@@ -1,3 +1,15 @@
+import type { PageSettingsCapabilities } from '../commands/page-settings-dto.ts';
+import { EDIT_PAGE_SETTINGS_COMMAND } from '../commands/commands.ts';
+import { capturePageSettingsPayload } from '../commands/page-settings.ts';
+import type {
+  EditPageSettingsPayload,
+  PageSettingsTarget,
+  PageSettingsRead,
+} from '../commands/page-settings.ts';
+import {
+  checkedPageSettingsCapabilities,
+  pageSettingsSource,
+} from '../../../../js/page-settings-edit.mjs';
 // @ts-ignore Shared strict SDK capability decoder.
 import { decodeSourceTableCellSplitCapability } from '../../../../js/source-table-cell-split-capability.mjs';
 import type { SourceTableCellSplitCapabilities } from '../commands/source-table-cell-split.ts';
@@ -1217,6 +1229,10 @@ export function createEditor(options: CreateEditorOptions) {
       current: () => boolean;
     }
   >();
+  const pageSettingsTargets = new WeakMap<
+    PageSettingsTarget,
+    { state: EditorState; native: PageSettingsCapabilities; section: number | null }
+  >();
   function capture<T>(
     command: EditorCommand<T>,
     payload: T,
@@ -1227,16 +1243,19 @@ export function createEditor(options: CreateEditorOptions) {
     const merge = command.id === MERGE_SOURCE_TABLE_CELLS_COMMAND.id;
     const width = command.id === EQUALIZE_SOURCE_TABLE_CELL_WIDTH_COMMAND.id;
     const height = command.id === EQUALIZE_SOURCE_TABLE_CELL_HEIGHT_COMMAND.id;
-    const tableCell = merge || split || width || height;
-    const owned = split
-      ? captureSourceTableCellSplitPayload(payload)
-      : merge || width || height
-        ? payload
-        : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
-          ? captureSourceTableGridRequest(payload, (snapshot.content as any)?.format)
-          : command.id === INSERT_DOCUMENT_COMMAND.id
-            ? captureDocumentInsertPayload(payload)
-            : copyOwned(payload);
+    const pageSettings = command.id === EDIT_PAGE_SETTINGS_COMMAND.id;
+    const tableCell = merge || split || width || height || pageSettings;
+    const owned = pageSettings
+      ? capturePageSettingsPayload(payload)
+      : split
+        ? captureSourceTableCellSplitPayload(payload)
+        : merge || width || height
+          ? payload
+          : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
+            ? captureSourceTableGridRequest(payload, (snapshot.content as any)?.format)
+            : command.id === INSERT_DOCUMENT_COMMAND.id
+              ? captureDocumentInsertPayload(payload)
+              : copyOwned(payload);
     return {
       command: command as EditorCommand<unknown>,
       payload: owned,
@@ -1402,6 +1421,37 @@ export function createEditor(options: CreateEditorOptions) {
           },
           payload.token,
           false,
+          guard,
+        );
+      }
+      if (pending.command.id === EDIT_PAGE_SETTINGS_COMMAND.id) {
+        const payload = pending.payload as EditPageSettingsPayload;
+        const capture = pageSettingsTargets.get(payload.target);
+        if (!capture) throw Error('ForeignPageSettingsTarget');
+        const guard = () => {
+          requireReady(capture.state.token, true);
+          if (state !== capture.state) throw Error('StalePageSettingsTarget');
+        };
+        guard();
+        if (!hasRuntimeAdmission(active, 'write-page-settings'))
+          throw Error('UnsupportedAtomicRuntime');
+        const rows = capture.native.sections;
+        const selected =
+          payload.scope === 'document' ? rows : rows.filter((r) => r.section === capture.section);
+        if (selected.length === 0 || selected.some((r) => !r.target))
+          throw Error('UnsupportedPageSettingsOwner');
+        return await mutate(
+          {
+            kind: 'write-page-settings',
+            request: {
+              binding: capture.native.binding,
+              scope: payload.scope,
+              targets: selected.map((r) => r.target),
+              values: payload.values,
+            },
+          },
+          capture.state.token,
+          true,
           guard,
         );
       }
@@ -1746,6 +1796,13 @@ export function createEditor(options: CreateEditorOptions) {
   function dispatchCommand<T>(command: EditorCommand<T>, payload: T): Promise<CommandResult> {
     assertPublicMutation();
     const pending = capture(command, payload);
+    if (command.id === EDIT_PAGE_SETTINGS_COMMAND.id) {
+      const found = pageSettingsTargets.get((pending.payload as EditPageSettingsPayload).target);
+      if (!found)
+        return Promise.resolve(reject(context(pending.token), 'ForeignPageSettingsTarget'));
+      if (state !== found.state)
+        return Promise.resolve(reject(context(pending.token), 'StalePageSettingsTarget'));
+    }
     if (command.id === MERGE_SOURCE_TABLE_CELLS_COMMAND.id) {
       const target = mergeTargets.get(pending.payload as SourceTableCellMergeTarget);
       if (!target || target.kind !== 'merge')
@@ -1966,6 +2023,8 @@ export function createEditor(options: CreateEditorOptions) {
       [
         'insert-document',
         'document-insert-capabilities',
+        'page-settings-capabilities',
+        'write-page-settings',
         'source-table-cell-split',
         'source-table-cell-split-capabilities',
       ].includes(kind)
@@ -2065,6 +2124,66 @@ export function createEditor(options: CreateEditorOptions) {
     )
       throw Error('InvalidNamedFieldOptions');
     return copyOwned(settings.token ?? state.token);
+  }
+  function getPageSettings(
+    options: { token?: StateToken; section?: number } = {},
+  ): Promise<PageSettingsRead> {
+    assertPublicMutation();
+    const settings = copyOwned(options);
+    if (
+      !settings ||
+      typeof settings !== 'object' ||
+      Array.isArray(settings) ||
+      Object.keys(settings).some((k) => !['token', 'section'].includes(k)) ||
+      settings.token === null ||
+      (settings.section !== undefined &&
+        (!Number.isInteger(settings.section) || settings.section < 0))
+    )
+      throw Error('InvalidPageSettingsOptions');
+    const token = copyOwned(settings.token ?? state.token);
+    return enqueue(async () => {
+      requireReady(token, true);
+      if (!['hwpx', 'hwp5'].includes((state.content as any)?.format))
+        return { state: 'unavailable', reason: 'PageSettingsWriteUnavailable' };
+      if (
+        (state.content as any)?.readOnly === true ||
+        (state.capabilities as any)?.readOnly === true
+      )
+        return { state: 'unavailable', reason: 'ReadOnlyDocument' };
+      const before = state;
+      const guard = () => {
+        requireReady(token, true);
+        if (state !== before) throw Error('StalePageSettingsTarget');
+      };
+      if (!hasRuntimeAdmission(active, 'page-settings-capabilities'))
+        throw Error('UnsupportedAtomicRuntime');
+      const reply = await readRequest({ kind: 'page-settings-capabilities' }, token, guard, true);
+      guard();
+      const native = checkedPageSettingsCapabilities(reply.pageSettings);
+      if (native.binding.revision !== state.nativeHistoryRevision)
+        throw Error('StalePageSettingsBinding');
+      const selection = state.selection as any;
+      const section =
+        settings.section ?? (Number.isInteger(selection?.section) ? selection.section : null);
+      if (section !== null && !native.sections.some((r) => r.section === section))
+        throw Error('InvalidPageSettingsSection');
+      const target = Object.freeze({}) as PageSettingsTarget;
+      pageSettingsTargets.set(target, {
+        state: before,
+        native: freezeDTO(copyOwned(native)),
+        section,
+      });
+      return freezeDTO({
+        state: 'available',
+        target,
+        currentSection: section,
+        sections: native.sections.map((r) => ({
+          section: r.section,
+          source: pageSettingsSource(native, r),
+          reason: r.reason,
+        })),
+      }) as PageSettingsRead;
+    });
   }
   function listParagraphBulletDefinitions(
     options: ParagraphBulletDefinitionsOptions = {},
@@ -2939,6 +3058,7 @@ export function createEditor(options: CreateEditorOptions) {
     getFormattingCapabilities: geometryGuard(getFormattingCapabilities),
     getReplaceAllCapabilities: geometryGuard(getReplaceAllCapabilities),
     getDocumentInsertionCapabilities: geometryGuard(getDocumentInsertionCapabilities),
+    getPageSettings: geometryGuard(getPageSettings),
     getSourceTableCellSplitCapabilities: geometryGuard(getSourceTableCellSplitCapabilities),
     queryFormatting: geometryGuard(queryFormatting),
     setSelection: geometryGuard(setSelection),

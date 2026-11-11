@@ -58,7 +58,7 @@ export function layoutPageSections(content, measure, maxRows, layoutSection) {
         limited: false,
         paragraphs: content.paragraphs.filter((row) => row.section === section),
         paragraphFlows: content.paragraphFlows?.filter((row) => row.section === section),
-        pageSettings: [setting],
+        pageSettings: [{ ...setting, physicalPageOffset: pageCount }],
       },
       measure,
       maxRows - usedRows,

@@ -130,7 +130,7 @@ const menus: readonly [string, readonly DemoCommand[]][] = [
       'align-distribute-space',
     ],
   ],
-  ['쪽', ['insert-header', 'insert-footer']],
+  ['쪽', ['page-settings', 'insert-header', 'insert-footer']],
   [
     '표',
     [
@@ -154,6 +154,7 @@ const menus: readonly [string, readonly DemoCommand[]][] = [
 const labels = new Map<DemoCommand, string>([
   ...commands.map(([id, label]) => [id, label] as [DemoCommand, string]),
   ['print-preview', DEMO_COMMAND_REGISTRY['print-preview'].label],
+  ['page-settings', DEMO_COMMAND_REGISTRY['page-settings'].label],
   ['table-cell-width-equal', '셀 너비를 같게'],
   ['paragraph-bullets', DEMO_COMMAND_REGISTRY['paragraph-bullets'].label],
   ['insert-document', DEMO_COMMAND_REGISTRY['insert-document'].label],

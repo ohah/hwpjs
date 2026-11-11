@@ -45,13 +45,10 @@ export function paginateBodyRows(
     return unavailable('InvalidPageFlowBounds');
   const initial = pageReferenceBoxes(setting, { x, y });
   if (initial.state !== 'placed') return unavailable(initial.state);
-  // pageReferenceBoxes currently admits only these page-invariant bindings.
-  // Page-specific horizontal overrides must update this proof before opting in.
-  const horizontalFitInvariant =
-    setting.gutter_type === 'left_only' ||
-    (setting.gutter_type === 'left_right' &&
-      setting.margin.gutter === 0 &&
-      setting.margin.left === setting.margin.right);
+  // Binding parity moves the physical origin; all three retain body width.
+  const horizontalFitInvariant = ['left_only', 'left_right', 'top_bottom'].includes(
+    setting.gutter_type,
+  );
 
   const validRow = (row) =>
     row &&

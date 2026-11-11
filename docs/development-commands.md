@@ -326,7 +326,6 @@ mise exec -- bun run dev 8082
 - root `docs:build`는 문서 빌드만 실행합니다. `docs:typecheck`는 source에 연결된 예제를 검사하며, `docs:check`는 예제 타입→빌드→링크→설치 license metadata→공개 출력 검사를 수행합니다. `apps/docs/`의 추적 파일 전체와 기존 `docs/public/editor` 정적 자산이 입력입니다. 새 umbrella producer가 그 정적 자산을 갱신하는 것은 아닙니다. CI의 정적 자산 확인은 `mise exec -- bun tools/build-pages-demo.mjs --verify`입니다.
 - Native shared-snapshot은 별도 ABI/archive/빌드 flag 계약입니다. 기능이 없는 binding은 `NativeSnapshotUnavailable`로 거부하며, plain-body snapshot 검증을 전체 Canvas·실기기·IME 완료로 표시하지 않습니다.
 
-
 ## 데모 서버 실행 모드
 
 기존 `mise exec -- bun run dev 8082`는 dev/dist 모드를 유지합니다. 검증된 bundle을 제공할 때만 다음 옵션을 명시합니다. 예시 경로는 준비된 실제 bundle 경로로 바꿉니다.
@@ -341,7 +340,6 @@ mise exec -- bun tools/serve-demo.mjs 8082 --bundle-dir /path/to/private-bundle 
 mise exec -- bun tools/serve-demo.mjs 8082 --bundle-dir /path/to/private-bundle --private-fixtures --fixture-policy tools/pages-demo/public-gallery-fixtures.json --fixture-root /path/to/original-project
 ```
 
-
 공개 갤러리를 사용하는 서버 회귀는 정책을 명시합니다. 기본 Noori2 양성·정책 누락/위조·링크 거부·사설 catalog 및 engine 일치와 기존 라우팅을 함께 검사합니다.
 
 ```sh
@@ -353,7 +351,6 @@ HWPJS_TEST_PUBLIC_FIXTURE_POLICY=tools/pages-demo/public-gallery-fixtures.json \
 2026-10-30 provider15와 기존23을 함께 실행해 실제 작업 트리에서 38pass·0fail·0skip이었고 임시 loopback 포트는 모두 종료됐습니다. 사설 운영 bundle이나 앱을 새로 생성한 검사가 아닙니다.
 
 모드별 검증·public 기준 manifest/동일 worker/WASM·라우팅·시작 시 snapshot과 **업데이트 후 재시작** 절차는 [데모 서버 모드](demo-server-modes.md)를 따릅니다. private catalog의 관측 개수는 정책 기본값이 아닙니다. bundle/문서 파일을 바꿔도 실행 중 서비스에 자동 반영되지 않습니다.
-
 
 WASM HTTP 압축 검사는 `mise exec -- node --test tests/hwpx/preview-wasm-compression.test.mjs`와 `mise exec -- bun test ./tests/hwpx/preview-wasm-compression.test.mjs`입니다. Bun 파일 인수의 `./`를 유지합니다. [전송 크기와 실측 범위](wasm-transfer.md)를 따릅니다.
 
@@ -421,7 +418,6 @@ HWPX 일반 prefix 감사는 `node tools/hwpx-edit-corpus-audit.mjs --wasm=/abso
 
 [사본 Canvas 원문 보존](hwp5-available-section-copy.md)은 `HWPJS_TEST_WASM=/absolute/copy-api-candidate.wasm node --test tests/hwp5/available-section-copy-canvas.test.mjs`로 3원본·4저장 구역의 제어 경계·대기 입력·독립 전체 Section·이력을 검사합니다. [추적 암호 fixture 경로](fixture-editor-coverage.md)는 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwp5/fixture-password-edit-paths.test.mjs`로 실행합니다. 후자는 정상 암호의 명시적 보호 해제 사본이며 재암호화 저장/브라우저 검사가 아닙니다.
 
-
 [사본 선택 UI·경고](hwp5-available-section-copy.md)는 `node --test tests/hwp5/available-section-copy-controls.test.mjs tests/hwp5/available-sections-controls.test.mjs`로 동의·취소·파일 수명·지연 실패·잘못된 경고를 검사합니다. native/Worker 묶음에는 `HWPJS_TEST_WASM=/absolute/copy-api-candidate.wasm HWPJS_BASELINE_WASM=/absolute/legacy.wasm`을 명시합니다. 실제 브라우저·전체 조판과 별도입니다.
 
 [저장 구역 사본 API·Worker](hwp5-available-section-copy.md)는 `HWPJS_TEST_WASM=/absolute/copy-api-candidate.wasm HWPJS_BASELINE_WASM=/absolute/legacy.wasm node --test tests/hwp5/available-section-copy-api.test.mjs tests/hwp5/available-section-copy-worker.test.mjs tests/hwp5/normalization-abi.test.mjs tests/hwp5/normalized-open.test.mjs tests/hwp5/available-sections-worker.test.mjs`로 검사합니다. 새 native 사본 API 후보가 필요하며 기본 배포·실제 브라우저 검증과 구분합니다.
@@ -485,7 +481,6 @@ HWPX 일반 prefix 감사는 `node tools/hwpx-edit-corpus-audit.mjs --wasm=/abso
 `node tools/run-selected-node-tests.mjs tests/hwp5/native-guard-error.test.mjs`는 [RSS 감시](native-core-rss-monitor.md)의 관측 오류·자손 소유 범위·실제 테스트 프로세스 격리를 검사하며 전체 native 실행을 대신하지 않습니다.
 
 후보 EMF/CFB와 검증용 bridge를 명시적으로 짝지어 검사할 때는 `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm HWPJS_TEST_HWP5_PROBE=/absolute/probe/hwp5-probe.wasm node --test tests/hwp5/emf-corpus.test.mjs tests/hwp5/emf-corpus-artifacts.test.mjs`를 사용합니다. `zig build emf-corpus-audit -Doptimize=ReleaseSafe`는 설치된 제품/probe 경로를 두 환경변수에 지정하고 경로 부정 대조도 함께 실행합니다. probe는 제품 ABI가 아닌 test-only bridge이며 [EMF 검증 기록](emf-framing.md)을 따릅니다.
-
 
 `zig test src/root.zig -O ReleaseSafe --test-filter 'dutmal' --test-filter 'inline string source report' --test-filter 'XML content source span'`는 덧말 leaf/현재값/저장/필드/구조 가드·전체 실패 주입의 집중 진입점입니다. `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test --test-concurrency=2 tests/hwpx/dutmal-text-editor.test.mjs tests/hwpx/dutmal-text-worker.test.mjs tests/hwpx/dutmal-sites.test.mjs tests/hwpx/inline-string-source-wire.test.mjs tests/hwpx/inline-string-source-reference.test.mjs tests/hwpx/dutmal-edge-publication.test.mjs`는 실제 API/Worker·독립 XML/ZIP·BOM/이력 검사입니다. Canvas paint/선택의 대역 검사는 `tests/hwpx/dutmal-renderer-worker.test.mjs`이며 정규 hwpx-text-audit에도 등록합니다. [후보·미지원 경계](hwpx-dutmal-text-changes.md)를 따릅니다.
 
@@ -682,7 +677,6 @@ Root 문단 간 하이퍼링크의 공개 open/apply/save/reopen 할당 실패�
 [HWPX OLE 패키지 사본 검사](hwpx-ole-payloads.md)는 `zig test src/root.zig --test-filter 'HWPX OLE payloads'`와 `--test-filter 'HWPX known inspections retain packaged OLE'`로 경계·소유권·실파일 연결을 검사합니다. 독립 봉투 조사 `python3 tools/hwpx-ole-payload-oracle.py --self-test` 및 인자 없는 전체 조사 결과는 아래 HWPX known shard 0~7과 대조합니다. 실파일 shard는 로컬 `reference/rhwp`가 필요하고 기본 audit에는 포함되지 않습니다.
 
 [OPF 이미지 후보 전수 검사](hwpx-manifest-image-payloads.md)는 `zig test src/root.zig --test-filter 'HWPX manifest image payloads'`와 `--test-filter 'HWPX known inspections include unreferenced'`로 합성·소유권·한도를 확인합니다. 독립 corpus 조사 `python3 tools/hwpx-fill-brush-image-oracle.py --self-test` 및 `--manifest-images` 결과는 아래 HWPX known shard 0~7과 대조합니다. 선택 shard는 로컬 `reference/rhwp`가 필요하고 기본 audit에는 포함되지 않습니다.
-
 
 [HWPX SVG 구조](hwpx-svg-image-payloads.md)는 `zig test src/root.zig --test-filter 'SVG structure'`, `zig test src/root.zig --test-filter 'HWPX picture image payloads'`, `zig test src/root.zig --test-filter 'HWPX fill brush image payloads'`로 합성·공통 연결을, `python3 tools/hwpx-fill-brush-image-oracle.py --self-test`와 `--picture-payloads`로 독립 분류를 검사합니다. 로컬 `reference/rhwp`가 있는 경우 `zig test src/hwpx_known_survey.zig -O ReleaseFast --test-filter 'HWPX known document inspections shard N'`을 N=0..7 각각 실행해 전체 corpus를 대조합니다. 실파일 8개 shard는 기본 audit에 포함되지 않습니다.
 
@@ -918,7 +912,6 @@ WASM 배포 디버그 정보와 실행 섹션 검증은 [산출물 정책](wasm-
 mise exec -- bun test ./packages/vanilla/tests/renderer-ack-projection.test.mjs
 ```
 
-
 ## 공개 패키지 JSX 회귀
 
 [JSX 런타임 계약과 검증 범위](public-package-jsx-runtime.md)를 따릅니다. 설치된 Bun·Node·React를 사용하며 Native 빌드와 문서 fixture가 필요하지 않습니다.
@@ -1036,7 +1029,6 @@ mise exec -- bun test ./apps/demo/tests/paragraph-shape-ui.test.ts ./apps/demo/t
 ```
 
 계약과 미연결 필드는 [글자·문단 모양 창](formatting-dialogs.md#문단-원자-서식-창-후보)을 따릅니다.
-
 
 ## 읽기 전용 서식 참조 집중 회귀
 
@@ -1393,7 +1385,6 @@ node --experimental-transform-types --max-old-space-size=256 \
   ./packages/vanilla/tests/multiblock-format-history-selection.test.mjs
 ```
 
-
 ## 원자 서식 Native 요청·COW 회귀
 
 정규 자체 합성 13개는 `src/root.zig`에서 명시 import하는 네 모듈이다. 외부 Noori 입력·WASM 실증과 합산하지 않는다.
@@ -1415,9 +1406,7 @@ Zig 변경의 전체 정규 진입점은 `nice -n 19 zig build test -j1`이다. 
 
 공식 진단 옵션 `nice -n 19 zig build test -j1 -Dnative-stack-traces=false`는 core의 같은 설치 Zig runner·test root·import·최적화 모드·회계를 유지하면서 `std.Options.allow_stack_tracing=false`를 설정한다. shipping-reference/text-splice 대상은 원래 설정을 유지한다. 이 공식 모드도 별도 승인된 단 한 번의 실제 실행에서 합산 RSS4,198,320KiB/40.77초로 4GiB guard에 도달해 중단됐다. 전체 성공이나 제품 테스트 실패로 계상하지 않는다. 각 대상의 시험 실행·성공·skip 수는 확정되지 않았다. 이전 두 기본 모드의 guard와 이번 원로그를 모두 보존했고 잔류 `[]`를 확인했다. 추가 상향·옵션 변경·자동 재실행은 없다. runtime safety를 제거하는 최적화 모드로 바꾸지 않는다.
 
-
 별도 수동 승인된 RSS8GiB 기본 trace 실행(`zig build test -j1`)은 합산 최고 RSS5,235,120KiB/메모리 여유 최저44%로 실제 test 바이너리 실행까지 도달했다. 이후 180.18초 wall guard로 종료되어 전체 test 수·pass/fail/skip은 확정되지 않았다. 제품 실패나 전체 성공으로 계상하지 않으며, 소유 프로세스 최종 잔류 `[]`를 확인하고 슬롯을 반환했다. 이 실행은 기능 검증이고 벽시간 속도 성공 주장이 아니다. 추가 실행이나 예산 조정은 자동으로 하지 않는다.
-
 
 동일 캐시 실행체의 직접 terminal 전수 실행 시도는 별도 cohort다. core의 컴파일 배열 5,059개 중 285개가 시작됐고 284개의 완료 outcome(관측 OK281·FAIL3·SKIP0)을 확인했다. case285는 미완료이고 나머지 4,774개는 미시작이다. core 실행 phase는 300초 wall guard로 중단됐다. 전체 core 최종 회계·leak 수는 미확정이다. 실패는 case106 `source_field_analysis`, case279 `paragraph_structure_save`, case281 `column_page_area_group_validate`의 `NondeterministicMemoryUsage`이며, 새 제품37의 영향인지 기존 baseline인지 미확정이다. 기대나 범위는 바꾸지 않았다. reference7과 text9는 각각 전수 pass, skip/fail/leak0 및 exit0였다. 진행 index·전체 N·case명은 바이너리의 builtin 배열과 대조했고 seed/cwd/명시 환경 구성을 유지했다. 신규 runtime filter는 없으며 기존 text compile filter를 보존했다. 재컴파일 없이 기존 실행체만 사용했지만 이를 원래 `zig build test -j1` exit0 또는 전체5,075 통과로 바꾸어 주장하지 않는다. 제품/test/binary와 원본 fixture84는 실행 뒤 동일 SHA였고 최종 잔류 `[]` 확인 후 슬롯을 반환했다.
 
@@ -1479,7 +1468,6 @@ zig build test-file-transforms -Doptimize=ReleaseSafe -j1
 ```
 
 표 삭제·이미지 삽입의 합성 입력, 필드·서명 거부, 할당 실패, Noori 저장·재열기를 검사합니다. 검증 파일을 별도 경로에 쓰지 않으므로 반복 실행할 수 있습니다. 지원 계약과 CLI·MCP 사용법은 [파일 변환 주제 문서](document-file-transforms.md)를 따릅니다.
-
 
 ## 단일 npm 패키지의 MCP 진입점
 
@@ -1682,7 +1670,6 @@ node --test --test-concurrency=1 tools/tests/table-file-grid-sdk.test.mjs \
 
 실물 source gate는 `tools/tests/source-table-grid-file-native.test.mjs`와 `source-table-grid-host-native.test.mjs`입니다. `HWPJS_TEST_SOURCE_ROOT`에 격리 후보, `HWPJS_TEST_WASM`·`HWPJS_TEST_WASM_SHA256`에 새 엔진과 고정 SHA, `HWPJS_TEST_SOURCE_GRID_HWP5`·`HWPJS_TEST_SOURCE_GRID_HWPX`에 위 승인된 브라우저 생성 파일을 지정합니다. `HWPJS_TEST_ORACLE_ROOT`는 정확한 `legacy/cfb.js` 오라클을 가진 루트이며 `HWPJS_TEST_CFB_SHA256`을 별도로 고정합니다. 각 실행의 `HWPJS_TEST_EVIDENCE_DIR`은 기존에 없는 디렉터리여야 합니다. SDK gate에는 선택 ABI가 없는 `HWPJS_TEST_OLD_WASM`도 필요합니다. host gate는 `source-table-grid-api-r1/install/bin/hwpjs.wasm` 위치를 추가 확인하며 공식 MCP Client와 stdio transport를 사용합니다. npm 설치 패키지 검증과 구분합니다.
 
-
 ## 원본 표 열린 세션 격자 편집 집중 검사
 
 [열린 세션 편집 계약](source-table-grid-live-edit.md)의 SDK·Core·실제 Surface 선택·공유 메뉴 router를 명시 파일로만 검사합니다. 아래 명령은 저장소 또는 통제 소스 루트에서 실행하며, Node 그룹은 기존 생성 표 검사와 같은 Core dist 및 renderer hook을 사용합니다. `packages/core/dist`는 검사할 소스로 미리 빌드되어 있어야 합니다.
@@ -1705,7 +1692,6 @@ HWPJS_TEST_CORE_DIST=packages/core/dist node --experimental-transform-types --ma
 
 원본 기준·다중 구역 suffix 좌표의 synthetic Native 검사는 `zig build test-section-source-bases -Doptimize=ReleaseSafe -j1`입니다. 실제 원본 표 세션 검사는 승인한 단순 표 파일의 절대경로를 `HWPJS_TEST_SOURCE_GRID_HWP5`와 `HWPJS_TEST_SOURCE_GRID_HWPX`로 명시하고 `zig build test-source-table-grid-live -Doptimize=ReleaseSafe -j1`을 실행합니다. 일반 Native 테스트가 임의 fixture를 찾아 읽도록 연결하지 않습니다.
 
-
 ## 원본 표 셀의 여러 문단
 
 [셀 문단 계약](source-table-grid-cell-paragraphs.md)의 구역 변환과 선택 이력은 별도로 검사합니다. Native 집중 검사는 외부 fixture를 읽지 않는 합성 입력입니다.
@@ -1725,7 +1711,6 @@ HWPJS_TEST_CORE_DIST=packages/core/dist node --experimental-transform-types \
 동일 승인 seed와 새 WASM을 사용한 Reader/Worker 검사는 `bun test ./packages/core/tests/runtime/source-table-grid-multiparagraph.test.ts`입니다. SDK 검사가 생성한 `task-d/old-refusal-final/seeds.json`과 고정된 원본 해시를 사용합니다. 초기 여러 문단·빈 문단의 투영 전체를 독립 오라클과 대조하고 네 명령·Native 이력·저장 재열기를 확인합니다.
 
 실제 브라우저 검사는 `tools/source-table-grid-multiparagraph-browser-audit.mjs`입니다. 새 번들을 소유 서버에 올린 뒤 origin·manifest SHA·WASM SHA와 명시 실행 플래그를 전달해야 합니다. 브라우저 검사를 소스 모형 검사나 공개 배포 확인으로 대체하지 않으며 사용한 브라우저는 종료 후 inactive 상태까지 확인합니다.
-
 
 ## 인라인 표의 가로 실패와 이력 예약
 
@@ -1807,7 +1792,6 @@ bun test --no-install apps/demo/tests/contextual-table-row-shortcut.test.ts \
 
 이는 실제 shortcut host·port·합성 Surface 회귀입니다. 신뢰된 키 이벤트·독립 CFB/ZIP/XML 저장의 실제 브라우저 검증은 별도입니다.
 
-
 ## HWP5 표 삽입의 현재 문단 바인딩
 
 [표 삽입 대상 계약](table-insert-target-availability.md)을 따릅니다. 참조 전체 대조와 source 슬롯·ID 분리, 오래된 참조·ABI 부재의 삽입 전 거부를 확인합니다.
@@ -1815,7 +1799,6 @@ bun test --no-install apps/demo/tests/contextual-table-row-shortcut.test.ts \
 ```sh
 node --max-old-space-size=256 --test tools/tests/hwp5-current-table-insertion.test.mjs
 ```
-
 
 ## HWP5 생성 본문 문단의 공개 서식
 
@@ -1825,7 +1808,6 @@ node --max-old-space-size=256 --test tools/tests/hwp5-current-table-insertion.te
 bun test packages/core/tests/commands/formatting.test.ts packages/core/tests/state/formatting-state.test.ts
 node --max-old-space-size=256 --test tools/tests/hwp5-current-table-insertion.test.mjs
 ```
-
 
 ## HWPX 생성 문단의 서식 저장 회귀
 
@@ -1888,3 +1870,54 @@ node --experimental-transform-types --max-old-space-size=512 \
 ```
 
 독립 ZIP/XML oracle은 Python 일반/-O에서 저장값과 비대상 payload 보존을 검사합니다. 이 소스 검증과 설치용 번들·실제 API 브라우저 검증은 구분합니다.
+
+## HWPX 편집 용지 쓰기 집중 검증
+
+[쓰기 계약](hwpx-page-settings-edit.md)을 따릅니다. 아래 SOURCE/EVIDENCE/WASM은 새 후보의 절대경로를 사용하며 보호 픽스처에 접근하는 무필터 Native suite는 실행하지 않습니다.
+
+```sh
+zig test "$SOURCE/src/hwpx_page_settings_edit_probe.zig" -O ReleaseSafe -fllvm -j1 --test-filter 'page settings' --cache-dir "$EVIDENCE/native-test-cache"
+HWPJS_TEST_WASM="$WASM" HWPJS_TEST_WASM_SHA256="$WASM_SHA256" HWPJS_TEST_EVIDENCE_DIR="$EVIDENCE/fresh-native-evidence" bun test --no-install "$SOURCE/tools/tests/page-settings-values.test.mjs" "$SOURCE/tools/tests/hwpx-page-settings-native.test.mjs"
+python3 "$SOURCE/tools/hwpx-page-settings-edit-oracle.py" --self-test
+python3 -O "$SOURCE/tools/hwpx-page-settings-edit-oracle.py" --self-test
+```
+
+큰 Native build 또는 소유 browser 시작 직전 statvfs로 여유 8GiB 이상을 확인하고 직렬 실행합니다. public ABI 6과 history protocol 2를 혼동하지 않습니다. 기존 엔진은 optional export 쌍이 없으면 쓰기 unavailable이며, 새 profile은 정확 SHA의 실제 COW 회귀 후에만 등록합니다.
+
+## HWP5 편집 용지 쓰기
+
+[지원 계약](hwp5-page-settings-edit.md)을 따릅니다. Native는 명시 필터만 실행하며 큰 검사 시작 전 statvfs 8GiB를 확인합니다.
+SOURCE/EVIDENCE/WASM과 입력 경로는 새 후보의 절대경로로 지정합니다.
+
+```sh
+zig test "$SOURCE/src/h5_page_settings_write_probe.zig" -O ReleaseSafe -fllvm -j1 --test-filter 'H5 page settings integrated' --cache-dir "$EVIDENCE/native-test-cache"
+HWPJS_TEST_WASM="$WASM" HWPJS_TEST_WASM_SHA256="$WASM_SHA256" HWPJS_TEST_EVIDENCE_DIR="$EVIDENCE/fresh-h5-evidence" HWPJS_TEST_HWP5_MULTI="$MULTI_HWP" HWPJS_TEST_HWP5_MULTI_SHA256="$MULTI_SHA256" bun test --no-install "$SOURCE/tools/tests/hwp5-page-settings-native.test.mjs"
+python3 "$SOURCE/tools/hwp5-page-settings-edit-oracle.py" "$PLAN_JSON"
+python3 -O "$SOURCE/tools/hwp5-page-settings-edit-oracle.py" "$PLAN_JSON"
+```
+
+MULTI_HWP은 합성 두 구역 입력이며 예상 SHA와 함께 인수합니다. test는 잘못된 치수·root metadata 반례도 양 모드에서 자동 검사합니다.
+이 결합본은 J499의 exports/arity를 보존하고 HWPX/HWP5 optional 쪽설정 각2개를 추가해503 exports입니다.
+이후 Native 변경 시 exports 수로 profile을 추론하지 말고 정확 SHA의 실제 COW를 다시 확인합니다.
+
+<a id="page-settings-portable-regressions"></a>
+
+## 편집 용지의 정규 SDK·CLI 회귀
+
+[통합 범위](page-settings-delivery.md)를 따릅니다. Native 경로와 기대 SHA를 명시하고 출력은 존재하지 않는 새 디렉터리를 사용합니다. 실행 도구는 추적된 합성 두 구역 입력2개와 기존 공개 page.hwp의 고정 SHA만 검사하며 외부 archive fixture나 전체 corpus를 탐색하지 않습니다.
+
+```sh
+HWPJS_TEST_WASM=/absolute/current-engine.wasm \
+HWPJS_TEST_WASM_SHA256=EXACT_CURRENT_SHA256 \
+HWPJS_PAGE_REGRESSION_OUT=/absolute/new-sdk-evidence \
+node tools/run-page-settings-regressions.mjs sdk
+
+HWPJS_TEST_WASM=/absolute/current-engine.wasm \
+HWPJS_TEST_WASM_SHA256=EXACT_CURRENT_SHA256 \
+HWPJS_PAGE_TEST_OLD_WASM=/absolute/engine-without-page-settings.wasm \
+HWPJS_PAGE_TEST_OLD_WASM_SHA256=EXACT_OLD_SHA256 \
+HWPJS_PAGE_REGRESSION_OUT=/absolute/new-cli-evidence \
+node tools/run-page-settings-regressions.mjs cli
+```
+
+SDK18개와 CLI·MCP14개는 원래 검사 파일을 그대로 실행하는 별도 분모입니다. Node24.20.0·Bun1.4.4를 사용하며, 구형 엔진 반례는 optional page-settings ABI가 없는 정확 바이너리를 지정합니다. actual browser·설치 archive·Native 할당 실패 검사는 이 두 실행의 성공으로 대신하지 않습니다.

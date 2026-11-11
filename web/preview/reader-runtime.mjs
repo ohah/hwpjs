@@ -1148,6 +1148,43 @@ export function createReaderRuntime({
     };
     displayResources.beginRequest(message, { format, editor, historyEnabled });
     try {
+      if (message.kind === 'page-settings-capabilities') {
+        if (!['hwpx', 'hwp5'].includes(format) || !editor?.supportsPageSettingsWrite?.())
+          throw Error('PageSettingsWriteUnavailable');
+        reply({ kind: message.kind, pageSettings: editor.pageSettingsCapabilities() });
+        return;
+      }
+      if (message.kind === 'write-page-settings') {
+        if (
+          !['hwpx', 'hwp5'].includes(format) ||
+          !editor ||
+          !historyEnabled ||
+          (format === 'hwpx' && hwpxCreatedTablesPending)
+        )
+          throw Error('PageSettingsWriteUnavailable');
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        atomicOutcome = editor.writePageSettings(message.request);
+        applied = atomicOutcome.application === 'applied';
+        mutationUncertain = atomicOutcome.application === 'unknown';
+        if (mutationUncertain) historyPoisoned = true;
+        if (atomicOutcome.error || atomicOutcome.cleanupError)
+          throw Error(atomicOutcome.error || atomicOutcome.cleanupError);
+        if (atomicOutcome.nativeCode === 2) {
+          reply({ kind: message.kind, changed: false });
+          return;
+        }
+        documentWindow = null;
+        if (format === 'hwpx') {
+          reader = await createHwpxReader(module);
+          preview = reader.readTextEvents(editor.saveForDisplay());
+        } else {
+          hwp5PreviewDirty = true;
+          await refreshHwp5PreviewFallback();
+        }
+        displayResources.invalidate();
+        reply({ kind: message.kind, content: format === 'hwpx' ? hwpxDisplay() : hwp5Display() });
+        return;
+      }
       if (message.kind === 'paragraph-bullet-definitions') {
         if (!editor) throw Error('EditorNotOpen');
         reply({ kind: message.kind, bulletDefinitions: editor.paragraphBulletDefinitions() });

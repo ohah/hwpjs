@@ -1635,3 +1635,51 @@ export fn hwp5_edit_bullet_definition_write(ptr: [*]const u8, len: usize) u32 {
     apply(.{ .edit_bullet_definition = parsed.value }) catch |err| return fail(err);
     return if (h.revision() == before) 2 else 1;
 }
+
+export fn hwp5_edit_page_settings_capabilities() u32 {
+    hwp5_edit_output_free();
+    const session_value = session() catch |err| return fail(err);
+    const h = if (history) |*v| v else return fail(error.HistoryNotEnabled);
+    if (h.stats().protocolVersion != 2) return fail(error.HistoryProtocol2Required);
+    const epoch = formatting_lifetime.session(a) catch |err| return fail(err);
+    defer a.free(epoch);
+    const T = @import("../hwp5/edit/page_settings_types.zig");
+    const Row = struct { section: usize, target: ?T.Target = null, reason: ?[]const u8 = null };
+    if (session_value.sectionCount() > 512) return fail(error.LimitExceeded);
+    const rows = a.alloc(Row, session_value.sectionCount()) catch |err| return fail(err);
+    defer a.free(rows);
+    for (rows, 0..) |*row, i| {
+        row.* = .{ .section = i };
+        const setting = session_value.pageSettings(a, i) catch |err| {
+            row.reason = switch (err) {
+                error.MissingPageDefinition, error.DuplicatePageDefinition, error.MissingSectionDefinition, error.DuplicateSectionDefinition, error.OrphanSectionRecord, error.MisplacedSectionDefinition, error.OrphanSectionDefinition, error.UnsupportedPageBinding => @errorName(err),
+                else => return fail(err),
+            };
+            continue;
+        };
+        row.target = .{ .section = i, .expected = setting };
+    }
+    var buffer: [20]u8 = undefined;
+    const serial = std.fmt.bufPrint(&buffer, "{d}", .{view_epoch.current() catch |err| return fail(err)}) catch unreachable;
+    output = std.json.Stringify.valueAlloc(a, .{ .schemaVersion = @as(u32, 1), .format = "hwp5", .binding = .{ .session = epoch, .revision = h.revision(), .serial = serial }, .sections = rows }, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_write_page_settings(ptr: [*]const u8, len: usize) u32 {
+    hwp5_edit_output_free();
+    _ = session() catch |err| return fail(err);
+    const h = if (history) |*v| v else return fail(error.HistoryNotEnabled);
+    if (h.stats().protocolVersion != 2) return fail(error.HistoryProtocol2Required);
+    if (len > 512 * 1024) return fail(error.LimitExceeded);
+    const parsed = std.json.parseFromSlice(@import("../hwp5/edit/page_settings_types.zig").Request, a, ptr[0..len], .{ .allocate = .alloc_always, .ignore_unknown_fields = false }) catch |err| return fail(err);
+    defer parsed.deinit();
+    const r = parsed.value;
+    formatting_lifetime.check(.{ .session = r.binding.session, .revision = r.binding.revision }, h.revision()) catch return fail(error.StalePageSettingsBinding);
+    const serial = @import("../model/formatting_binding.zig").decimal(r.binding.serial) catch |err| return fail(err);
+    if (serial != (view_epoch.current() catch |err| return fail(err))) return fail(error.StalePageSettingsBinding);
+    const before = h.revision();
+    apply(.{ .edit_page_settings = &r }) catch |err| {
+        _ = fail(err);
+        return if (err == error.HistoryMutationUncertain or err == error.MutationUncertain or h.stats().poisoned) 3 else 0;
+    };
+    return if (h.revision() == before) 2 else 1;
+}

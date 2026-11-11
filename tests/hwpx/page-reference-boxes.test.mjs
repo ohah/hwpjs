@@ -23,14 +23,6 @@ test('zero symmetric mirrored binding is parity invariant without inventing bind
       pageReferenceBoxes(mirrored, { x: 10, y: 20 }, ordinal),
       pageReferenceBoxes(single, { x: 10, y: 20 }, ordinal),
     );
-  for (const margin of [
-    { ...mirrored.margin, gutter: 1 },
-    { ...mirrored.margin, right: 7201 },
-  ])
-    assert.equal(
-      pageReferenceBoxes({ ...mirrored, margin }, { x: 0, y: 0 }).state,
-      'unsupported_page_geometry',
-    );
   assert.deepEqual(mirrored, before);
 });
 test('page boxes use physical units, margins and orientation', () => {
@@ -42,11 +34,6 @@ test('page boxes use physical units, margins and orientation', () => {
   const landscape = pageReferenceBoxes({ ...setting, orientation: 'narrowly' }, { x: 0, y: 0 });
   assert.equal(landscape.boxes.paper.width, 1920);
   assert.equal(landscape.boxes.paper.height, 960);
-  for (const gutter_type of ['left_right', 'top_bottom'])
-    assert.equal(
-      pageReferenceBoxes({ ...setting, gutter_type }, { x: 0, y: 0 }, 1).state,
-      'unsupported_page_geometry',
-    );
   assert.deepEqual(setting, original);
   const withAreas = pageReferenceBoxes(
     { ...setting, margin: { ...setting.margin, header: 3600, footer: 7200 } },
@@ -71,4 +58,25 @@ test('missing ambiguous overflowing or invalid geometry never invents a page', (
     'unsupported_page_geometry',
   );
   assert.equal(pageReferenceBoxes(setting, { x: 0, y: 0 }, -1).state, 'unsupported_page_geometry');
+});
+
+test('binding uses physical parity and top gutter without transposing stored axes', () => {
+  const mirror = { ...setting, gutter_type: 'left_right' };
+  const odd = pageReferenceBoxes(mirror, { x: 0, y: 0 }, 0),
+    even = pageReferenceBoxes(mirror, { x: 0, y: 0 }, 1);
+  assert.equal(odd.boxes.page.x, 144);
+  assert.equal(even.boxes.page.x, 192);
+  assert.equal(odd.boxes.page.width, even.boxes.page.width);
+  assert.deepEqual(
+    pageReferenceBoxes({ ...mirror, physicalPageOffset: 1 }, { x: 0, y: 0 }, 0),
+    even,
+  );
+  const top = pageReferenceBoxes({ ...setting, gutter_type: 'top_bottom' }, { x: 0, y: 0 });
+  assert.equal(top.boxes.page.x, 96);
+  assert.equal(top.boxes.page.y, 144);
+  assert.equal(top.boxes.page.height, 1680);
+  assert.equal(
+    pageReferenceBoxes({ ...setting, physicalPageOffset: -1 }, { x: 0, y: 0 }).state,
+    'unsupported_page_geometry',
+  );
 });

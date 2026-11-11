@@ -1,3 +1,4 @@
+import { createPageSettingsEditApi } from './page-settings-edit.mjs';
 import { createHwp5SourceTableCellSplitApi } from './hwp5-source-table-cell-split.mjs';
 import { decodeHwp5NamedFields } from './hwp5-named-fields.mjs';
 import { encodeCellDiagonals } from './cell-diagonal-command.mjs';
@@ -215,6 +216,7 @@ export async function createExperimentalHwp5Editor(
       prefix: 'hwp5_edit',
       unavailable: 'Hwp5SourceTableGridAbiUnavailable',
     }),
+    ...createPageSettingsEditApi({ wasm, memory, check, format: 'hwp5' }),
     ...createHwp5SourceTableCellSplitApi({ wasm, memory, check }),
     ...createAtomicFormattingApi({ wasm, memory, check: check, prefix: 'hwp5_edit' }),
     ...createIndependentTextApi({ wasm, memory, check: check, prefix: 'hwp5_edit' }),

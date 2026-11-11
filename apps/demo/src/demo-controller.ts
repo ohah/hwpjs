@@ -1,3 +1,4 @@
+import { createPageSettingsTool } from './page-settings-tool.ts';
 import { createTableCellSplitTool, type TableCellSplitCapture } from './table-cell-split-tool.ts';
 import { createTableGridPort, type TableGridHost } from './table-grid-port.ts';
 import { createGeneratedTableGridTool } from './generated-table-grid-tool.ts';
@@ -224,6 +225,12 @@ export async function mountDemo(
     },
     onPresentationChange: () => shell.update(),
   });
+  const pageSettingsTool = createPageSettingsTool({
+    root,
+    editor,
+    onStatus: note,
+    onClose: () => host?.focus?.(),
+  });
   const paragraphBullet = createParagraphBulletTool({
     root,
     editor,
@@ -432,6 +439,7 @@ export async function mountDemo(
       },
       ...formatDialogs.presentation(),
       'paragraph-bullets': paragraphBullet.presentation(),
+      'page-settings': pageSettingsTool.presentation(),
       ...(paragraphShape.available
         ? {
             'paragraph-properties': {
@@ -709,6 +717,10 @@ export async function mountDemo(
       return;
     }
     if (textColor.action(action.command)) return;
+    if (action.command === 'page-settings') {
+      void pageSettingsTool.open();
+      return;
+    }
     if (action.command === 'paragraph-bullets') {
       paragraphBullet.open();
       return;
@@ -948,6 +960,7 @@ export async function mountDemo(
     tableCellAppearance.dispose();
     tableInsert.dispose();
     objectProperties.dispose();
+    pageSettingsTool.dispose();
     paragraphBullet.dispose();
     paragraphShape.dispose();
     formatDialogs.dispose();
@@ -992,6 +1005,7 @@ export async function mountDemo(
       tableCellAppearance.dispose();
       tableInsert.dispose();
       objectProperties.dispose();
+      pageSettingsTool.dispose();
       paragraphBullet.dispose();
       paragraphShape.dispose();
       formatDialogs.dispose();

@@ -44,6 +44,7 @@ pub const Command = union(enum) {
     resize_picture: @import("picture_resize_values.zig").Edit,
     set_paragraph_format: @import("paragraph_format.zig").Edit,
     set_paragraph_bullet: struct { section: usize, paragraph: usize, value: @import("../../model/formatting_patch.zig").Bullet },
+    edit_page_settings: *const @import("page_settings_types.zig").Request,
     edit_bullet_definition: @import("../../model/paragraph_bullet_definition.zig").Request,
     set_paragraph_alignment: struct { section: usize, paragraph: usize, alignment: u32 },
     set_paragraph_border_fill: struct { section: usize, paragraph: usize, patch: @import("../../model/border_fill_patch.zig").Patch, flags: @import("../../model/paragraph_flags.zig").Patch = .{} },
@@ -1620,6 +1621,49 @@ pub const Session = opaque {
                 const prepared = try self.originalInfo();
                 defer if (prepared.owned) state.allocator.free(prepared.bytes);
                 try @import("bullet_apply.zig").applyReference(state.allocator, &state.document, prepared.bytes, state.source.header.version(), state.para_count, state.char_count, value.section, value.paragraph, value.value, max_stream);
+            },
+            .edit_page_settings => |request| {
+                const state = self.getState();
+                if (!try @import("page_settings_types.zig").validate(state.allocator, self, request.*)) return;
+                if (state.formatting_batch != null) return error.MutationInProgress;
+                if (state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview)) return error.UnsupportedPageSettingsSaveFeatures;
+                // One source pass, then O(1) checks per target. Count was bounded to512 above.
+                var pending_cell_style: [512]bool = @splat(false);
+                for (state.cell_backgrounds.entries) |entry| {
+                    if (entry.edit.section >= state.document.sections.len) return error.SourceBindingMismatch;
+                    pending_cell_style[entry.edit.section] = true;
+                }
+                for (request.targets) |target| {
+                    if (@import("page_settings_types.zig").equal(target.expected, request.values)) continue;
+                    if (state.created_tables[target.section].entries.len != 0) return error.UnsupportedPageSettingsPendingObjects;
+                    if (pending_cell_style[target.section]) return error.UnsupportedPageSettingsPendingCellStyle;
+                }
+                const saved = try self.save(state.allocator, .{ .allow_stale_layout = true });
+                defer state.allocator.free(saved.bytes);
+                var source = try @import("../text_source.zig").Source.open(state.allocator, saved.bytes);
+                defer source.deinit();
+                const drafts = try state.allocator.alloc(?model.Section, request.targets.len);
+                defer state.allocator.free(drafts);
+                @memset(drafts, null);
+                defer for (drafts) |*draft| if (draft.*) |*value| value.deinit(state.allocator);
+                for (request.targets, drafts) |target, *draft| {
+                    if (@import("page_settings_types.zig").equal(target.expected, request.values)) continue;
+                    const raw = try source.decodeSection(state.allocator, target.section);
+                    defer state.allocator.free(raw);
+                    const snapshot = try @import("page_settings_snapshot.zig").read(state.allocator, raw, state.source.header.version());
+                    var expected = target.expected;
+                    expected.source_node = snapshot.source_node;
+                    if (!std.meta.eql(expected, snapshot)) return error.StalePageSettingsSnapshot;
+                    const changed = try @import("page_settings_section.zig").write(state.allocator, raw, state.source.header.version(), request.values);
+                    errdefer state.allocator.free(changed);
+                    const current = state.document.sections[target.section];
+                    draft.* = try @import("page_settings_rebase.zig").project(state.allocator, changed, state.source.header.version(), if (current.rebased_source) |basis| basis.original_record_count else current.source_record_count, state.style_count);
+                }
+                // All sections prepared and validated before the no-fail publication loop.
+                for (request.targets, drafts) |target, *draft| if (draft.* != null) {
+                    std.mem.swap(model.Section, &state.document.sections[target.section], &draft.*.?);
+                };
+                state.refreshSourceViews();
             },
             .edit_bullet_definition => |request| {
                 const state = self.getState();

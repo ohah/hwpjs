@@ -16,6 +16,7 @@
 | 저장         | `save(options?)`                                                                       | 현재 문서 형식의 bytes 반환                                 |
 | 이력         | `undo()`, `redo()`, `getHistoryAvailability(state)`                                    | Native 이력과 capability에 따른 사용 가능 상태              |
 | 전체 바꾸기  | `getReplaceAllCapabilities()`, `planReplaceAll(state, request)`, `REPLACE_ALL_COMMAND` | 현재 main·웹 데모의 리터럴 일괄 교체. npm 게시는 별도       |
+| 편집 용지    | `getPageSettings()`, `EDIT_PAGE_SETTINGS_COMMAND`                                      | 구역·문서 범위의 방향·크기·여백 변경                        |
 | 재관측       | `refresh()`                                                                            | refresh-required 상태의 관측 갱신                           |
 | 구독         | `registerStateListener`, `registerUpdateListener`, `registerErrorListener`             | 반환된 해제 함수로 구독 정리                                |
 | 종료         | `dispose()`                                                                            | terminal 종료; 같은 객체 재사용 불가                        |
@@ -199,3 +200,44 @@ if (result.status !== 'committed-with-snapshot') throw new Error(String(result.e
 생성과 문단 적용은 한 번의 실행 취소로 복원합니다. `mode: 'update'`와 기존 `id`는 그 정의를 사용하는 모든 문단에 영향을 줍니다. `apply: false`는 정의만 수정합니다. 전체 geometry 값은 필수이며 `charShapeId: 0xffffffff`는 본문 글자 모양 상속입니다. 문서 전체 저장·재열기 경계의 명시 명령이므로 키 입력마다 호출하지 마세요.
 
 HWP5·HWPX의 지원되는 일반 본문 문단과 문자 정의를 지원합니다. HWP5는 원본 및 생성 continuation 문단에 연결하며 WCHAR와 signed HWPUNIT16로 표현할 수 없는 값은 명시 거부합니다. 그림/체크 글머리표·번호 이어가기는 후속입니다. 구형 inventory WASM의 조회는 계속 가능하지만 새 writer는 비활성입니다. 이 설명은 GitHub의 최신 구현 기준이며 npm 설치본의 게시 시점과 구분합니다.
+
+## HWP5·HWPX 편집 용지
+
+현재 웹 SDK와 데모의 **쪽 → 편집 용지**에서 제공합니다. npm 게시 버전의 지원 범위는 해당 릴리스에 따릅니다. `getPageSettings()`는 원본 규격과 구역별 지원 사유, 현재 세션에 묶인 target을 반환합니다. target은 같은 editor에서 그대로 사용하고 JSON으로 복제하지 않습니다. 대기 입력을 반영한 뒤 조회하며, 다른 편집·문서 교체·실행 취소 뒤에는 새로 조회합니다.
+
+크기와 여백은 정수 HWPUNIT(1/7200인치)입니다. `widely`는 세로, `narrowly`는 가로입니다. 방향을 바꾸기 위해 원본 width/height를 서로 바꾸지 않습니다. 아래는 문서 전체를 A4 세로와 명시한 여백으로 설정하는 예입니다.
+
+<!-- example:page-settings.ts -->
+
+```ts
+import { EDIT_PAGE_SETTINGS_COMMAND, type HeadlessEditor } from '@ohah/hwpjs';
+
+export async function setA4Page(editor: HeadlessEditor) {
+  const read = await editor.getPageSettings();
+  if (read.state !== 'available') throw new Error(read.reason);
+  const result = await editor.dispatchCommand(EDIT_PAGE_SETTINGS_COMMAND, {
+    target: read.target,
+    scope: 'document',
+    values: {
+      orientation: 'widely',
+      width: 59528,
+      height: 84188,
+      gutter_type: 'left_only',
+      margin: {
+        top: 5670,
+        bottom: 4250,
+        left: 8504,
+        right: 8504,
+        header: 4252,
+        footer: 4252,
+        gutter: 0,
+      },
+    },
+  });
+  if (result.status === 'rejected-unapplied') throw new Error(result.error);
+  if (result.status === 'committed-refresh-required') await editor.refresh();
+  return result;
+}
+```
+
+`scope: 'section'`은 조회 시 실제로 선택한 구역에 적용합니다. 선택 구역이 없으면 임의의 첫 구역을 사용하지 않습니다. 문서 전체 요청도 모든 대상 구역을 먼저 검사하며, 중복·조건부 owner나 해석할 수 없는 캐시가 있으면 변경을 거절합니다. 알려진 줄 배치 캐시는 해당 변경에서 무효화합니다. 용지 설정 변경은 하나의 Native 이력으로 처리하며, 저장은 기존 `save()` 계약을 따릅니다.

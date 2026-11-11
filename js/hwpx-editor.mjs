@@ -1,3 +1,4 @@
+import { createPageSettingsEditApi } from './page-settings-edit.mjs';
 import {
   decodeNamedFieldParameters,
   checkedNamedFieldParameterValues,
@@ -221,6 +222,7 @@ export async function createHwpxEditor(source) {
   }
   const documentInsert = createHwpxDocumentInsertApi({ wasm, memory, check: ready });
   return {
+    ...createPageSettingsEditApi({ wasm, memory, check: ready }),
     ...createCreatedTableGridApi({
       wasm,
       memory,

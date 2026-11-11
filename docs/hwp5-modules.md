@@ -567,3 +567,7 @@
 [HWPX 생성 본문의 일괄 서식](hwpx-generated-atomic-formatting.md)은 생성 BODY 소유권·query/patch/reset·요청별 인덱스와 오류 순서·단일 이력·독립 ZIP/XML 검증을 소유합니다.
 
 - [CLI·MCP 원본 셀 나누기](cli-source-cell-split.md)
+
+- [HWP5 편집 용지 실제 쓰기·수명·history·CFB·공개 DTO](hwp5-page-settings-edit.md)
+
+- [편집 용지 통합 범위와 검증](page-settings-delivery.md) — 형식별 계약을 공유하는 SDK·CLI·웹 연결과 현재 합본 검증.

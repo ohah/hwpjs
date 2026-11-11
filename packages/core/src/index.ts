@@ -227,3 +227,25 @@ export type {
   ParagraphBulletDefinitionEdit,
   EditParagraphBulletDefinitionPayload,
 } from './commands/paragraph-bullet-definition.ts';
+
+export { EDIT_PAGE_SETTINGS_COMMAND } from './commands/commands.ts';
+export type {
+  PageSettingsValues,
+  PageSettingsTarget,
+  PageSettingsRead,
+  PageSettingsSource,
+  EditPageSettingsPayload,
+} from './commands/page-settings.ts';
+
+export type {
+  PageSettingsCapabilities,
+  HwpxPageSettingsCapabilities,
+  Hwp5PageSettingsCapabilities,
+  PageSettingsBinding,
+  PageSettingsWriteOutcome,
+  PageSettingsWriteRequest,
+  HwpxPageSettingsSnapshot,
+  Hwp5PageSettingsSnapshot,
+  HwpxPageSettingsTarget,
+  Hwp5PageSettingsTarget,
+} from './commands/page-settings-dto.ts';

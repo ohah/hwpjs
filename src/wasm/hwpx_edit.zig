@@ -1043,7 +1043,7 @@ fn apply(command: histories.Command) !void {
         _ = try @import("../hwpx/display_resource_generation.zig").applyOwned(value, session, &.{command});
     } else switch (command.kind) {
         // Independent source-axis batches require the existing owned History.
-        .bullet_definition, .paragraph_bullet, .independent_text, .insert_document, .named_field_rename, .named_field_create, .named_field_parameters, .source_table_cell_merge, .source_table_cell_split => return error.HistoryNotEnabled,
+        .page_settings, .bullet_definition, .paragraph_bullet, .independent_text, .insert_document, .named_field_rename, .named_field_create, .named_field_parameters, .source_table_cell_merge, .source_table_cell_split => return error.HistoryNotEnabled,
         .source_table_grid => {
             _ = try @import("../hwpx/source_table_grid_session.zig").apply(session, .{ .section = command.section, .node = command.source_grid_node, .expected_rows = command.source_grid_expected_rows, .expected_columns = command.source_grid_expected_columns, .action = command.source_grid_action });
         },
@@ -2408,5 +2408,41 @@ export fn hwpx_edit_bullet_definition_write(ptr: [*]const u8, len: usize) u32 {
     const parsed = std.json.parseFromSlice(@import("../hwpx/bullet_definition_write.zig").Request, a, ptr[0..len], .{ .allocate = .alloc_always, .ignore_unknown_fields = false }) catch |err| return fail(err);
     defer parsed.deinit();
     const changed = @import("../hwpx/display_resource_generation.zig").applyOwned(h, session, &.{.{ .kind = .bullet_definition, .bullet_definition = &parsed.value, .section = 0, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "" }}) catch |err| return fail(err);
+    return if (changed) 1 else 2;
+}
+
+// Optional exact-owner page editor. Public WASM ABI stays 6; history protocol is 2.
+export fn hwpx_edit_page_settings_capabilities() u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const h = requireManagedHistory() catch |err| return fail(err);
+    const epoch = formatting_lifetime.session(a) catch |err| return fail(err);
+    defer a.free(epoch);
+    const owners = @import("../hwpx/page_settings_edit_owners.zig").observe(a, session) catch |err| return fail(err);
+    defer a.free(owners);
+    var buffer: [20]u8 = undefined;
+    const serial = std.fmt.bufPrint(&buffer, "{d}", .{session.mutation_serial}) catch unreachable;
+    output = std.json.Stringify.valueAlloc(a, .{ .schemaVersion = @as(u32, 1), .format = "hwpx", .binding = .{ .session = epoch, .revision = h.revision(), .serial = serial }, .sections = owners }, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_write_page_settings(ptr: [*]const u8, len: usize) u32 {
+    hwpx_edit_output_free();
+    requireNoReadScope() catch |err| return fail(err);
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const h = requireManagedHistory() catch |err| {
+        _ = fail(err);
+        return if (err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    if (len > 512 * 1024) return fail(error.LimitExceeded);
+    const parsed = std.json.parseFromSlice(@import("../hwpx/page_settings_write.zig").Request, a, ptr[0..len], .{ .allocate = .alloc_always, .ignore_unknown_fields = false }) catch |err| return fail(err);
+    defer parsed.deinit();
+    const request = parsed.value;
+    formatting_lifetime.check(.{ .session = request.binding.session, .revision = request.binding.revision }, h.revision()) catch return fail(error.StalePageSettingsBinding);
+    const serial = @import("../model/formatting_binding.zig").decimal(request.binding.serial) catch |err| return fail(err);
+    if (serial != session.mutation_serial) return fail(error.StalePageSettingsBinding);
+    const changed = @import("../hwpx/display_resource_generation.zig").applyOwned(h, session, &.{.{ .kind = .page_settings, .page_settings = &request, .section = 0, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "" }}) catch |err| {
+        _ = fail(err);
+        return if (err == error.MutationUncertain or err == error.HistoryMutationUncertain or h.stats().poisoned) 3 else 0;
+    };
     return if (changed) 1 else 2;
 }

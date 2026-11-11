@@ -30,17 +30,27 @@ export function pageReferenceBoxes(setting, origin, pageOrdinal = 0) {
     setting.duplicate_margins !== 0
   )
     return invalid;
-  // Nonzero/asymmetric mirrored binding still requires binding-side ownership.
-  const symmetricMirrored =
-    gutterType === 'left_right' && margin.gutter === 0 && margin.left === margin.right;
   if (
     !['widely', 'narrowly'].includes(orientation) ||
-    (gutterType !== 'left_only' && !symmetricMirrored)
+    !['left_only', 'left_right', 'top_bottom'].includes(gutterType)
+  )
+    return invalid;
+  const physicalOffset = setting.physicalPageOffset ?? 0;
+  if (
+    !Number.isSafeInteger(physicalOffset) ||
+    physicalOffset < 0 ||
+    !Number.isSafeInteger(physicalOffset + pageOrdinal)
   )
     return invalid;
   let [width, height, left, right, top, bottom, gutter, header, footer] = units.map(hwpUnitPixels);
   if (orientation === 'narrowly') [width, height] = [height, width];
-  left += gutter;
+  // Physical sequence ordinal, never the displayed/renumbered page label.
+  if (gutterType === 'top_bottom') top += gutter;
+  else if (gutterType === 'left_right' && (physicalOffset + pageOrdinal) % 2 === 1) {
+    const inside = left;
+    left = right;
+    right = inside + gutter;
+  } else left += gutter;
   top += header;
   bottom += footer;
   if (width <= left + right || height <= top + bottom) return invalid;

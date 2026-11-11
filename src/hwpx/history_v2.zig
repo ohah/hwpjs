@@ -195,7 +195,7 @@ pub const History = struct {
         s.history_transaction_active = true;
         defer s.history_transaction_active = false;
         try self.stack.prepare();
-        for (commands) |command| if (command.kind == .insert_document or command.kind == .bullet_definition) {
+        for (commands) |command| if (command.kind == .insert_document or command.kind == .bullet_definition or command.kind == .page_settings) {
             if (commands.len != 1 or command.break_before != null or command.deleted != 0)
                 return error.InvalidInsertDocumentBatch;
             if (!self.managed) return error.HistoryProtocol2Required;
@@ -217,9 +217,12 @@ pub const History = struct {
         const policy_limit = self.stack.policy;
         try document.validateParkable(s, policy_limit.max_checkpoint_bytes);
 
+        if (command.kind == .page_settings) try @import("page_settings_edit_owners.zig").validateTargets(s.allocator, s, (command.page_settings orelse return error.InvalidPageSettingsRequest).*);
         const before = try s.save();
         defer s.allocator.free(before);
-        var candidate = if (command.kind == .bullet_definition) blk: {
+        var candidate = if (command.kind == .page_settings) blk: {
+            break :blk (try @import("page_settings_write.zig").prepare(s.allocator, before, command.page_settings.?.*, s.options)) orelse return false;
+        } else if (command.kind == .bullet_definition) blk: {
             const request = command.bullet_definition orelse return error.InvalidBulletDefinitionRequest;
             break :blk (try @import("bullet_definition_write.zig").prepare(s.allocator, before, request.*, s.options)) orelse return false;
         } else blk: {
