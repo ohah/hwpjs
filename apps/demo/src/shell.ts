@@ -307,6 +307,10 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     });
     return { node, description };
   };
+  const toolbar = el('div', 'hwp-demo-tools');
+  toolbar.id = `${prefix}-basic-toolbar`;
+  const formatbar = el('div', 'hwp-demo-formatbar');
+  formatbar.id = `${prefix}-format-toolbar`;
   const menuNav = el('nav', 'hwp-demo-menus');
   menuNav.setAttribute('aria-label', '문서 메뉴');
   const zoomChoices: { node: HTMLButtonElement; percent: number }[] = [];
@@ -362,7 +366,7 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
         });
     }
     if (label === '보기') {
-      const scales = el('details', 'hwp-demo-zoom-menu'),
+      const scales = el('details', 'hwp-demo-view-menu'),
         heading = el('summary', '', '배율'),
         choices = el('div', 'hwp-demo-zoom-choices');
       for (const percent of VIEW_ZOOM_LEVELS) {
@@ -378,7 +382,25 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
         choices.append(button, description);
       }
       scales.append(heading, choices);
-      popup.append(scales);
+      const toolbarMenu = el('details', 'hwp-demo-view-menu');
+      toolbarMenu.append(el('summary', '', '도구 상자'));
+      for (const [bar, label] of [
+        [toolbar, '기본 도구 상자'],
+        [formatbar, '서식 도구 상자'],
+      ] as const) {
+        const toggle = el('button', 'hwp-demo-button', label);
+        toggle.type = 'button';
+        toggle.setAttribute('aria-controls', bar.id);
+        toggle.setAttribute('aria-pressed', 'true');
+        listen(toggle, 'click', () => {
+          bar.hidden = !bar.hidden;
+          toggle.setAttribute('aria-pressed', String(!bar.hidden));
+          details.open = false;
+          summary.focus();
+        });
+        toolbarMenu.append(toggle);
+      }
+      popup.append(scales, toolbarMenu);
     }
     details.append(summary, popup);
     menuNav.append(details);
@@ -391,7 +413,6 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     )
       for (const row of disclosures) row.details.open = false;
   });
-  const toolbar = el('div', 'hwp-demo-tools');
   toolbar.setAttribute('role', 'group');
   toolbar.setAttribute('aria-label', '문서 도구');
   const primaryTools = el('div', 'hwp-demo-tool-groups');
@@ -422,7 +443,6 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
   extra.append(extraSummary, extraPopup);
   trackDisclosure(extra, extraSummary, extraPopup);
   toolbar.append(primaryTools, extra);
-  const formatbar = el('div', 'hwp-demo-formatbar');
   formatbar.setAttribute('role', 'group');
   formatbar.setAttribute('aria-label', '글자와 문단 서식');
   const formatGroup = (label: string) => {

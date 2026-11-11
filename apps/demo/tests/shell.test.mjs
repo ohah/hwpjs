@@ -368,3 +368,29 @@ test('size Apply pointer activation retains draft focus like other toolbar comma
     h.shell.destroy();
   }
 });
+
+test('view menu toggles toolbars independently across shell updates without editing', () => {
+  const h = setup();
+  const other = setup();
+  const find = (x, label) =>
+    all(x.root, (n) => n.tagName === 'BUTTON' && n.textContent === label)[0];
+  const bar = (x, button) => all(x.root, (n) => n.id === button.getAttribute('aria-controls'))[0];
+  const basic = find(h, '기본 도구 상자');
+  const formatting = find(h, '서식 도구 상자');
+  assert.equal(basic.getAttribute('aria-pressed'), 'true');
+  assert.equal(formatting.getAttribute('aria-pressed'), 'true');
+  fire(basic, 'click');
+  assert.equal(bar(h, basic).hidden, true);
+  assert.notEqual(bar(h, formatting).hidden, true);
+  assert.notEqual(bar(other, find(other, '기본 도구 상자')).hidden, true);
+  h.shell.update();
+  assert.equal(basic.getAttribute('aria-pressed'), 'false');
+  assert.equal(bar(h, basic).hidden, true);
+  fire(formatting, 'click');
+  fire(basic, 'click');
+  assert.equal(bar(h, formatting).hidden, true);
+  assert.equal(bar(h, basic).hidden, false);
+  assert.deepEqual(h.calls, []);
+  h.shell.destroy();
+  other.shell.destroy();
+});
