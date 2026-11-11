@@ -56,18 +56,18 @@ test('public Core returns an owned complete inventory without changing editor st
     await editor.dispose();
   }
 });
-test('public Core exposes unavailable ABI separately from empty and HWP5 inventories', async () => {
+test('public Core distinguishes old unavailable ABI, empty HWPX and current HWP5 inventories', async () => {
   for (const [module, bytes, format, expected] of [
     [old, input, 'hwpx', 'ParagraphBulletDefinitionsAbiUnavailable'],
     [
-      wasm,
+      old,
       new Uint8Array(
         await readFile(
           new URL('../../../../apps/docs/docs/public/editor/fixtures/lists.hwp', import.meta.url),
         ),
       ),
       'hwp5',
-      'Hwp5BulletDefinitionsUnavailable',
+      'ParagraphBulletDefinitionsAbiUnavailable',
     ],
   ] as const) {
     const editor = await opened(module, bytes, format);
@@ -95,6 +95,40 @@ test('public Core exposes unavailable ABI separately from empty and HWP5 invento
     });
   } finally {
     await editor.dispose();
+  }
+
+  const hwp5 = await opened(
+    wasm,
+    new Uint8Array(
+      await readFile(
+        new URL('../../../../apps/docs/docs/public/editor/fixtures/lists.hwp', import.meta.url),
+      ),
+    ),
+    'hwp5',
+  );
+  try {
+    const before = hwp5.getEditorState();
+    const inventory = await hwp5.listParagraphBulletDefinitions({ token: before.token });
+    assert.equal(hwp5.getEditorState(), before);
+    assert.equal(inventory.state, 'available');
+    if (inventory.state !== 'available') throw Error('Expected HWP5 inventory');
+    assert.equal(inventory.coverage, 'complete');
+    assert.equal(inventory.definitionWriter, 'character-definitions-v1');
+    assert.deepEqual(
+      inventory.declarations.map(({ ordinal, id, marker, canApply }) => ({
+        ordinal,
+        id,
+        marker,
+        canApply,
+      })),
+      [
+        { ordinal: 0, id: 1, marker: 0xf06c, canApply: true },
+        { ordinal: 1, id: 2, marker: 0xf09f, canApply: true },
+      ],
+    );
+    assert(Object.isFrozen(inventory) && Object.isFrozen(inventory.declarations));
+  } finally {
+    await hwp5.dispose();
   }
 });
 test('Core rejects stale in-flight inventory after disposal and malformed runtime replies', async () => {
