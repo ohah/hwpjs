@@ -1,3 +1,4 @@
+import { createHwp5CellWidthFixture } from '../helpers/hwp5-cell-width-fixture.mjs';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
@@ -328,5 +329,30 @@ test('public Core splits every original cell corner with independent record and 
     assert.deepEqual((await editor.save({ allowStaleLayout: true })).bytes, input);
     await editor.dispatchCommand(REDO_COMMAND, { token: editor.getEditorState().token });
     assert.deepEqual((await editor.save({ allowStaleLayout: true })).bytes, output);
+  }
+});
+
+test('cell-size output with distinct declared outer extent splits and preserves original declaration and exact history', async (t) => {
+  const input = await createHwp5CellWidthFixture(module, {
+    widths: [6000, 6000],
+    heights: [4000, 4000],
+    text: 'A😀A',
+  });
+  const e = await createExperimentalHwp5Editor(module, input);
+  t.after(() => e.close());
+  e.enableHistoryV2();
+  const result = e.splitSourceTableCells(request(e));
+  assert.equal(result.nativeCode, 1, result.error);
+  const changed = e.save({ allowStaleLayout: true }).bytes;
+  oracle(input, changed, 0, 0, 'cell-size-extent');
+  e.undo();
+  assert.deepEqual(e.save({ allowStaleLayout: true }).bytes, input);
+  e.redo();
+  assert.deepEqual(e.save({ allowStaleLayout: true }).bytes, changed);
+  const reopened = await createExperimentalHwp5Editor(module, changed);
+  try {
+    assert.deepEqual(reopened.save({ allowStaleLayout: true }).bytes, changed);
+  } finally {
+    reopened.close();
   }
 });

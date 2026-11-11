@@ -153,17 +153,21 @@ def verify_objects(a, b, selected_row=0, selected_column=0):
     require(b''.join((x['raw'] for x in ar[:ai])) == b''.join((x['raw'] for x in br[:bi])), 'CFB oracle condition at line 97')
     require(b''.join((x['raw'] for x in ar[ae:])) == b''.join((x['raw'] for x in br[be:])), 'CFB oracle condition at line 98')
     expected = []
-    # Independent expected topology for the fixed 2x2 -> 3x4 fixture.
+    # Independent 2x2 -> 3x4 topology; dimensions come from immutable input cells.
     for source in range(4):
         r, c = divmod(source, 2)
+        prior = old[source]
+        require((prior['row'], prior['column'], prior['rs'], prior['cs']) == (r, c, 1, 1), 'Unexpected source cell topology')
+        width, height = prior['width'], prior['height']
+        require(width >= 3 and height >= 2, 'Invalid source dimensions')
         if (r, c) == (selected_row, selected_column):
             for subrow in range(2):
                 for subcolumn in range(3):
-                    expected.append((r + subrow, c + subcolumn, 1, 1, 5000, 4000, source, subrow != 0 or subcolumn != 0))
+                    expected.append((r + subrow, c + subcolumn, 1, 1, width // 3 + int(subcolumn < width % 3), height // 2 + int(subrow < height % 2), source, subrow != 0 or subcolumn != 0))
         else:
             expected.append((r + int(r > selected_row), c + 2 * int(c > selected_column),
                              2 if r == selected_row else 1, 3 if c == selected_column else 1,
-                             15000, 8000, source, False))
+                             width, height, source, False))
     expected.sort(key=lambda row: (row[0], row[1]))
     require(len(new) == len(expected), 'CFB oracle condition at line 100')
     all_ids = set()

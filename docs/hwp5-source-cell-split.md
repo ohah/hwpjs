@@ -45,3 +45,15 @@ HWP5 대화상자는 지원 범위를 표시하고 합친 후 나누기와 높�
 R2의 실제 WASM·Core/SDK·Vanilla Worker 메뉴·CFB 저장/undo/redo/재열기 및 Main params+bullet 회귀는 `zig-out/verification/hwp5-source-cell-split-r2/ADOPTION-MANIFEST.json`에 고정한다. 공개 배포와 최신 Main 진행분의 최종 합본은 별도 인수 단계다.
 
 새 글머리표 정의 writer/query·HWP5 크기 권한·COW·parked history를 보존한 F 기준 R2 결합 및 직접 재검증은 [결합 후보 인수](hwp5-cell-split-integration.md)에 기록한다. frozen 단일 원본 셀 범위를 유지하며 Main의 채택·배포는 별도 게이트다.
+
+## H 기준 Native 병합·extent 준비 closure (R5)
+
+Main `cce7ead1fc1ca17b73bebd01ea3d72945272e1da`의 H 소스를 현재값으로 두고 동결 R2를 공통 조상, R3/R4의 Native 파일만 incoming으로 병합한 격리 후보가 있다. 인수 원장은 `zig-out/verification/hwp5-source-cell-split-r5-native-rebase/ADOPTION-MANIFEST.json`이다. 위 R2의 공개 범위와 Main 통합 기록은 그대로 남긴다. 이 closure는 UI 확대 또는 새 공개 capability 선언이 아니다.
+
+원본 split 전용 writer는 병합 span의 완전 격자와 실제 셀 크기 등식을 검증하고 비선택 셀의 물리 크기/원문·서식을 보존한다. 외곽 control 선언은 실제 셀 합과 달라도 원시 바이트로 유지하며 양수 절대 크기와 기존 SSOT 크기 잠금·보호·spacing·unknown·복합 셀 거절을 지킨다. 기존 행·열 grid writer의 합==외곽 정책은 별도로 유지한다. `source_table_grid`는 split에만 새 writer를 위임하고 기존 셀·문단 SSOT를 공유한다.
+
+H의 WASM은 기존 `Service.capture()`가 단일 비병합 셀을 거절/허용한다고 전제한다. 공개 ABI·capability·JS decoder·Core/Surface witness를 함께 바꾸지 않은 상태에서 이 함수만 넓히면 1×1 요청으로 병합 셀을 가리킬 수 있다. 따라서 `capture()`는 선택 셀 span1과 기존 writer의 표 전체 비병합 공개 제한을 함께 확인한다. 비선택 병합 때문에 apply에서 거절하던 공개 입력도 이제 캡처에서 미리 거절하며 실제 적용 범위는 넓히지 않는다. Native 전용 `captureWithSpans()`가 같은 source binding/ticket/revision issuer를 공유해 병합 셀을 명시적으로 캡처하고 apply는 실제 현재 span까지 재검사한다. 기존 R2 호출과 H의 공개 좁은 profile은 유지되고, 새 merged public profile/완전 span witness 연결은 후속 통합이다.
+
+이 단계는 H497 optional ABI, WASM delegate, JS/Core/UI/Bridge/기존 profile 파일을 변경하지 않는다. 공개 경로에서는 비병합 셀의 extent mismatch 수정이 적용되며, 병합 셀 지원은 Native typed opt-in으로만 준비한다. 다중셀·merge-then-split·높이 유지·pending-created/중첩/필드/컨트롤/캐시/캡션/zone 등 복합 셀은 여전히 후속 범위다. 단일 History·stale/foreign/protocol/보호 및 이전 redo 보존은 기존 managed 경계를 사용한다.
+
+집중 검사는 새 rebase probe에서 Native managed geometry/extent/호환 거절과 기존 split/grid를 선택 실행한다. 실제 Native WASM 재빌드는 Main 최종 합본 한 번으로 남기며 이전 R4의 실제 SDK/Core/브라우저 증거를 이 H 결합 바이너리의 실측으로 바꾸어 부르지 않는다. 새 Native 검증과 비용의 범위·해시·전후파일은 인수 원장을 따른다. Root/Git/npm/다른 agent의 J 소스·공용 cache는 수정하거나 삭제하지 않는다.

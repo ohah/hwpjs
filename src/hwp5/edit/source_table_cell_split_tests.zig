@@ -67,7 +67,7 @@ test "H5 source cell split primitive OOM every fallback allocation" {
 const edit = @import("style_preservation.zig");
 const History = @import("editor_history.zig").History;
 const service = @import("source_table_cell_split_service.zig");
-fn authoredInput() ![]u8 {
+pub fn authoredInput() ![]u8 {
     const blank = try @import("../../new_document/root.zig").hwp5(a);
     defer a.free(blank);
     const session = try edit.Session.open(a, blank);
@@ -81,13 +81,13 @@ fn authoredInput() ![]u8 {
     try session.apply(.{ .stage_table = .{ .section = 0, .paragraph = 0, .unit = 0, .table = &table, .options = fixture.options } });
     return (try session.save(a, .{ .allow_stale_layout = true })).bytes;
 }
-fn tableNode(session: *const edit.Session) !usize {
+pub fn tableNode(session: *const edit.Session) !usize {
     const layouts = try session.tableLayoutSources(a, 0);
     defer a.free(layouts);
     if (layouts.len != 1) return error.InvalidTestTable;
     return layouts[0].table_record_node;
 }
-fn save(session: *const edit.Session) ![]u8 {
+pub fn save(session: *const edit.Session) ![]u8 {
     return (try session.save(a, .{ .allow_stale_layout = true })).bytes;
 }
 fn expectSaved(session: *const edit.Session, expected: []const u8) !void {
@@ -305,7 +305,7 @@ test "H5 source cell split postprepare History checkpoint budget rolls back sour
     try std.testing.expect(!try history.undo(session));
 }
 
-fn compressedInput(input: []const u8) ![]u8 {
+pub fn compressedInput(input: []const u8) ![]u8 {
     var source = try @import("../text_source.zig").Source.open(a, input);
     defer source.deinit();
     const info = try source.decodeDocInfo(a, 8 * 1024 * 1024);

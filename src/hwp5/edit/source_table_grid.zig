@@ -18,10 +18,11 @@ pub const Request = struct {
     new_paragraph_ids: []const u32 = &.{},
 };
 pub const Limits = struct { max_bytes: usize = 64 * 1024 * 1024, max_records: usize = 1_000_000, max_cells: usize = 100_000 };
-const Cell = struct { group: @import("../body/list_groups.zig").Group, header: usize, last_header: usize, runs: usize, value: body.Cell };
+pub const Cell = struct { group: @import("../body/list_groups.zig").Group, header: usize, last_header: usize, runs: usize, value: body.Cell };
 
 /// Source is immutable on all failures. Returned bytes are allocator-owned.
 pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, request: Request, limits: Limits) ![]u8 {
+    if (request.split != null) return @import("source_table_cell_split_writer.zig").prepare(a, source, version, request, limits);
     if (source.len > limits.max_bytes) return error.LimitExceeded;
     var arena = std.heap.ArenaAllocator.init(a);
     defer arena.deinit();
@@ -212,7 +213,7 @@ fn append(a: std.mem.Allocator, out: *std.ArrayList(u8), bytes: []const u8, limi
 
 /// Validate every direct paragraph once, including paragraphs later discarded.
 /// Only leaf plain-text/style records belong to this deliberately narrow editor.
-fn validateParagraph(tree: Tree, index: usize, end: usize) !usize {
+pub fn validateParagraph(tree: Tree, index: usize, end: usize) !usize {
     const node = tree.nodes[index];
     if (node.record.value != .header or node.subtree_end > end) return error.UnsupportedSourceTableGrid;
     const header = node.record.value.header;

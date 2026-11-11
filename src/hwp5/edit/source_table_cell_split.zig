@@ -59,7 +59,7 @@ pub fn create(rows: u32, columns: u32, request: Request, max_cells: usize) !Plan
         (request.rows == 1 and request.columns == 1)) return error.InvalidSourceTableCellSplit;
     const next_rows = try std.math.add(u32, rows, request.rows - 1);
     const next_columns = try std.math.add(u32, columns, request.columns - 1);
-    if (try std.math.mul(usize, next_rows, next_columns) > max_cells or next_rows > 65535 or next_columns > 65535)
+    if (try std.math.mul(usize, rows, columns) > max_cells or @as(usize, request.rows) * request.columns > max_cells or next_rows > 65535 or next_columns > 65535)
         return error.LimitExceeded;
     return .{ .old_rows = rows, .old_columns = columns, .rows = next_rows, .columns = next_columns, .inserted_count = @as(usize, request.rows) * request.columns - 1, .split = request };
 }
