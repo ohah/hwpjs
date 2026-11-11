@@ -814,7 +814,9 @@ export function createCanvasEditor({
       !context ||
       context.created ||
       (!split && (!block || block.paint.cells.size < 2)) ||
-      content?.format !== 'hwpx' ||
+      (equalizeWidth || equalizeHeight
+        ? !['hwpx', 'hwp5'].includes(content?.format)
+        : content?.format !== 'hwpx') ||
       (split
         ? content.sourceTableCellSplitAvailable !== true
         : equalizeHeight
@@ -857,7 +859,7 @@ export function createCanvasEditor({
         })),
     };
     if (witness.cells.length !== selected.size || !current()) return null;
-    const value = { witness, current };
+    const value = { witness, current, table };
     mergeCapture = { block, focus: savedFocus, purpose, content, value };
     return value;
   };

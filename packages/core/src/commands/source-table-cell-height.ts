@@ -4,7 +4,7 @@ import {
   type SourceTableCellBlockWitness,
 } from './source-table-cell-merge.ts';
 // @ts-ignore Pure source geometry is shared with the Worker.
-import { sourceTableCellHeightPlan } from '../../../../web/preview/source-table-cell-height.mjs';
+import { sourceTableCellHeightPlanForFormat } from '../../../../web/preview/source-table-cell-height-format.mjs';
 
 export interface SourceTableCellHeightMinimum {
   readonly listNode: number;
@@ -32,7 +32,7 @@ export function sourceTableCellHeightRequest(
   };
   if (
     state.nativeHistoryStats?.protocolVersion !== 2 ||
-    content?.format !== 'hwpx' ||
+    !['hwpx', 'hwp5'].includes(content?.format ?? '') ||
     content.sourceTableCellHeightAvailable !== true ||
     content.limited !== false ||
     content.readOnly ||
@@ -45,6 +45,6 @@ export function sourceTableCellHeightRequest(
   const table = content.tables?.find(
     (t) => t.section === request.section && t.tableNode === request.tableNode,
   );
-  sourceTableCellHeightPlan(table, request);
+  sourceTableCellHeightPlanForFormat(content.format, table, request);
   return request;
 }

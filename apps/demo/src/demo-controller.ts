@@ -111,6 +111,7 @@ export interface DemoHost
     current(): boolean;
   } | null;
   getSourceTableCellHeightAvailability?(): { available: boolean; reason: string | null };
+  getSourceTableCellWidthAvailability?(): { available: boolean; reason?: string };
   setScale(value: number): boolean;
   setDisplayOptions?(options: CanvasDisplayOptions): boolean;
   getDisplayOptions?(): Readonly<CanvasDisplayOptions> | undefined;
@@ -324,6 +325,7 @@ export async function mountDemo(
   });
   const cellSplit = createTableCellSplitTool(root, editor, () => host, note);
   const presentation = (): DemoShellState => {
+    const widthAvailability = host?.getSourceTableCellWidthAvailability?.();
     const sharedFormatting = captureFormattingPresentation(editor, () => host);
     const state = sharedFormatting.state,
       ready = state.status === 'ready';
@@ -337,6 +339,8 @@ export async function mountDemo(
     };
     const height = host?.getSourceTableCellHeightAvailability?.();
     const heightReasons: Record<string, string> = {
+      UnsupportedHwp5CellHeightMetadata:
+        '원본 HWP5 셀의 metadata 또는 부호 있는 크기를 안전하게 해석할 수 없습니다.',
       SourceTableCellHeightContentOverflow: '균등 높이가 셀 내용과 상하 여백보다 작습니다.',
       SourceTableCellHeightLayoutOverflow:
         '균등 높이를 적용하면 현재 조판의 셀 높이와 일치하지 않습니다.',
@@ -371,11 +375,25 @@ export async function mountDemo(
         enabled: height?.available === true,
         reason:
           heightReasons[height?.reason ?? ''] ??
-          '원본 HWPX 표에서 모든 열을 포함하는 두 행 이상을 선택하세요.',
+          '원본 HWP5/HWPX 표에서 모든 열을 포함하는 두 행 이상을 선택하세요.',
       },
       'table-cell-width-equal': {
-        enabled: host?.captureSourceTableCellWidth?.() != null,
-        reason: '원본 HWPX 표에서 물리 경계가 같은 직사각형의 두 칸 이상을 선택하세요.',
+        enabled: widthAvailability?.available ?? host?.captureSourceTableCellWidth?.() != null,
+        reason:
+          (
+            {
+              UnsupportedHwp5CellWidthMetadata:
+                '원본 HWP5 셀의 metadata 또는 부호 있는 크기를 안전하게 해석할 수 없습니다.',
+              UnsupportedSourceTableCellWidthGeometry:
+                '병합 셀이나 지원하지 않는 원본 크기가 있는 표입니다.',
+              UnsupportedSourceTableCellWidthInsets:
+                '셀 안여백을 확인할 수 없거나 균등 너비가 안여백보다 작습니다.',
+              NonRectangularSourceTableCellWidthGeometry:
+                '선택 행의 실제 셀 경계가 같은 직사각형이 아닙니다.',
+              SourceTableCellWidthInputPending: '입력이나 문서 처리가 끝난 뒤 다시 선택하세요.',
+            } as Record<string, string>
+          )[widthAvailability?.reason ?? ''] ??
+          '원본 HWP5/HWPX 표에서 물리 경계가 같은 직사각형의 두 칸 이상을 선택하세요.',
       },
       'table-cell-merge': {
         enabled: host?.captureSourceTableCellMerge?.() != null,

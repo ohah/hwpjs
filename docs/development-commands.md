@@ -1856,3 +1856,5 @@ Native 집중 검사는 `zig build test-hwpx-generated-atomic-formatting -Doptim
 ## 원본 셀 높이 균등화
 
 명시적인 `HWPJS_TEST_WASM`을 지정하고 `bun test --no-install tests/hwpx/source-table-cell-height.test.mjs tests/hwpx/source-table-cell-width.test.mjs tests/hwpx/source-table-cell-split.test.mjs tests/hwpx/source-table-rectangular-grid.test.mjs`를 실행합니다. 실제 셸 label은 Node24.20 이상에서 `node --test apps/demo/tests/table-cell-height-menu-label.test.mjs`로 검사합니다. 해당 시험의 Node registerHooks 의존성을 Bun으로 실행하지 않습니다. 독립 `tools/hwpx-cell-height-oracle.py`는 원본/저장본 base64·part·rectangle·기대 heights를 JSON stdin으로 받아 전체 XML과 다른 ZIP payload를 비교하며 Python 일반/-O와 잘못된 기대 높이 반례를 함께 검사합니다. [지원 계약](cell-height-equalization.md)을 따릅니다.
+
+HWP5 어댑터 회귀는 동일한 명시 `HWPJS_TEST_WASM`에서 `bun test --no-install tests/hwp5/source-table-cell-width.test.mjs tests/hwp5/source-table-cell-height.test.mjs`를 추가 실행합니다. 두 독립 `tools/hwp5-cell-*-oracle.py`는 JSON stdin의 원본/저장 base64·원시 주소·기대 크기를 비교하고 Python 일반/-O의 정상·오류 기대값을 검사합니다. [HWP5 계약](hwp5-cell-size-equalization.md)을 따릅니다.

@@ -6,7 +6,7 @@
 
 최상위 원본 HWPX 표의 모든 열을 포함한 연속 두 행 이상을 지원합니다. 전체 격자가 완전한 비병합 셀이고 최대 4096셀, 셀 간격0이며 각 행의 원본 높이가 일치해야 합니다. 선택 행의 HU 높이 합을 보존해 행 수로 나누고 나머지는 위쪽 행부터 1HU씩 배분합니다. 높이0도 실제 값으로 취급합니다. 너비·미선택 셀·표 바깥 크기 선언과 다른 XML/ZIP payload는 보존합니다.
 
-HWP5, 생성·중첩 표, 병합 셀, 일부 열만 선택한 영역 및 전체 높이0인 자동 성장 표는 아직 지원 범위 밖입니다. 이 제한은 전체 목표의 남은 작업이며 한컴의 제한이라고 해석하지 않습니다. 공식 [셀 높이를 같게](https://help.hancom.com/docs/ko-KR/mergedProjects/hoffice_hwp/topics/hancomoffice/hwp/table/table(eqheight).htm)의 직사각형 선택 의미와 [표/셀 속성: 셀](https://help.hancom.com/hoffice130/ko-KR/Hwp/table/tableattribute/table(cellattribute).htm)의 행 높이·내용 성장·안여백 의미를 기준으로 합니다. 합 보존·나머지 배분은 자체 편집 정책이며 한컴 내부 계산과 동일하다고 주장하지 않습니다.
+[HWP5 연결](hwp5-cell-size-equalization.md)은 별도 원본 metadata 계약을 따릅니다. 생성·중첩 표, 병합 셀, 일부 열만 선택한 영역 및 전체 높이0인 자동 성장 표는 아직 지원 범위 밖입니다. 이 제한은 전체 목표의 남은 작업이며 한컴의 제한이라고 해석하지 않습니다. 공식 [셀 높이를 같게](https://help.hancom.com/docs/ko-KR/mergedProjects/hoffice_hwp/topics/hancomoffice/hwp/table/table(eqheight).htm)의 직사각형 선택 의미와 [표/셀 속성: 셀](https://help.hancom.com/hoffice130/ko-KR/Hwp/table/tableattribute/table(cellattribute).htm)의 행 높이·내용 성장·안여백 의미를 기준으로 합니다. 합 보존·나머지 배분은 자체 편집 정책이며 한컴 내부 계산과 동일하다고 주장하지 않습니다.
 
 ## 내용 측정과 소유권
 

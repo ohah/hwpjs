@@ -1620,7 +1620,11 @@ export function createRenderer(
             pageLayoutPolicyReason: pageLayout.policyReason,
           };
     layout = attachCreatedTableFlow(pictureDisplay, layout, measure);
-    if (!draft && pictureDisplay.format === 'hwpx' && pageLayout.state === 'paginated')
+    if (
+      !draft &&
+      ['hwp5', 'hwpx'].includes(pictureDisplay.format) &&
+      pageLayout.state === 'paginated'
+    )
       cellHeightMeasurement = {
         source: content,
         content: pictureDisplay,
@@ -1634,10 +1638,15 @@ export function createRenderer(
             stableContext: true,
           }),
         project: (candidate, measure) =>
-          layoutPageContent(candidate, measure, undefined, {
-            chartDisplay: (section, wrapper) => chartResources.status(section, wrapper),
-            oversizeInlineTablePreview: true,
-          }),
+          (candidate.format === 'hwp5' ? layoutHwp5PageContent : layoutPageContent)(
+            candidate,
+            measure,
+            undefined,
+            {
+              chartDisplay: (section, wrapper) => chartResources.status(section, wrapper),
+              oversizeInlineTablePreview: true,
+            },
+          ),
       };
     layout = projectVisibleOverflowCells(content, layout, display);
     if (pictureDisplay.format === 'hwpx')

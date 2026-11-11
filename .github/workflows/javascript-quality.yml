@@ -124,7 +124,7 @@ jobs:
         env:
           HWPJS_TEST_WASM: ${{ github.workspace }}/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm
         run: |
-          bun test --no-install ./tests/hwpx/source-table-cell-split.test.mjs ./tests/hwpx/source-table-cell-width.test.mjs ./tests/hwpx/source-table-cell-height.test.mjs ./tests/hwpx/source-table-rectangular-grid.test.mjs
+          bun test --no-install ./tests/hwpx/source-table-cell-split.test.mjs ./tests/hwpx/source-table-cell-width.test.mjs ./tests/hwpx/source-table-cell-height.test.mjs ./tests/hwpx/source-table-rectangular-grid.test.mjs ./tests/hwp5/source-table-cell-width.test.mjs ./tests/hwp5/source-table-cell-height.test.mjs
           node --test tests/hwpx/source-table-row-horizontals.test.mjs apps/demo/tests/table-cell-height-menu-label.test.mjs
 
       - name: Test paragraph bullet editing with a pinned previous engine

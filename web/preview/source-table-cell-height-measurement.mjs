@@ -1,5 +1,5 @@
 import { measureNestedTable } from './nested-table-measurement.mjs';
-import { sourceTableCellHeightPlan } from './source-table-cell-height.mjs';
+import { sourceTableCellHeightPlanForFormat } from './source-table-cell-height-format.mjs';
 
 /** Reuse source padding, paragraph flow, terminal-line and object measurement. */
 export function measureSourceTableCellHeights(content, table, rectangle, measure, project) {
@@ -24,7 +24,7 @@ export function measureSourceTableCellHeights(content, table, rectangle, measure
     .filter((cell) => selectedLists.has(cell.listNode))
     .map((cell) => ({ listNode: cell.listNode, height: Math.ceil(cell.height * 75 - 1e-7) }));
   const request = { ...rectangle, minimums };
-  const changes = sourceTableCellHeightPlan(table, request);
+  const changes = sourceTableCellHeightPlanForFormat(content.format, table, request);
   const byList = new Map(changes.map((cell) => [cell.listNode, cell.height]));
   const resized = {
     ...table,

@@ -115,6 +115,11 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
           available: false,
           reason: 'SourceTableCellHeightUnavailable',
         },
+      getSourceTableCellWidthAvailability: () =>
+        ref.current?.surface?.getSourceTableCellWidthAvailability() ?? {
+          available: false,
+          reason: 'SourceTableCellWidthInputPending',
+        },
       setScale: (value) => ref.current?.setScale(value) ?? false,
       dispose: () => {
         pages.dispose();
@@ -184,6 +189,11 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
         surface?.getSourceTableCellHeightAvailability() ?? {
           available: false,
           reason: 'SourceTableCellHeightUnavailable',
+        },
+      getSourceTableCellWidthAvailability: () =>
+        surface?.getSourceTableCellWidthAvailability() ?? {
+          available: false,
+          reason: 'SourceTableCellWidthInputPending',
         },
       setScale: (value) => surface?.setScale(value) ?? false,
       dispose: () => {

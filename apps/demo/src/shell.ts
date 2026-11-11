@@ -153,6 +153,7 @@ const menus: readonly [string, readonly DemoCommand[]][] = [
 const labels = new Map<DemoCommand, string>([
   ...commands.map(([id, label]) => [id, label] as [DemoCommand, string]),
   ['print-preview', DEMO_COMMAND_REGISTRY['print-preview'].label],
+  ['table-cell-width-equal', '셀 너비를 같게'],
   ['insert-document', DEMO_COMMAND_REGISTRY['insert-document'].label],
   ['zoom-in', '확대'],
   ['zoom-out', '축소'],

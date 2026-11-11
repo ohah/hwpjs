@@ -1,3 +1,5 @@
+// @ts-ignore Pure format admission shared with Core and the Worker.
+import { sourceTableCellWidthPlanForFormat } from '../../../web/preview/source-table-cell-width-format.mjs';
 import { openPrintPreview } from '../../../web/preview/print-preview-dialog.mjs';
 import { capturePrintPages } from '../../../web/preview/host-print.mjs';
 import {
@@ -1255,6 +1257,54 @@ export function createCanvasSurface({
       ? { available: true }
       : { available: false, reason: 'busy' };
   };
+  const captureCellWidth = () => {
+    const state = editor.getEditorState();
+    const current = () =>
+      !closed &&
+      !nonTextHistoryPending &&
+      lease?.isActive() === true &&
+      !bridge?.busy() &&
+      !modalOpen() &&
+      editor.getEditorState() === state &&
+      state.status === 'ready' &&
+      state.stateVersion === observedStateVersion &&
+      displayed ===
+        `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}` &&
+      renderer.historyModelMatches(state) &&
+      direct.settled();
+    if (!current()) return { capture: null, reason: 'SourceTableCellWidthInputPending' };
+    const captured = direct.captureSourceTableCellBlock('width');
+    if (!captured || !captured.current() || !current())
+      return { capture: null, reason: 'MissingSourceTableCellWidthSelection' };
+    try {
+      const w: Parameters<NonNullable<InputSurfaceLease['captureSourceTableCellWidth']>>[0] =
+        captured.witness;
+      sourceTableCellWidthPlanForFormat(
+        (state.content as { format?: string })?.format,
+        captured.table,
+        {
+          section: w.section,
+          tableNode: w.tableNode,
+          expectedRows: w.rows,
+          expectedColumns: w.columns,
+          top: Math.min(...w.cells.map((cell) => cell.row)),
+          left: Math.min(...w.cells.map((cell) => cell.column)),
+          bottom: Math.max(...w.cells.map((cell) => cell.row)) + 1,
+          right: Math.max(...w.cells.map((cell) => cell.column)) + 1,
+        },
+      );
+    } catch (error) {
+      return {
+        capture: null,
+        reason: error instanceof Error ? error.message : 'SourceTableCellWidthUnavailable',
+      };
+    }
+    const live = () => current() && captured.current() && current();
+    const target = lease?.captureSourceTableCellWidth?.(captured.witness, live);
+    return target
+      ? { capture: Object.freeze({ state, target, current: live }), reason: undefined }
+      : { capture: null, reason: 'SourceTableCellWidthUnavailable' };
+  };
   const captureCellHeight = () => {
     const state = editor.getEditorState();
     const current = () =>
@@ -2036,26 +2086,11 @@ export function createCanvasSurface({
         : null;
     },
     captureSourceTableCellWidth() {
-      const state = editor.getEditorState();
-      const current = () =>
-        !closed &&
-        !nonTextHistoryPending &&
-        lease?.isActive() === true &&
-        !bridge?.busy() &&
-        !modalOpen() &&
-        editor.getEditorState() === state &&
-        state.status === 'ready' &&
-        state.stateVersion === observedStateVersion &&
-        displayed ===
-          `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}` &&
-        renderer.historyModelMatches(state) &&
-        direct.settled();
-      if (!current()) return null;
-      const captured = direct.captureSourceTableCellBlock('width');
-      if (!captured || !captured.current() || !current()) return null;
-      const live = () => current() && captured.current() && current();
-      const target = lease?.captureSourceTableCellWidth?.(captured.witness, live);
-      return target ? Object.freeze({ state, target, current: live }) : null;
+      return captureCellWidth().capture;
+    },
+    getSourceTableCellWidthAvailability() {
+      const { capture, reason } = captureCellWidth();
+      return { available: capture !== null, reason };
     },
     captureSourceTableCellHeight() {
       return captureCellHeight().capture;

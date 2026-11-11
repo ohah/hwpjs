@@ -4,7 +4,7 @@ import {
   type SourceTableCellBlockWitness,
 } from './source-table-cell-merge.ts';
 // @ts-ignore Pure source geometry is shared with the Worker.
-import { sourceTableCellWidthPlan } from '../../../../web/preview/source-table-cell-width.mjs';
+import { sourceTableCellWidthPlanForFormat } from '../../../../web/preview/source-table-cell-width-format.mjs';
 
 declare const widthTarget: unique symbol;
 /** A current F5 rectangle issued by the editor's owning surface. */
@@ -27,7 +27,7 @@ export function sourceTableCellWidthRequest(
   };
   if (
     state.nativeHistoryStats?.protocolVersion !== 2 ||
-    content?.format !== 'hwpx' ||
+    !['hwp5', 'hwpx'].includes(content?.format ?? '') ||
     content.sourceTableCellWidthAvailable !== true ||
     content.limited !== false ||
     content.readOnly ||
@@ -40,6 +40,6 @@ export function sourceTableCellWidthRequest(
   const table = content.tables?.find(
     (t) => t.section === request.section && t.tableNode === request.tableNode,
   );
-  sourceTableCellWidthPlan(table, request);
+  sourceTableCellWidthPlanForFormat(content.format, table, request);
   return request;
 }

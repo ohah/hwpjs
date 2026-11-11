@@ -1,9 +1,9 @@
-import { sourceTableCellHeightPlan } from './source-table-cell-height.mjs';
-import { sourceTableCellWidthPlan } from './source-table-cell-width.mjs';
+import { sourceTableCellWidthPlanForFormat } from './source-table-cell-width-format.mjs';
 import {
   readHwpxNamedFieldParameters,
   setHwpxNamedFieldParameters,
 } from './hwpx-named-field-parameters.mjs';
+import { sourceTableCellHeightPlanForFormat } from './source-table-cell-height-format.mjs';
 import { attachParagraphNumbering } from './paragraph-numbering.mjs';
 import { copyDocumentInsertRuntimeMessage } from '../../js/hwpx-document-insert.mjs';
 import { renameHwpxNamedField, setHwpxNamedFieldValue } from './hwpx-named-field-value.mjs';
@@ -266,6 +266,20 @@ export function createReaderRuntime({
     }
     const content = projected ?? displayContent(hwp5DisplayProjection());
     content.editorSessionAvailable = Boolean(editor);
+    content.sourceTableCellWidthAvailable =
+      Boolean(editor) &&
+      historyEnabled &&
+      [
+        'hwp5_edit_set_cell_sizes',
+        'hwp5_edit_table_bindings',
+        'hwp5_edit_cell_layout_sources',
+        'hwp5_edit_table_layout_sources',
+      ].every((name) =>
+        WebAssembly.Module.exports(module).some(
+          (entry) => entry.name === name && entry.kind === 'function',
+        ),
+      );
+    content.sourceTableCellHeightAvailable = content.sourceTableCellWidthAvailable;
     content.sourceTableGridAvailable = editor?.supportsSourceTableGrid?.() === true;
     const observedDocInfoAvailable = [
       'hwp5_edit_open_observed_docinfo',
@@ -1324,43 +1338,47 @@ export function createReaderRuntime({
         return;
       }
       if (message.kind === 'source-table-cell-width') {
-        if (format !== 'hwpx' || !historyEnabled || !editor)
+        if (!['hwp5', 'hwpx'].includes(format) || !historyEnabled || !editor)
           throw Error('SourceTableCellWidthUnavailable');
         if (historyPoisoned) throw Error('HistoryMutationUncertain');
-        const content = hwpxDisplay();
+        const content = format === 'hwpx' ? hwpxDisplay() : hwp5Display();
+        if (content.sourceTableCellWidthAvailable !== true)
+          throw Error('SourceTableCellWidthUnavailable');
         const tables = content.tables?.filter(
           (t) =>
             t.section === message.request?.section && t.tableNode === message.request?.tableNode,
         );
         if (tables?.length !== 1) throw Error('InvalidSourceTableCellWidthRectangle');
-        const cells = sourceTableCellWidthPlan(tables[0], message.request);
+        const cells = sourceTableCellWidthPlanForFormat(format, tables[0], message.request);
         if (cells.length === 0) {
           reply({ kind: message.kind, changed: false });
           return;
         }
         editor.setCellSizes(cells);
         applied = true;
-        reply({ kind: message.kind, content: hwpxDisplay() });
+        reply({ kind: message.kind, content: format === 'hwpx' ? hwpxDisplay() : hwp5Display() });
         return;
       }
       if (message.kind === 'source-table-cell-height') {
-        if (format !== 'hwpx' || !historyEnabled || !editor)
+        if (!['hwpx', 'hwp5'].includes(format) || !historyEnabled || !editor)
           throw Error('SourceTableCellHeightUnavailable');
         if (historyPoisoned) throw Error('HistoryMutationUncertain');
-        const content = hwpxDisplay();
+        const content = format === 'hwpx' ? hwpxDisplay() : hwp5Display();
+        if (content.sourceTableCellHeightAvailable !== true)
+          throw Error('SourceTableCellHeightUnavailable');
         const tables = content.tables?.filter(
           (t) =>
             t.section === message.request?.section && t.tableNode === message.request?.tableNode,
         );
         if (tables?.length !== 1) throw Error('InvalidSourceTableCellHeightRectangle');
-        const cells = sourceTableCellHeightPlan(tables[0], message.request);
+        const cells = sourceTableCellHeightPlanForFormat(format, tables[0], message.request);
         if (cells.length === 0) {
           reply({ kind: message.kind, changed: false });
           return;
         }
         editor.setCellSizes(cells);
         applied = true;
-        reply({ kind: message.kind, content: hwpxDisplay() });
+        reply({ kind: message.kind, content: format === 'hwpx' ? hwpxDisplay() : hwp5Display() });
         return;
       }
       if (message.kind === 'source-table-cell-merge') {
