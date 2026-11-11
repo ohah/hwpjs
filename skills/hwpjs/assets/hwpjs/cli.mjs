@@ -1507,7 +1507,7 @@ function sourceTableCellSplitProfile(format) {
 }
 function decodeSourceTableCellSplitCapability(input) {
 	if (!input || typeof input !== "object" || ![null, Object.prototype].includes(Object.getPrototypeOf(input))) throw Error("InvalidSourceTableSplitCapabilities");
-	const fields = Object.getOwnPropertyDescriptors(input), profile = descriptors[fields.format?.value];
+	const fields = Object.getOwnPropertyDescriptors(input), profile = Object.values(descriptors).find((value) => value.sourceProfile === fields.sourceProfile?.value);
 	if (!profile || Reflect.ownKeys(fields).length !== Object.keys(profile).length + 1 || Object.entries(profile).some(([key, value]) => !Object.hasOwn(fields[key] ?? {}, "value") || fields[key].value !== value)) throw Error("InvalidSourceTableSplitCapabilities");
 	const binding = fields.binding;
 	if (!binding || !Object.hasOwn(binding, "value")) throw Error("InvalidSourceTableSplitBinding");
@@ -1549,6 +1549,17 @@ var init_source_table_cell_split_capability = __esmMin((() => {
 			sourceProfile: "single-unmerged-source-cell",
 			maxSelectedCells: 1,
 			supportsMergedInput: false,
+			supportsMergeThenSplit: false,
+			supportsPreserveRowHeights: false,
+			maxAxis: 63,
+			maxGridCells: 4096
+		}),
+		hwp5Merged: Object.freeze({
+			schemaVersion: 1,
+			format: "hwp5",
+			sourceProfile: "single-source-cell-with-spans",
+			maxSelectedCells: 1,
+			supportsMergedInput: true,
 			supportsMergeThenSplit: false,
 			supportsPreserveRowHeights: false,
 			maxAxis: 63,
@@ -1673,13 +1684,14 @@ function createSourceTableCellSplitApi({ wasm, memory, check, documentInsert, fo
 		},
 		sourceTableCellSplitProfile() {
 			requireSupport();
-			return sourceTableCellSplitProfile(format).sourceProfile;
+			return format === "hwp5" ? documentInsert.documentInsertionCapabilities().sourceProfile : sourceTableCellSplitProfile(format).sourceProfile;
 		},
 		sourceTableCellSplitCapabilities() {
 			requireSupport();
-			return decodeSourceTableCellSplitCapability({
+			const current = documentInsert.documentInsertionCapabilities();
+			return decodeSourceTableCellSplitCapability(format === "hwp5" ? current : {
 				...sourceTableCellSplitProfile(format),
-				binding: documentInsert.documentInsertionCapabilities().binding
+				binding: current.binding
 			});
 		},
 		sourceTableCellSplitBinding() {
@@ -4489,12 +4501,13 @@ function decodeCharacterRanges(bytes) {
 	let cursor = 0;
 	return Array.from({ length: count }, (_, index) => {
 		const offset = 8 + index * 16, start = view.getUint32(offset, true), end = view.getUint32(offset + 4, true), id = view.getUint32(offset + 8, true), flags = view.getUint32(offset + 12, true);
-		if (start !== cursor || end < start || flags > 1 || flags === 0 && id !== 0) return fail();
+		if (start !== cursor || end < start || flags > 3 || flags === 2 || flags === 0 && id !== 0 || flags & 2 && (count !== 1 || start !== 0 || end > 1)) return fail();
 		cursor = end;
 		return {
 			start,
 			end,
-			charShapeId: flags ? id : null
+			charShapeId: flags & 1 ? id : null,
+			...flags & 2 ? { insertion: true } : {}
 		};
 	});
 }
