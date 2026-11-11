@@ -2684,6 +2684,53 @@ export async function createHwpxEditor(source) {
         if (!wasm.hwpx_edit_set_checkbox_state(section, formNode, ptr, size)) throw memory.error();
       });
     },
+    createNamedField(
+      section,
+      paragraph,
+      startUnit,
+      endUnit,
+      expectedText,
+      name,
+      direction = '',
+      memo = '',
+    ) {
+      ready();
+      [section, paragraph, startUnit, endUnit].forEach(uint);
+      if (typeof wasm.hwpx_edit_create_named_field !== 'function')
+        throw Error('NamedFieldCreateUnavailable');
+      if (typeof name !== 'string' || !/[^ \t\r\n]/.test(name) || !name.isWellFormed())
+        throw Error('InvalidNamedFieldName');
+      const expected = encodedText(expectedText);
+      const encodedName = encodedText(name);
+      const prompt = encodedText(direction);
+      const help = encodedText(memo);
+      if ([encodedName, prompt, help].some((bytes) => bytes.length > 4096))
+        throw Error('LimitExceeded');
+      return memory.withBytes(expected, (expectedPtr, expectedLen) =>
+        memory.withBytes(encodedName, (namePtr, nameLen) =>
+          memory.withBytes(prompt, (directionPtr, directionLen) =>
+            memory.withBytes(help, (memoPtr, memoLen) => {
+              const status = wasm.hwpx_edit_create_named_field(
+                section,
+                paragraph,
+                startUnit,
+                endUnit,
+                expectedPtr,
+                expectedLen,
+                namePtr,
+                nameLen,
+                directionPtr,
+                directionLen,
+                memoPtr,
+                memoLen,
+              );
+              if (status === 1) return true;
+              throw memory.error();
+            }),
+          ),
+        ),
+      );
+    },
     renameNamedField(section, paragraph, beginElement, expectedName, newName) {
       ready();
       [section, paragraph, beginElement].forEach(uint);

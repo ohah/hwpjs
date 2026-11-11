@@ -29,3 +29,11 @@
 undo/redo는 파생 원본 필드 캐시를 폐기할 수 있습니다. `fieldLabels` 등의 현재 조회가 성공해도 `Session.source_fields`가 다시 상주한다는 계약은 아닙니다. 내부 테스트에서 분석 보고서를 확인할 때도 `leaseForLabels`로 현재 분석을 얻어 수명 동안만 사용하고 `deinit`해야 합니다.
 
 기존 필드 범위 검사는 redo 뒤 캐시를 직접 unwrap해 중단됐습니다. 동일 합성 입력에서 공개 라벨·보호 편집 거부·저장 이력은 정상이며, 테스트만 현재 Lease와 ID 기반 마커 확인으로 수정했습니다. 기존 필드 범위 5개·Lease 할당 실패 1개·import 진입점 1개가 통과했습니다. 제품 필드 편집이나 WASM 변경의 근거가 아닙니다. 증거는 `source-grid-multipara-r1/task-next-layout-review/test-fix/`입니다.
+
+## 본문 누름틀 생성
+
+Core의 `CREATE_NAMED_FIELD_COMMAND`는 같은 관측에서 만든 HWPX 본문 `SelectionTarget`과 `selectionVersion`, 선택 문자열 `expectedText`, 새 이름 `name`을 받습니다. 단일 원본 텍스트 요소에 속한 선택의 글자와 run 속성을 유지한 채 필드로 감쌉니다. 캐럿은 원본 텍스트 요소가 하나로 결정될 때 빈 필드를 만듭니다. Native는 현재 UTF-16 경계와 선택 문자열, 본문 원본 소유권, 필드 바깥 범위, 완전한 이름 인벤토리와 중복 여부를 다시 검사합니다. History V2가 섹션 교체 한 건을 소유합니다.
+
+[KS X 6101 기계가독 원문](https://www.standard.go.kr/KSCI/api/std/viewMachine.do?reformNo=03&tmprKsNo=KSX6101&formType=STD)의 10.7.3.1, 10.7.3.2.1, 10.7.5 및 부속서 E에 따라 `fieldBegin/@id`와 `fieldEnd/@beginIDRef`를 연결합니다. 두 마커의 `fieldid`는 누름틀 종류 값이며, 현재 인스턴스의 연결 ID는 모든 현행 섹션 마커를 확인한 뒤 배정합니다. `Prop`, `Command`, `Direction`, `HelpState`를 쓰고 `cnt`에 실제 인자 수를 기록합니다. 선택적 `direction`과 `memo`는 원본 XML에 저장됩니다. 안내문 표시·인쇄와 한컴 앱 재저장 검증은 별도 범위입니다.
+
+여러 텍스트 요소를 가로지르는 선택, 원본 요소가 여럿인 경계 캐럿, 내부 컨트롤 또는 기존 필드와 겹치는 범위, 중첩 본문, 부분 이름 인벤토리, 구조 편집이 진행 중인 대상 섹션은 명시적으로 거부합니다. SDK의 `createNamedField`는 현재 Native 좌표(문단 1부터)와 예상 문자열을 직접 받습니다. Core는 여기에 편집기 수명과 관측 버전 검사를 추가합니다.

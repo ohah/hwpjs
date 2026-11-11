@@ -1,4 +1,6 @@
 import { requestNamedFields } from './editor/named-fields.ts';
+// @ts-ignore The shared constructor allocates a fresh Native instance.
+import { createNewDocumentBytes } from '../../../js/new-document.mjs';
 // @ts-ignore The R2 codec owns the bounded exact donor view and Native binding.
 import { copyDocumentInsertRuntimeMessage } from '../../../js/hwpx-document-insert.mjs';
 import type { RuntimeProjectionPreference } from './internal/runtime-admission.ts';
@@ -274,6 +276,7 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
       // Its transport fence conveys no native binding or geometry authority.
       (kind === 'set-named-field-value' ||
         kind === 'rename-named-field' ||
+        kind === 'create-named-field' ||
         (canonicalCode && transportWitness.current(worker))),
   );
   origins.set(runtime, {
@@ -311,5 +314,8 @@ export function createWorkerRuntimeFactory(
   };
   return Object.assign(() => createWorkerEditorRuntime({ ...captured, loadWasmModule }), {
     preload: loadWasmModule,
+    async createDocumentBytes(format: 'hwp5' | 'hwpx'): Promise<Uint8Array> {
+      return createNewDocumentBytes(await loadWasmModule(), format);
+    },
   });
 }

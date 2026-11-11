@@ -65,6 +65,19 @@ export interface SetNamedFieldValuePayload {
   readonly text: string;
 }
 
+export interface CreateNamedFieldPayload {
+  readonly target: SelectionTarget;
+  /** Selection version from the same current editor observation. */
+  readonly selectionVersion: number;
+  /** Exact selected UTF-16 text. Use an empty string for a caret. */
+  readonly expectedText: string;
+  readonly name: string;
+  /** Stored CLICK_HERE direction parameter. */
+  readonly direction?: string;
+  /** Stored CLICK_HERE help parameter. */
+  readonly memo?: string;
+}
+
 export interface RenameNamedFieldPayload {
   /** The current exact name and optional occurrence are the source precondition. */
   readonly selector: NamedFieldSelector;

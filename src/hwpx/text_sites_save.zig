@@ -25,6 +25,27 @@ pub fn writeWithFieldDirty(a: std.mem.Allocator, tree: *const tree_module.Tree, 
 /// Extra changes must be prepared against this same immutable tree. They
 /// borrow their text until return; the common writer rejects overlaps.
 pub fn writeWithChanges(a: std.mem.Allocator, tree: *const tree_module.Tree, current: *const sites_module.Sites, options: sites_module.Options, fields: []const FieldDirty, extra: []const writer.Change, max_output_bytes: usize) ![]u8 {
+    return writeBound(a, tree, current, options, fields, extra, null, max_output_bytes);
+}
+
+/// Replace the complete element for one known text site while folding other
+/// live text and dirty changes through their usual source binding.
+pub fn writeReplacingSite(a: std.mem.Allocator, tree: *const tree_module.Tree, current: *const sites_module.Sites, options: sites_module.Options, fields: []const FieldDirty, site_index: usize, replacement: []const u8, max_output_bytes: usize) ![]u8 {
+    if (site_index >= current.items.len) return error.InvalidTextSites;
+    const site = current.items[site_index];
+    if (site.element_index >= tree.elements.len or site.anchor_boundary or site.missing_text) return error.InvalidTextSites;
+    const element = tree.elements[site.element_index];
+    if (!element.is(@import("document_xml.zig").paragraph_uri, "t") or element.first_child != null)
+        return error.InvalidTextSites;
+    return writeBound(a, tree, current, options, fields, &.{.{
+        .start = element.start_tag.start,
+        .end = element.end,
+        .text = "",
+        .serialized_xml = replacement,
+    }}, site_index, max_output_bytes);
+}
+
+fn writeBound(a: std.mem.Allocator, tree: *const tree_module.Tree, current: *const sites_module.Sites, options: sites_module.Options, fields: []const FieldDirty, extra: []const writer.Change, replaced_site: ?usize, max_output_bytes: usize) ![]u8 {
     var original = try sites_module.collect(a, tree, options);
     defer original.deinit(a);
     if (original.items.len != current.items.len) return error.InvalidTextSites;
@@ -49,10 +70,11 @@ pub fn writeWithChanges(a: std.mem.Allocator, tree: *const tree_module.Tree, cur
         if (!std.mem.eql(u8, tag, tree.source[span.start..span.end])) try changes.append(a, .{ .start = span.start, .end = span.end, .text = "", .start_tag = tag });
     }
     var total: usize = 0;
-    for (original.items, current.items) |before, after| {
+    for (original.items, current.items, 0..) |before, after, index| {
         if (after.text.len > options.max_text_bytes -| total) return error.LimitExceeded;
         total += after.text.len;
-        if (try siteChange(tree, before, after)) |change| try changes.append(a, change);
+        const change = try siteChange(tree, before, after);
+        if (index != replaced_site) if (change) |value| try changes.append(a, value);
     }
     std.mem.sort(writer.Change, changes.items, {}, struct {
         fn less(_: void, left: writer.Change, right: writer.Change) bool {

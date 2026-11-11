@@ -20,6 +20,7 @@ export {
   SPLICE_TEXT_COMMAND,
   SET_NAMED_FIELD_VALUE_COMMAND,
   RENAME_NAMED_FIELD_COMMAND,
+  CREATE_NAMED_FIELD_COMMAND,
   INSERT_TABLE_COMMAND,
   EDIT_CREATED_TABLE_GRID_COMMAND,
   EDIT_SOURCE_TABLE_GRID_COMMAND,
@@ -185,6 +186,7 @@ export type {
   NamedFieldValue,
   SetNamedFieldValuePayload,
   RenameNamedFieldPayload,
+  CreateNamedFieldPayload,
 } from './editor/named-fields.ts';
 
 export { INSERT_DOCUMENT_COMMAND } from './commands/commands.ts';

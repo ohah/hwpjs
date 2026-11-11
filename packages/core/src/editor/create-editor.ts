@@ -11,6 +11,7 @@ import type {
   NamedFieldSelector,
   SetNamedFieldValuePayload,
   RenameNamedFieldPayload,
+  CreateNamedFieldPayload,
 } from './named-fields.ts';
 import {
   captureDocumentInsertPayload,
@@ -88,6 +89,7 @@ import {
   SPLICE_TEXT_COMMAND,
   SET_NAMED_FIELD_VALUE_COMMAND,
   RENAME_NAMED_FIELD_COMMAND,
+  CREATE_NAMED_FIELD_COMMAND,
   INSERT_TABLE_COMMAND,
   EDIT_CREATED_TABLE_GRID_COMMAND,
   EDIT_SOURCE_TABLE_GRID_COMMAND,
@@ -1282,6 +1284,58 @@ export function createEditor(options: CreateEditorOptions) {
           guard,
         );
       }
+      if (pending.command.id === CREATE_NAMED_FIELD_COMMAND.id) {
+        const payload = pending.payload as CreateNamedFieldPayload;
+        if (
+          !payload?.target ||
+          !Number.isSafeInteger(payload.selectionVersion) ||
+          payload.selectionVersion < 0 ||
+          typeof payload.expectedText !== 'string' ||
+          !isWellFormedText(payload.expectedText) ||
+          [payload.direction, payload.memo].some(
+            (value) =>
+              value !== undefined && (typeof value !== 'string' || !isWellFormedText(value)),
+          )
+        )
+          throw Error('InvalidNamedFieldCreateCommand');
+        if (
+          typeof payload.name !== 'string' ||
+          !/[^ \t\r\n]/.test(payload.name) ||
+          !isWellFormedText(payload.name)
+        )
+          throw Error('InvalidNamedFieldName');
+        const kind = 'create-named-field';
+        if (!hasRuntimeAdmission(active, kind) || payload.target.format !== 'hwpx')
+          throw Error('NamedFieldCreateUnavailable');
+        const { section, paragraph, startUnit, endUnit } = payload.target;
+        const guard = () => {
+          requireReady(payload.target, true);
+          if (state.stateVersion !== payload.selectionVersion)
+            throw Error('StaleNamedFieldSelection');
+          const row = validateSelection(payload.target, state);
+          if (payload.target.owner !== `section:${section}:body` || row.createdCell)
+            throw Error('UnsupportedNamedFieldCreateOwner');
+          if (row.text.slice(startUnit, endUnit) !== payload.expectedText)
+            throw Error('NamedFieldValueMismatch');
+        };
+        guard();
+        return await mutate(
+          {
+            kind,
+            section,
+            paragraph,
+            startUnit,
+            endUnit,
+            expectedText: payload.expectedText,
+            name: payload.name,
+            direction: payload.direction,
+            memo: payload.memo,
+          },
+          payload.target,
+          false,
+          guard,
+        );
+      }
       if (
         pending.command.id === SET_NAMED_FIELD_VALUE_COMMAND.id ||
         pending.command.id === RENAME_NAMED_FIELD_COMMAND.id
@@ -1678,6 +1732,7 @@ export function createEditor(options: CreateEditorOptions) {
         'splice',
         'set-named-field-value',
         'rename-named-field',
+        'create-named-field',
       ].includes(owned.kind)
     )
       throw Error('UseTypedEditorOperation');

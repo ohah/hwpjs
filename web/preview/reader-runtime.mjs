@@ -1129,6 +1129,30 @@ export function createReaderRuntime({
         });
         return;
       }
+      if (message.kind === 'create-named-field') {
+        if (format !== 'hwpx' || !editor || hwpxCreatedTablesPending)
+          throw Error('NamedFieldCreateUnavailable');
+        if (!historyEnabled) throw Error('HistoryNotEnabled');
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        const { section, paragraph, startUnit, endUnit, expectedText, name, direction, memo } =
+          message;
+        applied = editor.createNamedField(
+          section,
+          paragraph + 1,
+          startUnit,
+          endUnit,
+          expectedText,
+          name,
+          direction,
+          memo,
+        );
+        documentWindow = null;
+        reader = await createHwpxReader(module);
+        preview = reader.readTextEvents(editor.saveForDisplay());
+        displayResources.invalidate();
+        reply({ kind: message.kind, changed: true, content: hwpxDisplay() });
+        return;
+      }
       if (message.kind === 'set-named-field-value' || message.kind === 'rename-named-field') {
         const rename = message.kind === 'rename-named-field';
         if (format !== 'hwpx' || !editor || hwpxCreatedTablesPending)

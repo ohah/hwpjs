@@ -13,7 +13,7 @@ pub fn apply(session: *editor.Session, section: usize, paragraph: usize, element
     const old = &session.sections[section];
     try old.validateSourceBasis();
     const original = old.original_basis orelse return error.SourceBindingMismatch;
-    try requireFlatSection(session, section, old);
+    if (!supportsFlatSection(session, section, old)) return error.UnsupportedNamedFieldRenameSection;
 
     const a = session.allocator;
     const tag = try renameTag(a, &old.tree, element, name);
@@ -57,7 +57,7 @@ pub fn apply(session: *editor.Session, section: usize, paragraph: usize, element
     return true;
 }
 
-fn requireFlatSection(session: *const editor.Session, section: usize, old: *const editor.Section) !void {
+pub fn supportsFlatSection(session: *const editor.Session, section: usize, old: *const editor.Section) bool {
     // The rebase adapter transfers only current text and field dirty flags.
     // Pending node-based intents need their own checked rebinding.
     if (old.structure_values != null or
@@ -66,10 +66,11 @@ fn requireFlatSection(session: *const editor.Session, section: usize, old: *cons
         old.checkbox_states.items.len != 0 or old.dutmal_texts.entries.items.len != 0 or
         old.equation_scripts.entries.items.len != 0 or old.formula_definitions.entries.items.len != 0 or
         old.formula_result_overrides.entries.items.len != 0 or old.created_tables.entries.items.len != 0)
-        return error.UnsupportedNamedFieldRenameSection;
+        return false;
     for (session.cell_backgrounds.items) |entry| {
-        if (entry.section == section) return error.UnsupportedNamedFieldRenameSection;
+        if (entry.section == section) return false;
     }
+    return true;
 }
 
 fn renameTag(a: std.mem.Allocator, tree: *const Tree, index: usize, name: []const u8) ![]u8 {

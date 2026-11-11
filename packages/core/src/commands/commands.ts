@@ -1,4 +1,8 @@
-import type { RenameNamedFieldPayload, SetNamedFieldValuePayload } from '../editor/named-fields.ts';
+import type {
+  CreateNamedFieldPayload,
+  RenameNamedFieldPayload,
+  SetNamedFieldValuePayload,
+} from '../editor/named-fields.ts';
 import type { StateToken } from '../state/editor-state.ts';
 export interface EditorCommand<T> {
   readonly name: string;
@@ -27,6 +31,8 @@ export interface SpliceTextPayload {
 export interface HistoryPayload {
   readonly token: StateToken;
 }
+export const CREATE_NAMED_FIELD_COMMAND =
+  createCommand<CreateNamedFieldPayload>('create-named-field');
 export const RENAME_NAMED_FIELD_COMMAND =
   createCommand<RenameNamedFieldPayload>('rename-named-field');
 export const SET_NAMED_FIELD_VALUE_COMMAND =

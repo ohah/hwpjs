@@ -96,6 +96,8 @@ document.querySelector('main .api-playground h1').after(namedFieldsSlot);
 const namedFieldsPanel = mountNamedFieldsPanel(namedFieldsSlot, {
   editor,
   setNamedFieldValueCommand: core.SET_NAMED_FIELD_VALUE_COMMAND,
+  createNamedFieldCommand: core.CREATE_NAMED_FIELD_COMMAND,
+  getSelectionClipboard: core.getSelectionClipboard,
 });
 addEventListener('pagehide', () => {
   namedFieldsPanel.dispose();

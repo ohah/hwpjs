@@ -1,11 +1,13 @@
 import { strict as assert } from 'node:assert';
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import test from 'node:test';
 import { createNewDocumentBytes } from '../../../../js/new-document.mjs';
 import { createHwpxEditor } from '../../../../js/hwpx-editor.mjs';
 import {
   createEditor,
+  createParagraphSelection,
+  CREATE_NAMED_FIELD_COMMAND,
   SET_NAMED_FIELD_VALUE_COMMAND,
   RENAME_NAMED_FIELD_COMMAND,
   SPLICE_TEXT_COMMAND,
@@ -805,5 +807,356 @@ test('named field rename resolves duplicate occurrence across sections with glob
     assert.deepEqual((await editor.save()).bytes, input);
   } finally {
     await editor.dispose();
+  }
+});
+
+const createInput = zipWith(
+  paragraph(21, text('앞😀&amp;뒤 tail')) +
+    paragraph(22, text('next')) +
+    paragraph(
+      23,
+      text('A') + field(41, 'locked-create', 'LOCK', 'CLICK_HERE', ' editable="0"') + text('B'),
+    ) +
+    paragraph(24, text('')),
+);
+const createdName = '신규😀&<"';
+function fieldCreation(
+  editor: HeadlessEditor,
+  paragraph: number,
+  startUnit: number,
+  endUnit: number,
+  expectedText: string,
+  name: string,
+) {
+  const state = editor.getEditorState();
+  return {
+    target: createParagraphSelection(state, { section: 0, paragraph, startUnit, endUnit }),
+    selectionVersion: state.stateVersion,
+    expectedText,
+    name,
+  };
+}
+function verifyCreateXml(before: Uint8Array, first: Uint8Array, second: Uint8Array) {
+  const oracle = `
+import base64, io, json, sys, zipfile
+from xml.etree import ElementTree as ET
+request = json.load(sys.stdin)
+section = 'Contents/section0.xml'
+ns = '{http://www.hancom.co.kr/hwpml/2011/paragraph}'
+def read(field):
+    with zipfile.ZipFile(io.BytesIO(base64.b64decode(request[field]))) as z:
+        return {n: z.read(n) for n in z.namelist()}
+def tag(name):
+    return ns + name
+def row(parts, ident):
+    return next(p for p in ET.fromstring(parts[section]).findall(tag('p')) if p.get('id') == ident)
+def value(node):
+    return node.text or ''
+def markers(run):
+    return [child[0] if child.tag == tag('ctrl') else child for child in run]
+original, first, second = (read(key) for key in ('before','first','second'))
+for changed in (first, second):
+    assert original.keys() == changed.keys()
+    assert all(changed[k] == original[k] for k in original if k != section)
+    assert ET.tostring(row(changed, '23')) == ET.tostring(row(original, '23'))
+    old_run = row(original, '21').find(tag('run'))
+    run = row(changed, '21').find(tag('run'))
+    assert run.attrib == old_run.attrib
+    assert ''.join(value(t) for t in run.findall(tag('t'))) == value(old_run[0])
+    nodes = markers(run)
+    assert value(nodes[0]) == '앞'
+    assert nodes[1].tag == tag('fieldBegin') and nodes[1].get('name') == request['name']
+    assert nodes[1].get('type') == 'CLICK_HERE'
+    assert nodes[1].get('editable') == '1' and nodes[1].get('dirty') == '1'
+    assert nodes[1].get('zorder') == '-1'
+    assert value(nodes[2]) == '😀&'
+    assert nodes[3].tag == tag('fieldEnd') and nodes[3].get('beginIDRef') == nodes[1].get('id')
+    assert int(nodes[1].get('id')) == 42
+    assert int(nodes[1].get('fieldid')) == int.from_bytes(b'%clk', 'big')
+    assert nodes[3].get('fieldid') == nodes[1].get('fieldid')
+    def units(text):
+        return len(text.encode('utf-16-le')) // 2
+    for begin in run.iter(tag('fieldBegin')):
+        params, = list(begin)
+        assert params.tag == tag('parameters') and params.get('name') == ''
+        assert int(params.get('cnt')) == len(params) == 4
+        assert [p.get('name') for p in params] == ['Prop','Command','Direction','HelpState']
+        assert params[0].tag == tag('integerParam') and value(params[0]) == '9'
+        assert all(p.tag == tag('stringParam') for p in params[1:])
+        direction, memo = ('안내 😀&<', '도움말 <&' + chr(13)) if begin is nodes[1] else ('','')
+        assert (value(params[2]), value(params[3])) == (direction, memo)
+        payload = f'Direction:wstring:{units(direction)}:{direction} HelpState:wstring:{units(memo)}:{memo} '
+        assert value(params[1]) == f'Clickhere:set:{units(payload)}:{payload} '
+        assert params[1].get('{http://www.w3.org/XML/1998/namespace}space') == 'preserve'
+nodes = markers(row(second, '21').find(tag('run')))
+assert [n.tag for n in nodes] == list(map(tag, ['t','fieldBegin','t','fieldEnd','t','fieldBegin','t','fieldEnd','t']))
+assert value(nodes[4]) == '뒤 ' and value(nodes[6]) == '' and value(nodes[8]) == 'tail'
+assert nodes[5].get('name') == 'empty-create' and nodes[5].get('dirty') == '0'
+assert nodes[5].get('id') == nodes[7].get('beginIDRef') == '43'
+assert nodes[5].get('fieldid') == nodes[7].get('fieldid') == nodes[1].get('fieldid')
+`;
+  execFileSync('python3', ['-I', '-c', oracle], {
+    input: JSON.stringify({
+      before: Buffer.from(before).toString('base64'),
+      first: Buffer.from(first).toString('base64'),
+      second: Buffer.from(second).toString('base64'),
+      name: createdName,
+    }),
+  });
+}
+
+for (const [label, factory] of [
+  ['ReaderRuntime', reader],
+  ['Worker', worker],
+] as const) {
+  test(`named field create ${label} wraps exact styled text and repeats at a caret under HistoryV2`, async () => {
+    const editor = createEditor({ runtimeFactory: factory() });
+    try {
+      await editor.load(createInput, { format: 'hwpx', editable: true });
+      const before = editor.getEditorState();
+      const first = {
+        ...fieldCreation(editor, 1, 1, 4, '😀&', createdName),
+        direction: '안내 😀&<',
+        memo: '도움말 <&\r',
+      };
+      const result = await editor.dispatchCommand(CREATE_NAMED_FIELD_COMMAND, first);
+      assert.equal(result.status, 'committed-with-snapshot', result.error);
+      assert.equal(
+        editor.getEditorState().nativeHistoryRevision,
+        before.nativeHistoryRevision! + 1,
+      );
+      const firstBytes = (await editor.save()).bytes;
+      const stale = await editor.dispatchCommand(CREATE_NAMED_FIELD_COMMAND, {
+        ...first,
+        name: 'stale',
+      });
+      assert.equal(stale.status, 'rejected-unapplied');
+      assert.match(stale.error!, /Stale/);
+      const second = await editor.dispatchCommand(
+        CREATE_NAMED_FIELD_COMMAND,
+        fieldCreation(editor, 1, 6, 6, '', 'empty-create'),
+      );
+      assert.equal(second.status, 'committed-with-snapshot', second.error);
+      assert.equal(
+        editor.getEditorState().nativeHistoryRevision,
+        before.nativeHistoryRevision! + 2,
+      );
+      assert.equal((await editor.moveToNamedField({ name: 'empty-create' })).status, 'moved');
+      const rows = (await editor.listNamedFields()).rows;
+      assert.deepEqual(
+        rows.map((r) => [r.name, r.canSetValue, r.value]),
+        [
+          [createdName, true, { status: 'available', text: '😀&' }],
+          ['empty-create', true, { status: 'available', text: '' }],
+          ['locked-create', false, { status: 'available', text: 'LOCK' }],
+        ],
+      );
+      const secondBytes = (await editor.save()).bytes;
+      verifyCreateXml(createInput, firstBytes, secondBytes);
+      const artifacts = { input: createInput, first: firstBytes, second: secondBytes };
+      const history: Record<string, Uint8Array> = {};
+      assert.equal((await editor.undo()).status, 'committed-with-snapshot');
+      history['undo-first'] = (await editor.save()).bytes;
+      assert.deepEqual(history['undo-first'], firstBytes);
+      assert.equal((await editor.undo()).status, 'committed-with-snapshot');
+      history['undo-input'] = (await editor.save()).bytes;
+      assert.deepEqual(history['undo-input'], createInput);
+      assert.equal((await editor.redo()).status, 'committed-with-snapshot');
+      history['redo-first'] = (await editor.save()).bytes;
+      assert.deepEqual(history['redo-first'], firstBytes);
+      assert.equal((await editor.redo()).status, 'committed-with-snapshot');
+      history['redo-second'] = (await editor.save()).bytes;
+      assert.deepEqual(history['redo-second'], secondBytes);
+      if (label === 'Worker' && process.env.HWPJS_CREATE_EVIDENCE) {
+        for (const [name, bytes] of Object.entries({ ...artifacts, ...history }))
+          writeFileSync(`${process.env.HWPJS_CREATE_EVIDENCE}/${name}.hwpx`, bytes);
+      }
+      await editor.load(secondBytes, { format: 'hwpx', editable: true });
+      const filled = await setValue(editor, { name: 'empty-create' }, '', 'filled');
+      assert.equal(filled.status, 'committed-with-snapshot', filled.error);
+      const found = await editor.readNamedField({ name: 'empty-create' });
+      assert.equal(found.status, 'found');
+      if (found.status === 'found')
+        assert.deepEqual(found.field.value, { status: 'available', text: 'filled' });
+      assert.equal((await editor.undo()).status, 'committed-with-snapshot');
+      assert.deepEqual((await editor.save()).bytes, secondBytes);
+    } finally {
+      await editor.dispose();
+    }
+  });
+}
+
+test('named field create rejects duplicate, stale expected, protected, malformed and partial before writes', async () => {
+  const sdk = await createHwpxEditor(wasmModule);
+  try {
+    sdk.open(createInput);
+    assert.throws(() => sdk.createNamedField(0, 2, 1, 4, '😀&', 'fresh'), /HistoryNotEnabled/);
+    sdk.enableHistory();
+    assert.throws(
+      () => sdk.createNamedField(0, 2, 1, 4, '😀&', 'fresh'),
+      /HistoryProtocol2Required/,
+    );
+    sdk.open(createInput);
+    sdk.enableHistoryDefault();
+    assert.throws(
+      () => sdk.createNamedField(0, 2, 1, 4, '😀&', 'locked-create'),
+      /DuplicateNamedFieldName/,
+    );
+    assert.throws(
+      () => sdk.createNamedField(0, 2, 1, 4, 'bad', 'fresh'),
+      /NamedFieldValueMismatch/,
+    );
+    assert.throws(() => sdk.createNamedField(0, 2, 2, 4, 'bad', 'fresh'), /SplitSurrogatePair/);
+    assert.throws(() => sdk.createNamedField(0, 4, 1, 5, 'LOCK', 'fresh'), /ProtectedFieldRange/);
+    assert.throws(() => sdk.createNamedField(0, 4, 1, 1, '', 'fresh'), /ProtectedFieldRange/);
+    assert.throws(() => sdk.createNamedField(0, 2, 1, 4, '😀&', '\u0000'), /InvalidXml/);
+    assert.deepEqual(sdk.save(), createInput);
+    const partial = zipWith(paragraph(21, text('body')), 'master');
+    sdk.open(partial);
+    sdk.enableHistoryDefault();
+    assert.throws(
+      () => sdk.createNamedField(0, 2, 0, 4, 'body', 'fresh'),
+      /IncompleteNamedFieldInventory/,
+    );
+    assert.deepEqual(sdk.save(), partial);
+  } finally {
+    sdk.close();
+  }
+});
+
+test('named field create on constructor caret preserves section and column metadata', async () => {
+  const editor = createEditor({ runtimeFactory: worker() });
+  try {
+    await editor.createDocument({ format: 'hwpx' });
+    const result = await editor.dispatchCommand(
+      CREATE_NAMED_FIELD_COMMAND,
+      fieldCreation(editor, 0, 0, 0, '', 'blank-caret'),
+    );
+    assert.equal(result.status, 'committed-with-snapshot', result.error);
+    const found = await editor.readNamedField({ name: 'blank-caret' });
+    assert.equal(found.status, 'found');
+    if (found.status === 'found') {
+      assert.equal(found.field.canSetValue, true);
+      assert.deepEqual(found.field.value, { status: 'available', text: '' });
+    }
+    const saved = (await editor.save()).bytes;
+    assert.equal((await editor.undo()).status, 'committed-with-snapshot');
+    assert.deepEqual((await editor.save()).bytes, blank);
+    assert.equal((await editor.redo()).status, 'committed-with-snapshot');
+    assert.deepEqual((await editor.save()).bytes, saved);
+    if (process.env.HWPJS_CREATE_EVIDENCE) {
+      writeFileSync(`${process.env.HWPJS_CREATE_EVIDENCE}/blank.hwpx`, blank);
+      writeFileSync(`${process.env.HWPJS_CREATE_EVIDENCE}/blank-created.hwpx`, saved);
+    }
+  } finally {
+    await editor.dispose();
+  }
+});
+
+test('named field create folds current dirty values and repeats without save or reopen', async () => {
+  const sdk = await createHwpxEditor(wasmModule);
+  try {
+    sdk.open(createInput);
+    sdk.enableHistoryDefault();
+    sdk.splice(0, 2, 8, 0, '!');
+    assert(sdk.createNamedField(0, 2, 5, 5, '', 'one'));
+    const one = sdk.namedFields().rows.find((r) => r.name === 'one')!;
+    sdk.spliceFieldLabel(0, 2, one.location!.beginElement, 5, 0, 'X');
+    assert(sdk.createNamedField(0, 2, 8, 8, '', 'two'));
+    assert.deepEqual(
+      sdk
+        .namedFields()
+        .rows.slice(0, 2)
+        .map((r) => r.value),
+      [
+        { status: 'available', text: 'X' },
+        { status: 'available', text: '' },
+      ],
+    );
+    const bytes = sdk.save();
+    execFileSync(
+      'python3',
+      [
+        '-I',
+        '-c',
+        `
+import io, sys, zipfile
+from xml.etree import ElementTree as ET
+with zipfile.ZipFile(io.BytesIO(sys.stdin.buffer.read())) as z:
+    section = ET.fromstring(z.read('Contents/section0.xml'))
+ns = '{http://www.hancom.co.kr/hwpml/2011/paragraph}'
+p = next(p for p in section.findall(ns+'p') if p.get('id') == '21')
+first, second = p.iter(ns+'fieldBegin')
+assert first.get('dirty') == '1' and second.get('dirty') == '0'
+assert ''.join(t.text or '' for t in p.iter(ns+'t')) == '앞😀&뒤X ta!il'
+`,
+      ],
+      { input: bytes },
+    );
+  } finally {
+    sdk.close();
+  }
+});
+
+test('named field create refuses ambiguous site and preserves redo after rejection', async () => {
+  const sdk = await createHwpxEditor(wasmModule);
+  const input = zipWith(
+    paragraph(21, text('ab') + text('cd')) +
+      paragraph(22, '<hp:t>q<hp:tab width="4000" leader="0" type="1"/>r</hp:t>') +
+      paragraph(23, '<hp:t>z</hp:t>'),
+  );
+  try {
+    sdk.open(input);
+    sdk.enableHistoryDefault();
+    assert(sdk.createNamedField(0, 4, 0, 1, 'z', 'first'));
+    const changed = sdk.save();
+    sdk.undo();
+    assert.throws(
+      () => sdk.createNamedField(0, 2, 2, 2, '', 'ambiguous'),
+      /UnsupportedNamedFieldCreateSite/,
+    );
+    assert.throws(
+      () => sdk.createNamedField(0, 2, 1, 3, 'bc', 'cross-site'),
+      /UnsupportedNamedFieldCreateSite/,
+    );
+    assert.throws(
+      () => sdk.createNamedField(0, 3, 0, 3, 'q\tr', 'inline'),
+      /ProtectedInlineControl/,
+    );
+    assert.deepEqual(sdk.save(), input);
+    sdk.redo();
+    assert.deepEqual(sdk.save(), changed);
+  } finally {
+    sdk.close();
+  }
+});
+
+test('named field create rejects a nested source owner and exhausted begin ID without writes', async () => {
+  const sdk = await createHwpxEditor(wasmModule);
+  try {
+    const nested = zipWith(
+      paragraph(
+        21,
+        '<hp:tbl id="2"><hp:tr><hp:tc><hp:subList>' +
+          paragraph(22, text('nested')) +
+          '</hp:subList></hp:tc></hp:tr></hp:tbl>',
+      ),
+    );
+    sdk.open(nested);
+    sdk.enableHistoryDefault();
+    assert.throws(
+      () => sdk.createNamedField(0, 3, 0, 6, 'nested', 'bad-owner'),
+      /UnsupportedNamedFieldCreateOwner/,
+    );
+    assert.deepEqual(sdk.save(), nested);
+    const exhausted = zipWith(
+      paragraph(21, text('body')) + paragraph(22, field(0xffffffff, 'max-id', 'old')),
+    );
+    sdk.open(exhausted);
+    sdk.enableHistoryDefault();
+    assert.throws(() => sdk.createNamedField(0, 2, 0, 4, 'body', 'new'), /NamedFieldIdExhausted/);
+    assert.deepEqual(sdk.save(), exhausted);
+  } finally {
+    sdk.close();
   }
 });

@@ -114,6 +114,13 @@ jobs:
             ./packages/cli/tests/delete-table-service.test.mjs
           for path in "$@"; do test -f "$path" || exit 1; done
           node --max-old-space-size=512 --test --test-concurrency=1 "$@"
+      - name: Test named field creation, value changes and renaming
+        timeout-minutes: 2
+        env:
+          HWPJS_TEST_WASM: ${{ github.workspace }}/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm
+        run: |
+          bun build packages/core/src/worker.ts --target browser --format esm --outfile packages/core/src/worker.js
+          bun test --no-install ./packages/core/tests/editor/named-fields-runtime.test.ts ./packages/core/tests/editor/identity.test.ts ./packages/core/tests/editor/selection-version.test.ts
       - name: Test new document and table appearance contracts
         timeout-minutes: 2
         run: |

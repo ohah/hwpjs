@@ -47,7 +47,7 @@ pub fn encode(session: *const Session) ![]u8 {
     var arena = std.heap.ArenaAllocator.init(a);
     defer arena.deinit();
     const scratch = arena.allocator();
-    const inventory = try collect(session, scratch, lease.source.report.markers);
+    const inventory = try collect(session, scratch, lease.source.report.markers, true);
     return std.json.Stringify.valueAlloc(a, .{
         .format = "hwpx",
         .coverage = if (inventory.complete) "complete" else "partial",
@@ -56,8 +56,11 @@ pub fn encode(session: *const Session) ![]u8 {
     }, .{});
 }
 
-fn collect(session: *const Session, scratch: std.mem.Allocator, markers: []const Marker) !Inventory {
-    var inventory: Inventory = .{ .complete = !session.source_has_master_pages };
+fn collect(session: *const Session, scratch: std.mem.Allocator, markers: []const Marker, project: bool) !Inventory {
+    var inventory: Inventory = .{
+        .complete = !session.source_has_master_pages,
+        .projection_work = if (project) max_projection_work else 0,
+    };
     var first: usize = 0;
     for (0..session.sections.len) |section| {
         const start = first;
@@ -77,7 +80,7 @@ pub fn authorizeRename(session: *const Session, section: usize, paragraph: usize
     defer lease.deinit(a);
     var arena = std.heap.ArenaAllocator.init(a);
     defer arena.deinit();
-    const inventory = try collect(session, arena.allocator(), lease.source.report.markers);
+    const inventory = try collect(session, arena.allocator(), lease.source.report.markers, true);
     if (!inventory.complete) return error.IncompleteNamedFieldInventory;
 
     var target: ?Row = null;
@@ -101,6 +104,28 @@ pub fn authorizeRename(session: *const Session, section: usize, paragraph: usize
     if (std.mem.eql(u8, expected, name)) return false;
     if (duplicate) return error.DuplicateNamedFieldName;
     return true;
+}
+
+/// Check the same name coverage as the public inventory and reserve a source
+/// link ID against every marker, including inactive XML alternatives.
+pub fn creationId(session: *const Session, name: []const u8) !u32 {
+    const a = session.allocator;
+    var lease = try @import("source_field_analysis.zig").leaseForExterior(session);
+    defer lease.deinit(a);
+    const report = &lease.source.report;
+    var arena = std.heap.ArenaAllocator.init(a);
+    defer arena.deinit();
+    const inventory = try collect(session, arena.allocator(), report.markers, false);
+    if (!inventory.complete) return error.IncompleteNamedFieldInventory;
+    for (inventory.rows.items) |row| {
+        if (std.mem.eql(u8, row.name orelse continue, name)) return error.DuplicateNamedFieldName;
+    }
+    var id: u32 = 0;
+    for (report.markers) |marker| {
+        if (marker.begin) |begin| id = @max(id, begin.id orelse 0);
+        if (marker.end) |end| id = @max(id, end.begin_id_ref orelse 0);
+    }
+    return std.math.add(u32, id, 1) catch error.NamedFieldIdExhausted;
 }
 
 fn collectSection(

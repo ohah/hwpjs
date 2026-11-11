@@ -1,3 +1,5 @@
+import { createNamedFieldInsertionPort } from './named-field-insertion-port.mjs';
+
 const panelStyle = `
 .api-named-fields {
   margin-block: 1rem 1.5rem;
@@ -91,7 +93,10 @@ function sameView(token, state) {
 }
 
 /** Mount beside the existing playground controls, with the same ready Core editor. */
-export function mountNamedFieldsPanel(host, { editor, setNamedFieldValueCommand }) {
+export function mountNamedFieldsPanel(
+  host,
+  { editor, setNamedFieldValueCommand, createNamedFieldCommand, getSelectionClipboard },
+) {
   const doc = host.ownerDocument;
   const panel = doc.createElement('section');
   panel.className = 'api-named-fields';
@@ -125,6 +130,20 @@ export function mountNamedFieldsPanel(host, { editor, setNamedFieldValueCommand 
       <label>새 필드 값 <input data-value type="text" autocomplete="off"></label>
       <button type="button" data-action="write">필드 값 적용</button>
     </div>
+    <fieldset data-create-fields>
+      <legend>누름틀 만들기</legend>
+      <p>본문에서 텍스트나 빈 위치를 선택한 뒤 현재 선택을 가져오세요.</p>
+      <button type="button" data-action="capture-create">현재 선택 가져오기</button>
+      <p data-create-selection>문서 본문에서 넣을 위치나 텍스트를 선택하세요.</p>
+      <label>선택한 내용 <textarea data-create-text readonly rows="2"></textarea></label>
+      <div class="api-named-fields-controls">
+        <label>새 누름틀 이름 <input data-create-name type="text" autocomplete="off"></label>
+        <label>안내문 <input data-create-direction type="text" autocomplete="off"></label>
+        <label>도움말 <input data-create-memo type="text" autocomplete="off"></label>
+        <button type="button" data-action="create">누름틀 만들기</button>
+      </div>
+      <p>선택한 내용과 서식을 유지합니다. 안내문과 도움말은 누름틀 정보에 저장합니다.</p>
+    </fieldset>
     <p role="status" data-result>이름을 입력하고 값을 읽으세요.</p>
   `;
   const find = (selector) => panel.querySelector(selector);
@@ -139,6 +158,19 @@ export function mountNamedFieldsPanel(host, { editor, setNamedFieldValueCommand 
   const value = find('[data-value]');
   const write = find('[data-action=write]');
   const result = find('[data-result]');
+  const captureCreate = find('[data-action=capture-create]');
+  const create = find('[data-action=create]');
+  const createName = find('[data-create-name]');
+  const createDirection = find('[data-create-direction]');
+  const createMemo = find('[data-create-memo]');
+  const createSelection = find('[data-create-selection]');
+  const createText = find('[data-create-text]');
+  const insertion = createNamedFieldInsertionPort({
+    editor,
+    command: createNamedFieldCommand,
+    getSelectionClipboard,
+  });
+  let capturedCreation = null;
   const inventoryStatus = find('[data-inventory-status]');
   const table = find('.api-named-fields-table');
   const body = find('tbody');
@@ -169,6 +201,12 @@ export function mountNamedFieldsPanel(host, { editor, setNamedFieldValueCommand 
       value.disabled =
       write.disabled =
         !canRead || !observed || !observed.canSetValue || !writable(state);
+    const creation = insertion.capture();
+    captureCreate.disabled = busy || Boolean(creation.reason);
+    createName.disabled = createDirection.disabled = createMemo.disabled = busy;
+    create.disabled = busy || !insertion.current(capturedCreation) || !createName.value.trim();
+    if (!capturedCreation)
+      createSelection.textContent = creation.reason ?? '현재 선택을 가져오세요.';
     previous.disabled = busy || page === 0;
     next.disabled = busy || (page + 1) * pageSize >= (inventory?.rows.length ?? 0);
   }
@@ -213,6 +251,11 @@ export function mountNamedFieldsPanel(host, { editor, setNamedFieldValueCommand 
 
   function onState(state) {
     if (disposed) return;
+    if (capturedCreation && !insertion.current(capturedCreation)) {
+      capturedCreation = null;
+      createText.value = '';
+      if (!busy) result.textContent = '선택이 바뀌었습니다. 현재 선택을 다시 가져오세요.';
+    }
     if (inventory && (state.status !== 'ready' || !sameView(inventory.token, state))) {
       inventory = null;
       page = 0;
@@ -364,6 +407,62 @@ export function mountNamedFieldsPanel(host, { editor, setNamedFieldValueCommand 
       }),
   );
 
+  // Keep the live Canvas selection while capturing it with the pointer.
+  captureCreate.addEventListener('pointerdown', (event) => event.preventDefault());
+  captureCreate.addEventListener('click', () => {
+    capturedCreation = insertion.capture();
+    if (capturedCreation.reason) {
+      result.textContent = capturedCreation.reason;
+      capturedCreation = null;
+      updateControls();
+      return;
+    }
+    const { target, expectedText } = capturedCreation;
+    createText.value = expectedText;
+    createSelection.textContent =
+      `본문 문단 ${target.paragraph + 1} · ${target.startUnit}–${target.endUnit}` +
+      (target.startUnit === target.endUnit ? ' · 빈 위치' : '');
+    result.textContent = '현재 선택을 가져왔습니다. 이름을 입력하고 누름틀을 만드세요.';
+    updateControls();
+  });
+  createName.addEventListener('input', updateControls);
+  create.addEventListener(
+    'click',
+    () =>
+      void run(async () => {
+        const captured = capturedCreation;
+        const outcome = await insertion.insert(captured, {
+          name: createName.value,
+          direction: createDirection.value,
+          memo: createMemo.value,
+        });
+        if (disposed) return '';
+        if (outcome.status === 'committed-with-snapshot') {
+          capturedCreation = null;
+          createText.value = '';
+          name.value = createName.value;
+          occurrence.value = '';
+          return '누름틀을 만들었습니다. 필드 목록에서 확인하거나 값을 읽으세요.';
+        }
+        if (outcome.status.startsWith('committed')) {
+          capturedCreation = null;
+          createText.value = '';
+          return '누름틀이 반영되었을 수 있습니다. 문서 상태를 확인한 뒤 다시 조회하세요.';
+        }
+        const errors = {
+          DuplicateNamedFieldName: '같은 이름의 필드가 있습니다. 다른 이름을 입력하세요.',
+          IncompleteNamedFieldInventory:
+            '이 문서의 전체 필드 이름을 확인할 수 없어 생성할 수 없습니다.',
+          ProtectedFieldRange: '기존 필드와 겹치는 위치에는 누름틀을 만들 수 없습니다.',
+          UnsupportedNamedFieldCreateSite: '하나의 텍스트 요소 안에서 범위를 선택하세요.',
+          UnsupportedNamedFieldCreateSection:
+            '현재 구역의 편집 상태에서는 누름틀을 만들 수 없습니다.',
+          InvalidNamedFieldName: '누름틀 이름을 입력하세요.',
+        };
+        return errors[outcome.error] ?? outcome.error ?? outcome.status;
+      }),
+  );
+
   host.append(panel);
   const unsubscribe = editor.registerStateListener(onState);
   updateControls();
@@ -371,6 +470,7 @@ export function mountNamedFieldsPanel(host, { editor, setNamedFieldValueCommand 
     dispose() {
       if (disposed) return;
       disposed = true;
+      insertion.dispose();
       unsubscribe();
       panel.remove();
     },
