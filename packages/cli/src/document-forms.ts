@@ -1,3 +1,4 @@
+import { createObservationReadScope } from '../../document/src/model/read-observation-scope.ts';
 import { createDisplayEscaper } from './render-escape.ts';
 import { buildObjectReference, parseObjectReference } from './object-reference.ts';
 export interface FormDocument {
@@ -151,6 +152,7 @@ export function readFormInventory(document: FormDocument): FormInventory {
       throw new Error('FormProvenanceLimitExceeded');
     return encoded;
   };
+  const observeHwpx = d.format === 'hwpx' ? createObservationReadScope(d.sdk) : undefined;
   for (let section = 0; section < d.sectionCount; section++) {
     let hosts: Map<number, any> | undefined;
     const ownerHost = (paragraph: number) => {
@@ -229,91 +231,96 @@ export function readFormInventory(document: FormDocument): FormInventory {
         });
       }
     } else {
-      const sites = sdkMethod(d, 'formSites')(section);
-      for (const site of sites) {
-        const attrs = sdkMethod(d, 'formSourceAttributes')(section, site.formNode);
-        if (attrs.kind !== site.kind) throw new Error('MismatchedFormProvenance');
-        const host = ownerHost(site.paragraph);
-        const reference = buildObjectReference({
-          sourceSha256: d.sourceSha256,
-          format: d.format,
-          section,
-          kind: 'form',
-          node: site.formNode,
-        });
-        let state = hxString(attrs, 'value');
-        if (site.kind === 'check_button') {
-          try {
-            const actual = sdkMethod(d, 'checkBoxState')(section, site.formNode);
-            state = ['UNCHECKED', 'CHECKED', 'INDETERMINATE'].includes(actual)
-              ? known(actual)
-              : {
-                  state: 'unknown',
-                  value: null,
-                  reason: 'UnknownFormChoiceState',
-                  scope: 'current',
-                  raw: String(actual),
-                };
-          } catch (error) {
-            state = unknown(
-              error instanceof Error ? error.message : 'FormStateObservationFailed',
-              'current',
-              attrs.strings.value ?? undefined,
-            );
-          }
-        }
-        let currentText = unknown('HwpxFormTextCurrentQueryAbiUnavailable');
-        if (site.kind === 'radio_button') {
-          try {
-            state = known(sdkMethod(d, 'radioButtonState')(section, site.formNode));
-          } catch (error) {
-            state = unknown(
-              error instanceof Error ? error.message : 'FormStateObservationFailed',
-              'current',
-              attrs.strings.value ?? undefined,
-            );
-          }
-        }
-        if (['edit_box', 'combo_box'].includes(site.kind)) {
-          try {
-            currentText = known(sdkMethod(d, 'formText')(section, site.formNode));
-          } catch (error) {
-            currentText = unknown(
-              error instanceof Error ? error.message : 'FormTextObservationFailed',
-            );
-          }
-        }
-        forms.push({
-          reference,
-          kind: site.kind,
-          source: {
+      const observeSection = () => {
+        const sites = sdkMethod(d, 'formSites')(section);
+        for (const site of sites) {
+          const attrs = sdkMethod(d, 'formSourceAttributes')(section, site.formNode);
+          if (attrs.kind !== site.kind) throw new Error('MismatchedFormProvenance');
+          const host = ownerHost(site.paragraph);
+          const reference = buildObjectReference({
+            sourceSha256: d.sourceSha256,
+            format: d.format,
             section,
+            kind: 'form',
             node: site.formNode,
-            paragraph: site.paragraph,
-            anchorUnit: site.anchorUnit,
-          },
-          current: {
-            state,
-            text: currentText,
-            groupName: hxString(attrs, 'radioGroupName'),
-            name: hxString(attrs, 'name'),
-          },
-          permissions: {
-            enabled: hxBool(attrs, 'enabled'),
-            editable: hxBool(attrs, 'editable'),
-            triState: hxBool(attrs, 'triState'),
-            readOnly: hxBool(attrs, 'readOnly'),
-            editEnable: hxBool(attrs, 'editEnable'),
-          },
-          writers: {
-            checkbox: writers.checkbox && site.kind === 'check_button',
-            radio: writers.radio && site.kind === 'radio_button',
-            text: writers.text && ['edit_box', 'combo_box'].includes(site.kind),
-          },
-          ownership: site.state === 'located' && !!host ? 'located' : 'unavailable',
-          fingerprint: fingerprint({ site, attrs, host }),
-        });
-      }
+          });
+          let state = hxString(attrs, 'value');
+          if (site.kind === 'check_button') {
+            try {
+              const actual = sdkMethod(d, 'checkBoxState')(section, site.formNode);
+              state = ['UNCHECKED', 'CHECKED', 'INDETERMINATE'].includes(actual)
+                ? known(actual)
+                : {
+                    state: 'unknown',
+                    value: null,
+                    reason: 'UnknownFormChoiceState',
+                    scope: 'current',
+                    raw: String(actual),
+                  };
+            } catch (error) {
+              state = unknown(
+                error instanceof Error ? error.message : 'FormStateObservationFailed',
+                'current',
+                attrs.strings.value ?? undefined,
+              );
+            }
+          }
+          let currentText = unknown('HwpxFormTextCurrentQueryAbiUnavailable');
+          if (site.kind === 'radio_button') {
+            try {
+              state = known(sdkMethod(d, 'radioButtonState')(section, site.formNode));
+            } catch (error) {
+              state = unknown(
+                error instanceof Error ? error.message : 'FormStateObservationFailed',
+                'current',
+                attrs.strings.value ?? undefined,
+              );
+            }
+          }
+          if (['edit_box', 'combo_box'].includes(site.kind)) {
+            try {
+              currentText = known(sdkMethod(d, 'formText')(section, site.formNode));
+            } catch (error) {
+              currentText = unknown(
+                error instanceof Error ? error.message : 'FormTextObservationFailed',
+              );
+            }
+          }
+          forms.push({
+            reference,
+            kind: site.kind,
+            source: {
+              section,
+              node: site.formNode,
+              paragraph: site.paragraph,
+              anchorUnit: site.anchorUnit,
+            },
+            current: {
+              state,
+              text: currentText,
+              groupName: hxString(attrs, 'radioGroupName'),
+              name: hxString(attrs, 'name'),
+            },
+            permissions: {
+              enabled: hxBool(attrs, 'enabled'),
+              editable: hxBool(attrs, 'editable'),
+              triState: hxBool(attrs, 'triState'),
+              readOnly: hxBool(attrs, 'readOnly'),
+              editEnable: hxBool(attrs, 'editEnable'),
+            },
+            writers: {
+              checkbox: writers.checkbox && site.kind === 'check_button',
+              radio: writers.radio && site.kind === 'radio_button',
+              text: writers.text && ['edit_box', 'combo_box'].includes(site.kind),
+            },
+            ownership: site.state === 'located' && !!host ? 'located' : 'unavailable',
+            fingerprint: fingerprint({ site, attrs, host }),
+          });
+        }
+        return forms;
+      };
+      if (observeHwpx) observeHwpx(section, observeSection);
+      else observeSection();
     }
     if (forms.length > 100000) throw new Error('FormInventoryLimitExceeded');
   }

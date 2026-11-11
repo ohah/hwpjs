@@ -1,7 +1,6 @@
 //! Current form anchors derived from authoritative paragraph/protected positions.
 const std = @import("std");
 const editor = @import("editor_session.zig");
-const protected = @import("protected_display_host.zig");
 pub const Site = struct {
     formNode: usize,
     kind: @import("run_anchor.zig").Kind,
@@ -20,6 +19,8 @@ pub fn read(a: std.mem.Allocator, session: *const editor.Session, section_index:
     defer a.free(frames);
     var current = try @import("display_current_paragraphs.zig").read(a, section, session.options);
     defer current.deinit(a);
+    var index: ?@import("form_display_index.zig").Index = null;
+    defer if (index) |*v| v.deinit();
     var rows: std.ArrayList(Site) = .empty;
     errdefer rows.deinit(a);
     for (nodes) |node| {
@@ -29,7 +30,8 @@ pub fn read(a: std.mem.Allocator, session: *const editor.Session, section_index:
         }
         const run = section.tree.elements[node.formNode].parent.?;
         const template = section.tree.elements[run].parent.?;
-        const ordinal = protected.currentAnchorOrdinal(current.paragraphs, section.first_paragraph, template, node.formNode) catch |err| switch (err) {
+        if (index == null) index = try @import("form_display_index.zig").Index.init(a, &section.tree, current.paragraphs);
+        const ordinal = index.?.ordinal(section.first_paragraph, template, node.formNode) catch |err| switch (err) {
             error.MissingCurrentParagraphDisplayHost => {
                 try rows.append(a, .{ .formNode = node.formNode, .kind = node.kind, .state = .missing_host });
                 continue;
@@ -40,7 +42,7 @@ pub fn read(a: std.mem.Allocator, session: *const editor.Session, section_index:
             },
             else => return err,
         };
-        const unit = protected.anchorPosition(a, &section.tree, &current.paragraphs[ordinal - section.first_paragraph], node.formNode) catch |err| switch (err) {
+        const unit = index.?.position(ordinal - section.first_paragraph, node.formNode) catch |err| switch (err) {
             error.MissingProtectedDisplayAnchor, error.UnsupportedJoinedParagraphLocations, error.UnsupportedInlineControl, error.UnsupportedTextPositionProjection, error.MissingTextSite => {
                 try rows.append(a, .{ .formNode = node.formNode, .kind = node.kind, .paragraph = ordinal, .state = .unsupported_anchor });
                 continue;

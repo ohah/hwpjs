@@ -1,3 +1,4 @@
+import { createFormTextDraft } from './form-text-eol.mjs';
 import { canvasDocumentPoint } from './canvas-pointer-coordinates.mjs';
 
 /** Temporary input only. Worker/native responses remain the value authority. */
@@ -6,6 +7,8 @@ export function createFormTextCanvasControls({ canvas, viewport, renderer, note,
     pending = false,
     selected = null,
     input = null,
+    draft = null,
+    beforeEdit = null,
     composing = false,
     closed = false;
   const events = new AbortController(),
@@ -13,17 +16,25 @@ export function createFormTextCanvasControls({ canvas, viewport, renderer, note,
   const dismiss = () => {
     input?.remove();
     input = null;
+    draft = null;
+    beforeEdit = null;
     selected = null;
     composing = false;
   };
   const submit = () => {
     if (!input || !selected || composing || pending || !available || !ready()) return false;
-    const text = input.value,
-      target = selected.form.form;
+    let text;
+    try {
+      text = selected.form.multiline === true ? draft.update(input.value) : input.value;
+    } catch (error) {
+      note.textContent = error.message;
+      return false;
+    }
+    const target = selected.form.form;
     if (
       !text.isWellFormed() ||
       text.length > 65535 ||
-      (selected.form.multiline === true && /[\r\t]/.test(text))
+      (selected.form.multiline === true && /\t/.test(text))
     ) {
       note.textContent = '올바른 Unicode 문자열을 입력하세요(최대65535유닛).';
       return false;
@@ -89,10 +100,39 @@ export function createFormTextCanvasControls({ canvas, viewport, renderer, note,
       const multiline = target.form.multiline === true;
       input = canvas.ownerDocument.createElement(multiline ? 'textarea' : 'input');
       if (multiline) {
-        input.wrap = 'off';
+        input.wrap = target.form.wordWrap === true ? 'soft' : 'off';
         input.spellcheck = false;
       } else input.type = 'text';
-      input.value = target.form.label;
+      draft = multiline ? createFormTextDraft(target.form.label) : null;
+      input.value = draft ? draft.projection : target.form.label;
+      input.addEventListener(
+        'beforeinput',
+        (event) => {
+          beforeEdit = draft
+            ? {
+                projection: input.value,
+                start: input.selectionStart,
+                end: input.selectionEnd,
+                inputType: event.inputType,
+              }
+            : null;
+        },
+        options,
+      );
+      input.addEventListener(
+        'input',
+        (event) => {
+          if (draft) {
+            try {
+              draft.update(input.value, event.inputType, beforeEdit);
+            } catch (error) {
+              note.textContent = error.message;
+            }
+          }
+          beforeEdit = null;
+        },
+        options,
+      );
       input.setAttribute(
         'aria-label',
         multiline
@@ -112,8 +152,18 @@ export function createFormTextCanvasControls({ canvas, viewport, renderer, note,
         background: target.form.background,
         ...(multiline
           ? {
-              lineHeight: `${target.form.lineHeight * scale}px`,
-              whiteSpace: 'pre',
+              width: `${target.width}px`,
+              height: `${target.height}px`,
+              transform: `scale(${scale})`,
+              transformOrigin: 'top left',
+              lineHeight: `${target.form.lineHeight}px`,
+              scrollbarWidth: 'none',
+              whiteSpace: target.form.wordWrap === true ? 'break-spaces' : 'pre',
+              wordBreak: 'break-all',
+              lineBreak: 'anywhere',
+              overflowWrap: 'anywhere',
+              padding: '0 3px',
+              border: '0',
               resize: 'none',
               overflow: 'auto',
             }

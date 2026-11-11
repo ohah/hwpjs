@@ -1,3 +1,4 @@
+import { paragraphCharacterRange } from './projection-measure-memo.mjs';
 import { validateHwp5FormSources, validateHwp5FormAnchors } from '../../js/hwp5-form-sources.mjs';
 import { validateHwp5FormProperties } from '../../js/hwp5-form-properties.mjs';
 import { hwp5ObjectFlags } from './hwp5-object-flags.mjs';
@@ -77,9 +78,11 @@ export function inlineHwp5FormIndex(content, { draft } = {}) {
       const fields = new Map(form.properties.fields.map((f) => [f.field, f]));
       const text = (name, kind) => {
         const f = fields.get(name);
-        if (!f || f.kind !== kind || f.units.length > 4096)
+        if (!f || f.kind !== kind || f.units.length > (name === 'text' ? 65535 : 4096))
           throw Error('UnsupportedFormPreviewProperty');
-        const value = String.fromCharCode(...f.units);
+        let value = '';
+        for (let at = 0; at < f.units.length; at += 4096)
+          value += String.fromCharCode(...f.units.slice(at, at + 4096));
         if (!value.isWellFormed() || value.includes('\0'))
           throw Error('UnsupportedFormPreviewText');
         return value;
@@ -92,12 +95,11 @@ export function inlineHwp5FormIndex(content, { draft } = {}) {
         return value;
       };
       const sourceAutoSize = number('auto_size', 'boolean', 1) === 1;
+      const multiline = source.kind === 'edit' && number('multi_line', 'boolean', 1) === 1;
+      const wordWrap = number('word_wrap', 'boolean', 1) === 1;
       // Radio selection never edits Caption; retain the source box explicitly
       // rather than pretending current font metrics reproduce AutoSize.
-      if (
-        (sourceAutoSize && source.kind !== 'radio_button') ||
-        number('word_wrap', 'boolean', 1) !== 0
-      )
+      if ((sourceAutoSize && source.kind !== 'radio_button') || (wordWrap && !multiline))
         throw Error('UnsupportedFormPreviewAutosize');
       const follow = number('follow_context', 'boolean', 1),
         id = number('char_shape_id');
@@ -107,26 +109,28 @@ export function inlineHwp5FormIndex(content, { draft } = {}) {
         ['push_button', 'check_box', 'radio_button'].includes(source.kind) ? 'caption' : 'text',
         'wstring',
       );
-      if (/[\r\n]/.test(label)) throw Error('UnsupportedFormPreviewText');
+      if ((!multiline && /[\r\n]/.test(label)) || /\t/.test(label))
+        throw Error('UnsupportedFormPreviewText');
       if (
         source.kind === 'edit' &&
-        (text('password_char', 'wstring') !== '' ||
-          number('multi_line', 'boolean', 1) !== 0 ||
-          number('align_text') !== 0)
+        (text('password_char', 'wstring') !== '' || number('align_text') !== 0)
       )
         throw Error('UnsupportedFormPreviewEditMode');
       const foreground = colorrefCss(number('fore_color')),
         background = colorrefCss(number('back_color'));
       if (!foreground || !background) throw Error('UnsupportedFormPreviewColor');
-      const font = follow
-        ? fontAt(p, form.anchorUnit)
-        : fontAt(
-            {
-              text: label,
-              characterRanges: [{ start: 0, end: Math.max(1, label.length), charShapeId: id }],
-            },
-            0,
-          );
+      const effectiveId = follow ? paragraphCharacterRange(p, form.anchorUnit)?.charShapeId : id;
+      if (!content.characterShapes?.some((shape) => shape.id === effectiveId && shape.height > 0))
+        throw Error('MissingFormPreviewFont');
+      const fontParagraph = {
+        ...p,
+        text: label || ' ',
+        characterRanges: [{ start: 0, end: Math.max(1, label.length), charShapeId: effectiveId }],
+      };
+      const font = fontAt(fontParagraph, 0);
+      const lineHeight = multiline ? fontAt.fontHeight(fontParagraph, 0) : null;
+      if (multiline && (!Number.isFinite(lineHeight) || lineHeight <= 0))
+        throw Error('MissingFormPreviewFont');
       let checkBox = null;
       if (source.kind === 'check_box' || source.kind === 'radio_button') {
         const radio = source.kind === 'radio_button';
@@ -185,6 +189,9 @@ export function inlineHwp5FormIndex(content, { draft } = {}) {
           ? { ...form, editable: textEditable }
           : form,
         label,
+        multiline,
+        wordWrap,
+        lineHeight,
         font,
         foreground,
         background,

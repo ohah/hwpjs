@@ -5,6 +5,7 @@ const choices = @import("form_checkbox_state_values.zig");
 const attrs = @import("form_attribute_values.zig");
 pub fn validate(s: *const editor.Session, section: usize, node: usize) !void {
     if (section >= s.sections.len) return error.InvalidSectionIndex;
+    // Writers retain canonical source/owner validation; the lease is read-only.
     const tree = &s.sections[section].tree;
     if (node >= tree.elements.len) return error.InvalidFormNode;
     try s.sections[section].validateSourceBasis();
@@ -14,11 +15,17 @@ pub fn validate(s: *const editor.Session, section: usize, node: usize) !void {
     _ = try @import("paragraph_site_owner.zig").ancestor(tree, node);
 }
 pub fn radioState(s: *const editor.Session, section: usize, node: usize) !attrs.ButtonState {
+    if (s.form_read_context) |context| {
+        if (context.section_index == section) return context.choice(s, section, node, true);
+    }
     try validate(s, section, node);
     const part = &s.sections[section];
     return choices.readRadio(s.allocator, &part.tree, &part.checkbox_states, node);
 }
 pub fn text(s: *const editor.Session, section: usize, node: usize) ![]u8 {
+    if (s.form_read_context) |context| {
+        if (context.section_index == section) return context.read(s, section, node);
+    }
     try validate(s, section, node);
     const part = &s.sections[section];
     return part.form_texts.read(s.allocator, &part.tree, node, s.options.max_text_bytes);

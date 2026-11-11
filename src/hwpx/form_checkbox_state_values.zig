@@ -4,7 +4,7 @@ const Tree = @import("xml_part_tree.zig").Tree;
 const writer = @import("form_checkbox_state_write.zig");
 pub const Entry = struct { form_node: usize, state: writer.State };
 pub const Values = std.ArrayList(Entry);
-fn original(a: std.mem.Allocator, tree: *const Tree, node: usize, radio: bool) !writer.State {
+pub fn original(a: std.mem.Allocator, tree: *const Tree, node: usize, radio: bool) !writer.State {
     var value = try @import("form_attribute_values.zig").read(a, tree, node, .{});
     defer value.deinit(a);
     if (value.kind != (if (radio) @import("run_anchor.zig").Kind.radio_button else .check_button)) return error.NotCheckBoxForm;

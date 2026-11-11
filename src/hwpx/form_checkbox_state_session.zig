@@ -12,6 +12,9 @@ fn validate(session: *const editor.Session, section: usize, node: usize) !void {
     if (!frames[node].active) return error.InactiveFormNode;
 }
 pub fn read(session: *const editor.Session, section: usize, node: usize) !State {
+    if (session.form_read_context) |context| {
+        if (context.section_index == section) return context.choice(session, section, node, false);
+    }
     try validate(session, section, node);
     const part = &session.sections[section];
     return values.read(session.allocator, &part.tree, &part.checkbox_states, node);

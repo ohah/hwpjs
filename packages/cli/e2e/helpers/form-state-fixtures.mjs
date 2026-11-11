@@ -81,9 +81,12 @@ export async function generateFormStateFixtures({ wasmModule, directory, options
       token.writeUInt16LE(13, 16);
       const control = Buffer.alloc(46);
       control.writeUInt32LE(0x666f726d);
-      control.writeUInt32LE(1, 4);
+      control.writeUInt32LE(
+        options.canvasProfile ? 1 | 4 | (4 << 15) | (2 << 18) | (2 << 3) | (2 << 8) | (1 << 13) : 1,
+        4,
+      );
       control.writeUInt32LE(5000, 16);
-      control.writeUInt32LE(1500, 20);
+      control.writeUInt32LE(options.canvasProfile && index === 4 ? 4500 : 1500, 20);
       control.writeUInt32LE(200 + index, 36);
       const common = set(
         'CommonSet',
@@ -91,14 +94,23 @@ export async function generateFormStateFixtures({ wasmModule, directory, options
           scalar('Enabled', 'bool', options.disabledIndex === index ? '0' : '1') +
           scalar('Editable', 'bool', '1') +
           scalar('Printable', 'bool', '1') +
-          scalar('Command', 'wstring', ''),
+          scalar('Command', 'wstring', '') +
+          (options.canvasProfile
+            ? scalar('ForeColor', 'int', '0') +
+              scalar('BackColor', 'int', '16777215') +
+              scalar('DrawFrame', 'bool', '1')
+            : ''),
       );
       const char = set(
         'CharShapeSet',
         scalar('CharShapeID', 'int', '0') +
           scalar('FollowContext', 'bool', '1') +
           scalar('AutoSize', 'bool', '0') +
-          scalar('WordWrap', 'bool', '0'),
+          scalar(
+            'WordWrap',
+            'bool',
+            options.canvasProfile && index === 4 && options.wordWrap ? '1' : '0',
+          ),
       );
       const choice =
         value === null
@@ -118,11 +130,11 @@ export async function generateFormStateFixtures({ wasmModule, directory, options
         type === 'tde+'
           ? set(
               'EditSet',
-              scalar('Text', 'wstring', text) +
+              scalar('Text', 'wstring', options.canvasProfile ? (options.formText ?? text) : text) +
                 scalar('ReadOnly', 'bool', options.readOnly ? '1' : '0') +
                 scalar('MaxLength', 'int', '100') +
                 scalar('Number', 'bool', '0') +
-                scalar('MultiLine', 'bool', '0') +
+                scalar('MultiLine', 'bool', options.canvasProfile ? '1' : '0') +
                 scalar('PasswordChar', 'wstring', '') +
                 scalar('AlignText', 'int', '0'),
             )

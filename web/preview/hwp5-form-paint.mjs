@@ -1,3 +1,4 @@
+import { formTextLayout } from './form-text-layout.mjs';
 /** Static clipped form face; never mutates a value or invokes a button command. */
 import { paintSourceCheckBox } from './checkbox-source-paint.mjs';
 export function paintHwp5Form(ctx, item, x, y) {
@@ -45,10 +46,14 @@ export function paintHwp5Form(ctx, item, x, y) {
       ctx.clip();
       if (item.multiline === true) {
         if (!Number.isFinite(item.lineHeight) || item.lineHeight <= 0) return false;
-        const lines = item.label.split('\n');
-        const visible = Math.min(lines.length, Math.ceil(item.height / item.lineHeight));
-        for (let i = 0; i < visible; i++)
-          ctx.fillText(lines[i], x + 3, y + item.lineHeight * (i + 0.5));
+        const layout = formTextLayout(item.label, {
+          width: Math.max(0, item.width - 6),
+          wrap: item.wordWrap === true,
+          measure: (text) => ctx.measureText(text).width,
+          maxLines: Math.max(1, Math.min(65536, Math.ceil(item.height / item.lineHeight))),
+        });
+        for (let i = 0; i < layout.rows.length; i++)
+          ctx.fillText(layout.rows[i].text, x + 3, y + item.lineHeight * (i + 0.5));
       } else {
         ctx.fillText(
           item.label,

@@ -77,9 +77,10 @@ fn buildMode(a: std.mem.Allocator, tree: *const tree_module.Tree, sites: *const 
     var segments: std.ArrayList(Segment) = .empty;
     var title_axis_validated = false;
     defer segments.deinit(a);
-    const owners = try a.alloc(bool, tree.elements.len);
-    defer a.free(owners);
-    @memset(owners, false);
+    // Paragraph-local sparse membership: section-sized zeroing per paragraph
+    // made a whole form-anchor query quadratic even after host indexing.
+    var owners: std.AutoHashMapUnmanaged(usize, void) = .empty;
+    defer owners.deinit(a);
     var text_owners: std.ArrayList(usize) = .empty;
     defer text_owners.deinit(a);
     var found = false;
@@ -87,9 +88,8 @@ fn buildMode(a: std.mem.Allocator, tree: *const tree_module.Tree, sites: *const 
         if (location.paragraph_ordinal != paragraph) continue;
         if (site.element_index >= tree.elements.len) return error.InvalidTextSites;
         if (tree.elements[site.element_index].is(uri, "run") and !site.missing_text) return error.UnsupportedTextPositionProjection;
-        if (!owners[site.element_index]) {
+        if (!(try owners.getOrPut(a, site.element_index)).found_existing) {
             try text_owners.append(a, site.element_index);
-            owners[site.element_index] = true;
         }
         found = true;
         try segments.append(a, .{ .kind = .text, .index = index, .source_start = site.start });

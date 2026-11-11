@@ -258,6 +258,39 @@ jobs:
       - name: 정규 공개 JavaScript 산출물 빌드
         timeout-minutes: 3
         run: bun tools/build-public-package.mjs --js-only --wasm="$HWPJS_TEST_WASM"
+      - name: Form text CRLF and LF canonical CLI and MCP regression
+        timeout-minutes: 2
+        env:
+          HWPJS_FORM_EVIDENCE: ${{ runner.temp }}/hwpjs-form-text-eol-cli-${{ github.run_id }}-${{ github.run_attempt }}
+          HWPJS_FORM_CLI_ENTRY: ${{ github.workspace }}/packages/hwpjs/dist/cli.mjs
+          HWPJS_FORM_MCP_ENTRY: ${{ github.workspace }}/packages/hwpjs/dist/mcp.mjs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$HWPJS_TEST_WASM_SHA256"
+          test -f "$HWPJS_FORM_CLI_ENTRY"
+          test -f "$HWPJS_FORM_MCP_ENTRY"
+          test -f "$GITHUB_WORKSPACE/packages/hwpjs/dist/hwpjs.wasm"
+          node --expose-gc --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=90000 --test-reporter=tap packages/cli/e2e/form-multiline-values.test.mjs | tee "$RUNNER_TEMP/hwpjs-form-text-eol-cli.tap"
+          grep -Eq '^# tests 2$' "$RUNNER_TEMP/hwpjs-form-text-eol-cli.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/hwpjs-form-text-eol-cli.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/hwpjs-form-text-eol-cli.tap"
+      - name: Mixed pending forms and source-row exact Native regression
+        timeout-minutes: 2
+        env:
+          HWPJS_FORM_ROW_EVIDENCE: ${{ runner.temp }}/hwpjs-form-source-row
+          HWPJS_FORM_ROW_PACKAGE: ${{ github.workspace }}/packages/hwpjs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$HWPJS_TEST_WASM"
+          test -n "$HWPJS_TEST_WASM_SHA256"
+          # Same manifest-pinned current engine; fixture originals were produced by ac652.
+          # python3 -B normal/-O oracles execute inside the Node gate; no Native/browser build.
+          node --expose-gc --max-old-space-size=384 --test --test-concurrency=1 --test-timeout=90000 --test-reporter=tap packages/cli/e2e/form-source-row-mixed.test.mjs | tee "$RUNNER_TEMP/hwpjs-form-source-row.tap"
+          grep -Eq '^# tests 30$' "$RUNNER_TEMP/hwpjs-form-source-row.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/hwpjs-form-source-row.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/hwpjs-form-source-row.tap"
       - name: 정규 독립 실행 산출물 CLI와 MCP 검사
         timeout-minutes: 2
         shell: bash
@@ -284,6 +317,10 @@ jobs:
             ${{ runner.temp }}/hwpjs-forms-known-profile.tap
             ${{ runner.temp }}/hwpjs-cli-form-state.tap
             ${{ runner.temp }}/hwpjs-cli-form-state
+            ${{ runner.temp }}/hwpjs-form-text-eol-cli.tap
+            ${{ runner.temp }}/hwpjs-form-text-eol-cli-${{ github.run_id }}-${{ github.run_attempt }}
+            ${{ runner.temp }}/hwpjs-form-source-row.tap
+            ${{ runner.temp }}/hwpjs-form-source-row
             ${{ runner.temp }}/hwpjs-cli-character-plan-native.tap
             ${{ runner.temp }}/hwpjs-cli-character-plan-native
             ${{ runner.temp }}/hwpjs-cli-character-extensions.tap

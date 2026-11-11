@@ -26,6 +26,23 @@ jobs:
         run: bun install --frozen-lockfile --ignore-scripts
       - name: Test current public demo dependency notices
         run: node --test tools/tests/ui-license-inputs.test.mjs
+      - name: Test form text raw line endings and measured wrapping
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test --test-concurrency=1 --test-reporter=tap tests/form-text-eol-layout.test.mjs | tee "$RUNNER_TEMP/hwpjs-form-text-eol-node.tap"
+          grep -Eq '^# tests 9$' "$RUNNER_TEMP/hwpjs-form-text-eol-node.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/hwpjs-form-text-eol-node.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/hwpjs-form-text-eol-node.tap"
+      - name: Preserve form text line-ending Node evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: form-text-eol-node-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/hwpjs-form-text-eol-node.tap
+          retention-days: 7
+          if-no-files-found: warn
       - name: Test bounded Native fixture preflight
         run: |
           test -f ./tools/tests/native-fixture-preflight.test.mjs || exit 1
@@ -36,6 +53,13 @@ jobs:
           test -f ./apps/docs/docs/public/editor/hwpjs/hwpjs.wasm || exit 1
           bun ./tools/build-packages.mjs --package=core --web --wasm="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
           bun ./tools/build-packages.mjs --package=vanilla --web --wasm="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
+      - name: Test form layout requested-owner indexing
+        env:
+          HWPJS_TEST_CORE_DIST: packages/core/dist
+        run: |
+          test -f ./tools/renderer-test-core-provider.mjs || exit 1
+          node --max-old-space-size=384 --import ./tools/renderer-test-core-provider.mjs \
+            --test --test-concurrency=1 ./tools/tests/form-observation-linear-r7.test.mjs
       - name: Test caret formatting and terminal focus source regressions
         timeout-minutes: 2
         run: |
@@ -290,6 +314,14 @@ jobs:
           test -f ./packages/core/dist/build-manifest.json || exit 1
           HWPJS_TEST_WASM_EXPECTED_SHA256="$(node ./tools/tests/helpers/native-wasm-pin.mjs --manifest ./packages/core/dist/build-manifest.json)" || exit 1
           printf 'HWPJS_TEST_WASM_EXPECTED_SHA256=%s\n' "$HWPJS_TEST_WASM_EXPECTED_SHA256" >> "$GITHUB_ENV"
+      - name: Test Native form read scope preservation
+        timeout-minutes: 2
+        env:
+          HWPJS_TEST_WASM: ${{ github.workspace }}/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm
+        run: |
+          export HWPJS_TEST_WASM_SHA256="$HWPJS_TEST_WASM_EXPECTED_SHA256"
+          node --max-old-space-size=384 --test --test-concurrency=1 \
+            ./tools/tests/hwpx-form-read-scope-native.test.mjs
       - name: Test original Noori rows and opaque cache ownership
         timeout-minutes: 2
         env:

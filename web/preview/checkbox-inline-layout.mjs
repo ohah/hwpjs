@@ -1,21 +1,49 @@
+import { paragraphCharacterRange } from './projection-measure-memo.mjs';
 import { hwpUnitPixels } from './hwp-units.mjs';
 import { createTextStyle } from './text-style.mjs';
 import { FONT } from './layout.mjs';
 import { validShapeLayoutValues } from '../../js/hwpx-shape-layout-values.mjs';
 export const checkBoxPositionKey = (section, paragraph, unit) => `${section}:${paragraph}:${unit}`;
-export function inlineCheckBoxIndex(content) {
+export function inlineCheckBoxIndex(content, { allowFormTextWrap = false } = {}) {
   const result = new Map(),
     fontAt = createTextStyle(content, FONT);
   result.unavailable = [];
   result.blocked = new Set();
-  for (const row of content.checkBoxes ?? []) {
+  const sourceRows = content.checkBoxes ?? [];
+  const rows = Array.isArray(sourceRows) ? sourceRows : [...sourceRows];
+  if (rows.length === 0) return result;
+  // Borrow only requested Native paragraph owners, retaining the first match.
+  // Stop once all owners are found; unrelated tail paragraphs stay lazy.
+  const paragraphs = new Map();
+  let remaining = 0;
+  for (const row of rows) {
+    if (Number.isNaN(row.section) || Number.isNaN(row.paragraph)) continue;
+    let section = paragraphs.get(row.section);
+    if (!section) paragraphs.set(row.section, (section = new Map()));
+    if (!section.has(row.paragraph)) {
+      section.set(row.paragraph, null);
+      remaining++;
+    }
+  }
+  if (remaining !== 0) {
+    for (const paragraph of content.paragraphs ?? []) {
+      const section = paragraphs.get(paragraph.section);
+      if (
+        !section ||
+        !section.has(paragraph.paragraph) ||
+        section.get(paragraph.paragraph) !== null
+      )
+        continue;
+      section.set(paragraph.paragraph, paragraph);
+      if (--remaining === 0) break;
+    }
+  }
+  for (const row of rows) {
     const source = row.sourceLayout,
       g = source?.geometry,
       p = source?.position,
       c = source?.character;
-    const paragraph = content.paragraphs.find(
-      (value) => value.section === row.section && value.paragraph === row.paragraph,
-    );
+    const paragraph = paragraphs.get(row.section)?.get(row.paragraph);
     const fail = (reason) => {
       result.unavailable.push({ section: row.section, formNode: row.formNode, reason });
     };
@@ -50,7 +78,17 @@ export function inlineCheckBoxIndex(content) {
       fail('UnsupportedFormPlacement');
       continue;
     }
-    if (!c || c.auto_size !== false || c.word_wrap !== false || typeof row.caption !== 'string') {
+    const wraps =
+      allowFormTextWrap &&
+      row.kind === 'edit_box' &&
+      row.sourceAttrs?.booleans?.multiLine === true &&
+      typeof c?.word_wrap === 'boolean';
+    if (
+      !c ||
+      c.auto_size !== false ||
+      (!wraps && c.word_wrap !== false) ||
+      typeof row.caption !== 'string'
+    ) {
       fail('UnsupportedFormCaptionLayout');
       continue;
     }
@@ -65,8 +103,22 @@ export function inlineCheckBoxIndex(content) {
     }
     let font, fontHeight;
     if (c.follow_context === true) {
-      font = fontAt(paragraph, row.anchorUnit);
-      fontHeight = fontAt.fontHeight(paragraph, row.anchorUnit);
+      const id = paragraphCharacterRange(paragraph, row.anchorUnit)?.charShapeId;
+      if (
+        !content.characterShapes?.some(
+          (shape) => shape.id === id && Number.isInteger(shape.height) && shape.height > 0,
+        )
+      ) {
+        fail('MissingFormCharacterStyle');
+        continue;
+      }
+      const sampled = {
+        ...paragraph,
+        text: row.caption || ' ',
+        characterRanges: [{ start: 0, end: Math.max(1, row.caption.length), charShapeId: id }],
+      };
+      font = fontAt(sampled, 0);
+      fontHeight = fontAt.fontHeight(sampled, 0);
     } else if (
       c.follow_context === false &&
       content.characterShapes?.some(

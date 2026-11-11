@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "provenance": "Own controlled six-form Native constructor fixtures; original authoring checkpoint forms-crlf-wordwrap-f509-r1, reused unchanged under ac652. No external document/resources. Stored in repository; no runtime sidecar.",
+  "verifiedNativeSha256": "ac652edcd8f1e8cd844900e5795075db135cf1c1efe26fcf1cf4db5d69de39e0",
+  "files": [
+    {
+      "format": "hwp5",
+      "file": "controlled-crlf.hwp",
+      "bytes": 9216,
+      "sha256": "a37a1d4f0d31180e0537e11743f4285dfca89fbc120a195f1608606310770cab",
+      "expectedText": "A\r\nB\r\nC"
+    },
+    {
+      "format": "hwpx",
+      "file": "controlled-crlf.hwpx",
+      "bytes": 11715,
+      "sha256": "8fa83f889fce7d40fb43a56c8710f3582369b86aef1bc27ed0f6a44ae45a967a",
+      "expectedText": "A\r\nB\r\nC"
+    }
+  ]
+}

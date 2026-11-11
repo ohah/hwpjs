@@ -1,0 +1,102 @@
+{
+  "nativeOriginSha256": "ac652edcd8f1e8cd844900e5795075db135cf1c1efe26fcf1cf4db5d69de39e0",
+  "provenance": "Own six-form constructor + same-document plain HOST Native table creation + save/reopen; no imported document/resources. Original fixtures frozen in forms-source-row-mixed-f2-r1. Protection/readonly variants patch known own spans. Current form/owner references always queried; numeric nodes not stored as persistent targets.",
+  "files": [
+    {
+      "format": "hwp5",
+      "position": "before",
+      "variant": "original",
+      "file": "hwp5-before.hwp",
+      "bytes": 9728,
+      "sha256": "c116821ad1d4b64c4c908056bba044ca20d2f5e4462d5e14d7978bc53840d097"
+    },
+    {
+      "format": "hwp5",
+      "position": "before",
+      "variant": "protected",
+      "file": "hwp5-before-protected-table.hwp",
+      "bytes": 9728,
+      "sha256": "279f58fe436b15e23e3c7da4c543b1dbf737cd76007e9889e2d05e55ca92d852"
+    },
+    {
+      "format": "hwp5",
+      "position": "before",
+      "variant": "readonly",
+      "file": "hwp5-before-readonly-form.hwp",
+      "bytes": 9728,
+      "sha256": "1acd24f54782495566823209a6cccd1fdd21c2f4ac73fff527e9d61bb9414c09"
+    },
+    {
+      "format": "hwp5",
+      "position": "after",
+      "variant": "original",
+      "file": "hwp5-after.hwp",
+      "bytes": 9728,
+      "sha256": "b27488e198533e1ffe3a4ba2e135ab93c3e41a4b046eb55113dc1e8106043331"
+    },
+    {
+      "format": "hwp5",
+      "position": "after",
+      "variant": "protected",
+      "file": "hwp5-after-protected-table.hwp",
+      "bytes": 9728,
+      "sha256": "529f4560db257e3243e50bf4653946c40dcf972ebcbae84a0b2595ec00a9ec32"
+    },
+    {
+      "format": "hwp5",
+      "position": "after",
+      "variant": "readonly",
+      "file": "hwp5-after-readonly-form.hwp",
+      "bytes": 9728,
+      "sha256": "c411d9494f629215cb9c0a0c39376b54bd86419c7f3e5eafe84f9ed6113fdba2"
+    },
+    {
+      "format": "hwpx",
+      "position": "before",
+      "variant": "original",
+      "file": "hwpx-before.hwpx",
+      "bytes": 15062,
+      "sha256": "c9927777300d7e14fa6dbfe40e28c12e611168e7c9860c8794439f39b37a45f2"
+    },
+    {
+      "format": "hwpx",
+      "position": "before",
+      "variant": "protected",
+      "file": "hwpx-before-protected-cell-numeric.hwpx",
+      "bytes": 15062,
+      "sha256": "6c4c78f926aa80522271b78379078f4b791e0d6dee099ea374cab62d6f227bc9"
+    },
+    {
+      "format": "hwpx",
+      "position": "before",
+      "variant": "readonly",
+      "file": "hwpx-before-readonly-form.hwpx",
+      "bytes": 15061,
+      "sha256": "5c2189c65a9c15e633b5f2da57af08651f9fbb1bfada03211b8a73d818e61364"
+    },
+    {
+      "format": "hwpx",
+      "position": "after",
+      "variant": "original",
+      "file": "hwpx-after.hwpx",
+      "bytes": 15062,
+      "sha256": "8a495d73a83487debad1774486c1944c4e9965418b35ce5c2794619ee1814d44"
+    },
+    {
+      "format": "hwpx",
+      "position": "after",
+      "variant": "protected",
+      "file": "hwpx-after-protected-cell-numeric.hwpx",
+      "bytes": 15062,
+      "sha256": "871bf0f0d67c0a8875b671526fa650c287ba50df1ea15180f2d3e04eb05d0856"
+    },
+    {
+      "format": "hwpx",
+      "position": "after",
+      "variant": "readonly",
+      "file": "hwpx-after-readonly-form.hwpx",
+      "bytes": 15061,
+      "sha256": "7a535fd05e8b5d7f977201eb73fcb215275accfebc1eabd541d9fd88283daef7"
+    }
+  ]
+}

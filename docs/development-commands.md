@@ -1,5 +1,15 @@
 # 개발·검증 명령
 
+## HWPX 폼 조회 scope
+
+[동기 폼 조회 계약](hwpx-read-observation-scope.md)의 Native 원본·현재값 동치, owner·오류 우선순위, 할당 실패와 조회 수명을 집중 검사합니다.
+
+```sh
+zig build test-hwpx-form-read-context -Doptimize=ReleaseSafe -j1 --summary all
+```
+
+이 step은 `zig build test`에도 연결됩니다. 집중 회귀의 통과와 전체 Native suite 통과를 구분하며, 실제 WASM·CLI·Canvas 검증은 같은 주제 문서의 별도 증거를 확인합니다.
+
 ## 선택 그림 PNG/JPEG 교체
 
 [선택 그림 교체 계약](picture-resource-replacement.md)을 따릅니다. 원본을 읽어 발급한 이미지 참조를 사용하고 결과는 새 파일에 저장합니다. 소스 CLI 실행에는 새 교체 ABI를 포함한 WASM을 명시합니다.
@@ -1933,3 +1943,19 @@ zig test src/noori_owner_path_probe.zig -O ReleaseSafe -fllvm -j1 --test-filter 
 ```
 
 첫 검사는 실제 공통 CLI 파일 호스트의 양 형식 삽입·원래 내용 행 삭제·재열기와 독립 CFB/XML 일반/-O 및 틀린 결과 반례를 검사합니다. 추가 HWPX foreign cache 입력은 거래 거부·원문 바이트·이력 불변을 검사합니다. Native 집중 검사는 알려진 물리 소유자·형제/중첩의 잘못된 대상과 미지 HWP5 제어 아래의 빈/비어 있지 않은 캐시를 구분합니다. 실제 Canvas 입력·배포 검증과 분모가 다릅니다.
+
+## 폼 pending 값과 원본 표 행 편집 혼합 회귀
+
+[폼 상태 계약](hwpx-form-state-editing.md#mixed-form-source-row)은 자체 소유 12개 고정 입력(원본 ac652, 보호/readonly 변형)을 사용합니다. 일반 source suite에 암묵적으로 넣지 않고 CLI CI의 명시 E2E 단계에서 실행합니다. 현재 공개 manifest의 Native SHA를 공유하며, 로컬 ac652 재현은 아래 정확 pin을 사용합니다. 환경 누락/다른 SHA/이미 존재하는 증거 디렉터리는 실패합니다. 패키지와 SDK 엔진은 같은 SHA여야 합니다. 새 Native·브라우저 빌드는 필요하지 않습니다.
+
+```sh
+HWPJS_TEST_WASM=/absolute/path/ac652/hwpjs.wasm \
+HWPJS_TEST_WASM_SHA256=ac652edcd8f1e8cd844900e5795075db135cf1c1efe26fcf1cf4db5d69de39e0 \
+HWPJS_FORM_ROW_PACKAGE=/absolute/path/packages/hwpjs \
+HWPJS_FORM_ROW_EVIDENCE=/absolute/new/evidence-directory \
+node --expose-gc --max-old-space-size=384 --test --test-concurrency=1 \
+  --test-timeout=90000 --test-reporter=tap \
+  packages/cli/e2e/form-source-row-mixed.test.mjs
+```
+
+기존 canonical `dist/cli.mjs`/`dist/mcp.mjs`/`dist/hwpjs.wasm`를 소비합니다. Node 30개(실제 Native 28개 + 실제 패키지 CLI/MCP 묶음 1개 + receipt 1개), Python3 stdlib 독립 CFB/XML 일반/`-O`와 잘못된 기대값 반례를 포함합니다. readonly 거절 시 앞선 row/콤보 변경을 보존하고, 보호 셀/기대 행수 불일치 거절 시 앞선 폼 pending과 history/redo를 보존합니다. CLI/MCP는 별도 파일 세션이며 live Native history 공유를 주장하지 않습니다.

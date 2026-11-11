@@ -1,7 +1,10 @@
 // Display-only form text geometry, using the existing Native layout/font contract.
 import { inlineCheckBoxIndex } from './checkbox-inline-layout.mjs';
 export function inlineHwpxFormTextIndex(content) {
-  const geometry = inlineCheckBoxIndex({ ...content, checkBoxes: content.formTexts ?? [] }),
+  const geometry = inlineCheckBoxIndex(
+      { ...content, checkBoxes: content.formTexts ?? [] },
+      { allowFormTextWrap: true },
+    ),
     result = new Map();
   result.unavailable = geometry.unavailable;
   for (const [key, box] of geometry) {
@@ -13,8 +16,7 @@ export function inlineHwpxFormTextIndex(content) {
     const multiline = row.kind === 'edit_box' && row.sourceAttrs?.booleans?.multiLine === true;
     if (
       typeof row.drawFrame !== 'boolean' ||
-      /\r/.test(row.caption) ||
-      (!multiline && /\n/.test(row.caption)) ||
+      (!multiline && /[\r\n]/.test(row.caption)) ||
       (multiline &&
         (/\t/.test(row.caption) || !Number.isFinite(box.fontHeight) || box.fontHeight <= 0))
     ) {
@@ -36,6 +38,7 @@ export function inlineHwpxFormTextIndex(content) {
       drawFrame: row.drawFrame,
       checkBox: null,
       multiline,
+      wordWrap: multiline && row.sourceLayout.character.word_wrap === true,
       lineHeight: multiline ? box.fontHeight : null,
       form: { ...row, source: row.sourceAttrs },
     });

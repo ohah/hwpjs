@@ -1,3 +1,4 @@
+import { createObservationReadScope } from './read-observation-scope.ts';
 import type {
   ObservationSdk,
   Observation,
@@ -211,31 +212,9 @@ export function collectHwpx({
 }): DocumentObservations {
   const warnings: Diagnostic[] = [],
     sections: SectionObservation[] = [];
-  const scope = Object.hasOwn(sdk, 'withReadObservations')
-    ? Reflect.get(sdk, 'withReadObservations')
-    : undefined;
+  const observe = createObservationReadScope(sdk);
   for (let section = 0; section < sectionCount; section++) {
-    const read = () => collectSection(sdk, section, warnings);
-    if (typeof scope !== 'function') {
-      sections.push(read());
-      continue;
-    }
-    let invoked = false;
-    let completed = false;
-    let observed: SectionObservation | undefined;
-    const value: unknown = Reflect.apply(scope, sdk, [
-      section,
-      () => {
-        if (invoked) throw new Error('DuplicateReadObservationCallback');
-        invoked = true;
-        observed = read();
-        completed = true;
-        return observed;
-      },
-    ]);
-    if (!completed || observed === undefined || value !== observed)
-      throw new Error('InvalidReadObservationScopeResult');
-    sections.push(observed);
+    sections.push(observe(section, () => collectSection(sdk, section, warnings)));
   }
   return { sections, warnings };
 }

@@ -102,6 +102,21 @@ pub fn build(b: *std.Build) void {
     read_scope_step.dependOn(&run_read_scope_tests.step);
     core_test_step.dependOn(&run_read_scope_tests.step);
 
+    const form_read_tests = b.addTest(.{
+        .use_llvm = true,
+        .filters = &.{ "R7", "R8", "HWPX paragraph positions" },
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/form_owner_presence_r8_all.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    const run_form_read_tests = b.addRunArtifact(form_read_tests);
+    run_form_read_tests.has_side_effects = true;
+    const form_read_step = b.step("test-hwpx-form-read-context", "Verify scoped form observations, ownership, allocation failures and legacy parity");
+    form_read_step.dependOn(&run_form_read_tests.step);
+    core_test_step.dependOn(&run_form_read_tests.step);
+
     const header_read_tests = b.addTest(.{
         .use_llvm = true,
         .filters = &.{ "header read context", "header managed edit" },
