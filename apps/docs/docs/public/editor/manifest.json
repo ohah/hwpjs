@@ -168,7 +168,7 @@
     {
       "path": "api/main.js",
       "bytes": 9225,
-      "sha256": "383b0e4e8e263ddfdd30a1f9c8dc22635cc48b78850aeb5df4e73f1925d798e5"
+      "sha256": "4199f0cecf4f21400c10afac2bfc17f65a611e00c6aa6d793e88c40a0e64e73c"
     },
     {
       "path": "api/playground.js",
@@ -714,6 +714,16 @@
       "path": "assets/dist-C_vUukMI.js",
       "bytes": 1191623,
       "sha256": "7261fb0e8d8a0fe1581329ae3869dcc4b47444be1dd694c2dc31ddd90c919d35"
+    },
+    {
+      "path": "assets/dist-C0CyK47X.js",
+      "bytes": 1242345,
+      "sha256": "0ef9db960f2c439860a57f2c2422bc68e0ecec7592c7e3625b06fea06fa061b1"
+    },
+    {
+      "path": "assets/dist-C3aQpJVo.js",
+      "bytes": 57,
+      "sha256": "705c0e4d26f5045bf04390e16d71705f5274049e67424cd2bf563a732031d6d6"
     },
     {
       "path": "assets/dist-C3hjhvZn.js",
@@ -1806,6 +1816,11 @@
       "sha256": "d899faf189a7c383eaf5e1b97626442ddde0a399def8201055d0e8c2b999ebce"
     },
     {
+      "path": "assets/main-mVsP2pk6.js",
+      "bytes": 595232,
+      "sha256": "5889d170ef1ac597e3f48c3051df3d8369926bc52047f82ae0ddf623369fb041"
+    },
+    {
       "path": "assets/main-Q_BnVWU5.js",
       "bytes": 580584,
       "sha256": "0dd689a00680723462075000c585d85919f6aa5965496dbb711742d9cfe44569"
@@ -2393,22 +2408,22 @@
     {
       "path": "demo/headless/index.html",
       "bytes": 1283,
-      "sha256": "217b75279e6a5085d89e41e10ec316dfb743c9fc3833589aee99d8edf8a8c1d2"
+      "sha256": "4b30869f9bf9474118c1e0b2082d2b35d6a333c5a2e81bf10bb9d9c1dbba3dd5"
     },
     {
       "path": "demo/react/index.html",
       "bytes": 1283,
-      "sha256": "217b75279e6a5085d89e41e10ec316dfb743c9fc3833589aee99d8edf8a8c1d2"
+      "sha256": "4b30869f9bf9474118c1e0b2082d2b35d6a333c5a2e81bf10bb9d9c1dbba3dd5"
     },
     {
       "path": "demo/svelte/index.html",
       "bytes": 1283,
-      "sha256": "217b75279e6a5085d89e41e10ec316dfb743c9fc3833589aee99d8edf8a8c1d2"
+      "sha256": "4b30869f9bf9474118c1e0b2082d2b35d6a333c5a2e81bf10bb9d9c1dbba3dd5"
     },
     {
       "path": "demo/vanilla/index.html",
       "bytes": 1283,
-      "sha256": "217b75279e6a5085d89e41e10ec316dfb743c9fc3833589aee99d8edf8a8c1d2"
+      "sha256": "4b30869f9bf9474118c1e0b2082d2b35d6a333c5a2e81bf10bb9d9c1dbba3dd5"
     },
     {
       "path": "fixture-catalog.json",
@@ -2928,7 +2943,7 @@
     {
       "path": "index.html",
       "bytes": 1235,
-      "sha256": "bfcada79428e6f16f3b9d959819b99d96c9fe26882f863e2da9a167a2da592ae"
+      "sha256": "39b313786899c50c3221661d558b5c221d58792353950a9e2021adf22dff009d"
     },
     {
       "path": "LICENSE.txt",
