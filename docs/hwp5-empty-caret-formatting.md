@@ -67,9 +67,10 @@ pending12 입력 후 저장·undo/redo·재열기를 검사한다. 독립 CFB or
 구형 WASM은 새 proof를 제공하지 않으므로 새 UI도 빈 위치를 unknown으로 유지한다.
 구형 strict SDK는 flags3을 거부하므로 **Native + SDK/Worker + Core를 함께 재빌드**해야
 한다. export set이 같다는 사실을 wire 의미 호환과 혼동하지 않는다. Main의 최종 결합
-WASM SHA 프로필 등록은 기존 정책과 합본 게이트를 따른다. 이 후보는 profile registry를
-수정하거나 빠른 owner-window 성능을 새로 주장하지 않는다. 기존 empty owner 경로가
+WASM SHA 프로필 등록은 기존 정책과 합본 게이트를 따른다. 초기 단독 R1 후보는
+profile registry를 수정하지 않았으며, 현재 결합본은 아래 입력·Worker·이력 검증을 거쳐
+정확한 바이너리 해시를 등록한다. 이 검증을 새로운 속도 측정 결과로 해석하지 않는다. 기존 empty owner 경로가
 거부되는 경우에는 기존 full snapshot 경로가 유지된다. HWPX 빈 caret 지원 확대,
-새 public caret Native ABI, 실제 readonly GUI 실행, Main 통합/배포는 범위에 포함하지 않는다.
+새 public caret Native ABI, 실제 readonly GUI 실행은 범위에 포함하지 않는다.
 
 현재 합본은 Native 빈 문단 2건과 실제 Native/Core·구형 엔진·합성 손상/언어별 관측 9건을 검사한다. `empty-caret-formatting.test.mjs`는 실제 readonly Core 조회도 검사하며, 실제 readonly GUI 검증과 구분한다. Unicode 입력 `사😀`는 독립 CFB 일반/최적화 검사에서 UTF-16 단위 수와 원래 shape 승계를 대조한다. 실행·저장·재열기와 pending 언어별 글꼴/크기는 세 프레임워크 GUI에서 확인한다. 프로필 등록 후 실제 입력·Worker·이력 회귀 40건을 통과한 정확한 합본 WASM만 등록한다.
