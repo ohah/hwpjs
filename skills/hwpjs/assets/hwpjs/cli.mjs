@@ -1396,7 +1396,7 @@ var init_document_format = __esmMin((() => {
 }));
 // ../../js/hwp5-named-fields.mjs
 function decodeHwp5NamedFields(bytes) {
-	const source = JSON.parse(utf8$2.decode(bytes));
+	const source = JSON.parse(utf8$3.decode(bytes));
 	const invalid = () => /* @__PURE__ */ new Error("InvalidHwp5NamedFields");
 	if (source?.format !== "hwp5" || !["complete", "partial"].includes(source.coverage) || !Array.isArray(source.rows) || source.rows.length > 2e4) throw invalid();
 	const ids = /* @__PURE__ */ new Set();
@@ -1434,9 +1434,9 @@ function decodeHwp5NamedFields(bytes) {
 		rows
 	};
 }
-var utf8$2, uint$37;
+var utf8$3, uint$37;
 var init_hwp5_named_fields = __esmMin((() => {
-	utf8$2 = new TextDecoder("utf-8", { fatal: true });
+	utf8$3 = new TextDecoder("utf-8", { fatal: true });
 	uint$37 = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 4294967295;
 })), BORDER_WIDTHS_HUNDREDTH_MM;
 var init_border_fill_values = __esmMin((() => {
@@ -1913,6 +1913,7 @@ var init_abi_schema = __esmMin((() => {
 	]);
 	Object.freeze(["hwp5_edit_named_fields"]);
 	Object.freeze(["hwpx_edit_named_fields"]);
+	Object.freeze(["hwpx_edit_named_field_parameters", "hwpx_edit_set_named_field_parameters"]);
 	Object.freeze(["hwpx_edit_create_named_field"]);
 	Object.freeze(["hwpx_edit_rename_named_field"]);
 	HWPX_DOCUMENT_INSERT_FUNCTIONS = Object.freeze(["hwpx_edit_document_insert_capabilities", "hwpx_edit_insert_document"]);
@@ -4997,7 +4998,7 @@ function validate$1(reference) {
 	return reference;
 }
 function decodeHwp5CurrentReferences(bytes) {
-	const value = JSON.parse(utf8$1.decode(bytes));
+	const value = JSON.parse(utf8$2.decode(bytes));
 	if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).sort().join() !== "first,references,total,version") invalid();
 	if (value.version !== 1 || !uint$30(value.total) || !uint$30(value.first) || value.first > value.total || !Array.isArray(value.references) || value.references.length > 1024 || value.first + value.references.length > value.total) invalid();
 	for (const reference of value.references) validate$1(reference);
@@ -5089,10 +5090,10 @@ function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u
 		}
 	};
 }
-var utf8$1, utf16, encoder$9, fields$4, scopeSequence$1, invalid, uint$30, decimal;
+var utf8$2, utf16, encoder$9, fields$4, scopeSequence$1, invalid, uint$30, decimal;
 var init_hwp5_current_references = __esmMin((() => {
 	init_hwp5_exclusive_text_delta();
-	utf8$1 = new TextDecoder("utf-8", {
+	utf8$2 = new TextDecoder("utf-8", {
 		fatal: true,
 		ignoreBOM: true
 	});
@@ -6692,6 +6693,32 @@ var init_hwp5_editor = __esmMin((() => {
 		if (!Number.isInteger(value) || value < 0 || value > 4294967295) throw new RangeError(`Invalid ${name}`);
 		return value;
 	};
+}));
+// ../../js/named-field-parameters.mjs
+function checkedNamedFieldParameterValues(value) {
+	if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).length !== 2 || !Object.hasOwn(value, "direction") || !Object.hasOwn(value, "memo") || !valid(value.direction) || !valid(value.memo)) throw Error("InvalidNamedFieldParameters");
+	return {
+		direction: value.direction,
+		memo: value.memo
+	};
+}
+function decodeNamedFieldParameters(bytes) {
+	return checkedNamedFieldParameters(JSON.parse(utf8$1.decode(bytes)));
+}
+function checkedNamedFieldParameters(value) {
+	if (!value || typeof value.canEdit !== "boolean") throw Error("InvalidNamedFieldParameters");
+	return {
+		parameters: checkedNamedFieldParameterValues({
+			direction: value.direction,
+			memo: value.memo
+		}),
+		canEdit: value.canEdit
+	};
+}
+var utf8$1, valid;
+var init_named_field_parameters = __esmMin((() => {
+	utf8$1 = new TextDecoder("utf-8", { fatal: true });
+	valid = (value) => value === null || typeof value === "string" && value.isWellFormed() && new TextEncoder().encode(value).length <= 4096;
 }));
 // ../../js/hwpx-document-insert.mjs
 function ownRecord$1(record, keys, optional = []) {
@@ -12200,6 +12227,53 @@ async function createHwpxEditor(source) {
 				if (!wasm.hwpx_edit_set_checkbox_state(section, formNode, ptr, size)) throw memory.error();
 			});
 		},
+		namedFieldParameters(section, paragraph, beginElement, expectedName) {
+			ready();
+			[
+				section,
+				paragraph,
+				beginElement
+			].forEach(uint);
+			if (typeof wasm.hwpx_edit_named_field_parameters !== "function") throw Error("NamedFieldParametersUnavailable");
+			const name = encodedText(expectedName);
+			return memory.withBytes(name, (ptr, len) => {
+				try {
+					if (!wasm.hwpx_edit_named_field_parameters(section, paragraph, beginElement, ptr, len)) throw memory.error();
+					return decodeNamedFieldParameters(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+				} finally {
+					wasm.hwpx_edit_output_free();
+				}
+			});
+		},
+		setNamedFieldParameters(section, paragraph, beginElement, expectedName, expected, direction, memo) {
+			ready();
+			[
+				section,
+				paragraph,
+				beginElement
+			].forEach(uint);
+			if (typeof wasm.hwpx_edit_set_named_field_parameters !== "function") throw Error("NamedFieldParametersUnavailable");
+			const request = {
+				section,
+				paragraph,
+				beginElement,
+				expectedName,
+				expected: checkedNamedFieldParameterValues(expected),
+				direction,
+				memo
+			};
+			if (typeof expectedName !== "string" || !expectedName.length || !expectedName.isWellFormed()) throw Error("InvalidNamedFieldName");
+			for (const value of [direction, memo]) {
+				if (typeof value !== "string" || !value.isWellFormed()) throw Error("InvalidNamedFieldParameters");
+				if (new TextEncoder().encode(value).length > 4096) throw Error("LimitExceeded");
+			}
+			return memory.withBytes(encodedText(JSON.stringify(request)), (ptr, len) => {
+				const status = wasm.hwpx_edit_set_named_field_parameters(ptr, len);
+				if (status === 1) return true;
+				if (status === 2) return false;
+				throw memory.error();
+			});
+		},
 		createNamedField(section, paragraph, startUnit, endUnit, expectedText, name, direction = "", memo = "") {
 			ready();
 			[
@@ -12367,6 +12441,7 @@ async function createHwpxEditor(source) {
 	};
 }
 var init_hwpx_editor = __esmMin((() => {
+	init_named_field_parameters();
 	init_hwpx_document_insert();
 	init_hwpx_page_number_display_wire();
 	init_cell_diagonal_command();
