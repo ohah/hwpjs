@@ -1616,6 +1616,11 @@
       "sha256": "5aeb9e29aa2ccfba64b8e0ecdd2c38e7cd6c25f2e57bf08a73a54f83e0ddb992"
     },
     {
+      "path": "assets/main-7R-a21Qo.js",
+      "bytes": 593900,
+      "sha256": "bb6d84425086743eae855ae22643147a35391a371cf5eddc186e133b4367a13d"
+    },
+    {
       "path": "assets/main-B2a3Bbq_.js",
       "bytes": 583438,
       "sha256": "9fcb47904b23df90101e39b046ec2937baa29bc985a3ad355b44122d781a4b1a"
@@ -1659,6 +1664,11 @@
       "path": "assets/main-CeISYvvs.js",
       "bytes": 580584,
       "sha256": "34532867b086b54bb818469055cdfb0c13a8ce1837bb0b98f1fbf7bfab5282b8"
+    },
+    {
+      "path": "assets/main-Ci5cWXy-.css",
+      "bytes": 32289,
+      "sha256": "f9159ad5c54fb9467c02fd45c3b9c3c9e4aece7a7b61441b004db94b5bde6cc3"
     },
     {
       "path": "assets/main-CJD1pq0D.js",
@@ -2318,22 +2328,22 @@
     {
       "path": "demo/headless/index.html",
       "bytes": 1283,
-      "sha256": "93ce9bd6520def858051179db6d089bef602d6e36f4e44c52957ea6305069abf"
+      "sha256": "b91551d0e196883c25b857c379338f27a5020a9d8b698a2f533fdc2935094c84"
     },
     {
       "path": "demo/react/index.html",
       "bytes": 1283,
-      "sha256": "93ce9bd6520def858051179db6d089bef602d6e36f4e44c52957ea6305069abf"
+      "sha256": "b91551d0e196883c25b857c379338f27a5020a9d8b698a2f533fdc2935094c84"
     },
     {
       "path": "demo/svelte/index.html",
       "bytes": 1283,
-      "sha256": "93ce9bd6520def858051179db6d089bef602d6e36f4e44c52957ea6305069abf"
+      "sha256": "b91551d0e196883c25b857c379338f27a5020a9d8b698a2f533fdc2935094c84"
     },
     {
       "path": "demo/vanilla/index.html",
       "bytes": 1283,
-      "sha256": "93ce9bd6520def858051179db6d089bef602d6e36f4e44c52957ea6305069abf"
+      "sha256": "b91551d0e196883c25b857c379338f27a5020a9d8b698a2f533fdc2935094c84"
     },
     {
       "path": "fixture-catalog.json",
@@ -2853,7 +2863,7 @@
     {
       "path": "index.html",
       "bytes": 1235,
-      "sha256": "1f3ca42b32551236a2f1618d7c14dc52bc4d1a55d0f028dba596c6382836be24"
+      "sha256": "87990b7e479098d8adff91c6a3e964807cb5dffd03bcf349d70229a6c6e33c5a"
     },
     {
       "path": "LICENSE.txt",
