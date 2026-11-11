@@ -229,6 +229,19 @@ pub const Backend = struct {
         for (original, output) |v, *row| row.* = .{ .start = v.start_unit, .end = v.end_unit, .resource = v.char_shape_id };
         return output;
     }
+    /// Empty caret observation is not a writable fake character range.
+    pub fn insertionField(self: Backend, a: std.mem.Allocator, selected: m.Owner, unit: u32, field: []const u8) !p.Observation {
+        _ = try self.owner(selected);
+        if (unit != 0 or !std.mem.startsWith(u8, field, "character.")) return p.unknown("UnobservedInsertionPosition", "CaretTypingIntentRequired");
+        const rows = try self.session.characterRanges(a, selected.section, selected.paragraph);
+        defer a.free(rows);
+        if (rows.len != 1 or !rows[0].insertion) return p.unknown("UnobservedInsertionPosition", "CaretTypingIntentRequired");
+        const id = rows[0].char_shape_id orelse return p.unknown("MissingCharacterResource", "MissingSourceField");
+        var value = try self.characterField(a, id, field);
+        value.writable = false;
+        value.writeUnavailableReason = "CaretTypingIntentRequired";
+        return value;
+    }
     fn indexedShapes(self: Backend, shapes: anytype, id: u32, comptime character: bool) !@TypeOf(shapes) {
         if (self.snapshot) |snapshot| {
             const slot = if (character) &snapshot.character_ids else &snapshot.paragraph_ids;

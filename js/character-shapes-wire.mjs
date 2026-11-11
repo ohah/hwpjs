@@ -41,8 +41,21 @@ export function decodeCharacterRanges(bytes) {
       end = view.getUint32(offset + 4, true),
       id = view.getUint32(offset + 8, true),
       flags = view.getUint32(offset + 12, true);
-    if (start !== cursor || end < start || flags > 1 || (flags === 0 && id !== 0)) return fail();
+    if (
+      start !== cursor ||
+      end < start ||
+      flags > 3 ||
+      flags === 2 ||
+      (flags === 0 && id !== 0) ||
+      (flags & 2 && (count !== 1 || start !== 0 || end > 1))
+    )
+      return fail();
     cursor = end;
-    return { start, end, charShapeId: flags ? id : null };
+    return {
+      start,
+      end,
+      charShapeId: flags & 1 ? id : null,
+      ...(flags & 2 ? { insertion: true } : {}),
+    };
   });
 }

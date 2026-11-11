@@ -13,7 +13,10 @@ pub fn encode(a: std.mem.Allocator, spans: anytype) ![]u8 {
         std.mem.writeInt(u32, row[0..4], std.math.cast(u32, span.start_unit) orelse return error.LimitExceeded, .little);
         std.mem.writeInt(u32, row[4..8], std.math.cast(u32, span.end_unit) orelse return error.LimitExceeded, .little);
         std.mem.writeInt(u32, row[8..12], span.char_shape_id orelse 0, .little);
-        std.mem.writeInt(u32, row[12..16], @intFromBool(span.char_shape_id != null), .little);
+        // Optional read-only insertion proof. HWPX and older rows retain flags 0/1.
+        const insertion = if (@hasField(@TypeOf(span), "insertion")) span.insertion else false;
+        const flags: u32 = @as(u32, @intFromBool(span.char_shape_id != null)) | (if (insertion) @as(u32, 2) else 0);
+        std.mem.writeInt(u32, row[12..16], flags, .little);
     }
     return bytes;
 }

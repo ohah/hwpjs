@@ -35,6 +35,30 @@ export function rangeFormattingObservation(content, ranges) {
     { isBoundary: isUtf16Boundary },
     at,
   );
+  return observeFormattingIds(
+    content,
+    ids,
+    (ranges ?? []).map((range) => at(range.section, range.paragraph)),
+  );
+}
+/** Native empty-insertion proof only; zero-length selections are not text coverage. */
+export function insertionFormattingObservation(content, paragraph, unit) {
+  if (
+    content?.format !== 'hwp5' ||
+    unit !== 0 ||
+    paragraph?.text !== '' ||
+    paragraph.clipped ||
+    paragraph.characterRangesError ||
+    !Array.isArray(paragraph.characterRanges) ||
+    paragraph.characterRanges.length !== 1
+  )
+    return null;
+  const span = paragraph.characterRanges[0];
+  if (span?.insertion !== true || span.start !== 0 || span.end !== 0 || !uint(span.charShapeId))
+    return null;
+  return observeFormattingIds(content, [span.charShapeId], [paragraph]);
+}
+function observeFormattingIds(content, ids, paragraphs) {
   const resources = Object.fromEntries(
     [
       ['shapes', 'characterShapes'],
@@ -157,8 +181,7 @@ export function rangeFormattingObservation(content, ranges) {
     for (const face of content.fontFaces)
       if (selectedFontIds[face.language].has(face.id)) orderedFontIds[face.language].push(face.id);
   let align;
-  for (const range of ranges ?? []) {
-    const row = at(range.section, range.paragraph);
+  for (const row of paragraphs) {
     align = merge(align, paragraphAlignmentKey(row?.paragraphShape?.alignment));
   }
   return Object.freeze({

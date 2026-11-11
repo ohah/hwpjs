@@ -1,11 +1,14 @@
 //! Current native run boundaries in raw UTF-16 units, including controls/CR.
 const std = @import("std");
 const model = @import("../../model/document.zig");
-pub const Range = struct { start_unit: u32, end_unit: u32, char_shape_id: ?u32 };
+pub const Range = struct { start_unit: u32, end_unit: u32, char_shape_id: ?u32, insertion: bool = false };
 pub fn read(a: std.mem.Allocator, p: model.Paragraph, count: usize) ![]Range {
     const bytes = try @import("plain_text_content.zig").textBytes(a, p);
     defer a.free(bytes);
-    return fromRaw(a, p.character_runs, bytes, count);
+    const rows = try fromRaw(a, p.character_runs, bytes, count);
+    if (rows.len == 1 and rows[0].start_unit == 0 and rows[0].char_shape_id != null and
+        @import("insertion_character_source.zig").knownEmpty(p, bytes)) rows[0].insertion = true;
+    return rows;
 }
 pub fn fromRaw(a: std.mem.Allocator, runs: []const model.CharacterRun, bytes: []const u8, count: usize) ![]Range {
     if (bytes.len % 2 != 0 or bytes.len > 8 * 1024 * 1024) return error.InvalidTextLength;

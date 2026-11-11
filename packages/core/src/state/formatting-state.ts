@@ -8,6 +8,8 @@ import type { CharacterFontLanguage } from '../commands/commands.ts';
 import { FONT_LANGUAGES } from '../../../../js/font-face-identity.mjs';
 // @ts-ignore Public selection uses the canonical UTF-16 scalar boundary.
 import { isUtf16Boundary } from '../../../../web/preview/utf16-boundary.mjs';
+// @ts-ignore Native-proven empty insertion declaration; shared language/resource resolver.
+import { insertionFormattingObservation } from '../../../../web/preview/range-formatting-observation.mjs';
 import { characterTextColorObservation } from './text-color-state.ts';
 import type { EditorState } from './editor-state.ts';
 import type { SelectionTarget } from '../commands/commands.ts';
@@ -111,6 +113,7 @@ export function getSelectionFormatting(state: EditorState): SelectionFormatting 
   const strikeTargetReason = reason(true, 'characterStrikeAvailable');
   const content = state.content;
   const caret = target.startUnit === target.endUnit;
+  const insertion = caret ? insertionFormattingObservation(content, row, target.startUnit) : null;
   const span = caret ? typingSourceSpan(row.text, target.startUnit) : null;
   const start = span?.start ?? target.startUnit;
   const end = span?.end ?? target.endUnit;
@@ -124,38 +127,57 @@ export function getSelectionFormatting(state: EditorState): SelectionFormatting 
   const canObserve = (capability: string) =>
     observedSpan !== null && (content as Record<string, unknown>)[capability] === true;
   // Helpers deliberately consume display offsets, not the mapped native offsets.
-  const bold = canObserve('characterPropertiesAvailable')
-    ? characterSelectionState(content, row, start, end, 'bold')
-    : null;
-  const italic = canObserve('characterPropertiesAvailable')
-    ? characterSelectionState(content, row, start, end, 'italic')
-    : null;
-  const underline = canObserve('characterUnderlineAvailable')
-    ? characterSelectionState(content, row, start, end, 'underline')
-    : null;
-  const strike = canObserve('characterStrikeAvailable')
-    ? characterSelectionState(content, row, start, end, 'strike')
-    : null;
+  const bold = insertion
+    ? insertion.bold
+    : canObserve('characterPropertiesAvailable')
+      ? characterSelectionState(content, row, start, end, 'bold')
+      : null;
+  const italic = insertion
+    ? insertion.italic
+    : canObserve('characterPropertiesAvailable')
+      ? characterSelectionState(content, row, start, end, 'italic')
+      : null;
+  const underline = insertion
+    ? insertion.underline
+    : canObserve('characterUnderlineAvailable')
+      ? characterSelectionState(content, row, start, end, 'underline')
+      : null;
+  const strike = insertion
+    ? insertion.strike
+    : canObserve('characterStrikeAvailable')
+      ? characterSelectionState(content, row, start, end, 'strike')
+      : null;
   const strikeAvailableReason =
     strikeTargetReason ?? (strike === null ? 'UnknownCharacterStrike' : null);
   const textColorTargetReason = reason(true, 'characterTextColorAvailable');
-  const colorObservation = canObserve('characterTextColorAvailable')
-    ? characterTextColorObservation(content, row, start, end)
-    : null;
+  const colorObservation = insertion
+    ? { value: insertion.textColor, bindingValid: insertion.colorBindingValid }
+    : canObserve('characterTextColorAvailable')
+      ? characterTextColorObservation(content, row, start, end)
+      : null;
   const textColor = colorObservation?.value ?? null;
   const textColorAvailableReason =
     textColorTargetReason ?? (colorObservation?.bindingValid ? null : 'UnknownCharacterTextColor');
-  const size = canObserve('characterPropertiesAvailable')
-    ? characterSizeState(content, row, start, end, {
-        isBoundary: isUtf16Boundary,
-      })
-    : null;
+  const size = insertion
+    ? insertion.size
+    : canObserve('characterPropertiesAvailable')
+      ? characterSizeState(content, row, start, end, {
+          isBoundary: isUtf16Boundary,
+        })
+      : null;
   // 문단 원본 enum 관측은 문자 span 및 Native 문단 쓰기 가용성과 독립이다.
   const align = paragraphAlignmentKey(
     (row as typeof row & { paragraphShape?: { alignment?: number } }).paragraphShape?.alignment,
   );
   const fontTargetReason = reason(true, 'characterFontNameAvailable');
-  const fontObserved = characterFontNameObservations(content, row, start, end);
+  const fontObserved = insertion
+    ? (Object.fromEntries(
+        FONT_LANGUAGES.map((language: CharacterFontLanguage) => [
+          language,
+          { value: insertion.fontNames[language], bindingValid: insertion.fontBindings[language] },
+        ]),
+      ) as ReturnType<typeof characterFontNameObservations>)
+    : characterFontNameObservations(content, row, start, end);
   const fontNames = Object.freeze(
     Object.fromEntries(
       FONT_LANGUAGES.map((language: CharacterFontLanguage) => [

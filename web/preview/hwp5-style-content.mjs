@@ -35,12 +35,24 @@ export function projectHwp5Ranges(ranges, source, text) {
     if (end === start) {
       // Empty paragraphs and a separately styled CR retain source boundary
       // affinity without inventing a display glyph or a raw text terminator.
-      if (start === text.length) output.push({ start, end, charShapeId: range.charShapeId });
+      if (start === text.length)
+        output.push({
+          start,
+          end,
+          charShapeId: range.charShapeId,
+          ...(range.insertion === true && text.length === 0 ? { insertion: true } : {}),
+        });
       continue;
     }
     const previous = output.at(-1);
     if (previous?.charShapeId === range.charShapeId) previous.end = end;
-    else output.push({ start, end, charShapeId: range.charShapeId });
+    else
+      output.push({
+        start,
+        end,
+        charShapeId: range.charShapeId,
+        ...(range.insertion === true && text.length === 0 ? { insertion: true } : {}),
+      });
   }
   if (cursor !== text.length) throw new Error('CharacterDisplayLengthMismatch');
   return output;
