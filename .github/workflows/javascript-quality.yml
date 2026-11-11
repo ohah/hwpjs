@@ -24,6 +24,8 @@ jobs:
           node-version: '24.20.0'
       - name: Install frozen workspace dependencies
         run: bun install --frozen-lockfile --ignore-scripts
+      - name: Test current public demo dependency notices
+        run: node --test tools/tests/ui-license-inputs.test.mjs
       - name: Test bounded Native fixture preflight
         run: |
           test -f ./tools/tests/native-fixture-preflight.test.mjs || exit 1
@@ -288,6 +290,22 @@ jobs:
           test -f ./packages/core/dist/build-manifest.json || exit 1
           HWPJS_TEST_WASM_EXPECTED_SHA256="$(node ./tools/tests/helpers/native-wasm-pin.mjs --manifest ./packages/core/dist/build-manifest.json)" || exit 1
           printf 'HWPJS_TEST_WASM_EXPECTED_SHA256=%s\n' "$HWPJS_TEST_WASM_EXPECTED_SHA256" >> "$GITHUB_ENV"
+      - name: Test page settings SDK and independent saved-file oracles
+        timeout-minutes: 3
+        env:
+          HWPJS_TEST_WASM: ${{ github.workspace }}/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm
+          HWPJS_PAGE_REGRESSION_OUT: ${{ runner.temp }}/hwpjs-page-settings-sdk
+        run: |
+          export HWPJS_TEST_WASM_SHA256="$HWPJS_TEST_WASM_EXPECTED_SHA256"
+          node --max-old-space-size=512 tools/run-page-settings-regressions.mjs sdk
+      - name: Preserve page settings SDK evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: page-settings-sdk-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/hwpjs-page-settings-sdk
+          retention-days: 7
+          if-no-files-found: warn
       - name: Test generated paragraph extended formatting Core admission
         timeout-minutes: 2
         run: |

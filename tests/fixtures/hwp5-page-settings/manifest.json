@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "files": [
+    {
+      "path": "tests/fixtures/hwp5-page-settings/two-sections.hwp",
+      "sha256": "432b16e4365aa60cc73976dc33352e68b71a4b4cd1319303e7cf409df5689314"
+    },
+    {
+      "path": "tests/fixtures/hwp5-page-settings/two-reserved.hwp",
+      "sha256": "98b785f8754f36c89ec20de741bae580097a832a2a96ed3059b6f4a95e8eb4ea"
+    },
+    {
+      "path": "apps/docs/docs/public/editor/fixtures/page.hwp",
+      "sha256": "0677cebef471d6878e287fe72d199a2dcf3a147236caaa7c613990cf52fb3e67"
+    }
+  ]
+}

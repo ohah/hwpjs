@@ -197,6 +197,20 @@ jobs:
           grep -Eq '^# tests 6$' "$RUNNER_TEMP/hwpjs-cli-h5-bullet.tap"
           grep -Eq '^# fail 0$' "$RUNNER_TEMP/hwpjs-cli-h5-bullet.tap"
           grep -Eq '^# skipped 0$' "$RUNNER_TEMP/hwpjs-cli-h5-bullet.tap"
+      - name: HWP5 and HWPX page settings CLI and MCP E2E
+        timeout-minutes: 3
+        env:
+          HWPJS_PAGE_TEST_OLD_WASM: ${{ runner.temp }}/hwpjs-before-page-settings.wasm
+          HWPJS_PAGE_TEST_OLD_WASM_SHA256: 3723d2fe39a73dedd1f994c6c4cff8e8f75014761df8f0561a3be6a8362957dc
+          HWPJS_PAGE_REGRESSION_OUT: ${{ runner.temp }}/hwpjs-page-settings-cli
+        shell: bash
+        run: |
+          set -euo pipefail
+          previous_engine=693995fa24cd0f3a0ec17a67316f845257d89d93
+          git fetch --no-tags --depth=1 origin "$previous_engine"
+          git show "$previous_engine:apps/docs/docs/public/editor/hwpjs/hwpjs.wasm" > "$HWPJS_PAGE_TEST_OLD_WASM"
+          printf '%s  %s\n' "$HWPJS_PAGE_TEST_OLD_WASM_SHA256" "$HWPJS_PAGE_TEST_OLD_WASM" | sha256sum --check --strict
+          node --max-old-space-size=512 tools/run-page-settings-regressions.mjs cli
       - name: 문자 확장 서식 CLI와 MCP 명시 E2E
         timeout-minutes: 3
         shell: bash
@@ -245,6 +259,7 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
           path: |
+            ${{ runner.temp }}/hwpjs-page-settings-cli
             ${{ runner.temp }}/hwpjs-cli-character-plan-native.tap
             ${{ runner.temp }}/hwpjs-cli-character-plan-native
             ${{ runner.temp }}/hwpjs-cli-character-extensions.tap
