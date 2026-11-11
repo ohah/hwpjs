@@ -5790,6 +5790,12 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			const query = wasm.hwp5_edit_paragraph_shapes_with_heading ?? wasm.hwp5_edit_paragraph_shapes;
 			return decodeParagraphShapes(output(query).bytes);
 		},
+		paragraphNumberingSource() {
+			check();
+			const query = wasm.hwp5_edit_paragraph_numbering_definitions;
+			if (typeof query !== "function") return null;
+			return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(output(query).bytes));
+		},
 		characterShapes() {
 			check();
 			if (typeof wasm.hwp5_edit_character_shapes !== "function") throw new Error("Hwp5CharacterShapesAbiUnavailable");
@@ -9104,7 +9110,7 @@ function decodeHwpxParagraphShapes(bytes) {
 		"outline",
 		"number",
 		"bullet"
-	].includes(value.kind) && (value.marker === null || value.kind === "bullet" && Number.isInteger(value.marker) && value.marker > 32 && value.marker <= 1114111 && !(value.marker >= 127 && value.marker <= 159) && !(value.marker >= 55296 && value.marker <= 57343));
+	].includes(value.kind) && ["id", "level"].every((key) => !Object.hasOwn(value, key) || value[key] === null || Number.isInteger(value[key]) && value[key] >= 0 && value[key] <= 4294967295) && (value.marker === null || value.kind === "bullet" && Number.isInteger(value.marker) && value.marker > 32 && value.marker <= 1114111 && !(value.marker >= 127 && value.marker <= 159) && !(value.marker >= 55296 && value.marker <= 57343));
 	if (!Array.isArray(result)) invalid();
 	const ids = /* @__PURE__ */ new Set();
 	for (const row of result) {
@@ -10706,6 +10712,17 @@ async function createHwpxEditor(source) {
 			try {
 				if (!wasm.hwpx_edit_paragraph_shapes()) throw memory.error();
 				return decodeHwpxParagraphShapes(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+			} finally {
+				wasm.hwpx_edit_output_free();
+			}
+		},
+		paragraphNumberingSource() {
+			ready();
+			if (typeof wasm.hwpx_edit_paragraph_numbering_source !== "function") return null;
+			try {
+				if (!wasm.hwpx_edit_paragraph_numbering_source()) throw memory.error();
+				const bytes = memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len());
+				return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 			} finally {
 				wasm.hwpx_edit_output_free();
 			}
