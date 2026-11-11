@@ -994,6 +994,17 @@ export async function createHwpxEditor(source) {
         wasm.hwpx_edit_output_free();
       }
     },
+    paragraphNumberingSource() {
+      ready();
+      if (typeof wasm.hwpx_edit_paragraph_numbering_source !== 'function') return null;
+      try {
+        if (!wasm.hwpx_edit_paragraph_numbering_source()) throw memory.error();
+        const bytes = memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len());
+        return JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
+      } finally {
+        wasm.hwpx_edit_output_free();
+      }
+    },
     characterShapes() {
       ready();
       if (typeof wasm.hwpx_edit_character_shapes !== 'function')

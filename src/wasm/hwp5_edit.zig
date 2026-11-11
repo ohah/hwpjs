@@ -541,6 +541,15 @@ fn paragraphShapes(with_heading: bool) u32 {
     output = @import("paragraph_shapes_wire.zig").encode(a, shapes, with_heading) catch |err| return fail(err);
     return 1;
 }
+export fn hwp5_edit_paragraph_numbering_definitions() u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    var arena = std.heap.ArenaAllocator.init(a);
+    defer arena.deinit();
+    const definitions = s.paragraphNumberingDefinitions(arena.allocator()) catch |err| return fail(err);
+    output = std.json.Stringify.valueAlloc(a, definitions, .{}) catch |err| return fail(err);
+    return 1;
+}
 export fn hwp5_edit_character_shapes() u32 {
     hwp5_edit_output_free();
     const s = session() catch |err| return fail(err);

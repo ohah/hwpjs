@@ -1,3 +1,4 @@
+import { attachParagraphNumbering } from './paragraph-numbering.mjs';
 import { copyDocumentInsertRuntimeMessage } from '../../js/hwpx-document-insert.mjs';
 import { renameHwpxNamedField, setHwpxNamedFieldValue } from './hwpx-named-field-value.mjs';
 import { projectHwp5NamedFields } from './hwp5-named-fields.mjs';
@@ -493,14 +494,15 @@ export function createReaderRuntime({
       ),
     );
     const roots = projectHwp5RootContent(prepared);
-    if (roots.state === 'projected') return attachHwp5NoteSelectionOwners(roots.content);
+    if (roots.state === 'projected')
+      return attachParagraphNumbering(editor, attachHwp5NoteSelectionOwners(roots.content));
     if (
       prepared.hwp5Drawings?.length &&
       prepared.hwp5Drawings.every((row) => row.source.kind_id === 0x24636f6e)
     )
       prepared.hwp5GroupPageModelError = roots.error;
     else prepared.hwp5DrawingPageModelError = roots.error;
-    return attachHwp5NoteSelectionOwners(prepared);
+    return attachParagraphNumbering(editor, attachHwp5NoteSelectionOwners(prepared));
   }
   function anchorView(section, paragraph) {
     try {
@@ -1012,7 +1014,7 @@ export function createReaderRuntime({
     // The reusable load snapshot describes ABI availability; reply capability also gates history.
     result.sourceTableGridAvailable = editor?.supportsSourceTableGrid?.() === true;
     hwpxCreatedTablesPending = result.createdTableHostPending;
-    return result;
+    return attachParagraphNumbering(editor, result);
   }
   const outcomes = new WeakMap();
   let lastHistoryRevision;

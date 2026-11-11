@@ -9,6 +9,8 @@ const Allocator = std.mem.Allocator;
 pub const Heading = struct {
     kind: enum { none, outline, number, bullet },
     marker: ?u21 = null,
+    id: ?u32 = null,
+    level: ?u32 = null,
 };
 pub const Bullets = std.AutoHashMapUnmanaged(u32, ?u21);
 
@@ -68,8 +70,12 @@ fn readHeading(a: Allocator, tree: *const Tree, shape: usize, definitions: Bulle
     const kind = try raw.toUtf8(a, 16);
     defer a.free(kind);
     if (std.mem.eql(u8, kind, "NONE")) return .{ .kind = .none };
-    if (std.mem.eql(u8, kind, "NUMBER")) return .{ .kind = .number };
-    if (std.mem.eql(u8, kind, "OUTLINE")) return .{ .kind = .outline };
+    const numbered_kind: ?@FieldType(Heading, "kind") = if (std.mem.eql(u8, kind, "NUMBER")) .number else if (std.mem.eql(u8, kind, "OUTLINE")) .outline else null;
+    if (numbered_kind) |selected| return .{
+        .kind = selected,
+        .id = try fields.optionalUnsigned(a, tree, index, "idRef", 64),
+        .level = try fields.optionalUnsigned(a, tree, index, "level", 64),
+    };
     if (!std.mem.eql(u8, kind, "BULLET")) return null;
     const id = (try fields.optionalUnsigned(a, tree, index, "idRef", 64)) orelse return .{ .kind = .bullet };
     return .{ .kind = .bullet, .marker = definitions.get(id) orelse null };
@@ -111,7 +117,7 @@ test "caret heading matches current typed header resources and withholds ambiguo
                 .{ .kind = .bullet },
                 .{ .kind = .bullet },
                 .{ .kind = .none },
-                .{ .kind = .number },
+                .{ .kind = .number, .id = 17 },
                 .{ .kind = .outline },
                 null,
                 null,

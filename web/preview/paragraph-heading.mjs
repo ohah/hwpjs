@@ -6,7 +6,7 @@ export function unavailableHeading(reason) {
 
 // The snapshot carries only authoritative resource metadata. List templates,
 // inline automatic numbers, and document characters cannot supply a marker.
-export function observedParagraphHeading(format, shape) {
+export function observedParagraphHeading(format, shape, label) {
   const heading =
     format === 'hwp5'
       ? { kind: hwp5Kinds[shape?.headingKind], marker: shape?.headingMarker }
@@ -15,8 +15,16 @@ export function observedParagraphHeading(format, shape) {
         : null;
   if (heading?.kind === 'none')
     return Object.freeze({ state: 'available', kind: 'none', text: '' });
-  if (heading?.kind === 'number' || heading?.kind === 'outline')
-    return unavailableHeading('numbering-not-computed');
+  if (heading?.kind === 'number' || heading?.kind === 'outline') {
+    if (label?.kind !== heading.kind || typeof label.text !== 'string' || label.text.length === 0)
+      return unavailableHeading('numbering-not-computed');
+    return Object.freeze({
+      state: 'available',
+      kind: heading.kind,
+      text: label.text,
+      provenance: format === 'hwp5' ? 'hwp5-numbering' : 'hwpx-numbering',
+    });
+  }
   if (heading?.kind !== 'bullet') return unavailableHeading('heading-not-observed');
   const marker = heading.marker;
   if (

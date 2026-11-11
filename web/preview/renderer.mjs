@@ -2247,7 +2247,11 @@ export function createRenderer(
         !caretGeometry(layout, point)
       )
         return unavailableHeading('caret-not-observed');
-      return observedParagraphHeading(content.format, paragraph.paragraphShape);
+      return observedParagraphHeading(
+        content.format,
+        paragraph.paragraphShape,
+        paragraph.numberingLabel,
+      );
     },
     getPageText(state, pageIndex, filter) {
       if (closed || projectionDeferred || draft || sourceObservationState !== state)

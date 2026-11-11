@@ -378,6 +378,12 @@ export async function createExperimentalHwp5Editor(
       const query = wasm.hwp5_edit_paragraph_shapes_with_heading ?? wasm.hwp5_edit_paragraph_shapes;
       return decodeParagraphShapes(output(query).bytes);
     },
+    paragraphNumberingSource() {
+      check();
+      const query = wasm.hwp5_edit_paragraph_numbering_definitions;
+      if (typeof query !== 'function') return null;
+      return JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(output(query).bytes));
+    },
     characterShapes() {
       check();
       if (typeof wasm.hwp5_edit_character_shapes !== 'function')

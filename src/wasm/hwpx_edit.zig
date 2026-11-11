@@ -1596,6 +1596,15 @@ export fn hwpx_edit_paragraph_shapes() u32 {
     return 1;
 }
 
+export fn hwpx_edit_paragraph_numbering_source() u32 {
+    hwpx_edit_output_free();
+    const s = if (active) |*value| value else return fail(error.EditorNotOpen);
+    var arena = std.heap.ArenaAllocator.init(a);
+    defer arena.deinit();
+    const source = @import("../hwpx/paragraph_numbering_source.zig").read(arena.allocator(), s) catch |err| return fail(err);
+    output = std.json.Stringify.valueAlloc(a, source, .{}) catch |err| return fail(err);
+    return 1;
+}
 export fn hwpx_edit_character_shapes() u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);

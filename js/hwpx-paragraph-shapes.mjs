@@ -27,6 +27,12 @@ export function decodeHwpxParagraphShapes(bytes) {
     value === null ||
     (value &&
       ['none', 'outline', 'number', 'bullet'].includes(value.kind) &&
+      ['id', 'level'].every(
+        (key) =>
+          !Object.hasOwn(value, key) ||
+          value[key] === null ||
+          (Number.isInteger(value[key]) && value[key] >= 0 && value[key] <= 0xffffffff),
+      ) &&
       (value.marker === null ||
         (value.kind === 'bullet' &&
           Number.isInteger(value.marker) &&

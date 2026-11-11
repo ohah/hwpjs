@@ -116,6 +116,12 @@ export type CanvasParagraphHeadingResult =
       provenance: 'hwp5-docinfo' | 'hwpx-header';
     }>
   | Readonly<{
+      state: 'available';
+      kind: 'number' | 'outline';
+      text: string;
+      provenance: 'hwp5-numbering' | 'hwpx-numbering';
+    }>
+  | Readonly<{
       state: 'unavailable';
       reason:
         | 'surface-detached'

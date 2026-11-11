@@ -1285,6 +1285,14 @@ pub const Session = opaque {
         return @import("paragraph_display_shapes.zig").read(a, current, state.source.header.version(), self.paragraphShapeCount());
     }
 
+    pub fn paragraphNumberingDefinitions(self: *const Session, a: std.mem.Allocator) ![]@import("paragraph_numbering_source.zig").Definition {
+        // Paragraph-format edits may change references, but cannot edit this resource table.
+        const source = self.stateConst().source;
+        const decoded = try source.decodeDocInfo(a, max_stream);
+        defer a.free(decoded);
+        return @import("paragraph_numbering_source.zig").read(a, decoded, source.header.version());
+    }
+
     /// Scalar inventory only; includes pending created cells without copying text
     /// or resolving anchor order. It never grants edit ownership or permission.
     /// Caller owns the returned sections slice. Native wire total is inclusive.
