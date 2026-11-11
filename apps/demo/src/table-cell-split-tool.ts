@@ -3,6 +3,8 @@ import {
   type HeadlessEditor,
   type SourceTableCellSplitCapture,
 } from '@hwpjs/core';
+import { createDialogLayer } from './dialog-layer.ts';
+import './table-cell-split.css';
 
 export interface TableCellSplitCapture extends SourceTableCellSplitCapture {
   current(): boolean;
@@ -42,9 +44,10 @@ export function createTableCellSplitTool(
   note: (message: string) => void,
 ) {
   let disposeDialog: (() => void) | undefined;
+  let disposed = false;
   return {
     open(captured?: TableCellSplitCapture) {
-      if (disposeDialog) return;
+      if (disposed || disposeDialog || root.ownerDocument.querySelector('dialog:modal')) return;
       const host = getHost(),
         capture = captured ?? host?.captureSourceTableCellSplit?.();
       if (!capture?.current()) {
@@ -52,22 +55,36 @@ export function createTableCellSplitTool(
         return;
       }
       const hwp5 = capture.selection.profile === 'single-unmerged-source-cell';
-      const doc = root.ownerDocument,
-        dialog = doc.createElement('dialog');
-      dialog.dataset.role = 'table-cell-split-dialog';
-      dialog.setAttribute('aria-label', '셀 나누기');
-      const title = doc.createElement('h2');
-      title.textContent = '셀 나누기';
+      const doc = root.ownerDocument;
+      const openingState = editor.getEditorState();
+      const layer = createDialogLayer(root, {
+        role: 'table-cell-split-dialog',
+        title: '셀 나누기',
+        mode: 'modal',
+        onDismiss: () => close(),
+      });
+      const dialog = layer.element;
+      dialog.classList.add('hwp-table-cell-split-dialog');
+      const dismiss = dialog.querySelector<HTMLButtonElement>('[data-role=dialog-dismiss]')!;
       const description = doc.createElement('p');
       description.textContent = `${capture.selection.selectedCells}개 셀 선택 · 기존 내용은 각 분할의 첫 셀에 보존됩니다.`;
-      dialog.append(title, description);
+      description.className = 'hwp-cell-split-description';
+      layer.body.append(description);
       if (hwp5) {
         const scope = doc.createElement('p');
         scope.dataset.role = 'cell-split-scope';
         scope.textContent =
           'HWP5는 현재 원본 비병합 표의 셀 하나를 균등하게 나눕니다. 병합 입력·여러 셀 나누기는 후속 지원 범위입니다.';
-        dialog.append(scope);
+        scope.className = 'hwp-cell-split-scope';
+        layer.body.append(scope);
       }
+      const dimensions = doc.createElement('fieldset'),
+        counts = doc.createElement('div'),
+        countTitle = doc.createElement('legend');
+      dimensions.className = 'hwp-cell-split-group';
+      countTitle.textContent = '줄/칸 나누기';
+      counts.className = 'hwp-cell-split-counts';
+      dimensions.append(countTitle, counts);
       const number = (name: string, text: string, value: number) => {
         const label = doc.createElement('label'),
           input = doc.createElement('input');
@@ -78,19 +95,22 @@ export function createTableCellSplitTool(
         input.max = '63';
         input.step = '1';
         input.value = String(value);
-        input.style.width = '5em';
+        label.className = 'hwp-cell-split-count';
         label.append(input);
-        dialog.append(label);
+        counts.append(label);
         return input;
       };
-      const rows = number('splitRows', '줄 수 ', 1),
-        columns = number('splitColumns', '칸 수 ', 2);
+      const rows = number('splitRows', '줄 수', 1),
+        columns = number('splitColumns', '칸 수', 2);
       const hint = doc.createElement('p');
       hint.textContent = '1은 해당 방향을 유지합니다. 나눌 방향은 2~63을 입력하세요.';
-      dialog.append(hint);
+      hint.className = 'hwp-cell-split-hint';
+      dimensions.append(hint);
+      layer.body.append(dimensions);
       const modes = doc.createElement('fieldset'),
         legend = doc.createElement('legend');
       legend.textContent = '나누는 방법';
+      modes.className = 'hwp-cell-split-group hwp-cell-split-modes';
       modes.append(legend);
       const modeInputs: HTMLInputElement[] = [];
       for (const [value, text] of [
@@ -105,11 +125,12 @@ export function createTableCellSplitTool(
         input.checked = value === 'each';
         input.disabled =
           value === 'merge-then-split' && (hwp5 || capture.selection.selectedCells < 2);
+        label.className = 'hwp-cell-split-choice';
         label.append(input, doc.createTextNode(text));
         modes.append(label);
         modeInputs.push(input);
       }
-      dialog.append(modes);
+      layer.body.append(modes);
       const equalLabel = doc.createElement('label'),
         equal = doc.createElement('input');
       equal.type = 'checkbox';
@@ -117,9 +138,12 @@ export function createTableCellSplitTool(
       equal.checked = true;
       equal.disabled = hwp5;
       equalLabel.append(equal, doc.createTextNode('줄 높이를 같게 나누기'));
-      dialog.append(equalLabel);
+      equalLabel.className = 'hwp-cell-split-choice';
+      layer.body.append(equalLabel);
       const status = doc.createElement('p');
       status.setAttribute('role', 'status');
+      status.dataset.role = 'cell-split-status';
+      status.className = 'hwp-cell-split-status';
       const accept = doc.createElement('button'),
         cancel = doc.createElement('button');
       accept.type = cancel.type = 'button';
@@ -127,17 +151,27 @@ export function createTableCellSplitTool(
       cancel.textContent = '취소';
       accept.dataset.role = 'apply-cell-split';
       cancel.dataset.role = 'cancel-cell-split';
-      dialog.append(status, accept, cancel);
+      accept.className = 'hwp-cell-split-accept';
+      layer.body.append(status);
+      layer.footer.append(accept, cancel);
       root.append(dialog);
       let busy = false,
         closed = false;
       const close = (force = false) => {
         if (closed || (busy && !force)) return;
         closed = true;
-        dialog.close();
-        dialog.remove();
+        layer.destroy();
         disposeDialog = undefined;
-        host?.focus?.();
+        const now = editor.getEditorState();
+        if (
+          !disposed &&
+          getHost() === host &&
+          now.editorId === openingState.editorId &&
+          now.documentId === openingState.documentId &&
+          now.generation === openingState.generation &&
+          now.status === 'ready'
+        )
+          host?.focus?.();
       };
       disposeDialog = () => close(true);
       if (!capture.bindDialog(dialog)) {
@@ -147,9 +181,11 @@ export function createTableCellSplitTool(
       }
       host?.registerCellBlockMenu?.(dialog, () => capture.current());
       cancel.addEventListener('click', () => close());
-      dialog.addEventListener('cancel', (event) => {
-        event.preventDefault();
-        close();
+      dialog.addEventListener('keydown', (event) => {
+        if (event.key === 'F5') {
+          event.preventDefault();
+          event.stopPropagation();
+        }
       });
       dialog.addEventListener('close', () => close());
       accept.addEventListener('click', async () => {
@@ -168,7 +204,9 @@ export function createTableCellSplitTool(
           return;
         }
         busy = true;
-        accept.disabled = cancel.disabled = true;
+        accept.disabled = cancel.disabled = dismiss.disabled = true;
+        rows.disabled = columns.disabled = modes.disabled = true;
+        equal.disabled = true;
         try {
           const result = await editor.dispatchCommand(SPLIT_SOURCE_TABLE_CELLS_COMMAND, {
             target: capture.target,
@@ -195,15 +233,20 @@ export function createTableCellSplitTool(
         } catch (error) {
           status.textContent = refusal(error instanceof Error ? error.message : String(error));
         } finally {
-          busy = false;
-          cancel.disabled = false;
-          accept.disabled = !capture.current();
+          if (!closed) {
+            busy = false;
+            cancel.disabled = dismiss.disabled = false;
+            rows.disabled = columns.disabled = modes.disabled = false;
+            equal.disabled = hwp5;
+            accept.disabled = !capture.current();
+          }
         }
       });
-      dialog.showModal();
-      columns.focus();
+      layer.show(columns);
+      columns.select();
     },
     dispose() {
+      disposed = true;
       disposeDialog?.();
     },
   };

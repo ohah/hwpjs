@@ -1,0 +1,101 @@
+/* Scoped UI layout only; numeric values and split admission stay in Core/Native. */
+.hwp-table-cell-split-dialog {
+  width: min(440px, calc(100vw - 24px));
+}
+.hwp-table-cell-split-dialog .hwp-dialog-body {
+  display: grid;
+  gap: 12px;
+}
+.hwp-table-cell-split-dialog p {
+  margin: 0;
+}
+.hwp-table-cell-split-dialog .hwp-cell-split-description {
+  font-weight: 500;
+}
+.hwp-table-cell-split-dialog .hwp-cell-split-scope {
+  padding: 8px 10px;
+  border: 1px solid #d6deec;
+  border-radius: 3px;
+  background: #f0f4fa;
+  color: #4b5b70;
+  overflow-wrap: anywhere;
+}
+.hwp-table-cell-split-dialog .hwp-cell-split-group {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 10px 12px 12px;
+  border: 1px solid #cbd4e6;
+  border-radius: 3px;
+}
+.hwp-table-cell-split-dialog legend {
+  padding-inline: 4px;
+}
+.hwp-table-cell-split-dialog .hwp-cell-split-counts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 16px;
+}
+.hwp-table-cell-split-dialog .hwp-cell-split-count {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.hwp-table-cell-split-dialog input[type='number'] {
+  min-width: 0;
+  width: 100%;
+  min-height: 30px;
+  border: 1px solid #a9b6cb;
+  border-radius: 3px;
+  padding: 4px 7px;
+  color: inherit;
+  background: #fff;
+  font: inherit;
+}
+.hwp-table-cell-split-dialog .hwp-cell-split-hint {
+  margin-top: 9px;
+  font-size: 12px;
+  color: #556579;
+}
+.hwp-table-cell-split-dialog .hwp-cell-split-modes {
+  display: grid;
+  gap: 8px;
+}
+.hwp-table-cell-split-dialog .hwp-cell-split-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+}
+.hwp-table-cell-split-dialog input[type='radio'],
+.hwp-table-cell-split-dialog input[type='checkbox'] {
+  flex: 0 0 auto;
+  margin: 3px 0 0;
+  accent-color: #2862b4;
+}
+.hwp-table-cell-split-dialog label:has(input:disabled) {
+  color: #667386;
+}
+.hwp-table-cell-split-dialog .hwp-cell-split-status {
+  color: #a72c2c;
+  overflow-wrap: anywhere;
+}
+.hwp-table-cell-split-dialog .hwp-cell-split-status:empty {
+  display: none;
+}
+.hwp-table-cell-split-dialog .hwp-cell-split-accept {
+  border-color: #386cba;
+  background: #edf3ff;
+  font-weight: 600;
+}
+.hwp-table-cell-split-dialog .hwp-dialog-footer {
+  flex-wrap: wrap;
+}
+@media (max-width: 360px) {
+  .hwp-table-cell-split-dialog .hwp-cell-split-counts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (forced-colors: active) {
+  .hwp-table-cell-split-dialog .hwp-cell-split-accept {
+    border-color: Highlight;
+  }
+}
