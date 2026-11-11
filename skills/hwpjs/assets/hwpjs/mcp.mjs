@@ -26011,6 +26011,7 @@ var init_abi_schema = __esmMin((() => {
 	]);
 	Object.freeze(["hwp5_edit_named_fields"]);
 	Object.freeze(["hwpx_edit_named_fields"]);
+	Object.freeze(["hwpx_edit_create_named_field"]);
 	Object.freeze(["hwpx_edit_rename_named_field"]);
 	HWPX_DOCUMENT_INSERT_FUNCTIONS = Object.freeze(["hwpx_edit_document_insert_capabilities", "hwpx_edit_insert_document"]);
 	HWPX_SOURCE_TABLE_CELL_MERGE_FUNCTIONS = Object.freeze(["hwpx_edit_document_insert_capabilities", "hwpx_edit_merge_source_table_cells"]);
@@ -36223,6 +36224,30 @@ async function createHwpxEditor(source) {
 			memory.withBytes(bytes, (ptr, size) => {
 				if (!wasm.hwpx_edit_set_checkbox_state(section, formNode, ptr, size)) throw memory.error();
 			});
+		},
+		createNamedField(section, paragraph, startUnit, endUnit, expectedText, name, direction = "", memo = "") {
+			ready();
+			[
+				section,
+				paragraph,
+				startUnit,
+				endUnit
+			].forEach(uint);
+			if (typeof wasm.hwpx_edit_create_named_field !== "function") throw Error("NamedFieldCreateUnavailable");
+			if (typeof name !== "string" || !/[^ \t\r\n]/.test(name) || !name.isWellFormed()) throw Error("InvalidNamedFieldName");
+			const expected = encodedText(expectedText);
+			const encodedName = encodedText(name);
+			const prompt = encodedText(direction);
+			const help = encodedText(memo);
+			if ([
+				encodedName,
+				prompt,
+				help
+			].some((bytes) => bytes.length > 4096)) throw Error("LimitExceeded");
+			return memory.withBytes(expected, (expectedPtr, expectedLen) => memory.withBytes(encodedName, (namePtr, nameLen) => memory.withBytes(prompt, (directionPtr, directionLen) => memory.withBytes(help, (memoPtr, memoLen) => {
+				if (wasm.hwpx_edit_create_named_field(section, paragraph, startUnit, endUnit, expectedPtr, expectedLen, namePtr, nameLen, directionPtr, directionLen, memoPtr, memoLen) === 1) return true;
+				throw memory.error();
+			}))));
 		},
 		renameNamedField(section, paragraph, beginElement, expectedName, newName) {
 			ready();
