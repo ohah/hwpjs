@@ -305,7 +305,7 @@ function parseObjectReference(reference, expected = {}) {
 		kind: match[4],
 		node: Number(match[5])
 	};
-	if (!uint$38(result.section) || !uint$38(result.node)) throw new TypeError("InvalidObjectReference");
+	if (!uint$39(result.section) || !uint$39(result.node)) throw new TypeError("InvalidObjectReference");
 	if (expectedSha256 !== void 0 && expectedSha256 !== result.sourceSha256) throw new Error("StaleObjectReference");
 	if (expectedFormat !== void 0 && expectedFormat !== result.format) throw new Error("ObjectReferenceFormatMismatch");
 	return result;
@@ -320,7 +320,7 @@ function canonicalImageId(value) {
 	})) throw new TypeError("InvalidImageIdentity");
 	return `${documentFormat}:s${section}:i${node}`;
 }
-var KINDS, SHA, REFERENCE, object$11, uint$38, format, identity;
+var KINDS, SHA, REFERENCE, object$11, uint$39, format, identity;
 var init_object_reference$1 = __esmMin((() => {
 	KINDS = /* @__PURE__ */ new Set([
 		"image",
@@ -334,9 +334,9 @@ var init_object_reference$1 = __esmMin((() => {
 	SHA = /^[a-f0-9]{64}$/u;
 	REFERENCE = /^hwpjs-object:([a-f0-9]{64})\/(hwp5|hwpx)\/s(0|[1-9]\d*)\/(image|table|chart|equation|drawing|ole|unknown)\/(0|[1-9]\d*)$/u;
 	object$11 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	uint$38 = (value) => typeof value === "number" && Number.isSafeInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
+	uint$39 = (value) => typeof value === "number" && Number.isSafeInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
 	format = (value) => value === "hwp5" || value === "hwpx";
-	identity = (value) => object$11(value) && format(value.format) && uint$38(value.section) && uint$38(value.node);
+	identity = (value) => object$11(value) && format(value.format) && uint$39(value.section) && uint$39(value.node);
 }));
 // src/object-reference.ts
 var init_object_reference = __esmMin((() => {
@@ -1245,14 +1245,14 @@ function observationLines(value, prefix = "") {
 	visit(value, prefix, 0);
 	return lines.join("");
 }
-var scalar$1, line, warningLines;
+var scalar$2, line, warningLines;
 var init_host_output = __esmMin((() => {
-	scalar$1 = (value) => Array.from(String(value), (character) => {
+	scalar$2 = (value) => Array.from(String(value), (character) => {
 		const code = character.charCodeAt(0);
 		return code <= 31 || code === 127 ? "\\u" + code.toString(16).padStart(4, "0") : character;
 	}).join("");
-	line = (key, value) => `${key}: ${scalar$1(value)}\n`;
-	warningLines = (warnings = []) => warnings.map((warning) => line("warning", typeof warning === "string" ? warning : Object.entries(warning).map(([key, value]) => `${key}=${scalar$1(value)}`).join(" "))).join("");
+	line = (key, value) => `${key}: ${scalar$2(value)}\n`;
+	warningLines = (warnings = []) => warnings.map((warning) => line("warning", typeof warning === "string" ? warning : Object.entries(warning).map(([key, value]) => `${key}=${scalar$2(value)}`).join(" "))).join("");
 }));
 // ../document/src/render-escape.ts
 function createDisplayEscaper(options) {
@@ -1336,14 +1336,14 @@ const metadataEscape = createDisplayEscaper({
 	format: "text",
 	view: "structure"
 });
-const scalar = (value) => metadataEscape(String(value));
+const scalar$1 = (value) => metadataEscape(String(value));
 /** 내부 배치 모델은 문서 JSON으로 노출하지 않고 읽기용 텍스트/Markdown으로 보고합니다. */
 function renderBatchReadReport(batch, { format = "text", view = "content", maxOutputBytes }) {
 	if (format !== "text" && format !== "markdown") throw Error("InvalidReadFormat");
 	if (view !== "content" && view !== "structure") throw Error("InvalidReadView");
 	const indent = format === "markdown" ? "    " : "";
 	const lines = [format === "markdown" ? "# 여러 문서 읽기\n" : "여러 문서 읽기\n"];
-	const line = (key, value) => `${indent}${key}: ${scalar(value)}\n`;
+	const line = (key, value) => `${indent}${key}: ${scalar$1(value)}\n`;
 	if (view === "content") {
 		const escape = createDisplayEscaper({
 			format,
@@ -1402,7 +1402,7 @@ function decodeHwp5NamedFields(bytes) {
 	const ids = /* @__PURE__ */ new Set();
 	const rows = source.rows.map(({ section, node, kind, name, text, sourceLocation }) => {
 		const id = `hwp5:${section}:${node}`;
-		if (!uint$37(section) || !uint$37(node) || ids.has(id) || !["CLICK_HERE", "BOOKMARK"].includes(kind) || name !== null && (typeof name !== "string" || !name.isWellFormed()) || text !== null && (typeof text !== "string" || !text.isWellFormed())) throw invalid();
+		if (!uint$38(section) || !uint$38(node) || ids.has(id) || !["CLICK_HERE", "BOOKMARK"].includes(kind) || name !== null && (typeof name !== "string" || !name.isWellFormed()) || text !== null && (typeof text !== "string" || !text.isWellFormed())) throw invalid();
 		ids.add(id);
 		if (text === null !== (sourceLocation === null)) throw invalid();
 		if (sourceLocation !== null) {
@@ -1413,7 +1413,7 @@ function decodeHwp5NamedFields(bytes) {
 				sourceNode,
 				startUnit,
 				endUnit
-			].every(uint$37) || endUnit - startUnit !== text.length) throw invalid();
+			].every(uint$38) || endUnit - startUnit !== text.length) throw invalid();
 		}
 		return {
 			id,
@@ -1434,10 +1434,10 @@ function decodeHwp5NamedFields(bytes) {
 		rows
 	};
 }
-var utf8$3, uint$37;
+var utf8$3, uint$38;
 var init_hwp5_named_fields = __esmMin((() => {
 	utf8$3 = new TextDecoder("utf-8", { fatal: true });
-	uint$37 = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 4294967295;
+	uint$38 = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 4294967295;
 })), BORDER_WIDTHS_HUNDREDTH_MM;
 var init_border_fill_values = __esmMin((() => {
 	Object.freeze([
@@ -2984,32 +2984,32 @@ function validateHwp5FormSources(rows) {
 		"property_bytes",
 		"property_nodes",
 		"other_direct_children"
-	].every((k) => uint$36(row[k])) && row.paragraph_node < row.control_node && row.source_unit <= 4294967287 && [
+	].every((k) => uint$37(row[k])) && row.paragraph_node < row.control_node && row.source_unit <= 4294967287 && [
 		"unknown",
 		"push_button",
 		"check_box",
 		"combo_box",
 		"radio_button",
 		"edit"
-	].includes(row.kind) && uint$36(row.type_id) && uint$36(row.secondary_type_id) && [
+	].includes(row.kind) && uint$37(row.type_id) && uint$37(row.secondary_type_id) && [
 		"offset_x",
 		"offset_y",
 		"z_order",
 		"prevent_page_break"
-	].every((k) => signed(row[k], -2147483648, 2147483647)) && Array.isArray(row.margins) && row.margins.length === 4 && row.margins.every((v) => signed(v, -32768, 32767)) && (row.description_bytes === null || uint$36(row.description_bytes)));
+	].every((k) => signed(row[k], -2147483648, 2147483647)) && Array.isArray(row.margins) && row.margins.length === 4 && row.margins.every((v) => signed(v, -32768, 32767)) && (row.description_bytes === null || uint$37(row.description_bytes)));
 }
 function validateHwp5FormAnchors(rows) {
-	return uniqueRows(rows, (row) => uint$36(row.paragraph) && uint$36(row.source_unit) && row.source_unit <= 4294967287 && uint$36(row.current_unit) && row.current_unit <= 4294967287);
+	return uniqueRows(rows, (row) => uint$37(row.paragraph) && uint$37(row.source_unit) && row.source_unit <= 4294967287 && uint$37(row.current_unit) && row.current_unit <= 4294967287);
 }
-var uint$36, signed, uniqueRows, decode$1, decodeHwp5FormSources, decodeHwp5FormAnchors;
+var uint$37, signed, uniqueRows, decode$1, decodeHwp5FormSources, decodeHwp5FormAnchors;
 var init_hwp5_form_sources = __esmMin((() => {
-	uint$36 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$37 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	signed = (value, min, max) => Number.isInteger(value) && value >= min && value <= max;
 	uniqueRows = (rows, inspect) => {
 		const controls = /* @__PURE__ */ new Set(), objects = /* @__PURE__ */ new Set();
 		if (!Array.isArray(rows)) throw Error("InvalidHwp5FormSources");
 		for (const row of rows) {
-			if (!row || !uint$36(row.control_node) || !uint$36(row.object_node) || row.control_node >= row.object_node || controls.has(row.control_node) || objects.has(row.object_node) || !inspect(row)) throw Error("InvalidHwp5FormSources");
+			if (!row || !uint$37(row.control_node) || !uint$37(row.object_node) || row.control_node >= row.object_node || controls.has(row.control_node) || objects.has(row.object_node) || !inspect(row)) throw Error("InvalidHwp5FormSources");
 			controls.add(row.control_node);
 			objects.add(row.object_node);
 		}
@@ -3033,7 +3033,7 @@ function validateHwp5FormProperties(rows) {
 			"object_node",
 			"known_nodes",
 			"deferred_nodes"
-		].every((k) => uint$35(row[k])) || row.control_node >= row.object_node || controls.has(row.control_node) || objects.has(row.object_node) || !Array.isArray(row.fields)) fail();
+		].every((k) => uint$36(row[k])) || row.control_node >= row.object_node || controls.has(row.control_node) || objects.has(row.object_node) || !Array.isArray(row.fields)) fail();
 		const fields = /* @__PURE__ */ new Set();
 		for (const property of row.fields) {
 			if (!property || typeof property.field !== "string" || !/^[a-z][a-z0-9_]{0,63}$/.test(property.field) || fields.has(property.field) || ![
@@ -3055,9 +3055,9 @@ function validateHwp5FormProperties(rows) {
 function decodeHwp5FormProperties(bytes) {
 	return validateHwp5FormProperties(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
-var uint$35;
+var uint$36;
 var init_hwp5_form_properties = __esmMin((() => {
-	uint$35 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$36 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 }));
 // ../../js/hwp5-note-shape-sources.mjs
 function validateHwp5NoteShapeSources(rows) {
@@ -4569,7 +4569,7 @@ function decodeHwp5ParagraphFlow(bytes) {
 	for (const [index, row] of rows.entries()) {
 		if (row?.empty_line_eligible !== void 0 && (typeof row.empty_line_eligible !== "boolean" || row.empty_line_eligible && row.top_level !== true)) throw new Error("InvalidHwp5ParagraphFlow");
 		if (row && (Object.hasOwn(row, "memo_index") || Object.hasOwn(row, "memo_node"))) {
-			if (!(row.memo_index === null && row.memo_node === null) && !(uint$34(row.memo_index) && uint$34(row.memo_node) && row.host === "other" && row.top_level === false && uint$34(row.list_node) && row.memo_node + 1 === row.list_node)) throw new Error("InvalidHwp5ParagraphFlow");
+			if (!(row.memo_index === null && row.memo_node === null) && !(uint$35(row.memo_index) && uint$35(row.memo_node) && row.host === "other" && row.top_level === false && uint$35(row.list_node) && row.memo_node + 1 === row.list_node)) throw new Error("InvalidHwp5ParagraphFlow");
 		}
 		if (row?.host !== void 0) {
 			if (![
@@ -4583,9 +4583,9 @@ function decodeHwp5ParagraphFlow(bytes) {
 				"master_page",
 				"drawing",
 				"other"
-			].includes(row.host) || !(row.list_node === null || uint$34(row.list_node)) || row.top_level !== (row.host === "body") || row.host === "body" !== (row.list_node === null)) throw new Error("InvalidHwp5ParagraphFlow");
+			].includes(row.host) || !(row.list_node === null || uint$35(row.list_node)) || row.top_level !== (row.host === "body") || row.host === "body" !== (row.list_node === null)) throw new Error("InvalidHwp5ParagraphFlow");
 		}
-		if (!row || row.paragraph !== index || !uint$34(row.template_node) || !(row.source_node === null || uint$34(row.source_node)) || !(row.parent_node === null || uint$34(row.parent_node)) || !Number.isInteger(row.break_flags) || row.break_flags < 0 || row.break_flags > 255 || typeof row.generated !== "boolean" || row.generated !== (row.source_node === null) || row.top_level !== (row.parent_node === null) || row.generated && (![
+		if (!row || row.paragraph !== index || !uint$35(row.template_node) || !(row.source_node === null || uint$35(row.source_node)) || !(row.parent_node === null || uint$35(row.parent_node)) || !Number.isInteger(row.break_flags) || row.break_flags < 0 || row.break_flags > 255 || typeof row.generated !== "boolean" || row.generated !== (row.source_node === null) || row.top_level !== (row.parent_node === null) || row.generated && (![
 			0,
 			4,
 			8
@@ -4603,14 +4603,14 @@ function decodeHwp5ColumnSources(bytes) {
 	const rows = parse$3(bytes);
 	if (!Array.isArray(rows)) throw new Error("InvalidHwp5ColumnSources");
 	for (const row of rows) {
-		if (!row || !uint$34(row.current_paragraph) || !uint$34(row.current_unit)) throw new Error("InvalidHwp5ColumnSources");
+		if (!row || !uint$35(row.current_paragraph) || !uint$35(row.current_unit)) throw new Error("InvalidHwp5ColumnSources");
 		if (!row || ![
 			"source_node",
 			"paragraph_node",
 			"flags",
 			"color",
 			"extra_bytes"
-		].every((name) => uint$34(row[name])) || !Number.isInteger(row.count) || row.count < 1 || row.count > 255 || ![
+		].every((name) => uint$35(row[name])) || !Number.isInteger(row.count) || row.count < 1 || row.count > 255 || ![
 			0,
 			1,
 			2,
@@ -4626,9 +4626,9 @@ function decodeHwp5ColumnSources(bytes) {
 	}
 	return rows;
 }
-var uint$34, parse$3;
+var uint$35, parse$3;
 var init_hwp5_flow_sources = __esmMin((() => {
-	uint$34 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$35 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	parse$3 = (bytes) => JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 }));
 // ../../js/hwp5-formula-sources.mjs
@@ -4637,15 +4637,15 @@ function decodeHwp5FormulaSources(bytes) {
 	if (!Array.isArray(rows) || rows.length > 1e6) throw new Error("InvalidHwp5FormulaSources");
 	const seen = /* @__PURE__ */ new Set();
 	for (const row of rows) {
-		if (!row || !uint$33(row.source_node) || row.source_node === 0 || !uint$33(row.paragraph) || seen.has(row.source_node) || typeof row.formula !== "string" || !row.formula.startsWith("=") || row.formula.length < 2 || typeof row.last_result !== "string" || typeof row.derived !== "boolean" || !row.formula.isWellFormed() || !row.last_result.isWellFormed()) throw new Error("InvalidHwp5FormulaSources");
+		if (!row || !uint$34(row.source_node) || row.source_node === 0 || !uint$34(row.paragraph) || seen.has(row.source_node) || typeof row.formula !== "string" || !row.formula.startsWith("=") || row.formula.length < 2 || typeof row.last_result !== "string" || typeof row.derived !== "boolean" || !row.formula.isWellFormed() || !row.last_result.isWellFormed()) throw new Error("InvalidHwp5FormulaSources");
 		seen.add(row.source_node);
 	}
 	return rows;
 }
-var decoder$6, uint$33;
+var decoder$6, uint$34;
 var init_hwp5_formula_sources = __esmMin((() => {
 	decoder$6 = new TextDecoder("utf-8", { fatal: true });
-	uint$33 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$34 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 }));
 // ../../js/hwp5-field-spans.mjs
 function validateHwp5FieldSpans(rows) {
@@ -4674,18 +4674,18 @@ function validateHwp5FieldTopology(value) {
 	if (!value || !Array.isArray(value.spans) || !Array.isArray(value.unresolved)) fail();
 	const starts = /* @__PURE__ */ new Set();
 	for (const row of value.spans) {
-		if (!row || !uint$32(row.field_id) || !uint$32(row.ordinal) || !position$2(row.begin) || !position$2(row.end) || before(row.end, row.begin)) fail();
+		if (!row || !uint$33(row.field_id) || !uint$33(row.ordinal) || !position$2(row.begin) || !position$2(row.end) || before(row.end, row.begin)) fail();
 		const key = row.begin.paragraph + ":" + row.ordinal;
 		if (starts.has(key)) fail();
 		starts.add(key);
 	}
 	let previous = null;
 	for (const row of value.unresolved) {
-		if (!row || !position$2(row.position) || !uint$32(row.marker_id) || !(row.list_node === null || uint$32(row.list_node))) fail();
+		if (!row || !position$2(row.position) || !uint$33(row.marker_id) || !(row.list_node === null || uint$33(row.list_node))) fail();
 		if (previous && !before(previous, row.position)) fail();
 		previous = row.position;
 		if (row.kind === "unclosed_start") {
-			if (!uint$32(row.ordinal)) fail();
+			if (!uint$33(row.ordinal)) fail();
 			const key = row.position.paragraph + ":" + row.ordinal;
 			if (starts.has(key)) fail();
 			starts.add(key);
@@ -4701,10 +4701,10 @@ function validateHwp5FieldTopology(value) {
 function decodeHwp5FieldTopology(bytes) {
 	return validateHwp5FieldTopology(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
-var uint$32, position$2, before;
+var uint$33, position$2, before;
 var init_hwp5_field_topology = __esmMin((() => {
-	uint$32 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
-	position$2 = (value) => value && uint$32(value.paragraph) && uint$32(value.unit);
+	uint$33 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	position$2 = (value) => value && uint$33(value.paragraph) && uint$33(value.unit);
 	before = (lhs, rhs) => lhs.paragraph < rhs.paragraph || lhs.paragraph === rhs.paragraph && lhs.unit < rhs.unit;
 }));
 // ../../js/hwp5-text-source-protection.mjs
@@ -4835,7 +4835,7 @@ function decodeHwp5TextWindow(bytes) {
 	const v = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 	const n = (i) => v.getUint32(4 + i * 4, true);
 	const e = (BigInt(n(2)) << 32n | BigInt(n(1))).toString();
-	if (String.fromCharCode(...bytes.slice(0, 4)) !== "H5W1" || n(0) !== 1 || !epoch(e) || !uint$31(n(3)) || !uint$31(n(4)) || n(7) > n(8) || n(8) > n(6) || n(8) - n(7) > 4096 || n(9) !== 1 || n(10) !== (n(8) - n(7)) * 2 || bytes.length !== 48 + n(10)) bad();
+	if (String.fromCharCode(...bytes.slice(0, 4)) !== "H5W1" || n(0) !== 1 || !epoch(e) || !uint$32(n(3)) || !uint$32(n(4)) || n(7) > n(8) || n(8) > n(6) || n(8) - n(7) > 4096 || n(9) !== 1 || n(10) !== (n(8) - n(7)) * 2 || bytes.length !== 48 + n(10)) bad();
 	const text = new TextDecoder("utf-16le", {
 		fatal: true,
 		ignoreBOM: true
@@ -4878,13 +4878,13 @@ function decodeHwp5TextDelta(bytes) {
 		"sourceNode",
 		"startUnit",
 		"totalUnits"
-	]) if (!uint$31(r[k])) bad();
-	if (r.parentNode !== null && !uint$31(r.parentNode)) bad();
+	]) if (!uint$32(r[k])) bad();
+	if (r.parentNode !== null && !uint$32(r.parentNode)) bad();
 	for (const k of ["removed", "inserted"]) if (!Array.isArray(r[k]) || r[k].length > 4096 || r[k].some((x) => !Number.isInteger(x) || x < 0 || x > 65535)) bad();
 	if (!Array.isArray(r.runs) || !r.runs.length || r.runs.length > 4096) bad();
 	let prev = -1;
 	for (const run of r.runs) {
-		if (Object.keys(run).sort().join() !== "char_shape_id,start_unit" || !uint$31(run.start_unit) || !uint$31(run.char_shape_id) || run.start_unit <= prev || run.start_unit > r.totalUnits) bad();
+		if (Object.keys(run).sort().join() !== "char_shape_id,start_unit" || !uint$32(run.start_unit) || !uint$32(run.char_shape_id) || run.start_unit <= prev || run.start_unit > r.totalUnits) bad();
 		prev = run.start_unit;
 	}
 	if (r.runs[0].start_unit !== 0 || r.totalUnits < 1 || r.totalUnits > 4096) bad();
@@ -4922,7 +4922,7 @@ function createHwp5ExclusiveTextApi({ wasm, output, check, encode, currentSource
 			const length = w.text.length - 1;
 			let cursor = 0;
 			for (const range of raw) {
-				if (range.start !== cursor || range.end < range.start || range.end > w.totalUnits || !uint$31(range.charShapeId)) bad();
+				if (range.start !== cursor || range.end < range.start || range.end > w.totalUnits || !uint$32(range.charShapeId)) bad();
 				cursor = range.end;
 				const start = Math.min(length, range.start), end = Math.min(length, range.end), charShapeId = range.charShapeId;
 				if (start === end) {
@@ -4973,10 +4973,10 @@ function createHwp5ExclusiveTextApi({ wasm, output, check, encode, currentSource
 		}
 	};
 }
-var uint$31, epoch, bad;
+var uint$32, epoch, bad;
 var init_hwp5_exclusive_text_delta = __esmMin((() => {
 	init_character_shapes_wire();
-	uint$31 = (x) => Number.isSafeInteger(x) && x >= 0 && x < 4294967295;
+	uint$32 = (x) => Number.isSafeInteger(x) && x >= 0 && x < 4294967295;
 	epoch = (x) => typeof x === "string" && /^[1-9][0-9]{0,19}$/.test(x) && BigInt(x) <= 18446744073709551615n;
 	bad = () => {
 		throw Error("InvalidExclusiveTextDelta");
@@ -4987,7 +4987,7 @@ function validate$1(reference) {
 	if (!reference || typeof reference !== "object" || Array.isArray(reference)) invalid();
 	if (Object.keys(reference).length !== fields$4.length || fields$4.some((key) => !Object.hasOwn(reference, key))) invalid();
 	const { epoch, kind, section, id, row, column } = reference;
-	if (!decimal(epoch) || epoch === "0" || !decimal(id) || !uint$30(section) || !uint$30(row) || !uint$30(column)) invalid();
+	if (!decimal(epoch) || epoch === "0" || !decimal(id) || !uint$31(section) || !uint$31(row) || !uint$31(column)) invalid();
 	if (![
 		"original",
 		"generated",
@@ -5000,7 +5000,7 @@ function validate$1(reference) {
 function decodeHwp5CurrentReferences(bytes) {
 	const value = JSON.parse(utf8$2.decode(bytes));
 	if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).sort().join() !== "first,references,total,version") invalid();
-	if (value.version !== 1 || !uint$30(value.total) || !uint$30(value.first) || value.first > value.total || !Array.isArray(value.references) || value.references.length > 1024 || value.first + value.references.length > value.total) invalid();
+	if (value.version !== 1 || !uint$31(value.total) || !uint$31(value.first) || value.first > value.total || !Array.isArray(value.references) || value.references.length > 1024 || value.first + value.references.length > value.total) invalid();
 	for (const reference of value.references) validate$1(reference);
 	if (value.references.some((reference) => reference.epoch !== value.references[0].epoch)) invalid();
 	return value;
@@ -5090,7 +5090,7 @@ function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u
 		}
 	};
 }
-var utf8$2, utf16, encoder$9, fields$4, scopeSequence$1, invalid, uint$30, decimal;
+var utf8$2, utf16, encoder$9, fields$4, scopeSequence$1, invalid, uint$31, decimal;
 var init_hwp5_current_references = __esmMin((() => {
 	init_hwp5_exclusive_text_delta();
 	utf8$2 = new TextDecoder("utf-8", {
@@ -5114,7 +5114,7 @@ var init_hwp5_current_references = __esmMin((() => {
 	invalid = () => {
 		throw new Error("InvalidHwp5CurrentReference");
 	};
-	uint$30 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$31 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	decimal = (value) => typeof value === "string" && /^(0|[1-9][0-9]{0,19})$/.test(value) && BigInt(value) <= 18446744073709551615n;
 }));
 // ../../js/created-table-identity.mjs
@@ -6719,6 +6719,40 @@ var utf8$1, valid;
 var init_named_field_parameters = __esmMin((() => {
 	utf8$1 = new TextDecoder("utf-8", { fatal: true });
 	valid = (value) => value === null || typeof value === "string" && value.isWellFormed() && new TextEncoder().encode(value).length <= 4096;
+}));
+// ../../js/paragraph-bullet-definitions.mjs
+/** Only validates a Native DTO. No source XML, inference or retained inventory. */
+function checkedParagraphBulletDefinitions(result) {
+	const invalid = () => {
+		throw Error("MalformedParagraphBulletDefinitions");
+	};
+	if (result?.state === "unavailable" && typeof result.reason === "string" && result.reason.length) return result;
+	if (result?.schemaVersion !== 1 || result.state !== "available" || result.scope !== "current-header" || result.coverage !== "complete" || !Array.isArray(result.declarations) || result.declarations.length > 4096) invalid();
+	const counts = /* @__PURE__ */ new Map();
+	for (const [index, row] of result.declarations.entries()) {
+		if (!row || row.ordinal !== index || row.id !== null && !uint$30(row.id) || row.marker !== null && !scalar(row.marker) || typeof row.canApply !== "boolean") invalid();
+		if (row.canApply ? row.id === null || row.marker === null || row.reason !== null : !reasons.has(row.reason)) invalid();
+		if (row.id === null !== (row.reason === "InvalidBulletId")) invalid();
+		if (row.id !== null) counts.set(row.id, (counts.get(row.id) ?? 0) + 1);
+	}
+	for (const row of result.declarations) {
+		if (row.id !== null && counts.get(row.id) > 1 && (row.canApply || row.reason !== "DuplicateBulletId")) invalid();
+		if (row.reason === "DuplicateBulletId" && counts.get(row.id) < 2) invalid();
+	}
+	return result;
+}
+function decodeParagraphBulletDefinitions(bytes) {
+	return checkedParagraphBulletDefinitions(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
+}
+var reasons, uint$30, scalar;
+var init_paragraph_bullet_definitions = __esmMin((() => {
+	reasons = /* @__PURE__ */ new Set([
+		"InvalidBulletId",
+		"DuplicateBulletId",
+		"UnsupportedBulletDeclaration"
+	]);
+	uint$30 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	scalar = (value) => uint$30(value) && value > 32 && value <= 1114111 && !(value >= 127 && value <= 159) && !(value >= 55296 && value <= 57343);
 }));
 // ../../js/hwpx-document-insert.mjs
 function ownRecord$1(record, keys, optional = []) {
@@ -10898,6 +10932,19 @@ async function createHwpxEditor(source) {
 				wasm.hwpx_edit_output_free();
 			}
 		},
+		paragraphBulletDefinitions() {
+			ready();
+			if (typeof wasm.hwpx_edit_bullet_definitions !== "function") return {
+				state: "unavailable",
+				reason: "ParagraphBulletDefinitionsAbiUnavailable"
+			};
+			try {
+				if (!wasm.hwpx_edit_bullet_definitions()) throw memory.error();
+				return decodeParagraphBulletDefinitions(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+			} finally {
+				wasm.hwpx_edit_output_free();
+			}
+		},
 		paragraphNumberingSource() {
 			ready();
 			if (typeof wasm.hwpx_edit_paragraph_numbering_source !== "function") return null;
@@ -12442,6 +12489,7 @@ async function createHwpxEditor(source) {
 }
 var init_hwpx_editor = __esmMin((() => {
 	init_named_field_parameters();
+	init_paragraph_bullet_definitions();
 	init_hwpx_document_insert();
 	init_hwpx_page_number_display_wire();
 	init_cell_diagonal_command();
