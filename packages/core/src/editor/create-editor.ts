@@ -1,3 +1,6 @@
+// @ts-ignore Shared strict SDK capability decoder.
+import { decodeSourceTableCellSplitCapability } from '../../../../js/source-table-cell-split-capability.mjs';
+import type { SourceTableCellSplitCapabilities } from '../commands/source-table-cell-split.ts';
 // @ts-ignore Shared HWPX metadata boundary validation.
 import { checkedNamedFieldParameterValues } from '../../../../js/named-field-parameters.mjs';
 import {
@@ -1597,8 +1600,15 @@ export function createEditor(options: CreateEditorOptions) {
         guard();
         if (payload.mode === 'merge-then-split' && target.plan.selectedCells < 2)
           throw Error('InvalidSourceTableSplitMode');
-        const admission = await readDocumentInsertCapability(pending.token, guard);
+        const admission = await readSourceTableCellSplitCapability(pending.token, guard);
         if ('reason' in admission) throw Error(admission.reason);
+        if (
+          target.plan.selectedCells > admission.maxSelectedCells ||
+          (payload.mode === 'merge-then-split' && !admission.supportsMergeThenSplit)
+        )
+          throw Error('UnsupportedSourceTableSplitSelection');
+        if (!payload.equalizeRows && !admission.supportsPreserveRowHeights)
+          throw Error('UnsupportedSourceTableSplitHeights');
         return await mutate(
           {
             kind: 'source-table-cell-split',
@@ -1951,7 +1961,14 @@ export function createEditor(options: CreateEditorOptions) {
   ): Promise<CommandResult | RuntimeReply> {
     assertPublicMutation();
     const kind = Object.getOwnPropertyDescriptor(message ?? {}, 'kind')?.value;
-    if (kind === 'insert-document' || kind === 'document-insert-capabilities')
+    if (
+      [
+        'insert-document',
+        'document-insert-capabilities',
+        'source-table-cell-split',
+        'source-table-cell-split-capabilities',
+      ].includes(kind)
+    )
       throw Error('UseTypedEditorOperation');
     const owned = copyOwned(message),
       settings = copyOwned(experimental);
@@ -2340,6 +2357,60 @@ export function createEditor(options: CreateEditorOptions) {
       ),
     );
   }
+  async function readSourceTableCellSplitCapability(
+    token: StateToken,
+    guard: () => void,
+  ): Promise<SourceTableCellSplitCapabilities> {
+    if (!active || !hasRuntimeAdmission(active))
+      return { available: false, reason: 'UnsupportedAtomicRuntime' };
+    const ctx = context(token);
+    const reply = await requestAtRuntimeAdmission(
+      active,
+      { kind: 'source-table-cell-split-capabilities' },
+      ctx,
+      guard,
+    );
+    verifyReply(reply, ctx);
+    guard();
+    if (reply.kind !== 'source-table-cell-split-capabilities')
+      throw Error('InvalidSourceTableSplitCapabilities');
+    if (reply.error) {
+      if (
+        [
+          'SourceTableCellSplitUnavailable',
+          'HistoryNotEnabled',
+          'HistoryProtocolRequired',
+        ].includes(reply.error)
+      )
+        return { available: false, reason: reply.error };
+      throw Error(reply.error);
+    }
+    const cap = decodeSourceTableCellSplitCapability(reply.capabilities);
+    if (
+      cap.format !== (state.content as { format?: string })?.format ||
+      cap.binding.revision !== state.nativeHistoryRevision
+    )
+      throw Error('StaleSourceTableSplitBinding');
+    return Object.freeze({ available: true as const, ...cap });
+  }
+  function getSourceTableCellSplitCapabilities(
+    options: { token?: StateToken } = {},
+  ): Promise<SourceTableCellSplitCapabilities> {
+    assertPublicMutation();
+    const settings = copyOwned(options);
+    if (
+      !settings ||
+      typeof settings !== 'object' ||
+      Array.isArray(settings) ||
+      settings.token === null ||
+      Object.keys(settings).some((key) => key !== 'token')
+    )
+      throw Error('InvalidSourceTableSplitCapabilities');
+    const token = copyOwned(settings.token ?? state.token);
+    return enqueue(() =>
+      readSourceTableCellSplitCapability(token, () => requireReady(token, true)),
+    );
+  }
   async function readDocumentInsertCapability(token: StateToken, guard: () => void) {
     if (!active || !hasRuntimeAdmission(active))
       return { available: false as const, reason: 'UnsupportedAtomicRuntime' };
@@ -2652,6 +2723,10 @@ export function createEditor(options: CreateEditorOptions) {
         return Object.freeze({
           target,
           selection: Object.freeze({
+            profile:
+              (state.content as { format?: string })?.format === 'hwp5'
+                ? ('single-unmerged-source-cell' as const)
+                : ('static-source-cell-rectangle' as const),
             selectedCells: plan.selectedCells,
             rows: plan.bottom - plan.top,
             columns: plan.right - plan.left,
@@ -2854,6 +2929,7 @@ export function createEditor(options: CreateEditorOptions) {
     getFormattingCapabilities: geometryGuard(getFormattingCapabilities),
     getReplaceAllCapabilities: geometryGuard(getReplaceAllCapabilities),
     getDocumentInsertionCapabilities: geometryGuard(getDocumentInsertionCapabilities),
+    getSourceTableCellSplitCapabilities: geometryGuard(getSourceTableCellSplitCapabilities),
     queryFormatting: geometryGuard(queryFormatting),
     setSelection: geometryGuard(setSelection),
     listParagraphBulletDefinitions: geometryGuard(listParagraphBulletDefinitions),

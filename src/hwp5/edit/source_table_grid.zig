@@ -11,7 +11,8 @@ pub const Request = struct {
     table_node: usize,
     expected_rows: u32,
     expected_columns: u32,
-    command: mapping.Command,
+    command: ?mapping.Command = null,
+    split: ?@import("source_table_cell_split.zig").Request = null,
     /// Explicit schema selection. Never inferred from record length/version.
     layout: body.list_header.Layout,
     new_paragraph_ids: []const u32 = &.{},
@@ -31,7 +32,7 @@ pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, reque
     const marker = tree.nodes[request.table_node];
     const table = marker.record.value.table;
     if (table.row_count != request.expected_rows or table.column_count != request.expected_columns) return error.SourceBindingMismatch;
-    const plan = try mapping.create(table.row_count, table.column_count, request.command, limits.max_cells);
+    const plan = try @import("source_table_grid_operation.zig").create(table.row_count, table.column_count, request.command, request.split, limits.max_cells);
     if (plan.rows > 65535 or plan.columns > 65535) return error.LimitExceeded;
     if (table.extra.len != 0 or (table.zones != null and table.zones.?.count() != 0)) return error.UnsupportedSourceTableGrid;
     const owner = marker.parent orelse return error.InvalidSourceTableGridTarget;
@@ -89,8 +90,19 @@ pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, reque
     }
     var width: u32 = 0;
     var height: u32 = 0;
-    for (0..plan.columns) |c| width = try std.math.add(u32, width, cells[try plan.templateIndex(0, @intCast(c))].value.width);
-    for (0..plan.rows) |r| height = try std.math.add(u32, height, cells[try plan.templateIndex(@intCast(r), 0)].value.height);
+    switch (plan.operation) {
+        .grid => {
+            for (0..plan.columns) |c| width = try std.math.add(u32, width, cells[try plan.templateIndex(0, @intCast(c))].value.width);
+            for (0..plan.rows) |r| height = try std.math.add(u32, height, cells[try plan.templateIndex(@intCast(r), 0)].value.height);
+        },
+        .split => |division| {
+            const selected = cells[@as(usize, division.split.row) * table.column_count + division.split.column].value;
+            _ = try @import("source_table_cell_split.zig").part(selected.width, division.split.columns, 0);
+            _ = try @import("source_table_cell_split.zig").part(selected.height, division.split.rows, 0);
+            width = old_width;
+            height = old_height;
+        },
+    }
 
     for (0..table.rows.count()) |i| if (table.rows.get(i).?.size != table.column_count) return error.UnsupportedSourceTableGrid;
     // No caption/unknown direct siblings are silently discarded during rebuilding.
@@ -128,14 +140,17 @@ pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, reque
     std.mem.writeInt(u16, payload.items[4..6], @intCast(plan.rows), .little);
     std.mem.writeInt(u16, payload.items[6..8], @intCast(plan.columns), .little);
     var row_bytes: [2]u8 = undefined;
-    std.mem.writeInt(u16, &row_bytes, @intCast(plan.columns), .little);
-    for (0..plan.rows) |_| try payload.appendSlice(scratch, &row_bytes);
+    for (0..plan.rows) |row| {
+        std.mem.writeInt(u16, &row_bytes, @intCast(plan.rowCells(@intCast(row))), .little);
+        try payload.appendSlice(scratch, &row_bytes);
+    }
     try payload.appendSlice(scratch, marker.record.framing.payload[18 + @as(usize, table.row_count) * 2 ..]);
     try framing.append(scratch, &out, 77, marker.record.framing.level, payload.items, limits.max_bytes);
     var fresh: usize = 0;
     for (0..plan.rows) |row| for (0..plan.columns) |column| {
         const r: u32 = @intCast(row);
         const c: u32 = @intCast(column);
+        if (!plan.starts(r, c)) continue;
         const prior = try plan.sourceIndex(r, c);
         const template = cells[try plan.templateIndex(r, c)];
         const list_record = tree.nodes[template.group.header_node].record.framing;
@@ -143,6 +158,16 @@ pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, reque
         const base: usize = if (request.layout == .spec6) 6 else 8;
         std.mem.writeInt(u16, list_bytes[base..][0..2], @intCast(c), .little);
         std.mem.writeInt(u16, list_bytes[base + 2 ..][0..2], @intCast(r), .little);
+        if (plan.operation == .split) {
+            const division = plan.operation.split;
+            std.mem.writeInt(u16, list_bytes[base + 4 ..][0..2], @intCast(division.columnSpan(r, c)), .little);
+            std.mem.writeInt(u16, list_bytes[base + 6 ..][0..2], @intCast(division.rowSpan(r, c)), .little);
+            if (division.selected(r, c)) {
+                const split = @import("source_table_cell_split.zig");
+                std.mem.writeInt(u32, list_bytes[base + 8 ..][0..4], try split.part(template.value.width, division.split.columns, c - division.split.column), .little);
+                std.mem.writeInt(u32, list_bytes[base + 12 ..][0..4], try split.part(template.value.height, division.split.rows, r - division.split.row), .little);
+            }
+        }
         if (prior == null) {
             const count = try @import("paragraph_list_count.zig").read(tree, template.group.header_node);
             var encoded: [4]u8 = undefined;

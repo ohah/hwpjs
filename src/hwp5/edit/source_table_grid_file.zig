@@ -12,7 +12,8 @@ pub const Request = struct {
     table_node: usize,
     expected_rows: u32,
     expected_columns: u32,
-    command: Command,
+    command: ?Command = null,
+    split: ?@import("source_table_cell_split.zig").Request = null,
     layout: @import("../body/list_header.zig").Layout,
 };
 pub const Options = struct {
@@ -40,7 +41,7 @@ pub fn transform(a: std.mem.Allocator, input: []const u8, request: Request, opti
     const source = &opened.source;
     if (source.header.has(.history) or source.header.has(.digital_signature) or source.header.has(.signature_preview)) return error.UnsupportedSourceTableGridSaveFeatures;
     if (request.section >= source.section_count) return error.InvalidSection;
-    const plan = try @import("../../model/table_grid_edit_plan.zig").create(request.expected_rows, request.expected_columns, request.command, options.max_cells);
+    const plan = try @import("source_table_grid_operation.zig").create(request.expected_rows, request.expected_columns, request.command, request.split, options.max_cells);
     var ids: std.AutoHashMap(u32, void) = .init(s);
     defer ids.deinit();
     const inventory = try inspect(s, &opened, request.section, options, &ids);
@@ -65,6 +66,7 @@ pub fn transform(a: std.mem.Allocator, input: []const u8, request: Request, opti
         .expected_rows = request.expected_rows,
         .expected_columns = request.expected_columns,
         .command = request.command,
+        .split = request.split,
         .layout = request.layout,
         .new_paragraph_ids = fresh,
     }, .{

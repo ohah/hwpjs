@@ -16,8 +16,13 @@ export function mountHeadlessPanel(
     createParagraphSelection: core.createParagraphSelection,
     planReplaceAll: core.planReplaceAll,
     replaceAllCommand: core.REPLACE_ALL_COMMAND,
+    editParagraphBulletDefinitionCommand: core.EDIT_PARAGRAPH_BULLET_DEFINITION_COMMAND,
+    listParagraphBulletDefinitions: (options: core.ParagraphBulletDefinitionsOptions) =>
+      editor.listParagraphBulletDefinitions(options),
     operations: [
       'read',
+      'listParagraphBulletDefinitions',
+      'editParagraphBulletDefinition',
       'select',
       'splice',
       'getReplaceAllCapabilities',

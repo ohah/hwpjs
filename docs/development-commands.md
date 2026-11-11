@@ -1866,3 +1866,25 @@ HWP5 어댑터 회귀는 동일한 명시 `HWPJS_TEST_WASM`에서 `bun test --no
 ## 글머리표 정의 생성·수정
 
 `zig test src/hwpx_bullet_definition_write_probe.zig -O ReleaseSafe -fllvm --test-filter 'bullet definition'`로 Native 원문/이력·할당 실패를 검사합니다. 명시 `HWPJS_TEST_WASM`, 이전 inventory 엔진인 `HWPJS_TEST_OLD_WASM`, 새 출력 경로 `HWPJS_TEST_EVIDENCE`에서 `bun test --no-install tests/wasm/paragraph-bullet-definition-write.test.mjs packages/core/tests/editor/paragraph-bullet-definition-write.test.ts`를 실행합니다. SDK 검사는 독립 `tests/hwpx/paragraph-bullet-definition-oracle.py`를 Python 일반/-O로 실행하고 잘못된 기대값 반려도 확인합니다. [지원/비용 계약](paragraph-bullet-definition-editing.md)을 따릅니다.
+
+## HWP5 원본 셀 나누기와 글머리표 도구
+
+[셀 나누기 연결](hwp5-cell-split-integration.md)과 [글머리표 정의 편집](paragraph-bullet-definition-editing.md)의 지원 계약을 따릅니다. 셀 나누기는 원본 단일 비병합 셀의 네 모서리 위치를 모두 검사하며 공개 새 문서·표 생성 API로 입력을 만듭니다. 테스트용 과거 엔진은 셀 나누기 전의 `5ece4c0a551716239c37af0e1ff40db7b2a642e1baf75bb27782bcf237bd1621`로 고정합니다.
+
+```sh
+HWPJS_TEST_WASM=/absolute/current.wasm \
+HWPJS_TEST_OLD_WASM=/absolute/before-h5-split.wasm \
+HWPJS_TEST_EVIDENCE=/absolute/new-evidence-directory \
+bun test --no-install tests/hwp5/source-table-cell-split.test.mjs
+```
+
+글머리표 API·CLI·MCP의 실제 Native 연결은 아래 두 진입점입니다. `HWPJS_TEST_WASM`과 그 정확 해시 `HWPJS_TEST_WASM_EXPECTED_SHA256`, `HWPJS_TEST_OLD_WASM`(정의 writer 전의 `a3be6777229dbe1ec895f4850168809f70d9cf52b14b85996a670a5577e865f1`), `HWPJS_TEST_HWPX`(허용된 `page.hwpx`), `HWPJS_TEST_HWP5`(허용된 `lists.hwp`), 새 `HWPJS_TEST_EVIDENCE` 절대경로가 필수입니다. 두 코호트의 과거 엔진은 서로 다릅니다.
+
+```sh
+node --experimental-transform-types --max-old-space-size=512 \
+  --test --test-concurrency=1 \
+  apps/demo/tests/api-playground-bullet-definition.test.mjs \
+  packages/cli/tests/paragraph-bullet-definition-bridges.test.mjs
+```
+
+독립 ZIP/XML oracle은 Python 일반/-O에서 저장값과 비대상 payload 보존을 검사합니다. 이 소스 검증과 설치용 번들·실제 API 브라우저 검증은 구분합니다.

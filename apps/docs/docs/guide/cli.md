@@ -282,7 +282,6 @@ bun run cli replace-image ./input.hwpx --ref "$IMAGE_REF" \
 
 이 파일 명령들은 원본을 덮어쓰지 않고 새 파일을 만듭니다. 현재 웹 UI나 열린 헤드리스 세션의 undo/redo에 연결됐다는 뜻은 아니며 기존 편집기는 저장 결과를 별도로 다시 열어야 합니다. 현재 지원 제한은 [공통 계약](https://github.com/ohah/hwpjs/blob/main/docs/document-file-transforms.md)을 따릅니다.
 
-
 ## 원본 표 행·열 파일 편집 (소스 후보)
 
 현재 소스 CLI에는 `edit-table-grid`가 추가되어 있습니다. 공개 npm 0.1.1의 지원 범위와 구분합니다.
@@ -297,3 +296,43 @@ bun run cli edit-table-grid ./input.hwpx --ref "$TABLE_REF" \
 `--action`은 `insert-row`, `delete-row`, `insert-column`, `delete-column` 중 하나입니다. `--ref`는 같은 원본의 구조 보기에서 발급한 표 참조이며 원본 SHA 조건을 포함합니다. `--rows`·`--columns`는 현재 표의 예상 크기(1~4294967295)입니다. `--index`는 0부터 시작하며 삽입은 해당 축 크기까지, 삭제는 크기 미만까지 허용합니다. 마지막 행·열 삭제와 U32 최대 크기의 축 삽입은 거부합니다. 실제 표 지원 여부와 예상 크기 일치는 서비스가 검사합니다.
 
 HWP5와 HWPX 모두 `--allow-stale-layout`이 필수이며 결과는 `layoutRequiresReflow: true`, `previewStale: true`입니다. 선택 `--layout`은 `spec6` 또는 HWP5 전용 `observed8`이며 생략하면 서비스 기본값을 사용합니다. 기존 원본·출력을 덮어쓰지 않고 새 파일 게시 영수증에 출력 경로·SHA·원본 SHA를 보고합니다. 이 연결의 집중 검증은 주입 서비스를 이용한 CLI·공식 MCP 전송 검사이며 실제 Native 저장 검증은 별도입니다.
+
+## HWPX 문자 글머리표 정의 작업
+
+이 연산은 **현재 GitHub 구현 기준**이며 npm 릴리스에 포함됐다는 뜻이 아닙니다. 공개 설치 이름은 `npm install @ohah/hwpjs`이며 아래 호출에는 이 기능과 대응 WASM을 포함한 빌드가 필요합니다. 별도 CLI 패키지는 설치하지 않습니다.
+
+기존 `hwpjs apply`와 `--patch`의 배열에 다음 연산을 넣습니다. `section`과 `paragraph`는 `hwpjs read INPUT --view structure`와 `hwpjs paragraph INPUT --target s0:p2`로 확인한 Native 원본 주소입니다. API 플레이그라운드의 화면 문단 번호와 혼용하지 마세요.
+
+```json
+[
+  {
+    "kind": "paragraph-bullet-definition",
+    "coordinates": "current-transaction",
+    "section": 0,
+    "paragraph": 2,
+    "edit": {
+      "mode": "create",
+      "apply": true,
+      "definition": {
+        "marker": 9733,
+        "alignment": "RIGHT",
+        "useInstanceWidth": false,
+        "autoIndent": true,
+        "widthAdjust": -50,
+        "textOffsetType": "HWPUNIT",
+        "textOffset": 750,
+        "charShapeId": 4294967295
+      }
+    }
+  }
+]
+```
+
+이 배열을 `bullet-changes.json`으로 저장하고 구조 보기의 실제 SHA를 사용합니다.
+
+```sh
+hwpjs apply ./document.hwpx --patch ./bullet-changes.json \
+  --expect-sha256 ACTUAL_DOCUMENT_SHA256 --output ./document-with-bullet.hwpx
+```
+
+동일 연산의 수정은 `edit.mode: "update"`와 실제 기존 `edit.id`를 지정하며 definition 전체를 보냅니다. `apply: false`는 정의만 바꾸고, 수정은 같은 ID를 사용하는 모든 문단에 영향을 줍니다. 선택적 `expectedText`는 기존 Native 원문 조건입니다. `charShapeId: 4294967295`는 본문 글자 모양 상속이며 새 글자 모양을 생성하지 않습니다. HWP5·구형 writer 없는 WASM은 거절합니다. 전체 작업 검증과 순차 Native 실행·저장·종료가 성공해야 새 출력이 게시됩니다. 후행 연산 실패 시 출력 파일을 만들지 않으며 원본·기존 출력의 덮어쓰기도 거절합니다.

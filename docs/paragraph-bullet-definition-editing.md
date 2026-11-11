@@ -22,6 +22,14 @@ Native current Session의 기존 paragraph/character/font intent를 먼저 저�
 
 HWP5 조회/정의 writer, 그림/체크 글머리표, 새 font/char shape 생성, 번호 이어가기·재시작, 임의 중첩 owner는 후속 목표입니다. 이 기능의 문자 정의 범위를 전체 기안기 완료로 계산하지 않습니다.
 
+## API 플레이그라운드와 파일 도구 연결
+
+API 플레이그라운드는 Core의 전체 헤더 조회와 typed 정의 명령을 그대로 호출합니다. 명시 화면 좌표에서 현재 target을 발급하며 사용자가 제공한 selectionVersion을 유지해 오래된 요청을 거부합니다. query의 definitionWriter는 쓰기 ABI의 관측이며 선택 owner·읽기 전용 권한은 실제 명령에서 다시 검사합니다. 기존 누름틀·속성·Canvas 조회 callback을 유지합니다.
+
+CLI apply와 MCP apply_document_changes는 공통 paragraph-bullet-definition 연산을 사용합니다. 주소는 기존 Native 원본 문단 좌표이며 화면 문단 번호와 다릅니다. 전체 batch 사전 검사에서 HWP5와 구형 writer를 거절하고, 이 연산이 있는 HWPX 세션에만 history V2를 활성화합니다. 새 writer의 문서 park edge에 필요한 준비이며 기존 연산만 있는 세션의 이력 정책은 바꾸지 않습니다. 독립 세션의 전체 실행·저장·종료 성공 뒤 기존 새 파일 게시 호스트를 재사용합니다. 실패 시 transient 세션을 닫고 결과를 게시하지 않는 파일 transaction이며 열린 UI 세션의 batch rollback을 약속하지 않습니다.
+
+공개 사용 예제의 소유자는 Rspress의 api/editor.md·api/playground.mdx·guide/cli.md·guide/mcp.md입니다. 설명은 현재 GitHub 구현 기준이며 npm 게시 버전을 뜻하지 않습니다.
+
 ## 근거와 검증
 
 공식 OWPML BulletType·ParaHeadType의 고정 revision `1453388472c703a4b299a0834f425cdac16644b9`에 있는 필드 관계와 자체 Native 소유 모델을 사용했습니다. [BulletType](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Head/BulletType.cpp)·[ParaHeadType](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Head/ParaHeadType.cpp). 외부 구현 코드를 채택하지 않았습니다. ID 배분·수치 한도는 제품 정책입니다.

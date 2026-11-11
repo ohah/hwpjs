@@ -65,7 +65,14 @@ type SharedMutationMethods =
   | 'editCreatedTableGrid'
   | 'supportsCreatedTableGrid';
 type Hwp5MutationSdk = Pick<Hwp5Sdk, SharedMutationMethods | 'text' | 'validateTextSourcePolicy'>;
-type HwpxMutationSdk = Pick<HwpxSdk, SharedMutationMethods | 'anchorText'>;
+type HwpxMutationSdk = Pick<
+  HwpxSdk,
+  | SharedMutationMethods
+  | 'anchorText'
+  | 'writeParagraphBulletDefinition'
+  | 'paragraphBulletDefinitions'
+  | 'enableHistoryV2'
+>;
 interface OperationDocumentBase {
   sourceSha256: string;
   sectionCount: number;

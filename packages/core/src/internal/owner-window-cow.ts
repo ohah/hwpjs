@@ -19,6 +19,8 @@ const ROOT_KEYS = new Set([
   'sourceTableGridAvailable',
   'sourceTableCellWidthAvailable',
   'sourceTableCellHeightAvailable',
+  'sourceTableCellSplitAvailable',
+  'sourceTableCellSplitProfile',
   'tableCreationResources',
   'createdTables',
   'normalizationEditingAvailable',
@@ -228,6 +230,10 @@ export function isPlainOwnerBaseline(content: any, section: number, paragraph: n
         typeof content.sourceTableCellWidthAvailable !== 'boolean') ||
       (Object.hasOwn(content, 'sourceTableCellHeightAvailable') &&
         typeof content.sourceTableCellHeightAvailable !== 'boolean') ||
+      (Object.hasOwn(content, 'sourceTableCellSplitAvailable') &&
+        typeof content.sourceTableCellSplitAvailable !== 'boolean') ||
+      (Object.hasOwn(content, 'sourceTableCellSplitProfile') &&
+        content.sourceTableCellSplitProfile !== 'single-unmerged-source-cell') ||
       Object.keys(content).some((k) => !ROOT_KEYS.has(k))
     )
       return false;

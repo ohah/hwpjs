@@ -352,16 +352,15 @@ MCP의 `outputPath`는 **새 단일 파일**입니다. CLI `extract-images --out
 
 모든 도구는 같은 CLI 파일 호스트를 사용합니다. 현재 웹 UI·열린 편집 세션 undo와는 연결되지 않았습니다. 결과·현재 지원 제한·원자적 게시와 게시 후 오류의 해석은 [문서 파일 변환 계약](https://github.com/ohah/hwpjs/blob/main/docs/document-file-transforms.md)과 [CLI 사용법](./cli.md#새-파일의-표-삭제그림-삽입의미-html)을 따릅니다.
 
-
 ## 개발 중: 반복 읽기 세션
 
 아래 도구 세 개는 새 로컬 후보에 추가한 기능이며 npm 0.1.1에는 아직 배포하지 않았습니다. 기존 파일 도구에 아래 원본 표 grid 도구를 더한 소스 후보는 파일 도구 17개와 세션 도구 3개로, `tools/list`는 20개입니다. 같은 Native 문서를 유지해 반복 읽기 때 다시 열지 않습니다.
 
-| 도구 | 입력 | 결과 |
-| --- | --- | --- |
-| `open_document_session` | `inputPath`, 선택적 `expectedSha256` | `sessionId`, 포맷, 원본 SHA, 구역 수 |
-| `read_document_session` | `sessionId`, 선택적 `format`, `view` | 기존 읽기와 같은 text/Markdown·개체 참조 |
-| `close_document_session` | `sessionId` | 핸들 종료와 Native 자원 해제 |
+| 도구                     | 입력                                 | 결과                                     |
+| ------------------------ | ------------------------------------ | ---------------------------------------- |
+| `open_document_session`  | `inputPath`, 선택적 `expectedSha256` | `sessionId`, 포맷, 원본 SHA, 구역 수     |
+| `read_document_session`  | `sessionId`, 선택적 `format`, `view` | 기존 읽기와 같은 text/Markdown·개체 참조 |
+| `close_document_session` | `sessionId`                          | 핸들 종료와 Native 자원 해제             |
 
 ```json
 {"name":"open_document_session","arguments":{"inputPath":"/documents/noori.hwpx"}}
@@ -372,7 +371,6 @@ MCP의 `outputPath`는 **새 단일 파일**입니다. CLI `extract-images --out
 세션은 열린 시점의 읽기 전용 스냅샷입니다. 디스크 변경을 자동 반영하지 않으며 세션 편집·undo/redo는 이번 범위에 없습니다. 파일 편집은 기존 `apply_document_changes` 등을 사용합니다. 같은 세션에 읽기를 겹쳐 보내면 `DocumentSessionBusy`로 거부하므로 이전 읽기를 기다린 뒤 다음 요청을 보냅니다.
 
 동시 세션은 4개, 입력은 파일당 64MiB·예약 포함 합계 128MiB, 한 읽기 응답은 UTF-8 16MiB입니다. 입력 한도는 전체 파서 heap/RSS의 상한이 아닙니다. 다른 서버의 핸들이나 종료한 핸들은 사용할 수 없고, 사용 후 close해야 합니다. 서버 종료도 자원을 정리합니다.
-
 
 ## 원본 표 행·열 파일 편집 (소스 후보)
 
@@ -396,3 +394,42 @@ MCP의 `outputPath`는 **새 단일 파일**입니다. CLI `extract-images --out
 ```
 
 `reference`는 같은 원본 SHA를 포함한 실제 표 참조로 바꿔야 합니다. `action`·0 기반 `index`·현재 예상 크기와 선택 `layout`의 범위는 [CLI 계약](./cli.md#원본-표-행열-파일-편집-소스-후보)을 따릅니다. 알 수 없는 키는 거부하며 `allowStaleLayout` 기본값은 false입니다. HWP5/HWPX 모두 명시 동의해야 저장합니다. MCP는 공통 CLI 파일 호스트를 호출하고 별도 파일 쓰기를 수행하지 않습니다. 응답에는 새 파일의 경로·SHA·원본 SHA와 `layoutRequiresReflow: true`, `previewStale: true`가 포함됩니다. 열린 세션을 편집하는 도구가 아닙니다.
+
+## HWPX 문자 글머리표 정의 생성·수정
+
+현재 GitHub 구현은 기존 `apply_document_changes`에 `paragraph-bullet-definition` 연산을 연결합니다. npm 릴리스 지원을 뜻하지 않습니다. 공개 설치 이름은 `npm install @ohah/hwpjs`, 서버 호출은 `hwpjs mcp`이며 해당 구현과 대응 WASM을 포함한 빌드가 필요합니다. 별도 MCP 패키지는 없습니다.
+
+```json
+{
+  "name": "apply_document_changes",
+  "arguments": {
+    "inputPath": "/absolute/document.hwpx",
+    "outputPath": "/absolute/document-with-bullet.hwpx",
+    "expectedSha256": "ACTUAL_DOCUMENT_SHA256",
+    "operations": [
+      {
+        "kind": "paragraph-bullet-definition",
+        "coordinates": "current-transaction",
+        "section": 0,
+        "paragraph": 2,
+        "edit": {
+          "mode": "create",
+          "apply": true,
+          "definition": {
+            "marker": 9733,
+            "alignment": "RIGHT",
+            "useInstanceWidth": false,
+            "autoIndent": true,
+            "widthAdjust": -50,
+            "textOffsetType": "HWPUNIT",
+            "textOffset": 750,
+            "charShapeId": 4294967295
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+SHA와 Native 문단 주소는 같은 원본의 구조 보기·문단 조회 결과로 바꿉니다. `edit.mode: "update"`와 기존 `edit.id`를 보내면 같은 ID를 사용하는 모든 문단에 영향을 줍니다. `apply: false`는 정의만 수정합니다. 필수 속성·수치 한도와 저장 경계는 [CLI의 공통 계약](./cli.md#hwpx-문자-글머리표-정의-작업)을 따릅니다. MCP의 strict 스키마 뒤에도 동일 mutation service가 요청을 검증하며, HWP5·구형 ABI·후행 오류는 새 파일 게시 없이 실패합니다.

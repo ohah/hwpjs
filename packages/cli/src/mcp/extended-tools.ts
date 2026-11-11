@@ -76,6 +76,31 @@ function operationSchema() {
       coordinates: z.literal('current-transaction'),
     };
     const field = (name: string): z.ZodType => {
+      if (name === 'edit') {
+        const definition = z.strictObject({
+          marker: uint(),
+          alignment: z.enum(['LEFT', 'CENTER', 'RIGHT']),
+          useInstanceWidth: z.boolean(),
+          autoIndent: z.boolean(),
+          widthAdjust: z.number().int().min(-1000000).max(1000000),
+          textOffsetType: z.enum(['PERCENT', 'HWPUNIT']),
+          textOffset: z.number().int().min(-1000000).max(1000000),
+          charShapeId: uint(),
+        });
+        return z
+          .discriminatedUnion('mode', [
+            z.strictObject({ mode: z.literal('create'), definition, apply: z.boolean() }),
+            z.strictObject({
+              mode: z.literal('update'),
+              id: uint(),
+              definition,
+              apply: z.boolean(),
+            }),
+          ])
+          .describe(
+            'HWPX 문자 글머리표 정의 생성·수정. update는 같은 ID의 모든 문단에 영향을 줍니다.',
+          );
+      }
       if (coordinateFields.has(name)) return uint();
       if (textFields.has(name)) return z.string();
       if (name === 'cellTexts')

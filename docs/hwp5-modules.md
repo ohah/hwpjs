@@ -531,6 +531,7 @@
 - [MCP 문서 읽기 세션](mcp-document-sessions.md)
 
 - [HWP5 원본 표 격자 후보](hwp5-source-table-grid.md)
+- [HWP5 원본 단순 셀 나누기 Native 후보](hwp5-source-cell-split.md)
 - [HWPX 원본 표 격자 후보](hwpx-source-table-grid.md)
 
 - [검증된 Native 모듈 프로필](native-module-profiles.md)

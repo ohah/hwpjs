@@ -166,6 +166,8 @@ export function getTableInsertionState(editor: HeadlessEditor) {
 
 ## 글머리표 정의 조회·생성·수정
 
+아래는 현재 GitHub 구현 기준이며 npm 릴리스에 포함됐다는 뜻이 아닙니다. 공개 설치 이름은 `npm install @ohah/hwpjs`이며 해당 기능과 대응 WASM을 포함한 빌드가 필요합니다.
+
 HWPX의 `editor.listParagraphBulletDefinitions({ token? })`는 본문에서 사용하지 않는 선언도 포함한 현재 헤더 전체 목록을 반환합니다. `state: 'available'`와 `coverage: 'complete'`를 확인하세요. `definitionWriter: 'character-definitions-v1'`이면 새 정의 쓰기를 지원하며 각 선언의 nullable `definition`에서 편집 가능한 모양을 읽습니다.
 
 ```ts

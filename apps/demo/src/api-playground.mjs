@@ -67,6 +67,8 @@ export function createApiPlayground({
   createParagraphSelection,
   planReplaceAll: queryReplaceAllPlan,
   replaceAllCommand,
+  editParagraphBulletDefinitionCommand,
+  listParagraphBulletDefinitions: queryParagraphBulletDefinitions,
   surface,
   operations,
 }) {
@@ -124,6 +126,34 @@ export function createApiPlayground({
         throw Error('ApiTableInsertAvailabilityUnavailable');
       const selected = target(args);
       return queryTableInsertAvailability(editor.getEditorState(), selected);
+    },
+    listParagraphBulletDefinitions(args) {
+      replaceAllArgs(args, []);
+      return queryParagraphBulletDefinitions({ token: editor.getEditorState().token });
+    },
+    editParagraphBulletDefinition(args) {
+      if (Object.keys(args).some((key) => !['target', 'selectionVersion', 'edit'].includes(key)))
+        throw Error('InvalidBulletDefinitionRequest');
+      const coordinates = args.target;
+      if (
+        !coordinates ||
+        typeof coordinates !== 'object' ||
+        Array.isArray(coordinates) ||
+        Object.keys(coordinates).some(
+          (key) => !['section', 'paragraph', 'start', 'end', 'affinity'].includes(key),
+        ) ||
+        !['section', 'paragraph', 'start', 'end'].every(
+          (key) => Number.isSafeInteger(coordinates[key]) && coordinates[key] >= 0,
+        ) ||
+        !Number.isSafeInteger(args.selectionVersion) ||
+        args.selectionVersion < 0
+      )
+        throw Error('InvalidBulletDefinitionRequest');
+      return editor.dispatchCommand(editParagraphBulletDefinitionCommand, {
+        target: target(coordinates),
+        selectionVersion: args.selectionVersion,
+        edit: args.edit,
+      });
     },
     getReplaceAllCapabilities(args) {
       replaceAllArgs(args, []);
@@ -192,6 +222,11 @@ export function createApiPlayground({
       (operation) =>
         Object.hasOwn(registry, operation) &&
         (hasReplaceAll || !replaceAllOperations.includes(operation)) &&
+        (operation !== 'listParagraphBulletDefinitions' ||
+          typeof queryParagraphBulletDefinitions === 'function') &&
+        (operation !== 'editParagraphBulletDefinition' ||
+          (typeof editParagraphBulletDefinitionCommand?.id === 'symbol' &&
+            typeof createParagraphSelection === 'function')) &&
         (operation !== 'getPageText' || typeof surface?.getPageText === 'function'),
     ),
   );
@@ -213,7 +248,8 @@ export function createApiPlayground({
         const value = await registry[operation](effectiveArgs);
         const result = value?.getEditorState ? undefined : value;
         const error =
-          operation === 'getPageText' && result?.state === 'unavailable'
+          ['getPageText', 'listParagraphBulletDefinitions'].includes(operation) &&
+          result?.state === 'unavailable'
             ? result.reason
             : (result?.error ?? null);
         return {
@@ -261,6 +297,25 @@ const examples = Object.freeze({
   select: { section: 0, paragraph: 0, start: 0, end: 0 },
   splice: { section: 0, paragraph: 0, start: 0, end: 0, text: 'API 검증' },
   getTableInsertAvailability: { section: 0, paragraph: 0, start: 0, end: 0 },
+  listParagraphBulletDefinitions: {},
+  editParagraphBulletDefinition: {
+    target: { section: 0, paragraph: 1, start: 0, end: 0 },
+    selectionVersion: 0,
+    edit: {
+      mode: 'create',
+      apply: true,
+      definition: {
+        marker: 9679,
+        alignment: 'LEFT',
+        useInstanceWidth: true,
+        autoIndent: true,
+        widthAdjust: 0,
+        textOffsetType: 'PERCENT',
+        textOffset: 50,
+        charShapeId: 4294967295,
+      },
+    },
+  },
   getReplaceAllCapabilities: {},
   planReplaceAll: { query: '누리', replacement: '우리' },
   replaceAll: { query: '누리', replacement: '우리' },
@@ -282,6 +337,24 @@ const snippets = Object.freeze({
   reopen: 'await editor.load(saved.bytes, { format: saved.format });',
 });
 export function apiSampleCode(operation, args = {}) {
+  if (operation === 'listParagraphBulletDefinitions') {
+    replaceAllArgs(args, []);
+    return 'await editor.listParagraphBulletDefinitions({ token: editor.getEditorState().token });';
+  }
+  if (operation === 'editParagraphBulletDefinition') {
+    return (
+      "import { createParagraphSelection, EDIT_PARAGRAPH_BULLET_DEFINITION_COMMAND } from '@ohah/hwpjs';\n" +
+      'const args = ' +
+      JSON.stringify(args, null, 2) +
+      ';\n' +
+      'const createTarget = ' +
+      apiSelectionTarget.toString() +
+      ';\n' +
+      'const target = createTarget(editor, args.target, createParagraphSelection);\n' +
+      'await editor.dispatchCommand(EDIT_PARAGRAPH_BULLET_DEFINITION_COMMAND, {\n' +
+      '  target, selectionVersion: args.selectionVersion, edit: args.edit,\n});'
+    );
+  }
   if (operation === 'getPageText') {
     const { pageIndex, include } = args;
     const filter = include === undefined ? '' : ', ' + JSON.stringify({ include });
@@ -486,7 +559,11 @@ export function mountApiPlayground(root, options) {
     const readingPage = operation.value === 'getPageText';
     argsLabel.hidden = readingPage;
     pageFields.hidden = !readingPage;
-    args.value = JSON.stringify(examples[operation.value], null, 2);
+    const example =
+      operation.value === 'editParagraphBulletDefinition'
+        ? { ...examples[operation.value], selectionVersion: api.snapshot().stateVersion }
+        : examples[operation.value];
+    args.value = JSON.stringify(example, null, 2);
     updateCode();
   };
   const changeMode = () => {

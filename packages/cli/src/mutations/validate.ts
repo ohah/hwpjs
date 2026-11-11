@@ -1,3 +1,5 @@
+import { checkedBulletDefinitionEdit } from '../../../../js/paragraph-bullet-definition-write.mjs';
+import type { ParagraphBulletDefinitionEdit } from '../../../core/src/commands/paragraph-bullet-definition.ts';
 import {
   captureCreatedTableGridRequest,
   type CreatedTableGridRequest,
@@ -74,6 +76,10 @@ export type DocumentOperation = OperationBase &
         WholeTextCondition)
     | ({ readonly kind: 'character-format'; readonly charShapeId: number } & RangeCondition &
         WholeTextCondition)
+    | ({
+        readonly kind: 'paragraph-bullet-definition';
+        readonly edit: ParagraphBulletDefinitionEdit;
+      } & AtParagraph)
     | ({ readonly kind: 'paragraph-format'; readonly paraShapeId: number } & AtParagraph)
     | ({ readonly kind: 'paragraph-alignment'; readonly alignment: string } & AtParagraph)
     | ({ readonly kind: 'paragraph-margins'; readonly margins: ParagraphMargins } & AtParagraph)
@@ -134,6 +140,7 @@ export const DOCUMENT_OPERATION_SPECS = Object.freeze({
   'merge-paragraph': spec([...paragraph, 'expectedText']),
   'character-properties': spec([...textRange, 'properties'], ['expectedText']),
   'character-format': spec([...textRange, 'charShapeId'], ['expectedText']),
+  'paragraph-bullet-definition': spec([...paragraph, 'edit'], ['expectedText']),
   'paragraph-format': spec([...paragraph, 'paraShapeId'], ['expectedText']),
   'paragraph-alignment': spec([...paragraph, 'alignment'], ['expectedText']),
   'paragraph-margins': spec([...paragraph, 'margins'], ['expectedText']),
@@ -319,6 +326,10 @@ export function validateDocumentOperations(input: unknown): readonly DocumentOpe
       case 'character-format':
         range(operation);
         uint(operation.charShapeId);
+        break;
+      case 'paragraph-bullet-definition':
+        position(operation);
+        checkedBulletDefinitionEdit(operation.edit);
         break;
       case 'paragraph-format':
         position(operation);

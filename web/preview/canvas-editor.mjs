@@ -814,7 +814,7 @@ export function createCanvasEditor({
       !context ||
       context.created ||
       (!split && (!block || block.paint.cells.size < 2)) ||
-      (equalizeWidth || equalizeHeight
+      (split || equalizeWidth || equalizeHeight
         ? !['hwpx', 'hwp5'].includes(content?.format)
         : content?.format !== 'hwpx') ||
       (split

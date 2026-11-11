@@ -1,6 +1,11 @@
 import {
+  decodeSourceTableCellSplitCapability,
+  sourceTableCellSplitProfile,
+} from './source-table-cell-split-capability.mjs';
+import {
   HWPX_SOURCE_TABLE_CELL_MERGE_FUNCTIONS,
   HWPX_SOURCE_TABLE_CELL_SPLIT_FUNCTIONS,
+  HWP5_SOURCE_TABLE_CELL_SPLIT_FUNCTIONS,
 } from './abi-schema.mjs';
 import { applyNativeEdit } from './native-edit-outcome.mjs';
 
@@ -110,18 +115,43 @@ export function createSourceTableCellMergeApi({ wasm, memory, check, documentIns
  * mode: 'each' | 'merge-then-split', equalizeRows: boolean
  * }} SourceTableCellSplitRequest
  */
-export function createSourceTableCellSplitApi({ wasm, memory, check, documentInsert }) {
+export function createSourceTableCellSplitApi({
+  wasm,
+  memory,
+  check,
+  documentInsert,
+  format = 'hwpx',
+}) {
   const supported =
     documentInsert.supportsDocumentInsertionAbi() &&
-    HWPX_SOURCE_TABLE_CELL_SPLIT_FUNCTIONS.every((name) => typeof wasm[name] === 'function');
+    (format === 'hwp5'
+      ? HWP5_SOURCE_TABLE_CELL_SPLIT_FUNCTIONS
+      : HWPX_SOURCE_TABLE_CELL_SPLIT_FUNCTIONS
+    ).every((name) => typeof wasm[name] === 'function');
   const requireSupport = () => {
     check();
-    if (!supported) throw new Error('HwpxSourceTableCellSplitAbiUnavailable');
+    if (!supported)
+      throw new Error(
+        format === 'hwp5'
+          ? 'Hwp5SourceTableCellSplitAbiUnavailable'
+          : 'HwpxSourceTableCellSplitAbiUnavailable',
+      );
   };
   return {
     supportsSourceTableCellSplit() {
       check();
       return supported;
+    },
+    sourceTableCellSplitProfile() {
+      requireSupport();
+      return sourceTableCellSplitProfile(format).sourceProfile;
+    },
+    sourceTableCellSplitCapabilities() {
+      requireSupport();
+      return decodeSourceTableCellSplitCapability({
+        ...sourceTableCellSplitProfile(format),
+        binding: documentInsert.documentInsertionCapabilities().binding,
+      });
     },
     sourceTableCellSplitBinding() {
       requireSupport();
@@ -155,7 +185,7 @@ export function createSourceTableCellSplitApi({ wasm, memory, check, documentIns
         { withBytes: (_, invoke) => invoke(0, 0), error: () => memory.error() },
         null,
         () =>
-          wasm.hwpx_edit_split_source_table_cells(
+          wasm[`${format}_edit_split_source_table_cells`](
             ...numeric.map((key) => value[key]),
             value.mode === 'each' ? 0 : 1,
             value.equalizeRows ? 1 : 0,

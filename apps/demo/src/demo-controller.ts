@@ -380,7 +380,10 @@ export async function mountDemo(
         : {}),
       'table-cell-split': {
         enabled: host?.captureSourceTableCellSplit?.() != null,
-        reason: '편집 가능한 HWPX 원본 표의 셀이나 직사각형 셀 블록을 선택하세요.',
+        reason:
+          (state.content as { format?: string })?.format === 'hwp5'
+            ? '현재 HWP5는 비병합 원본 표의 셀 하나를 지원합니다. 병합 입력·여러 셀은 후속 지원 범위입니다.'
+            : '편집 가능한 HWPX 원본 표의 셀이나 직사각형 셀 블록을 선택하세요.',
       },
       'table-cell-height-equal': {
         enabled: height?.available === true,

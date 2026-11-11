@@ -161,6 +161,8 @@ export type { HTMLConversionOptions } from './conversion.ts';
 
 export type {
   SourceTableCellSplitTarget,
+  SourceTableCellSplitProfile,
+  SourceTableCellSplitCapabilities,
   SourceTableCellSplitCapture,
   SourceTableCellSplitSelection,
   SplitSourceTableCellsPayload,

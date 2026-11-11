@@ -18,6 +18,7 @@ test('verified profile preserves known-only and owner-window tiers', () => {
   }
   for (const sha of [
     current,
+    'afd903edc5658543b768491efb6ee6fbdbe185a8f393334a363acbd2eb5510ae',
     '475af44280d71edc715be1c210c97701dd4dad049e74adaebf8dadb091b1876e',
     '0100f86340c05f3d420f011424bf063f02e5d106bd71a388f4a1cba6fd0c001d',
     '376634c3d1b827388d35bba1d068f054df76ead49dd150e1d2cd7a6c512340f4',

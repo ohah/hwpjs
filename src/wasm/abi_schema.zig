@@ -55,6 +55,10 @@ pub const hwpx_named_field_parameters_exports = [_][]const u8{
     "hwpx_edit_named_field_parameters",
     "hwpx_edit_set_named_field_parameters",
 };
+pub const hwp5_source_table_cell_split_exports = [_][]const u8{
+    "hwp5_edit_source_table_cell_split_capabilities",
+    "hwp5_edit_split_source_table_cells",
+};
 pub const document = struct {
     pub const header_bytes: usize = 8;
     pub const node_bytes: usize = 56;

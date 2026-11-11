@@ -11,7 +11,8 @@ pub const Edit = struct {
     table_node: usize,
     expected_rows: u32,
     expected_columns: u32,
-    command: @import("../../model/table_grid_edit_plan.zig").Command,
+    command: ?@import("../../model/table_grid_edit_plan.zig").Command = null,
+    split: ?@import("source_table_cell_split.zig").Request = null,
     layout: @import("../body/list_header.zig").Layout,
 };
 const TableSite = struct { ordinal: usize, total: usize };
@@ -58,6 +59,7 @@ pub fn prepare(a: std.mem.Allocator, current_file: []const u8, active_source: []
         .expected_rows = edit.expected_rows,
         .expected_columns = edit.expected_columns,
         .command = edit.command,
+        .split = edit.split,
         .layout = edit.layout,
     }, .{});
     defer a.free(changed_file);

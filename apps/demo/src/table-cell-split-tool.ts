@@ -14,6 +14,21 @@ export interface TableCellSplitHost {
   focus?(): boolean;
 }
 const refusal = (error: string) => {
+  if (
+    error === 'UnsupportedSourceTableSplitSelection' ||
+    error === 'UnsupportedSourceTableSplitMode'
+  )
+    return '현재 HWP5는 비병합 원본 표의 셀 하나를 지원합니다. 병합 입력과 여러 셀 나누기는 후속 지원 범위입니다.';
+  if (error === 'UnsupportedSourceTableGrid')
+    return '이 표에는 현재 나눌 수 없는 병합·보호·중첩 또는 복잡한 셀 구조가 있습니다.';
+  if (
+    [
+      'UnsupportedSectionRecord',
+      'UnsupportedSectionControl',
+      'UnsupportedSectionStructure',
+    ].includes(error)
+  )
+    return '구역에 지원하지 않는 필드나 개체가 있어 셀을 나눌 수 없습니다.';
   if (error === 'UnsupportedSourceTableSplitHeights')
     return '현재 행 높이를 유지하는 이 분할은 지원하지 않습니다. 줄 높이를 같게 하거나 나눌 줄 수를 바꾸세요.';
   if (error.includes('Stale') || error.includes('Foreign'))
@@ -33,9 +48,10 @@ export function createTableCellSplitTool(
       const host = getHost(),
         capture = captured ?? host?.captureSourceTableCellSplit?.();
       if (!capture?.current()) {
-        note('편집 가능한 HWPX 원본 표에서 셀이나 직사각형 셀 블록을 선택하세요.');
+        note('지원되는 원본 표에서 셀이나 직사각형 셀 블록을 선택하세요.');
         return;
       }
+      const hwp5 = capture.selection.profile === 'single-unmerged-source-cell';
       const doc = root.ownerDocument,
         dialog = doc.createElement('dialog');
       dialog.dataset.role = 'table-cell-split-dialog';
@@ -45,6 +61,13 @@ export function createTableCellSplitTool(
       const description = doc.createElement('p');
       description.textContent = `${capture.selection.selectedCells}개 셀 선택 · 기존 내용은 각 분할의 첫 셀에 보존됩니다.`;
       dialog.append(title, description);
+      if (hwp5) {
+        const scope = doc.createElement('p');
+        scope.dataset.role = 'cell-split-scope';
+        scope.textContent =
+          'HWP5는 현재 원본 비병합 표의 셀 하나를 균등하게 나눕니다. 병합 입력·여러 셀 나누기는 후속 지원 범위입니다.';
+        dialog.append(scope);
+      }
       const number = (name: string, text: string, value: number) => {
         const label = doc.createElement('label'),
           input = doc.createElement('input');
@@ -80,7 +103,8 @@ export function createTableCellSplitTool(
         input.name = 'splitMode';
         input.value = value;
         input.checked = value === 'each';
-        input.disabled = value === 'merge-then-split' && capture.selection.selectedCells < 2;
+        input.disabled =
+          value === 'merge-then-split' && (hwp5 || capture.selection.selectedCells < 2);
         label.append(input, doc.createTextNode(text));
         modes.append(label);
         modeInputs.push(input);
@@ -91,6 +115,7 @@ export function createTableCellSplitTool(
       equal.type = 'checkbox';
       equal.name = 'equalizeRows';
       equal.checked = true;
+      equal.disabled = hwp5;
       equalLabel.append(equal, doc.createTextNode('줄 높이를 같게 나누기'));
       dialog.append(equalLabel);
       const status = doc.createElement('p');

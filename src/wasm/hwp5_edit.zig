@@ -339,6 +339,67 @@ export fn hwp5_edit_created_table_grid(section: u32, low: u32, high: u32, action
     apply(.{ .edit_created_table_grid = .{ .section = section, .table = identity, .command = command } }) catch |err| return fail(err);
     return 1;
 }
+fn sourceCellSplitService() !@import("../hwp5/edit/source_table_cell_split_service.zig").Service {
+    const current = try session();
+    const h = if (history) |*value| value else return error.HistoryNotEnabled;
+    return .{ .session = current, .history = h, .lifetime = &formatting_lifetime };
+}
+export fn hwp5_edit_source_table_cell_split_capabilities() u32 {
+    hwp5_edit_output_free();
+    const service = sourceCellSplitService() catch |err| return fail(err);
+    const revision = service.currentRevision() catch |err| return fail(err);
+    const epoch = formatting_lifetime.session(a) catch |err| return fail(err);
+    defer a.free(epoch);
+    const ticket = service.session.historyTicket() catch |err| return fail(err);
+    var serial_buffer: [20]u8 = undefined;
+    const serial = std.fmt.bufPrint(&serial_buffer, "{d}", .{ticket.epoch}) catch unreachable;
+    output = std.json.Stringify.valueAlloc(a, .{
+        .schemaVersion = @as(u32, 1),
+        .format = "hwp5",
+        .sourceProfile = "single-unmerged-source-cell",
+        .maxSelectedCells = @as(u32, 1),
+        .supportsMergedInput = false,
+        .supportsMergeThenSplit = false,
+        .supportsPreserveRowHeights = false,
+        .maxAxis = @as(u32, 63),
+        .maxGridCells = @as(u32, 4096),
+        .binding = .{ .session = epoch, .revision = revision, .serial = serial },
+    }, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_split_source_table_cells(section: u32, table_node: u32, rows: u32, columns: u32, top: u32, left: u32, bottom: u32, right: u32, selected: u32, split_rows: u32, split_columns: u32, mode: u32, equalize: u32, revision: u32, epoch_lo: u32, epoch_hi: u32, serial_lo: u32, serial_hi: u32) u32 {
+    hwp5_edit_output_free();
+    const service = sourceCellSplitService() catch |err| {
+        _ = fail(err);
+        return if (err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    const current = service.currentRevision() catch |err| {
+        _ = fail(err);
+        return if (err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    const ticket = service.session.historyTicket() catch |err| return fail(err);
+    const epoch = @as(u64, epoch_hi) << 32 | epoch_lo;
+    const serial = @as(u64, serial_hi) << 32 | serial_lo;
+    if (formatting_lifetime.epoch != epoch or current != revision or ticket.epoch != serial)
+        return fail(error.StaleSourceTableSplitBinding);
+    if (selected != 1 or bottom <= top or right <= left or bottom - top != 1 or right - left != 1)
+        return fail(error.UnsupportedSourceTableSplitSelection);
+    if (mode != 0) return fail(error.UnsupportedSourceTableSplitMode);
+    if (equalize != 1) return fail(error.UnsupportedSourceTableSplitHeights);
+    const next_view_epoch = view_epoch.next() catch |err| return fail(err);
+    const target = service.capture(a, section, table_node, top, left) catch |err| return fail(err);
+    if (target.expected_rows != rows or target.expected_columns != columns) return fail(error.SourceBindingMismatch);
+    const changed = service.apply(a, target, split_rows, split_columns) catch |err| {
+        const poisoned = service.history.stats().poisoned;
+        _ = fail(err);
+        return if (poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    if (changed) {
+        view_epoch.value = next_view_epoch;
+        reflow = true;
+    }
+    return if (changed) 1 else 2;
+}
 export fn hwp5_edit_source_table_grid(section: u32, table_node: u32, rows: u32, columns: u32, action: u32, index: u32, layout: u32) u32 {
     hwp5_edit_output_free();
     const command = @import("created_table_grid_request.zig").decode(action, index) catch |err| return fail(err);

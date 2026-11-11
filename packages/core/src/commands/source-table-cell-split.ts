@@ -2,7 +2,26 @@ declare const splitTarget: unique symbol;
 export interface SourceTableCellSplitTarget {
   readonly [splitTarget]: true;
 }
+export type SourceTableCellSplitProfile =
+  | 'single-unmerged-source-cell'
+  | 'static-source-cell-rectangle';
+export type SourceTableCellSplitCapabilities =
+  | Readonly<{ available: false; reason: string }>
+  | Readonly<{
+      available: true;
+      schemaVersion: 1;
+      format: 'hwp5' | 'hwpx';
+      sourceProfile: SourceTableCellSplitProfile;
+      maxSelectedCells: number;
+      supportsMergedInput: boolean;
+      supportsMergeThenSplit: boolean;
+      supportsPreserveRowHeights: boolean;
+      maxAxis: 63;
+      maxGridCells: 4096;
+      binding: Readonly<{ session: string; revision: number; serial: string }>;
+    }>;
 export interface SourceTableCellSplitSelection {
+  readonly profile?: SourceTableCellSplitProfile;
   readonly selectedCells: number;
   readonly rows: number;
   readonly columns: number;

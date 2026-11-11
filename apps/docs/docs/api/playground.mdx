@@ -29,7 +29,17 @@ HWPX 파일을 연 뒤 필드 이름과 필요한 순번을 입력하고 **누�
 
 파일을 수정하지 않고 확인하려면 패널의 **열기 모드 → 읽기 전용**을 선택하고 파일을 여세요. 보호 필드와 읽기 전용 문서에서도 지원되는 속성은 조회할 수 있고 적용은 비활성화됩니다. 다른 문서나 선택으로 바뀌면 속성을 다시 읽어야 합니다.
 
-헤드리스 API는 `readNamedFieldParameters`와 `SET_NAMED_FIELD_PARAMETERS_COMMAND`를 사용합니다. `read` 결과의 `token`, `selectionVersion`, 기존 `parameters`를 수정 요청의 기대값으로 전달합니다. 문단 글머리표는 `APPLY_FORMATTING_PATCH_COMMAND`의 `paragraph.bullet`로 기존 선언 적용·해제를 지원하며 새 선언 생성은 후속입니다.
+헤드리스 API는 `readNamedFieldParameters`와 `SET_NAMED_FIELD_PARAMETERS_COMMAND`를 사용합니다. `read` 결과의 `token`, `selectionVersion`, 기존 `parameters`를 수정 요청의 기대값으로 전달합니다. 문단 글머리표의 기존 선언 적용·해제는 `APPLY_FORMATTING_PATCH_COMMAND`의 `paragraph.bullet`를 사용합니다. 새 문자 선언의 생성·수정은 아래 typed 명령을 사용합니다.
+
+## 문자 글머리표 정의 조회·생성·수정
+
+이 연결은 **현재 GitHub 구현 기준**이며 npm 게시 버전을 뜻하지 않습니다. 공개 설치 이름은 `npm install @ohah/hwpjs`입니다. 새 기능은 해당 구현을 포함한 빌드가 필요합니다. [HeadlessEditor 예제](./editor.md#글머리표-정의-조회생성수정)의 import도 `@ohah/hwpjs`를 사용합니다.
+
+`load`로 편집 가능한 HWPX를 열고 `listParagraphBulletDefinitions`를 실행하세요. 실제 Core가 현재 헤더 전체를 조회합니다. `scope: "current-header"`, `coverage: "complete"`, `definitionWriter: "character-definitions-v1"`을 확인하세요. 정의별 `canApply`는 현재 선택에 대한 쓰기 권한을 뜻하지 않습니다.
+
+`editParagraphBulletDefinition`은 `target`에 `{ "section": 0, "paragraph": 1, "start": 0, "end": 0 }`처럼 현재 화면 문단 좌표를 명시합니다. 현재 엔진 상태의 `stateVersion`을 `selectionVersion`으로 전달하세요. 항목을 선택할 때 현재 버전을 예제에 채우며 문서·선택·이력 변경 후에는 다시 선택해 갱신해야 합니다. 실행 예제는 `createParagraphSelection`으로 같은 문서의 target을 발급한 후 `EDIT_PARAGRAPH_BULLET_DEFINITION_COMMAND`를 실행합니다.
+
+`edit`는 `{ mode: "create", definition, apply: true }`입니다. 수정은 `{ mode: "update", id, definition, apply: false }`로 지정하며 동일 ID를 사용하는 모든 문단에 영향을 줍니다. definition의 필수 8개 값은 [API 계약](./editor.md#글머리표-정의-조회생성수정)을 따릅니다. 쓰기 오류·오래된 선택·읽기 전용·지원하지 않는 owner·구형 엔진의 writer 부재는 오류와 전후 상태로 확인합니다. HWP5 정의 쓰기는 지원하지 않습니다. 문서 교체나 패널 종료 후 이전 요청을 재사용하지 마세요.
 
 <ApiPlayground />
 

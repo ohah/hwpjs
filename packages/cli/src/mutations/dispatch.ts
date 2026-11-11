@@ -28,6 +28,7 @@ const METHODS = Object.freeze({
   'merge-paragraph': 'mergeParagraph',
   'character-properties': 'setCharacterProperties',
   'character-format': 'setCharacterFormat',
+  'paragraph-bullet-definition': 'writeParagraphBulletDefinition',
   'paragraph-format': 'setParagraphFormat',
   'paragraph-alignment': 'setParagraphAlignment',
   'paragraph-margins': 'setParagraphMargins',
@@ -80,7 +81,17 @@ export function prepareOperationSession(
     throw new Error('InvalidOperationSession');
   const protectedSections = new Set<number>();
   for (const operation of operations) {
-    if (typeof document.sdk[METHODS[operation.kind]] !== 'function')
+    if (operation.kind === 'paragraph-bullet-definition') {
+      if (document.format !== 'hwpx') throw new Error('Hwp5BulletDefinitionWriteUnavailable');
+      const inventory = document.sdk.paragraphBulletDefinitions();
+      if (
+        inventory.state !== 'available' ||
+        !('definitionWriter' in inventory) ||
+        inventory.definitionWriter !== 'character-definitions-v1'
+      )
+        throw new Error('BulletDefinitionWriteAbiUnavailable');
+    }
+    if (typeof Reflect.get(document.sdk, METHODS[operation.kind]) !== 'function')
       throw new Error(`DocumentOperationUnavailable:${operation.kind}`);
     if (operation.kind === 'created-table-grid') {
       const supports: unknown = Reflect.get(document.sdk, 'supportsCreatedTableGrid');
@@ -116,6 +127,14 @@ export function prepareOperationSession(
         'function'
     )
       throw new Error('OperationTextObservationUnavailable');
+  }
+  if (
+    document.format === 'hwpx' &&
+    operations.some((operation) => operation.kind === 'paragraph-bullet-definition')
+  ) {
+    // The definition writer parks the previous Native document in a history edge.
+    // Enable only after all batch admission checks, before applying any operation.
+    document.sdk.enableHistoryV2();
   }
   if (document.format === 'hwp5') {
     if (protectedSections.size && typeof document.sdk.validateTextSourcePolicy !== 'function')
@@ -218,6 +237,14 @@ export function applyOperation(document: OperationDocument, operation: DocumentO
         endUnit: operation.endUnit,
         charShapeId: operation.charShapeId,
       });
+      break;
+    case 'paragraph-bullet-definition':
+      if (document.format !== 'hwpx') throw new Error('Hwp5BulletDefinitionWriteUnavailable');
+      document.sdk.writeParagraphBulletDefinition(
+        operation.edit,
+        operation.section,
+        operation.paragraph,
+      );
       break;
     case 'paragraph-format':
       document.sdk.setParagraphFormat({

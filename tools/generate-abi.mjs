@@ -12,6 +12,7 @@ import {
   HWPX_NAMED_FIELD_CREATE_FUNCTIONS,
   HWPX_NAMED_FIELD_PARAMETERS_FUNCTIONS,
   HWP5_NAMED_FIELDS_FUNCTIONS,
+  HWP5_SOURCE_TABLE_CELL_SPLIT_FUNCTIONS,
 } from '../js/abi-schema.mjs';
 
 const enumeration = (name, entries) =>
@@ -46,6 +47,9 @@ const generated =
   '};\n' +
   'pub const hwpx_named_field_parameters_exports = [_][]const u8{\n' +
   HWPX_NAMED_FIELD_PARAMETERS_FUNCTIONS.map((name) => `    ${JSON.stringify(name)},\n`).join('') +
+  '};\n' +
+  'pub const hwp5_source_table_cell_split_exports = [_][]const u8{\n' +
+  HWP5_SOURCE_TABLE_CELL_SPLIT_FUNCTIONS.map((name) => `    ${JSON.stringify(name)},\n`).join('') +
   '};\n' +
   'pub const document = struct {\n' +
   Object.entries(DOCUMENT)

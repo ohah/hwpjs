@@ -84,6 +84,8 @@ const panel = mountApiPlayground(document.querySelector('main'), {
   createParagraphSelection: core.createParagraphSelection,
   planReplaceAll: core.planReplaceAll,
   replaceAllCommand: core.REPLACE_ALL_COMMAND,
+  editParagraphBulletDefinitionCommand: core.EDIT_PARAGRAPH_BULLET_DEFINITION_COMMAND,
+  listParagraphBulletDefinitions: (options) => editor.listParagraphBulletDefinitions(options),
   async loadFixture(format, fixture = 'noori') {
     const name = fixture + (format === 'hwp5' ? '.hwp' : '.hwpx');
     const response = await fetch(new URL('../fixtures/' + name, import.meta.url));

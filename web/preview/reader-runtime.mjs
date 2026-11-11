@@ -281,6 +281,9 @@ export function createReaderRuntime({
       );
     content.sourceTableCellHeightAvailable = content.sourceTableCellWidthAvailable;
     content.sourceTableGridAvailable = editor?.supportsSourceTableGrid?.() === true;
+    content.sourceTableCellSplitAvailable = editor?.supportsSourceTableCellSplit?.() === true;
+    if (content.sourceTableCellSplitAvailable)
+      content.sourceTableCellSplitProfile = editor.sourceTableCellSplitProfile();
     const observedDocInfoAvailable = [
       'hwp5_edit_open_observed_docinfo',
       'hwp5_edit_observed_docinfo_diagnostics',
@@ -1034,6 +1037,8 @@ export function createReaderRuntime({
     // The reusable load snapshot describes ABI availability; reply capability also gates history.
     result.sourceTableGridAvailable = editor?.supportsSourceTableGrid?.() === true;
     result.sourceTableCellSplitAvailable = editor?.supportsSourceTableCellSplit?.() === true;
+    if (result.sourceTableCellSplitAvailable)
+      result.sourceTableCellSplitProfile = editor.sourceTableCellSplitProfile();
     result.sourceTableCellMergeAvailable = editor?.supportsSourceTableCellMerge?.() === true;
     result.sourceTableCellWidthAvailable = WebAssembly.Module.exports(module).some(
       (entry) => entry.name === 'hwpx_edit_set_cell_sizes' && entry.kind === 'function',
@@ -1345,9 +1350,16 @@ export function createReaderRuntime({
         }
         return;
       }
+      if (message.kind === 'source-table-cell-split-capabilities') {
+        if (!historyEnabled || editor?.supportsSourceTableCellSplit?.() !== true)
+          throw Error('SourceTableCellSplitUnavailable');
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        reply({ kind: message.kind, capabilities: editor.sourceTableCellSplitCapabilities() });
+        return;
+      }
       if (message.kind === 'source-table-cell-split') {
         if (
-          format !== 'hwpx' ||
+          !['hwp5', 'hwpx'].includes(format) ||
           !historyEnabled ||
           editor?.supportsSourceTableCellSplit?.() !== true
         )
@@ -1364,9 +1376,11 @@ export function createReaderRuntime({
           return;
         }
         documentWindow = null;
-        reader = await createHwpxReader(module);
-        preview = reader.readTextEvents(editor.saveForDisplay());
-        reply({ kind: message.kind, content: hwpxDisplay() });
+        if (format === 'hwpx') {
+          reader = await createHwpxReader(module);
+          preview = reader.readTextEvents(editor.saveForDisplay());
+        } else await refreshHwp5PreviewFallback();
+        reply({ kind: message.kind, content: format === 'hwpx' ? hwpxDisplay() : hwp5Display() });
         return;
       }
       if (message.kind === 'source-table-cell-width') {

@@ -53,6 +53,7 @@ function sourceTableCellPlan(
         format?: string;
         sourceTableCellMergeAvailable?: boolean;
         sourceTableCellSplitAvailable?: boolean;
+        sourceTableCellSplitProfile?: string;
         limited?: boolean;
         readOnly?: boolean;
         viewKind?: unknown;
@@ -63,8 +64,9 @@ function sourceTableCellPlan(
       }
     | undefined;
   if (
+    !content ||
     state.nativeHistoryStats?.protocolVersion !== 2 ||
-    content?.format !== 'hwpx' ||
+    (split ? !['hwp5', 'hwpx'].includes(content?.format ?? '') : content?.format !== 'hwpx') ||
     (split
       ? content.sourceTableCellSplitAvailable !== true
       : content.sourceTableCellMergeAvailable !== true) ||
@@ -75,7 +77,19 @@ function sourceTableCellPlan(
     content.createdTableHostPending
   )
     throw Error(split ? 'SourceTableCellSplitUnavailable' : 'SourceTableCellMergeUnavailable');
-  return sourceTableCellBlockPlan(state, witness, split);
+  const plan = sourceTableCellBlockPlan(state, witness, split);
+  if (split && content?.format === 'hwp5') {
+    const table = content.tables?.find(
+      (value) => value.section === witness.section && value.tableNode === witness.tableNode,
+    );
+    if (
+      content.sourceTableCellSplitProfile !== 'single-unmerged-source-cell' ||
+      plan.selectedCells !== 1 ||
+      table?.cells.some((cell) => cell.rowSpan !== 1 || cell.columnSpan !== 1)
+    )
+      throw Error('UnsupportedSourceTableSplitSelection');
+  }
+  return plan;
 }
 
 /** Common source owner/rectangle validation, without granting a mutation capability. */

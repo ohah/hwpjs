@@ -19,6 +19,7 @@ pub const Command = union(enum) {
     stage_table: @import("created_table_stage.zig").Edit,
     set_created_cell_text: @import("created_cell_text.zig").Edit,
     edit_created_table_grid: @import("created_table_grid_session.zig").Edit,
+    split_source_table_cell: @import("source_table_cell_split_service.zig").Edit,
     edit_source_table_grid: @import("source_table_grid_session.zig").Edit,
     splice_current_paragraph: @import("current_paragraph_edit.zig").Splice,
     set_style: struct { section: usize, paragraph: usize, style_id: u8 },
@@ -1497,6 +1498,29 @@ pub const Session = opaque {
             .edit_created_table_grid => |edit| {
                 const state = self.getState();
                 try @import("created_table_grid_session.zig").apply(state.allocator, state.decoded, &state.document, state.created_tables, state.source.header.version(), edit, self.createdTableResources(), created_table_limits);
+            },
+            .split_source_table_cell => |edit| {
+                const state = self.getState();
+                if (edit.section >= state.decoded.len) return error.InvalidSection;
+                // Rebase changes record identities across the section. Retain only
+                // the existing strict selected-source policy and the existing
+                // unselected structure preservation contract for every other section.
+                for (state.decoded, 0..) |bytes, section| {
+                    if (section == edit.section) {
+                        try @import("source_policy.zig").validate(state.allocator, bytes, state.source.header.version());
+                    } else {
+                        try @import("source_policy.zig").validateUnselectedStructureSection(state.allocator, bytes, state.source.header.version());
+                    }
+                }
+                try @import("source_table_cell_split_service.zig").validateOwner(self, state.allocator, edit);
+                return self.apply(.{ .edit_source_table_grid = .{
+                    .section = edit.section,
+                    .table_node = edit.table_node,
+                    .expected_rows = edit.expected_rows,
+                    .expected_columns = edit.expected_columns,
+                    .split = .{ .row = edit.row, .column = edit.column, .rows = edit.rows, .columns = edit.columns },
+                    .layout = .observed8,
+                } });
             },
             .edit_source_table_grid => |edit| {
                 const state = self.getState();
