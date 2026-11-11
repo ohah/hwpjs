@@ -1,5 +1,9 @@
 export { CanvasSurface, useCanvasSurface, useEditorState } from './surface.ts';
 export type {
+  CanvasPageTextKind,
+  CanvasPageTextFilter,
+  CanvasPageTextIssue,
+  CanvasPageTextResult,
   CanvasPrintAvailability,
   CanvasPrintPreview,
   CanvasPrintPreviewOptions,

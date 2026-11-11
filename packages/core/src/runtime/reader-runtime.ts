@@ -1,3 +1,4 @@
+import { requestNamedFields } from '../editor/named-fields.ts';
 import type { RuntimeProjectionPreference } from '../internal/runtime-admission.ts';
 import { bindRuntimeAdmission } from '../internal/runtime-admission.ts';
 import type {
@@ -109,7 +110,11 @@ export function createReaderEditorRuntime(options: ReaderRuntimeOptions = {}): E
     closed = true;
     return backend.dispose();
   }
-  runtime = { request, dispose };
+  runtime = {
+    request,
+    dispose,
+    readNamedFields: (context) => requestNamedFields(request, context),
+  };
   bindRuntimeAdmission(
     runtime,
     (message, context, admission, projection) =>

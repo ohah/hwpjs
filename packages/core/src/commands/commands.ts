@@ -104,3 +104,6 @@ export const APPLY_FORMATTING_PATCH_COMMAND =
 
 import type { ReplaceAllPlanRequest } from './replace-all.ts';
 export const REPLACE_ALL_COMMAND = createCommand<ReplaceAllPlanRequest>('replace-all');
+
+import type { InsertDocumentPayload } from './document-insert.ts';
+export const INSERT_DOCUMENT_COMMAND = createCommand<InsertDocumentPayload>('insert-document');

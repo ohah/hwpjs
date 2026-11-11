@@ -1,3 +1,4 @@
+import { getScenePageText, pageTextUnavailable } from './page-text-scene.mjs';
 import { indexPrintPageScene } from './print-page-scene.mjs';
 import { attachHwpxPageNumbers } from './hwpx-page-number-layout.mjs';
 import { richTypingOwnerAllowed } from './caret-formatting-intent.mjs';
@@ -2193,6 +2194,11 @@ export function createRenderer(
     equationAtLogicalPoint: (x, y) => {
       flushProjection();
       return equationAnchorAtPoint(display, layout, x, y);
+    },
+    getPageText(state, pageIndex, filter) {
+      if (closed || projectionDeferred || draft || sourceObservationState !== state)
+        return pageTextUnavailable('scene-not-current');
+      return getScenePageText(content, layout, pageIndex, filter);
     },
     layout: () => flushProjection(),
     paintedFrame: () => paintedFrame,

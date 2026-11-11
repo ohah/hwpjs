@@ -165,3 +165,25 @@ export type {
   ReplaceAllPlan,
   ReplaceAllCapabilities,
 } from './commands/replace-all.ts';
+
+export { resolveNamedField } from './editor/named-fields.ts';
+export type {
+  NamedField,
+  NamedFieldFormat,
+  NamedFieldInventory,
+  NamedFieldLocation,
+  NamedFieldNavigation,
+  NamedFieldOptions,
+  NamedFieldResolution,
+  NamedFieldSelector,
+  NamedFieldSource,
+  NamedFieldSourceRow,
+  NamedFieldValue,
+} from './editor/named-fields.ts';
+
+export { INSERT_DOCUMENT_COMMAND } from './commands/commands.ts';
+export type {
+  DocumentInsertionCapabilities,
+  DocumentInsertionCapabilityOptions,
+  InsertDocumentPayload,
+} from './commands/document-insert.ts';

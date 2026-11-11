@@ -59,6 +59,7 @@ import { createDocumentAdmission } from './document-admission.ts';
 import { mountSavePolicy } from './save-policy.ts';
 import { askDocumentPassword } from './password-dialog.ts';
 import { documentDownloadName } from './download-name.ts';
+import { createDocumentInsertTool } from './document-insert-tool.ts';
 import { askObservedDocInfoConsent } from './observed-docinfo-dialog.ts';
 import { mountObservedDocInfoNotice } from './observed-docinfo-notice.ts';
 import { createDocumentLoader } from './document-loader.ts';
@@ -289,6 +290,12 @@ export async function mountDemo(
     clipboard: root.ownerDocument.defaultView?.navigator.clipboard ?? null,
   });
   const viewOptions = createViewOptionsBridge({ getHost: () => host, onStatus: note });
+  const documentInsert = createDocumentInsertTool({
+    root,
+    editor,
+    onStatus: note,
+    onPresentationChange: () => shell.update(),
+  });
   const presentation = (): DemoShellState => {
     const sharedFormatting = captureFormattingPresentation(editor, () => host);
     const state = sharedFormatting.state,
@@ -337,6 +344,7 @@ export async function mountDemo(
       ...viewOptions.presentation(ready),
       ...clipboard.getPresentation().actions,
       'new-document': { enabled: !busy },
+      'insert-document': documentInsert.presentation(state, sharedFormatting.formatting.target),
       save: { enabled: ready, reason: ready ? undefined : '문서를 먼저 열어주세요.' },
       ...(print
         ? {
@@ -459,6 +467,10 @@ export async function mountDemo(
       if (!host?.openPrintPreview) throw Error('PrintSurfaceDetached');
       const name = filename.replace(/\.(?:hwp|hwpx)$/i, '') || '문서';
       await host.openPrintPreview({ filename: name + '.pdf' }).ready;
+      return;
+    }
+    if (action.command === 'insert-document') {
+      documentInsert.open();
       return;
     }
     if (action.command === 'new-document') {
@@ -696,6 +708,7 @@ export async function mountDemo(
     shell.update();
   } catch (error) {
     closed = true;
+    documentInsert.dispose();
     cancelFixtureRefresh();
     presentationRefresh.dispose();
     unsubscribePages();
@@ -734,6 +747,7 @@ export async function mountDemo(
     async dispose() {
       if (closed) return;
       closed = true;
+      documentInsert.dispose();
       formatting.dispose();
       cancelFixtureRefresh();
       const drained = admission.dispose();

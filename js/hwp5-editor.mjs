@@ -1,3 +1,4 @@
+import { decodeHwp5NamedFields } from './hwp5-named-fields.mjs';
 import { encodeCellDiagonals } from './cell-diagonal-command.mjs';
 import { encodeCellBorderPatches } from './cell-border-patch-command.mjs';
 import { validateCellStyles } from './cell-style-command.mjs';
@@ -1016,6 +1017,12 @@ export async function createExperimentalHwp5Editor(
       if (typeof wasm.hwp5_edit_field_spans !== 'function')
         throw new Error('Hwp5FieldSpansAbiUnavailable');
       return decodeHwp5FieldSpans(output(() => wasm.hwp5_edit_field_spans(index)).bytes);
+    },
+    namedFields() {
+      check();
+      if (typeof wasm.hwp5_edit_named_fields !== 'function')
+        throw new Error('NamedFieldsUnavailable');
+      return decodeHwp5NamedFields(output(() => wasm.hwp5_edit_named_fields()).bytes);
     },
     supportsFieldTopology() {
       check();

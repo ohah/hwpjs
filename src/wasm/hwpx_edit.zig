@@ -972,7 +972,7 @@ fn apply(command: histories.Command) !void {
         _ = try @import("../hwpx/display_resource_generation.zig").applyOwned(value, session, &.{command});
     } else switch (command.kind) {
         // Independent source-axis batches require the existing owned History.
-        .independent_text => return error.HistoryNotEnabled,
+        .independent_text, .insert_document => return error.HistoryNotEnabled,
         .source_table_grid => {
             _ = try @import("../hwpx/source_table_grid_session.zig").apply(session, .{ .section = command.section, .node = command.source_grid_node, .expected_rows = command.source_grid_expected_rows, .expected_columns = command.source_grid_expected_columns, .action = command.source_grid_action });
         },
@@ -1977,6 +1977,15 @@ export fn hwpx_edit_save() u32 {
     output = session.save() catch |err| return fail(err);
     return 1;
 }
+export fn hwpx_edit_named_fields() u32 {
+    hwpx_edit_output_free();
+    requireNoReadScope() catch |err| return fail(err);
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    if (session.history_transaction_active) return fail(error.MutationInProgress);
+    if (history) |*h| if (h.stats().poisoned) return fail(error.HistoryReloadRequired);
+    output = @import("../hwpx/named_fields.zig").encode(session) catch |err| return fail(err);
+    return 1;
+}
 export fn hwpx_edit_field_labels(section: u32, paragraph: u32) u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
@@ -2161,4 +2170,59 @@ fn applyRichCharacter(input: @import("text_transaction_commands.zig").Input, req
     try service.session.beginFormattingBatch(&batch);
     defer service.session.endFormattingBatch(&batch);
     return @import("../hwpx/display_resource_generation.zig").applyOwned(service.history, service.session, commands);
+}
+
+// Optional source-package insertion. These exports never run through the
+// named-field or ordinary text mutation adapters.
+const document_insert_options: @import("../hwpx/document_insert.zig").Options = .{};
+
+fn documentInsertHistory() !*histories.History {
+    const h = if (history) |*value| value else return error.HistoryNotEnabled;
+    const managed = h.owned orelse return error.HistoryProtocol2Required;
+    if (!managed.managed) return error.HistoryProtocol2Required;
+    if (managed.poisoned) return error.HistoryMutationUncertain;
+    return h;
+}
+
+export fn hwpx_edit_document_insert_capabilities() u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const h = documentInsertHistory() catch |err| return fail(err);
+    const epoch = formatting_lifetime.session(a) catch |err| return fail(err);
+    defer a.free(epoch);
+    var serial_buffer: [20]u8 = undefined;
+    const serial = std.fmt.bufPrint(&serial_buffer, "{d}", .{session.mutation_serial}) catch unreachable;
+    output = std.json.Stringify.valueAlloc(a, .{
+        .schemaVersion = @as(u32, 1),
+        .binding = .{ .session = epoch, .revision = h.revision(), .serial = serial },
+        .maxSourceBytes = document_insert_options.max_input_bytes,
+    }, .{}) catch |err| return fail(err);
+    return 1;
+}
+
+export fn hwpx_edit_insert_document(section: u32, paragraph: u32, unit: u32, revision: u32, epoch_lo: u32, epoch_hi: u32, serial_lo: u32, serial_hi: u32, ptr: [*]const u8, size: usize) u32 {
+    requireNoReadScope() catch |err| return fail(err);
+    if (size == 0 or size > document_insert_options.max_input_bytes) return fail(error.LimitExceeded);
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const h = documentInsertHistory() catch |err| {
+        _ = fail(err);
+        return if (err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    const epoch = @as(u64, epoch_hi) << 32 | epoch_lo;
+    const serial = @as(u64, serial_hi) << 32 | serial_lo;
+    if (!formatting_lifetime.opened or formatting_lifetime.epoch != epoch or
+        h.revision() != revision or session.mutation_serial != serial)
+        return fail(error.StaleDocumentInsertBinding);
+    const changed = h.apply(session, .{
+        .kind = .insert_document,
+        .section = section,
+        .paragraph = paragraph,
+        .start = unit,
+        .deleted = 0,
+        .inserted = ptr[0..size],
+    }) catch |err| {
+        _ = fail(err);
+        return if (err == error.MutationUncertain or err == error.HistoryMutationUncertain or h.stats().poisoned) 3 else 0;
+    };
+    return if (changed) 1 else 2;
 }

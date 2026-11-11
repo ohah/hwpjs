@@ -129,6 +129,8 @@ pub const Session = struct {
     sections: []Section,
     options: Options,
     source_fields: ?@import("source_field_analysis.zig").Source = null,
+    /// Named field enumeration covers selected section trees, not master-page parts.
+    source_has_master_pages: bool = false,
     paragraph_resources: @import("paragraph_resource_values.zig").Values = .{},
     character_resources: @import("character_resource_values.zig").Values = .{},
     font_resources: @import("../model/font_resource_values.zig").Values = .{},
@@ -1095,7 +1097,19 @@ pub fn open(a: std.mem.Allocator, input: []const u8, options: Options) !Session 
         else => null,
     };
     errdefer if (source_fields) |*fields| fields.deinit(a);
-    return .{ .allocator = a, .source = source, .original_header = inspected.header, .original_header_source = source, .sections = try sections.toOwnedSlice(a), .options = options, .source_fields = source_fields };
+    const has_master_pages = for (document.manifest.items) |item| {
+        if (@import("masterpage_parts.zig").isPartHref(item.href)) break true;
+    } else false;
+    return .{
+        .allocator = a,
+        .source = source,
+        .original_header = inspected.header,
+        .original_header_source = source,
+        .sections = try sections.toOwnedSlice(a),
+        .options = options,
+        .source_fields = source_fields,
+        .source_has_master_pages = has_master_pages,
+    };
 }
 
 /// Shared collection/serialization policy for session-bound site provenance.

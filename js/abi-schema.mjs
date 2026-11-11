@@ -36,6 +36,15 @@ export const HWPX_TEXT_TRANSACTION_FUNCTIONS = Object.freeze([
   'hwpx_edit_query_text_transaction',
   'hwpx_edit_apply_text_transaction',
 ]);
+// Optional read-only HWP5 named field inventory.
+export const HWP5_NAMED_FIELDS_FUNCTIONS = Object.freeze(['hwp5_edit_named_fields']);
+// Optional read-only source-section field inventory.
+export const HWPX_NAMED_FIELDS_FUNCTIONS = Object.freeze(['hwpx_edit_named_fields']);
+// Optional HWPX source-body insertion; required ABI and version are unchanged.
+export const HWPX_DOCUMENT_INSERT_FUNCTIONS = Object.freeze([
+  'hwpx_edit_document_insert_capabilities',
+  'hwpx_edit_insert_document',
+]);
 // Optional HWPX provenance; intentionally not part of REQUIRED_FUNCTIONS.
 export const HWPX_DOCUMENT_PROVENANCE_FUNCTIONS = Object.freeze(['hwpx_edit_document_provenance']);
 export const DOCUMENT = Object.freeze({

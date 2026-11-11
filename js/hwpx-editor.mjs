@@ -1,3 +1,4 @@
+import { createHwpxDocumentInsertApi } from './hwpx-document-insert.mjs';
 import { decodeHwpxPageNumberDisplaySource } from './hwpx-page-number-display-wire.mjs';
 import { encodeCellDiagonals } from './cell-diagonal-command.mjs';
 import { encodeCellBorderPatches } from './cell-border-patch-command.mjs';
@@ -35,6 +36,7 @@ import { decodeDutmalSites } from './hwpx-dutmal-sites.mjs';
 import { decodeEquationSources } from './hwpx-equation-sources.mjs';
 import { decodeEquationScripts } from './hwpx-equation-scripts.mjs';
 import { decodeEquationSites } from './hwpx-equation-sites.mjs';
+import { decodeHwpxNamedFields } from './hwpx-named-fields.mjs';
 import { decodeFieldTargets } from './hwpx-field-target-wire.mjs';
 import { decodeFormulaResultParagraphs } from './formula-result-paragraphs.mjs';
 import { decodeFormulaResultDisplaySnapshot } from './formula-result-display-snapshot.mjs';
@@ -225,6 +227,7 @@ export async function createHwpxEditor(source) {
     }),
     ...createAtomicFormattingApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
     ...createIndependentTextApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
+    ...createHwpxDocumentInsertApi({ wasm, memory, check: ready }),
     ...createParagraphBreakApi({
       wasm,
       memory,
@@ -2666,6 +2669,19 @@ export async function createHwpxEditor(source) {
       memory.withBytes(bytes, (ptr, size) => {
         if (!wasm.hwpx_edit_set_checkbox_state(section, formNode, ptr, size)) throw memory.error();
       });
+    },
+    namedFields() {
+      ready();
+      if (typeof wasm.hwpx_edit_named_fields !== 'function')
+        throw new Error('NamedFieldsUnavailable');
+      try {
+        if (!wasm.hwpx_edit_named_fields()) throw memory.error();
+        return decodeHwpxNamedFields(
+          memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
+        );
+      } finally {
+        wasm.hwpx_edit_output_free();
+      }
     },
     fieldLabels,
     manualFormulaResultDisplaySnapshot(section) {

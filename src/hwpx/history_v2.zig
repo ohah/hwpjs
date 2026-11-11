@@ -55,15 +55,18 @@ const entries = @import("history_state_entry.zig");
 const OwnedCheckpoint = @import("history_checkpoint_owner.zig").CheckpointOwner;
 const stacks = @import("history_state_stack.zig");
 const text = @import("suffix_text_delta.zig");
+const document = @import("document_insert_history.zig");
 const HistoryValue = union(enum) {
     anchor,
     full: cp.Checkpoint,
     delta: text.Delta,
     state,
+    document: *document.Edge,
 };
 fn dispose(v: *HistoryValue) void {
     switch (v.*) {
         .full => |*value| value.deinit(),
+        .document => |edge| edge.destroy(),
 
         // delta bytes는 entry의 arena가 고유 소유하며 arena 해제로 일괄 정리한다.
         .anchor, .delta, .state => {},
@@ -192,12 +195,62 @@ pub const History = struct {
         s.history_transaction_active = true;
         defer s.history_transaction_active = false;
         try self.stack.prepare();
+        for (commands) |command| if (command.kind == .insert_document) {
+            if (commands.len != 1 or command.break_before != null or command.deleted != 0)
+                return error.InvalidInsertDocumentBatch;
+            if (!self.managed) return error.HistoryProtocol2Required;
+            return self.insertDocument(command);
+        };
         if (!self.managed) return self.snapshotApply(commands);
         if (commands.len == 1 and commands[0].kind == .plain and commands[0].break_before == null) {
             if (try self.deltaApply(commands[0])) |result| return result;
         }
         return self.bridgeApply(commands);
     }
+    fn insertDocument(self: *Self, command: commands_mod.Command) !bool {
+        const s = self.owner;
+        if (command.section != 0) return error.UnsupportedInsertSections;
+        const policy_limit = self.stack.policy;
+        try document.validateParkable(s, policy_limit.max_checkpoint_bytes);
+
+        const before = try s.save();
+        defer s.allocator.free(before);
+        var prepared = try @import("document_insert.zig").prepare(self.allocator, before, command.inserted, .{ .paragraph = command.paragraph, .unit = command.start }, .{});
+        defer prepared.deinit(self.allocator);
+        var candidate = try editor.open(s.allocator, prepared.bytes, s.options);
+        var adopted = false;
+        defer if (!adopted) candidate.deinit();
+        candidate.history_delta_managed = true;
+        try document.validateParkable(&candidate, policy_limit.max_checkpoint_bytes);
+        const payload = try cp.size(&candidate, policy_limit.max_checkpoint_bytes);
+        const after_text = try totalText(&candidate);
+
+        const next = try E.create(self.allocator, policy_limit.max_retained_bytes, policy_limit.max_checkpoint_owned_bytes);
+        var transferred = false;
+        defer if (!transferred) next.deinit();
+        const charge = try document.reservation(s, &candidate, policy_limit.max_checkpoint_bytes);
+        // Keep later checkpoint upgrades subject to the same entry and stack budget.
+        if (charge > policy_limit.max_retained_bytes) return error.HistoryEntryOwnedLimitExceeded;
+        next.parked_document_bytes = charge;
+        const edge_allocator = next.snapshotAllocator();
+        const edge = edge_allocator.create(document.Edge) catch |err| return next.captureError(err);
+        edge.* = .{ .allocator = edge_allocator, .parked = candidate, .parked_text_bytes = after_text, .left = s.source.ptr, .right = candidate.source.ptr };
+        adopted = true;
+        next.finish(.{ .document = edge }, payload);
+        const plan = try self.stack.plan(next);
+        try text.normalize(s);
+        try self.stack.commit(plan);
+        transferred = true;
+
+        resource_receipt.openOwned(&edge.parked);
+        edge.exchange(s, &self.total_text_bytes);
+        self.source = s.source.ptr;
+        self.lane = null;
+        self.installWatches();
+        self.changedSerial();
+        return true;
+    }
+
     fn deltaApply(self: *Self, command: commands_mod.Command) !?bool {
         const s = self.owner;
         if (self.lane == null or self.lane.?.section != command.section or self.lane.?.paragraph != command.paragraph) self.lane = try text.locate(s, command.section, command.paragraph);
@@ -314,6 +367,13 @@ pub const History = struct {
                 try text.reserve(self.owner, delta, context.redo);
                 text.commit(self.owner, delta, context.redo);
             },
+            .document => |parked| {
+                try parked.validate(self.owner, context.redo, self.stack.policy.max_checkpoint_bytes);
+                try text.normalize(self.owner);
+                parked.exchange(self.owner, &self.total_text_bytes);
+                self.source = self.owner.source.ptr;
+                self.installWatches();
+            },
             .state => {
                 const owned = target.checkpoint orelse return error.InvalidHistoryTransition;
                 var parent = try cp.cloneForRestore(&owned.value, self.owner, self.stack.policy.max_checkpoint_bytes);
@@ -334,12 +394,13 @@ pub const History = struct {
         try self.bind(s);
         s.history_transaction_active = true;
         defer s.history_transaction_active = false;
+        const previous_source = self.source;
         const changed = try self.stack.move(is_redo, Travel{ .history = self, .redo = is_redo }, restore);
         if (changed) {
             self.changedSerial();
             self.lane = null;
             // 아직 bridge와 delta를 나누지 않아 undo 메타데이터 계산에도 전체 순회가 남는다.
-            self.total_text_bytes = totalText(s) catch {
+            if (self.source == previous_source) self.total_text_bytes = totalText(s) catch {
                 self.poisoned = true;
                 resource_receipt.block(self.owner);
                 return error.MutationUncertain;

@@ -39,6 +39,12 @@ pub const hwpx_text_transaction_exports = [_][]const u8{
     "hwpx_edit_query_text_transaction",
     "hwpx_edit_apply_text_transaction",
 };
+pub const hwp5_named_fields_exports = [_][]const u8{
+    "hwp5_edit_named_fields",
+};
+pub const hwpx_named_fields_exports = [_][]const u8{
+    "hwpx_edit_named_fields",
+};
 pub const document = struct {
     pub const header_bytes: usize = 8;
     pub const node_bytes: usize = 56;

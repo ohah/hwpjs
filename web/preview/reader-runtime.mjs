@@ -1,3 +1,5 @@
+import { copyDocumentInsertRuntimeMessage } from '../../js/hwpx-document-insert.mjs';
+import { projectHwp5NamedFields } from './hwp5-named-fields.mjs';
 import { richTypingOwnerAllowed } from './caret-formatting-intent.mjs';
 import { prepareReplaceAllTransaction } from './replace-all-transaction.mjs';
 import { validateHwp5CurrentBodyReference } from './hwp5-current-body-reference.mjs';
@@ -104,6 +106,9 @@ import { applyCreatedTableGridCommand } from './created-table-grid-command.mjs';
 
 /** Copy before the first await; no caller buffers or shared memory cross the queue. */
 export function copyRuntimeMessage(message) {
+  if (Object.getOwnPropertyDescriptor(message ?? {}, 'kind')?.value === 'insert-document')
+    return copyDocumentInsertRuntimeMessage(message);
+
   const ancestors = new Set();
   function validate(value) {
     if (
@@ -1109,6 +1114,17 @@ export function createReaderRuntime({
     };
     displayResources.beginRequest(message, { format, editor, historyEnabled });
     try {
+      if (message.kind === 'named-fields') {
+        if (!editor || (format !== 'hwpx' && format !== 'hwp5'))
+          throw new Error('NamedFieldsUnavailable');
+        const source = editor.namedFields();
+        reply({
+          kind: message.kind,
+          namedFields:
+            format === 'hwp5' ? projectHwp5NamedFields(source, hwp5DisplayProjection()) : source,
+        });
+        return;
+      }
       if (message.kind === 'formatting-capabilities') {
         if (!editor) throw Error('EditorNotOpen');
         reply({
@@ -1536,6 +1552,47 @@ export function createReaderRuntime({
           ...saved,
           ...(protectionRemoved ? { passwordProtectionRemoved: true } : {}),
         });
+      } else if (
+        message.kind === 'document-insert-capabilities' ||
+        message.kind === 'insert-document'
+      ) {
+        if (
+          format !== 'hwpx' ||
+          !editor ||
+          !historyEnabled ||
+          editor.supportsDocumentInsertionAbi?.() !== true
+        )
+          throw Error('DocumentInsertionUnavailable');
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        if (message.kind === 'document-insert-capabilities') {
+          reply({ kind: message.kind, capabilities: editor.documentInsertionCapabilities() });
+          return;
+        }
+        if (
+          !Number.isInteger(message.paragraph) ||
+          message.paragraph < 0 ||
+          message.paragraph >= 0xffff_ffff
+        )
+          throw new RangeError('InvalidDocumentInsertCoordinate');
+        atomicOutcome = editor.insertDocument({
+          section: message.section,
+          paragraph: message.paragraph + 1,
+          unit: message.unit,
+          binding: message.binding,
+          bytes: message.bytes,
+        });
+        applied = atomicOutcome.application === 'applied';
+        mutationUncertain = atomicOutcome.application === 'unknown';
+        if (mutationUncertain) historyPoisoned = true;
+        if (atomicOutcome.error || atomicOutcome.cleanupError)
+          throw Error(atomicOutcome.error || atomicOutcome.cleanupError);
+        if (atomicOutcome.nativeCode === 2) {
+          reply({ kind: message.kind, changed: false });
+          return;
+        }
+        reader = await createHwpxReader(module);
+        preview = reader.readTextEvents(editor.saveForDisplay());
+        reply({ kind: message.kind, content: hwpxDisplay() });
       } else if (message.kind === 'splice-rich-character') {
         if (!editor || !historyEnabled || editor.supportsRichTypingAbi?.() !== true)
           throw Error('RichTypingUnavailable');

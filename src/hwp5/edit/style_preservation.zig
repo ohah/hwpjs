@@ -895,6 +895,13 @@ pub const Session = opaque {
         return @import("field_span_snapshot.zig").read(a, state.decoded[section], state.source.header.version(), state.document.sections[section]);
     }
     /// Marker diagnostics only, not field-header binding or edit admission.
+    pub fn namedFields(self: *const Session, a: std.mem.Allocator) ![]u8 {
+        if (self.historyTransactionActive()) return error.MutationInProgress;
+        const state = self.stateConst();
+        if (state.source.header.has(.distribution)) return error.NamedFieldsUnavailable;
+        // The live gap owns only control-free paragraphs and cannot contain a field.
+        return @import("named_fields.zig").encode(a, state.decoded, state.source.header.version(), &state.document);
+    }
     pub fn fieldTopology(self: *const Session, a: std.mem.Allocator, section: usize) !@import("local_field_spans.zig").Report {
         try self.materializeLiveText();
         const state = self.stateConst();

@@ -1,3 +1,6 @@
+import { requestNamedFields } from './editor/named-fields.ts';
+// @ts-ignore The R2 codec owns the bounded exact donor view and Native binding.
+import { copyDocumentInsertRuntimeMessage } from '../../../js/hwpx-document-insert.mjs';
 import type { RuntimeProjectionPreference } from './internal/runtime-admission.ts';
 import { bindRuntimeAdmission } from './internal/runtime-admission.ts';
 import { createNativeWorkerWitness } from './internal/native-worker-origin.ts';
@@ -23,7 +26,7 @@ import type {
 } from './internal/native-runtime-origin.ts';
 import { KNOWN_WORKER_CODE_SHA256 } from './internal/known-worker-code.ts';
 interface RuntimeWorker {
-  postMessage(message: unknown): void;
+  postMessage(message: unknown, transfer?: Transferable[]): void;
   terminate(): void;
   addEventListener(type: string, listener: (event: any) => void): void;
   removeEventListener(type: string, listener: (event: any) => void): void;
@@ -161,6 +164,7 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
     message: unknown,
     admission?: () => void,
     projection: RuntimeProjectionPreference = false,
+    transfer?: Transferable[],
   ): Promise<RuntimeReply> =>
     new Promise((resolve, reject) => {
       if (closed) {
@@ -171,7 +175,7 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
       pending.set(id, { resolve, reject });
       try {
         admission?.();
-        worker!.postMessage({
+        const envelope = {
           id,
           message,
           ...(projection === true
@@ -179,7 +183,9 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
             : projection && typeof projection === 'object'
               ? { viewProjection: projection }
               : {}),
-        });
+        };
+        if (transfer) worker!.postMessage(envelope, transfer);
+        else worker!.postMessage(envelope);
       } catch (error) {
         pending.delete(id);
         reject(error instanceof Error ? error : Error(String(error)));
@@ -213,7 +219,11 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
     } catch {
       /* malformed hint keeps full reply */
     }
-    const owned = copyOwned(message),
+    const insertion =
+      Object.getOwnPropertyDescriptor(message, 'kind')?.value === 'insert-document'
+        ? (copyDocumentInsertRuntimeMessage(message) as RuntimeMessage & { bytes: Uint8Array })
+        : undefined;
+    const owned = insertion ?? copyOwned(message),
       captured = context ? { ...context } : undefined,
       kind = owned.kind;
     await ready;
@@ -221,6 +231,7 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
       owned,
       admission,
       allowsOwnerWindowProjection(contract) && valid() ? ownedProjection : false,
+      insertion ? [insertion.bytes.buffer as ArrayBuffer] : undefined,
     );
     const reply = ownObservation({
       ...raw,
@@ -246,7 +257,11 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
   function dispose() {
     shutdown(Error('RuntimeDisposed'));
   }
-  runtime = { request, dispose };
+  runtime = {
+    request,
+    dispose,
+    readNamedFields: (context) => requestNamedFields(request, context),
+  };
   bindRuntimeAdmission(
     runtime,
     (message, context, admission, projection) =>

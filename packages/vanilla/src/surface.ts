@@ -105,6 +105,46 @@ export interface CanvasSurfaceEnvironment extends Record<string, any> {
    */
   resourceProviderEpoch?: () => Readonly<Record<string, never>>;
 }
+export type CanvasPageTextKind = 'body' | 'table' | 'textbox' | 'caption';
+export type CanvasPageTextFilter = Readonly<{ include: readonly CanvasPageTextKind[] }>;
+export type CanvasPageTextIssue = Readonly<{
+  code:
+    | 'incomplete-source-coverage'
+    | 'unknown-text-ownership'
+    | 'unplaced-text'
+    | 'invalid-text-range'
+    | 'unknown-text-geometry'
+    | 'clipped-text'
+    | 'ambiguous-reading-order';
+  kind?: CanvasPageTextKind;
+}>;
+export type CanvasPageTextResult =
+  | Readonly<{
+      state: 'available';
+      pageIndex: number;
+      pageCount: number;
+      section: number;
+      text: string;
+      coverage: 'complete' | 'partial';
+      issues: readonly CanvasPageTextIssue[];
+    }>
+  | Readonly<{
+      state: 'unavailable';
+      reason:
+        | 'surface-detached'
+        | 'editor-not-ready'
+        | 'input-pending'
+        | 'scene-not-current'
+        | 'invalid-page-index'
+        | 'invalid-filter'
+        | 'unknown-scene'
+        | 'incomplete-scene'
+        | 'unknown-physical-page-identity'
+        | 'unknown-text-ownership'
+        | 'page-out-of-range'
+        | 'scene-budget-exceeded';
+    }>;
+
 export interface CanvasSurfaceOptions {
   root: HTMLElement;
   editor: HostEditor;
@@ -1886,6 +1926,20 @@ export function createCanvasSurface({
     },
     getSelection() {
       return editor.getEditorState().selection ?? null;
+    },
+    /** Read from the current physical page scene without committing input or changing selection. */
+    getPageText(pageIndex: number, filter?: CanvasPageTextFilter): CanvasPageTextResult {
+      if (closed || !lease?.isActive())
+        return Object.freeze({ state: 'unavailable', reason: 'surface-detached' });
+      const state = editor.getEditorState();
+      if (state.status !== 'ready')
+        return Object.freeze({ state: 'unavailable', reason: 'editor-not-ready' });
+      if (!isOutputInputSettled())
+        return Object.freeze({ state: 'unavailable', reason: 'input-pending' });
+      const key = `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}`;
+      if (key !== displayed || state.stateVersion !== observedStateVersion)
+        return Object.freeze({ state: 'unavailable', reason: 'scene-not-current' });
+      return renderer.getPageText(state, pageIndex, filter);
     },
     getPrintAvailability,
     capturePrintPages(options: CanvasPrintRasterOptions = {}): Promise<CanvasPrintRasterJob> {

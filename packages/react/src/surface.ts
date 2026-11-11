@@ -31,6 +31,9 @@ export interface CanvasSurfaceHandle {
   focus(): boolean;
   setScale(value: number): boolean;
   getSelection(): ReturnType<CanvasSurfaceInstance['getSelection']>;
+  getPageText(
+    ...args: Parameters<CanvasSurfaceInstance['getPageText']>
+  ): ReturnType<CanvasSurfaceInstance['getPageText']>;
   flushComposition(): ReturnType<CanvasSurfaceInstance['flushComposition']>;
   getPrintAvailability(): ReturnType<CanvasSurfaceInstance['getPrintAvailability']>;
   capturePrintPages(
@@ -79,6 +82,12 @@ export function useCanvasSurface(options: UseCanvasSurfaceOptions) {
       },
       getSelection() {
         return surfaceRef.current?.getSelection() ?? null;
+      },
+      getPageText(pageIndex, filter) {
+        return (
+          surfaceRef.current?.getPageText(pageIndex, filter) ??
+          Object.freeze({ state: 'unavailable', reason: 'surface-detached' })
+        );
       },
       flushComposition() {
         return surfaceRef.current?.flushComposition() ?? Promise.resolve('blocked' as const);

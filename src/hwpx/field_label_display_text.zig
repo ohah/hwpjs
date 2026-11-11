@@ -6,6 +6,11 @@ pub fn read(session: *const editor.Session, section: usize, paragraph: usize) ![
     const a = session.allocator;
     const labels = try session.fieldLabels(section, paragraph);
     defer a.free(labels);
+    return readWithLabels(session, section, paragraph, labels);
+}
+
+pub fn readWithLabels(session: *const editor.Session, section: usize, paragraph: usize, labels: []const @import("field_label_targets.zig").Target) ![]u8 {
+    const a = session.allocator;
     if (labels.len == 0) return error.UnsupportedFieldLabelDisplay;
     const part = &session.sections[section];
     if (part.structure_values) |*values| {

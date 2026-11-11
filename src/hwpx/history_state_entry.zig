@@ -13,6 +13,7 @@ pub fn Entry(comptime Value: type, comptime dispose: fn (*Value) void) type {
         value: Value = undefined,
         ready: bool = false,
         payload_bytes: usize = 0,
+        parked_document_bytes: usize = 0,
         revision: u32 = 0,
         retained_by: ?*const anyopaque = null,
         pub fn create(a: std.mem.Allocator, total_limit: usize, explicit_owned_limit: ?u32) !*Self {
@@ -38,7 +39,7 @@ pub fn Entry(comptime Value: type, comptime dispose: fn (*Value) void) type {
             self.ready = true;
         }
         pub fn ownedBytes(self: *const Self) usize {
-            return @sizeOf(Self) + self.meter.live + if (self.checkpoint) |owned| owned.ownedBytes() else @as(usize, 0);
+            return @sizeOf(Self) + self.meter.live + self.parked_document_bytes + if (self.checkpoint) |owned| owned.ownedBytes() else @as(usize, 0);
         }
         pub fn attach(self: *Self, owned: *Owned) void {
             std.debug.assert(self.checkpoint == null and owned.retained_by == null);

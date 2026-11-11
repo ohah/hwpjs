@@ -1,3 +1,26 @@
+import {
+  checkedNamedFieldInventory,
+  checkedNamedFieldSelector,
+  resolveNamedField,
+} from './named-fields.ts';
+import type {
+  NamedFieldInventory,
+  NamedFieldNavigation,
+  NamedFieldOptions,
+  NamedFieldResolution,
+  NamedFieldSelector,
+} from './named-fields.ts';
+import {
+  captureDocumentInsertPayload,
+  checkedDocumentInsertCapability,
+  currentDocumentInsertCaret,
+  documentInsertMessage,
+} from '../commands/document-insert.ts';
+import type {
+  DocumentInsertionCapabilities,
+  DocumentInsertionCapabilityOptions,
+  InsertDocumentPayload,
+} from '../commands/document-insert.ts';
 import { planReplaceAll } from '../commands/replace-all.ts';
 import type { ReplaceAllPlanRequest, ReplaceAllCapabilities } from '../commands/replace-all.ts';
 import { mergeExclusiveOwnerWindow, isPlainOwnerBaseline } from '../internal/owner-window-cow.ts';
@@ -74,6 +97,7 @@ import {
   SET_CHARACTER_FONT_NAME_COMMAND,
   APPLY_FORMATTING_PATCH_COMMAND,
   REPLACE_ALL_COMMAND,
+  INSERT_DOCUMENT_COMMAND,
 } from '../commands/commands.ts';
 import type {
   EditorCommand,
@@ -914,6 +938,8 @@ export function createEditor(options: CreateEditorOptions) {
               )
             : await active!.request(message, ctx);
         verifyReply(reply, ctx);
+        if (message.kind === 'insert-document' && reply.kind !== message.kind)
+          throw Error('MismatchedRuntimeReply');
       } catch (error) {
         if (error instanceof RuntimeAdmissionRejected) return reject(ctx, error);
         install({ operationRevision: reserved, status: 'refresh-required' });
@@ -948,25 +974,34 @@ export function createEditor(options: CreateEditorOptions) {
       }
       if (application === 'unapplied') {
         if (
-          ['formatting-patch', 'independent-text', 'splice-rich-character'].includes(
-            message.kind,
-          ) &&
+          [
+            'formatting-patch',
+            'independent-text',
+            'splice-rich-character',
+            'insert-document',
+          ].includes(message.kind) &&
           reply.formattingRefreshRequired === true
         )
           install({ status: 'refresh-required' });
         if (
-          ['formatting-patch', 'independent-text', 'splice-rich-character'].includes(
-            message.kind,
-          ) &&
+          [
+            'formatting-patch',
+            'independent-text',
+            'splice-rich-character',
+            'insert-document',
+          ].includes(message.kind) &&
           reply.formattingNativeCode === 2
         ) {
           if (reply.error) notifyError(reply.error, ctx, false);
           return result('known-no-op', ctx, reply.error, reply);
         }
         if (
-          ['formatting-patch', 'independent-text', 'splice-rich-character'].includes(
-            message.kind,
-          ) &&
+          [
+            'formatting-patch',
+            'independent-text',
+            'splice-rich-character',
+            'insert-document',
+          ].includes(message.kind) &&
           reply.error
         ) {
           notifyError(reply.error, ctx, false);
@@ -1106,7 +1141,9 @@ export function createEditor(options: CreateEditorOptions) {
     const owned =
       command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
         ? captureSourceTableGridRequest(payload, (snapshot.content as any)?.format)
-        : copyOwned(payload);
+        : command.id === INSERT_DOCUMENT_COMMAND.id
+          ? captureDocumentInsertPayload(payload)
+          : copyOwned(payload);
     return {
       command: command as EditorCommand<unknown>,
       payload: owned,
@@ -1131,6 +1168,22 @@ export function createEditor(options: CreateEditorOptions) {
       assertLive();
       if (handled) return result('handled-without-runtime', ctx);
       writePolicy.assertWritable();
+      if (pending.command.id === INSERT_DOCUMENT_COMMAND.id) {
+        const payload = pending.payload as InsertDocumentPayload;
+        const guard = () => {
+          requireReady(payload.target, true);
+          currentDocumentInsertCaret(state, payload.target, payload.selectionVersion);
+        };
+        guard();
+        const admission = await readDocumentInsertCapability(payload.target, guard);
+        if ('reason' in admission) throw Error(admission.reason);
+        return await mutate(
+          documentInsertMessage(payload, admission),
+          payload.target,
+          false,
+          guard,
+        );
+      }
       if (pending.command.id === REPLACE_ALL_COMMAND.id) {
         const payload = pending.payload as ReplaceAllPlanRequest;
         const guard = () => {
@@ -1468,6 +1521,9 @@ export function createEditor(options: CreateEditorOptions) {
     experimental: ExperimentalOptions,
   ): Promise<CommandResult | RuntimeReply> {
     assertPublicMutation();
+    const kind = Object.getOwnPropertyDescriptor(message ?? {}, 'kind')?.value;
+    if (kind === 'insert-document' || kind === 'document-insert-capabilities')
+      throw Error('UseTypedEditorOperation');
     const owned = copyOwned(message),
       settings = copyOwned(experimental);
     if (!owned || typeof owned.kind !== 'string' || typeof settings.mutation !== 'boolean')
@@ -1519,6 +1575,65 @@ export function createEditor(options: CreateEditorOptions) {
       if (owned) validateSelection(owned, state);
       install({ selection: owned });
       return state;
+    });
+  }
+  async function readNamedFieldInventory(token: StateToken): Promise<NamedFieldInventory> {
+    requireReady(token, true);
+    const runtime = active!;
+    const ctx = context(token);
+    try {
+      if (!runtime.readNamedFields) throw Error('NamedFieldsUnavailable');
+      const source = await runtime.readNamedFields(ctx);
+      requireReady(token, true);
+      return checkedNamedFieldInventory(source, state);
+    } catch (error) {
+      notifyError(error, ctx, false);
+      throw error;
+    }
+  }
+  function namedFieldToken(options: NamedFieldOptions): StateToken {
+    const settings = copyOwned(options);
+    if (
+      !settings ||
+      typeof settings !== 'object' ||
+      Array.isArray(settings) ||
+      Object.keys(settings).some((key) => key !== 'token') ||
+      settings.token === null
+    )
+      throw Error('InvalidNamedFieldOptions');
+    return copyOwned(settings.token ?? state.token);
+  }
+  function listNamedFields(options: NamedFieldOptions = {}): Promise<NamedFieldInventory> {
+    assertPublicMutation();
+    const token = namedFieldToken(options);
+    return enqueue(() => readNamedFieldInventory(token));
+  }
+  function readNamedField(
+    selector: NamedFieldSelector,
+    options: NamedFieldOptions = {},
+  ): Promise<NamedFieldResolution> {
+    assertPublicMutation();
+    const owned = checkedNamedFieldSelector(copyOwned(selector));
+    const token = namedFieldToken(options);
+    return enqueue(async () => resolveNamedField(await readNamedFieldInventory(token), owned));
+  }
+  function moveToNamedField(
+    selector: NamedFieldSelector,
+    options: NamedFieldOptions = {},
+  ): Promise<NamedFieldNavigation> {
+    assertPublicMutation();
+    const owned = checkedNamedFieldSelector(copyOwned(selector));
+    const token = namedFieldToken(options);
+    return admit(async () => {
+      const inventory = await readNamedFieldInventory(token);
+      requireReady(token, true);
+      const result = resolveNamedField(inventory, owned);
+      if (result.status !== 'found') return result;
+      const { field } = result;
+      if (!field.target) return { status: 'unavailable', field };
+      validateSelection(field.target, state);
+      install({ selection: field.target });
+      return { status: 'moved', field, state };
     });
   }
   function historyCommand(
@@ -1703,6 +1818,70 @@ export function createEditor(options: CreateEditorOptions) {
         true,
       ),
     );
+  }
+  async function readDocumentInsertCapability(token: StateToken, guard: () => void) {
+    if (!active || !hasRuntimeAdmission(active))
+      return { available: false as const, reason: 'UnsupportedAtomicRuntime' };
+    const ctx = context(token);
+    const reply = await requestAtRuntimeAdmission(
+      active,
+      { kind: 'document-insert-capabilities' },
+      ctx,
+      guard,
+    );
+    verifyReply(reply, ctx);
+    guard();
+    if (reply.kind !== 'document-insert-capabilities')
+      throw Error('MalformedDocumentInsertionCapabilities');
+    if (reply.error) {
+      if (
+        ['DocumentInsertionUnavailable', 'HistoryNotEnabled', 'HistoryProtocol2Required'].includes(
+          reply.error,
+        )
+      )
+        return { available: false as const, reason: reply.error };
+      throw Error(reply.error);
+    }
+    return checkedDocumentInsertCapability(reply.capabilities, state.nativeHistoryRevision);
+  }
+  function getDocumentInsertionCapabilities(
+    options: DocumentInsertionCapabilityOptions = {},
+  ): Promise<DocumentInsertionCapabilities> {
+    assertPublicMutation();
+    const settings = copyOwned(options);
+    if (
+      !settings ||
+      typeof settings !== 'object' ||
+      Array.isArray(settings) ||
+      Object.keys(settings).some((key) => key !== 'token') ||
+      settings.token === null
+    )
+      throw Error('InvalidDocumentInsertionCapabilityOptions');
+    const token = copyOwned(settings.token ?? state.token);
+    return enqueue(async () => {
+      requireReady(token, true);
+      if (!hostFormattingWritable())
+        return Object.freeze({ available: false, reason: 'ReadOnlyDocument' });
+      if ((state.content as { format?: string })?.format !== 'hwpx')
+        return Object.freeze({ available: false, reason: 'DocumentInsertionUnavailable' });
+      const current = state.selection as SelectionTarget | undefined;
+      if (!current)
+        return Object.freeze({ available: false, reason: 'DocumentInsertionRequiresCaret' });
+      const selectionVersion = state.stateVersion;
+      const guard = () => {
+        requireReady(token, true);
+        currentDocumentInsertCaret(state, current, selectionVersion);
+      };
+      try {
+        guard();
+      } catch (error) {
+        if (error instanceof Error)
+          return Object.freeze({ available: false, reason: error.message });
+        throw error;
+      }
+      const result = await readDocumentInsertCapability(token, guard);
+      return 'reason' in result ? Object.freeze(result) : result.capabilities;
+    });
   }
   function getReplaceAllCapabilities(
     options: { readonly token?: StateToken } = {},
@@ -2031,8 +2210,12 @@ export function createEditor(options: CreateEditorOptions) {
     readResource: geometryGuard(readResource),
     getFormattingCapabilities: geometryGuard(getFormattingCapabilities),
     getReplaceAllCapabilities: geometryGuard(getReplaceAllCapabilities),
+    getDocumentInsertionCapabilities: geometryGuard(getDocumentInsertionCapabilities),
     queryFormatting: geometryGuard(queryFormatting),
     setSelection: geometryGuard(setSelection),
+    listNamedFields: geometryGuard(listNamedFields),
+    readNamedField: geometryGuard(readNamedField),
+    moveToNamedField: geometryGuard(moveToNamedField),
     acquireInputSurface: geometryGuard(acquireInputSurface),
     dispose: geometryGuard(dispose),
     undo: (token?: StateToken) => historyCommand(UNDO_COMMAND, token),

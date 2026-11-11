@@ -439,6 +439,14 @@ export fn hwp5_edit_field_spans(section: u32) u32 {
     output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
     return 1;
 }
+export fn hwp5_edit_named_fields() u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    if (available_section_copy != null or normalization != null) return fail(error.NamedFieldsUnavailable);
+    if (history) |*h| if (h.stats().poisoned) return fail(error.HistoryReloadRequired);
+    output = s.namedFields(a) catch |err| return fail(err);
+    return 1;
+}
 export fn hwp5_edit_field_topology(section: u32) u32 {
     hwp5_edit_output_free();
     const s = session() catch |err| return fail(err);

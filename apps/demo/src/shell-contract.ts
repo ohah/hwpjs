@@ -8,6 +8,7 @@ export type DemoCommand =
   | 'new-document'
   | 'save'
   | 'print-preview'
+  | 'insert-document'
   | 'undo'
   | 'redo'
   | 'cut'

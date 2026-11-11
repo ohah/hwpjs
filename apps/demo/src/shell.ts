@@ -95,7 +95,7 @@ const extraTools: readonly Tool[] = [
 ];
 const commands = [...toolGroups.flatMap(([, tools]) => tools), ...extraTools];
 const menus: readonly [string, readonly DemoCommand[]][] = [
-  ['파일', ['new-document', 'save', 'print-preview']],
+  ['파일', ['new-document', 'insert-document', 'save', 'print-preview']],
   ['편집', ['undo', 'redo', 'cut', 'copy', 'paste', 'format-copy', 'find', 'replace']],
   ['보기', ['zoom-in', 'zoom-out', 'toggle-marks', 'toggle-paragraph-marks', 'toggle-grid']],
   ['입력', ['insert-image', 'insert-table', 'insert-shape', 'insert-link', 'insert-symbol']],
@@ -138,6 +138,7 @@ const menus: readonly [string, readonly DemoCommand[]][] = [
 const labels = new Map<DemoCommand, string>([
   ...commands.map(([id, label]) => [id, label] as [DemoCommand, string]),
   ['print-preview', DEMO_COMMAND_REGISTRY['print-preview'].label],
+  ['insert-document', DEMO_COMMAND_REGISTRY['insert-document'].label],
   ['zoom-in', '확대'],
   ['zoom-out', '축소'],
   ['undo', '실행 취소'],
@@ -341,21 +342,21 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     popup.id = `${prefix}-menu-${disclosures.length}`;
     summary.setAttribute('aria-controls', popup.id);
     for (const id of items) {
-      const print = id === 'print-preview';
+      const opensDialog = id === 'print-preview' || id === 'insert-document';
       const button = commandButton(
         id,
         undefined,
         undefined,
-        print
+        opensDialog
           ? () => {
               details.open = false;
               summary.focus();
             }
           : undefined,
       );
-      if (print) button.node.setAttribute('aria-haspopup', 'dialog');
+      if (opensDialog) button.node.setAttribute('aria-haspopup', 'dialog');
       popup.append(button.node, button.description);
-      if (!print)
+      if (!opensDialog)
         listen(button.node, 'click', () => {
           details.open = false;
         });
