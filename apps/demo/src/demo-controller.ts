@@ -1,3 +1,4 @@
+import { createShapeCopyTool } from './shape-copy-tool.ts';
 import { createPageSettingsTool } from './page-settings-tool.ts';
 import { createTableCellSplitTool, type TableCellSplitCapture } from './table-cell-split-tool.ts';
 import { createTableGridPort, type TableGridHost } from './table-grid-port.ts';
@@ -188,6 +189,15 @@ export async function mountDemo(
     getSurfaceFormattingHost: () => host,
   });
   const characterShapePort = createCharacterShapePort(editor);
+  const shapeCopy = createShapeCopyTool({
+    root,
+    editor,
+    onStatus: note,
+    onClose: () => {
+      host?.focus?.();
+    },
+    onPresentationChange: () => shell.update(),
+  });
   const textColor = createTextColorTool({
     getSurfaceFormattingHost: () => host,
     root,
@@ -371,6 +381,7 @@ export async function mountDemo(
     const availability = {
       ...formatState.actions,
       ...textColor.presentation(sharedFormatting),
+      'format-copy': shapeCopy.presentation(),
       'font-name': {
         enabled: fontAvailability.enabled,
         surfaceSelection: fontAvailability.surfaceSelection,
@@ -716,6 +727,7 @@ export async function mountDemo(
       fontName.open(action.language);
       return;
     }
+    if (action.command === 'format-copy' && (await shapeCopy.action(action.command))) return;
     if (textColor.action(action.command)) return;
     if (action.command === 'page-settings') {
       void pageSettingsTool.open();
@@ -964,6 +976,7 @@ export async function mountDemo(
     paragraphBullet.dispose();
     paragraphShape.dispose();
     formatDialogs.dispose();
+    shapeCopy.dispose();
     textColor.dispose();
     fontName.dispose();
     viewOptions.dispose();
@@ -1009,6 +1022,7 @@ export async function mountDemo(
       paragraphBullet.dispose();
       paragraphShape.dispose();
       formatDialogs.dispose();
+      shapeCopy.dispose();
       textColor.dispose();
       fontName.dispose();
       viewOptions.dispose();
