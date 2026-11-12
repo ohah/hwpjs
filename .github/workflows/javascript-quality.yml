@@ -795,6 +795,12 @@ jobs:
             assert((await readFile(`${shipped}/${name}`)).equals(await readFile(`zig-out/verification/ci-agent-skill/${name}`)), `SkillAssetOutOfDate:${name}`);
           }
           JS
+      - name: Test portable fixture author and independent oracle
+        run: |
+          python3 -B tools/testing/portable_five/test_portable_five.py
+          python3 -B -O tools/testing/portable_five/test_portable_five.py
+          python3 -B tools/testing/portable_five/author_fixtures.py --check
+          python3 -B tools/testing/portable_five/oracle.py
       - name: Check derived quality configuration
         run: bun run quality:config
       - name: Test quality scope and safety contracts

@@ -10,7 +10,7 @@ test "chart plot settings preserve explicit absent and empty values without comb
     defer tree.deinit(a);
     var plots = try @import("chart_plot_values.zig").collect(a, &tree, .{});
     defer plots.deinit(a);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, original: *const @import("chart_tree.zig").Tree, nodes: []const @import("chart_plot_values.zig").Plot) !void {
             var bar = try settings.read(allocator, original, nodes[0].node, .{});
             defer bar.deinit(allocator);

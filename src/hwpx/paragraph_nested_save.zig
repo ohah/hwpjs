@@ -318,7 +318,7 @@ test "HWPX nested save retains joined sibling text and removes only its owned so
         }
     };
     try Probe.run(a, &tree, &current, &original, parent);
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &tree, &current, &original, parent });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &tree, &current, &original, parent });
     try std.testing.expectEqualStrings(source, tree.source);
 }
 

@@ -64,7 +64,7 @@ test "HWPX retained inline spaces preserve element spelling and protected Unicod
         const xml = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run charPrIDRef='7'><p:t>A" ++ element ++ "B😀</p:t></p:run></p:p></s:sec>";
         var tree = try @import("xml_part_tree.zig").parse(a, xml, .section, 0, 0, .{});
         defer tree.deinit(a);
-        try std.testing.checkAllAllocationFailures(a, struct {
+        try @import("../testing/allocation_failures.zig").check(struct {
             fn run(allocator: std.mem.Allocator, parsed: *const Tree) !void {
                 var sites = try @import("text_sites.zig").collect(allocator, parsed, .{ .materialize_tab_boundaries = true });
                 defer sites.deinit(allocator);

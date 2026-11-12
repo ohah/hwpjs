@@ -28,7 +28,7 @@ fn prepareOwned(allocator: std.mem.Allocator, session: *const @import("../hwp5/e
     try std.testing.expectEqual(@as(usize, 2), prepared.table.cells.len);
 }
 test "table creation wire owns explicit policy through allocation failures and rejects every truncation" {
-    const bytes = try std.json.Stringify.valueAlloc(a, value, .{});
+    const bytes = try std.json.Stringify.valueAlloc(a, value, .{ .emit_null_optional_fields = false });
     defer a.free(bytes);
     try std.testing.checkAllAllocationFailures(a, parseOwned, .{bytes});
     for (0..bytes.len) |length| try std.testing.expectError(error.InvalidTableCreationRequest, request.parse(a, bytes[0..length]));
@@ -42,7 +42,7 @@ test "table creation wire prepares and commits an actual HWP table without borro
     const Session = @import("../hwp5/edit/style_preservation.zig").Session;
     const session = try Session.open(a, input);
     defer session.close();
-    const bytes = try std.json.Stringify.valueAlloc(a, value, .{});
+    const bytes = try std.json.Stringify.valueAlloc(a, value, .{ .emit_null_optional_fields = false });
     defer a.free(bytes);
     try std.testing.checkAllAllocationFailures(a, prepareOwned, .{ session, bytes });
     try std.testing.expectEqual(@as(usize, 0), try session.pendingTableCount(0));

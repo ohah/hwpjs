@@ -115,7 +115,7 @@ test "HWPX font metrics current header list releases every partial allocation" {
     defer a.free(bytes);
     var session = try @import("editor_session.zig").open(a, bytes, .{});
     defer session.deinit();
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, original: *const @import("editor_session.zig").Session) !void {
             var view = original.*;
             view.allocator = allocator;

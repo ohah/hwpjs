@@ -23,6 +23,21 @@ pub fn build(b: *std.Build) void {
     const core_test_step = b.step("test", "Run core and controlled text unit tests");
     core_test_step.dependOn(&run_tests.step);
 
+    const portable_tests = b.addTest(.{
+        .use_llvm = true,
+        .filters = &.{"portable five"},
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/portable_five_contract_probe.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    const run_portable_tests = b.addRunArtifact(portable_tests);
+    run_portable_tests.has_side_effects = true;
+    const portable_step = b.step("test-portable-five", "Verify authored portable ZIP/XML/GIF/CFB contracts");
+    portable_step.dependOn(&run_portable_tests.step);
+    core_test_step.dependOn(&run_portable_tests.step);
+
     const generated_format_tests = b.addTest(.{
         .use_llvm = true,
         .filters = &.{"HWPX generated formatting regression"},

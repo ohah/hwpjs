@@ -1179,7 +1179,7 @@ test "HWPX header resources index memo shape IDs without interpreting payload" {
     var spoofed_inventory = try spoofed_document.inspectHeaderResources(a, .{});
     defer spoofed_inventory.deinit(a);
     try std.testing.expectEqualSlices(u32, &.{3}, spoofed_inventory.table(.memo_shape).ids.items);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: []const u8) !void {
             var parsed = try package.inspectDocument(allocator, source, .{});
             defer parsed.deinit(allocator);

@@ -18,7 +18,7 @@ test "field source run writer closes namespaces and retains crossing markers" {
     var generated = current.paragraphs[0];
     generated.generated_id = 91;
     try std.testing.expectError(error.UnsupportedStructuralFieldEdit, @import("run_current_xml.zig").writeSourceFields(a, &tree, &generated, first_run, .{}, 10000));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: *const @import("xml_part_tree.zig").Tree, values: *const @import("paragraph_structure_values.zig").Values) !void {
             var output: std.ArrayList(u8) = .empty;
             defer output.deinit(allocator);

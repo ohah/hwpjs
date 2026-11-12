@@ -53,3 +53,8 @@ test "chart blank policy reads actual incomplete stock fixture without inventing
     try std.testing.expect(tree.elements[result.node].is(@import("chart_namespace.zig").uri, "dispBlanksAs"));
     try std.testing.expectEqualSlices(u8, xml, tree.source);
 }
+
+// Self-contained contract lane; observed fixture test above remains separate.
+test {
+    _ = @import("../testing/portable_five_contract_tests.zig");
+}

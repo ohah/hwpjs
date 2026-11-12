@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "source": "portable-five-contracts-r1 authored inputs; fixed bytes independently checked, not a producer sample",
+  "checkedRepositoryFiles": [
+    "background.hwpx",
+    "chart-section.xml",
+    "chart.hwpx",
+    "chart.xml",
+    "pixel.gif",
+    "runless.hwpx",
+    "table-wire.hwp"
+  ],
+  "generatedFiles": [
+    {
+      "path": "background.hwpx",
+      "bytes": 1991,
+      "sha256": "d1e60be51f34cc614b8ec4f14f753ecaa0bf7532556b656083ac45e972094de8"
+    },
+    {
+      "path": "chart-section.xml",
+      "bytes": 579,
+      "sha256": "924346ea1c7ca09fa678a205a1ed5069c24ad85b2b7ca086c8f34d3c5a6a8833"
+    },
+    {
+      "path": "chart.hwpx",
+      "bytes": 2189,
+      "sha256": "2a2c6318fb661653308ae2ea666b0152d457b2f962ee54cdc08a95a9368ecde6"
+    },
+    {
+      "path": "chart.xml",
+      "bytes": 180,
+      "sha256": "83a7f109677e4e5152d7979fccb6ac4e86119df1a3deadc41ef9c0a53612f28b"
+    },
+    {
+      "path": "pixel.gif",
+      "bytes": 35,
+      "sha256": "cd251e1117213163d1cda55ad6f7ec3e6046042739c67efe0c939f6bded51efe"
+    },
+    {
+      "path": "runless-header.xml",
+      "bytes": 265,
+      "sha256": "92076f5617bc82da9fa996e2d63baf8a20d1eea1e9443e0408a8e5298e0efe0c"
+    },
+    {
+      "path": "runless-section.xml",
+      "bytes": 345,
+      "sha256": "856a6c048fd62411117dc7634bf2d2742534761d862736441ab75cf0a51c54be"
+    },
+    {
+      "path": "runless.hwpx",
+      "bytes": 1759,
+      "sha256": "441fe8d016b7ee237c16e09955d6e7015e27e6dbc1e9d1ccfc80102b7533b20c"
+    },
+    {
+      "path": "table-wire-docinfo.bin",
+      "bytes": 493,
+      "sha256": "26f7e96fea0581b68f043e75f2ddab4317bafa2d20bc891e4ab1e82e93fc722e"
+    },
+    {
+      "path": "table-wire-section.bin",
+      "bytes": 198,
+      "sha256": "40de8070b12e4fce47eac58cdb6736e8c9e49b88d0573eb774f1d7cf4405ae49"
+    },
+    {
+      "path": "table-wire.hwp",
+      "bytes": 3584,
+      "sha256": "5bef82de89f9a4654e0d0fc63f23c9e6008c84c63cc78c462851278b22959124"
+    }
+  ]
+}

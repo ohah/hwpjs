@@ -19,7 +19,7 @@ test "HWPX picture caption source preserves exact direct owner and scalar values
     try std.testing.expectEqual(@as(?u32, 14004), source.last_width);
     try std.testing.expectEqual(@as(?u32, 0), source.text_direction);
     try std.testing.expectError(error.InvalidPictureCaptionNode, values.readPicture(a, &tree, 5));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, allocation_input: []const u8) !void {
             var source_tree = try tree_mod.parse(allocator, allocation_input, 0, 0, .{});
             defer source_tree.deinit(allocator);

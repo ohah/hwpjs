@@ -36,7 +36,7 @@ fn allocationCase(a: std.mem.Allocator, session: *const @import("editor_session.
 test "equation display sites release every failed allocation without changing session" {
     var session = try fixture.open(t.allocator, xml, 1);
     defer session.deinit();
-    try t.checkAllAllocationFailures(t.allocator, allocationCase, .{&session});
+    try @import("../testing/allocation_failures.zig").check(allocationCase, .{&session});
     try allocationCase(t.allocator, &session);
 }
 
