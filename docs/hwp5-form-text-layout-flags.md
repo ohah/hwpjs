@@ -21,5 +21,5 @@ readonly·stale·foreign·유효하지 않은 owner 및 Native binding 거부는
 Main은 동일 17경로를 적용한 현재 Root에서 AutoSize 60개와 별도 EOL 회귀 9개가 각각 exit0임을 확인했습니다.
 r11 격리 공개 SDK의 정상 loader·기존 Native879·실제 provider·controlled Node Canvas metrics 경로는 NEW 자체 작성 HWP5/HWPX 8개가 통과했습니다.
 소스 회귀는 측정 실패 중 입력/submit, owner 거부, selection/composition 유지와 epoch 복귀를 검사하며, NEW8은 flags·권한·text·source frame·history·입력 대비 save 불변을 검사합니다.
-실제 브라우저·제공 폰트·커서/selection·focus·IME·overflow·편집/history/save는 검증 대기입니다.
-Node geometry와 raw flag 보존을 DOM/Canvas 또는 한글 조판 동치로 확대하지 않으며, GUI·배포 완료도 뜻하지 않습니다.
+같은 production gallery의 Vanilla·React·Svelte × HWP5/HWPX 6경로에서 실제 입력·선택·focus·undo/redo·저장·재열기가 통과했습니다. readonly 6경로와 Vanilla의 좁은 상자 fallback 2경로도 확인했습니다. 두 URL prefix의 gallery·프레임워크·API 12개 진입점을 검사했으며 예제 목록은 각각 101개입니다.
+실제 OS IME, 정확한 font face와 한글 조판 동치는 미검증입니다. 브라우저 검사는 이 production bundle 범위이며 모든 예제·기능 지원을 뜻하지 않습니다.
