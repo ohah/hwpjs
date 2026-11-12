@@ -2766,6 +2766,11 @@
       "sha256": "2ccb51c97a664676488da2f27d9e44854f4c05481d36f0427006baa58afa350d"
     },
     {
+      "path": "assets/main-DGgv_Ocv.js",
+      "bytes": 639976,
+      "sha256": "1286b4242d938819b1261a58d532abba0eba9ba4f77ed6b5205b2ec80454b0da"
+    },
+    {
       "path": "assets/main-DHWd1byr.js",
       "bytes": 596862,
       "sha256": "eb8f2af0a3978ae1f4ae18c6812152ab38a78857b46250809a8df41fe3817444"
@@ -3678,22 +3683,22 @@
     {
       "path": "demo/headless/index.html",
       "bytes": 1283,
-      "sha256": "885575ce1c344c8d795762f1ab73bd6247b2ed79c2509230037aca59d862ae63"
+      "sha256": "14827ee3c8d903a44b9a2c1b1b86dedfb2eca4be58cdd75818ff9a10a0dd60b9"
     },
     {
       "path": "demo/react/index.html",
       "bytes": 1283,
-      "sha256": "885575ce1c344c8d795762f1ab73bd6247b2ed79c2509230037aca59d862ae63"
+      "sha256": "14827ee3c8d903a44b9a2c1b1b86dedfb2eca4be58cdd75818ff9a10a0dd60b9"
     },
     {
       "path": "demo/svelte/index.html",
       "bytes": 1283,
-      "sha256": "885575ce1c344c8d795762f1ab73bd6247b2ed79c2509230037aca59d862ae63"
+      "sha256": "14827ee3c8d903a44b9a2c1b1b86dedfb2eca4be58cdd75818ff9a10a0dd60b9"
     },
     {
       "path": "demo/vanilla/index.html",
       "bytes": 1283,
-      "sha256": "885575ce1c344c8d795762f1ab73bd6247b2ed79c2509230037aca59d862ae63"
+      "sha256": "14827ee3c8d903a44b9a2c1b1b86dedfb2eca4be58cdd75818ff9a10a0dd60b9"
     },
     {
       "path": "fixture-catalog.json",
@@ -4213,7 +4218,7 @@
     {
       "path": "index.html",
       "bytes": 1235,
-      "sha256": "37d0d409ae5eacdbfd08ab4f16eb9f12ba0dbf32f72783ad1cda4d7f0df36a8e"
+      "sha256": "e799ad368197cea3e9a43d66b349eda7a39bcd294bcfe677b168d21492c22237"
     },
     {
       "path": "LICENSE.txt",
