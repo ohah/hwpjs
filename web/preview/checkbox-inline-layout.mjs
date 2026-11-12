@@ -1,10 +1,19 @@
+import { requestFormAutoSizeFrame } from './form-autosize-frame.mjs';
 import { paragraphCharacterRange } from './projection-measure-memo.mjs';
 import { hwpUnitPixels } from './hwp-units.mjs';
 import { createTextStyle } from './text-style.mjs';
 import { FONT } from './layout.mjs';
 import { validShapeLayoutValues } from '../../js/hwpx-shape-layout-values.mjs';
 export const checkBoxPositionKey = (section, paragraph, unit) => `${section}:${paragraph}:${unit}`;
-export function inlineCheckBoxIndex(content, { allowFormTextWrap = false } = {}) {
+export function inlineCheckBoxIndex(
+  content,
+  {
+    allowFormTextWrap = false,
+    autoSizeFrames,
+    requestAutoSize,
+    measurementSnapshot = content,
+  } = {},
+) {
   const result = new Map(),
     fontAt = createTextStyle(content, FONT);
   result.unavailable = [];
@@ -85,7 +94,7 @@ export function inlineCheckBoxIndex(content, { allowFormTextWrap = false } = {})
       typeof c?.word_wrap === 'boolean';
     if (
       !c ||
-      c.auto_size !== false ||
+      (c.auto_size !== false && !(c.auto_size === true && autoSizeFrames)) ||
       (!wraps && c.word_wrap !== false) ||
       typeof row.caption !== 'string'
     ) {
@@ -135,6 +144,41 @@ export function inlineCheckBoxIndex(content, { allowFormTextWrap = false } = {})
       fail('MissingFormCharacterStyle');
       continue;
     }
+    const storedFrame = Object.freeze({
+      width: hwpUnitPixels(g.width),
+      height: hwpUnitPixels(g.height),
+    });
+    let autoSizeFrame = null,
+      autoSizeContext = null;
+    if (c.auto_size === true) {
+      const context = (autoSizeContext = Object.freeze({
+        kind: row.kind,
+        label: row.caption,
+        name: row.sourceAttrs?.strings?.name ?? null,
+        font,
+        fontHeight,
+        lineHeight: wraps ? fontHeight : null,
+        multiline: wraps,
+        wordWrap: wraps && c.word_wrap,
+        storedFrame,
+      }));
+      try {
+        autoSizeFrame = requestFormAutoSizeFrame(
+          autoSizeFrames,
+          measurementSnapshot,
+          row,
+          context,
+          requestAutoSize,
+        );
+      } catch (error) {
+        fail(error.message);
+        continue;
+      }
+      if (!autoSizeFrame) {
+        fail('FormAutoSizeGeometryUnavailable');
+        continue;
+      }
+    }
     const key = checkBoxPositionKey(row.section, row.paragraph, row.anchorUnit);
     if (result.has(key)) {
       result.set(key, null);
@@ -143,11 +187,21 @@ export function inlineCheckBoxIndex(content, { allowFormTextWrap = false } = {})
       continue;
     }
     result.set(key, {
-      width: hwpUnitPixels(g.width),
-      height: hwpUnitPixels(g.height),
+      width: autoSizeFrame?.width ?? storedFrame.width,
+      height: autoSizeFrame?.height ?? storedFrame.height,
+      ...(autoSizeFrame
+        ? {
+            storedFrame: autoSizeFrame.storedFrame,
+            frameBasis: autoSizeFrame.basis,
+            autoSizeContext,
+            autoSizeOwner: row,
+          }
+        : {}),
       affectLineSpacing: p.flags[0],
       font,
       fontHeight,
+      lineHeight: autoSizeFrame?.lineHeight,
+      textOffset: autoSizeFrame?.textOffset,
       checkBox: row,
     });
   }

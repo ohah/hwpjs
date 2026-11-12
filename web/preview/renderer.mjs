@@ -1,3 +1,6 @@
+import { createFormTextDraftMeasurements } from './form-text-draft-measurements.mjs';
+import { createFormAutoSizeFrames } from './form-autosize-frame.mjs';
+import { createCanvasFormAutoSizer } from './form-autosize-provider.mjs';
 import { measureSourceTableCellHeights } from './source-table-cell-height-measurement.mjs';
 import { tableCellBlockContainsBox } from './table-cell-block.mjs';
 import { getScenePageText, pageTextUnavailable } from './page-text-scene.mjs';
@@ -301,7 +304,14 @@ export function createRenderer(
   let checkBoxPaintScrollLeft = null;
   let inlineCheckBoxes = new Map();
   let inlineForms = new Map();
+  const formAutoSizeFrames = createFormAutoSizeFrames();
+  const requestAutoSize = createCanvasFormAutoSizer(ctx);
+  const formTextDraftMeasurements = createFormTextDraftMeasurements(requestAutoSize);
+  let currentFormDraftContexts = new WeakMap();
   let paintedFormTargets = [];
+  let paintedFormTargetSet = new WeakSet();
+  let paintedFormTargetByOwner = new WeakMap();
+  const formGeometryWatchers = new Set();
   let pictureDecoder = (bytes) => createImageBitmap(new Blob([bytes]));
   const decodedResourceGeometry = createDecodedResourceGeometryEpoch(realm);
   const pictureResources = createPictureResources({
@@ -534,6 +544,8 @@ export function createRenderer(
     let paintedFormattingMarks = 0;
     const paintedForms = new Set();
     paintedFormTargets = [];
+    paintedFormTargetSet = new WeakSet();
+    paintedFormTargetByOwner = new WeakMap();
     paintedCheckBoxes = [];
     checkBoxPaintScrollTop = null;
     checkBoxPaintScrollLeft = null;
@@ -1029,6 +1041,12 @@ export function createRenderer(
                   height: form.height,
                 };
                 paintedFormTargets.push(target);
+                paintedFormTargetSet.add(target);
+                if (form.autoSizeOwner)
+                  paintedFormTargetByOwner.set(
+                    form.autoSizeOwner,
+                    paintedFormTargetByOwner.has(form.autoSizeOwner) ? null : target,
+                  );
                 if (form.checkBox)
                   paintedCheckBoxes.push({
                     ...target,
@@ -1414,6 +1432,10 @@ export function createRenderer(
     // Publish hit targets only with the scroll origin of this completed frame.
     checkBoxPaintScrollTop = formPaintScrollTop;
     checkBoxPaintScrollLeft = formPaintScrollLeft;
+    for (const watcher of new Set(formGeometryWatchers)) {
+      const target = paintedFormTargetByOwner.get(watcher.owner);
+      watcher.update(target?.form?.form?.editable === false ? null : (target ?? null));
+    }
     canvas.dataset.paintedCaret = paintedCaret;
     canvas.dataset.formattingMarks = String(displayOptions.formattingMarks === true);
     canvas.dataset.formattingMarkCount = String(paintedFormattingMarks);
@@ -1548,10 +1570,23 @@ export function createRenderer(
     const inlineCharts = inlineChartIndex(pictureDisplay, (section, wrapper) =>
       chartResources.status(section, wrapper),
     );
-    inlineCheckBoxes = inlineCheckBoxIndex(pictureDisplay);
+    const formOwners = [
+      ...new Set([
+        ...(pictureDisplay.checkBoxes ?? []),
+        ...(pictureDisplay.formTexts ?? []),
+        ...(pictureDisplay.hwp5Forms ?? []),
+      ]),
+    ];
+    formAutoSizeFrames.begin(pictureDisplay, formOwners);
+    formTextDraftMeasurements.begin(pictureDisplay, formOwners);
+    const autoSizeOptions = { autoSizeFrames: formAutoSizeFrames, requestAutoSize };
+    inlineCheckBoxes = inlineCheckBoxIndex(pictureDisplay, autoSizeOptions);
     inlineForms = pictureDisplay.formTexts
-      ? inlineHwpxFormTextIndex(pictureDisplay)
-      : inlineHwp5FormIndex(pictureDisplay, { draft });
+      ? inlineHwpxFormTextIndex(pictureDisplay, autoSizeOptions)
+      : inlineHwp5FormIndex(pictureDisplay, { draft, ...autoSizeOptions });
+    currentFormDraftContexts = new WeakMap();
+    for (const form of inlineForms.values())
+      if (form?.autoSizeContext) currentFormDraftContexts.set(form, form.autoSizeContext);
     const measurementPolicy = readMeasurementPolicy();
     const measuredEnvironment = [
       canvas.ownerDocument,
@@ -1837,6 +1872,33 @@ export function createRenderer(
           y < box.y + box.height,
       );
       return matches.length === 1 ? matches[0] : null;
+    },
+    watchFormTextGeometry(target, update) {
+      if (
+        closed ||
+        !paintedFormTargetSet.has(target) ||
+        !target.form?.autoSizeOwner ||
+        typeof update !== 'function'
+      )
+        return () => {};
+      const watcher = { owner: target.form.autoSizeOwner, update };
+      formGeometryWatchers.add(watcher);
+      return () => formGeometryWatchers.delete(watcher);
+    },
+    formTextDraftAdmission(target) {
+      return (
+        !closed &&
+        formTextDraftMeasurements.admits(target, paintedFormTargetSet, currentFormDraftContexts)
+      );
+    },
+    measureFormTextDraft(target, text) {
+      if (closed) return null;
+      return formTextDraftMeasurements.measure(
+        target,
+        text,
+        paintedFormTargetSet,
+        currentFormDraftContexts,
+      );
     },
     checkBoxAtLogicalPoint: (x, y) =>
       checkBoxPaintScrollTop === viewport.scrollTop &&
@@ -2628,6 +2690,11 @@ export function createRenderer(
       onGeometry = callback;
     },
     close() {
+      formAutoSizeFrames.dispose();
+      formTextDraftMeasurements.dispose();
+      currentFormDraftContexts = new WeakMap();
+      for (const watcher of new Set(formGeometryWatchers)) watcher.update(null);
+      formGeometryWatchers.clear();
       cellHeightMeasurement = cellHeightCapture = null;
       queuedTypingHold = null;
       rendererGlyphMetrics.close();

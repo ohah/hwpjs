@@ -1,3 +1,9 @@
+import {
+  FORM_TEXT_LEFT,
+  FORM_TEXT_CLIP,
+  formTextWrapWidth,
+  FORM_COMBO_TEXT_CUT,
+} from './form-face-geometry.mjs';
 import { formTextLayout } from './form-text-layout.mjs';
 /** Static clipped form face; never mutates a value or invokes a button command. */
 import { paintSourceCheckBox } from './checkbox-source-paint.mjs';
@@ -38,26 +44,38 @@ export function paintHwp5Form(ctx, item, x, y) {
     try {
       ctx.beginPath();
       ctx.rect(
-        x + 2,
+        x + FORM_TEXT_CLIP,
         y,
-        Math.max(0, item.width - (item.form.source.kind === 'combo_box' ? 18 : 4)),
+        Math.max(
+          0,
+          item.width -
+            (item.form.source.kind === 'combo_box' ? FORM_COMBO_TEXT_CUT : 2 * FORM_TEXT_CLIP),
+        ),
         item.height,
       );
       ctx.clip();
       if (item.multiline === true) {
         if (!Number.isFinite(item.lineHeight) || item.lineHeight <= 0) return false;
         const layout = formTextLayout(item.label, {
-          width: Math.max(0, item.width - 6),
+          width: formTextWrapWidth(
+            item.width,
+            item.form.source.kind,
+            item.textOffset ?? FORM_TEXT_LEFT,
+          ),
           wrap: item.wordWrap === true,
           measure: (text) => ctx.measureText(text).width,
           maxLines: Math.max(1, Math.min(65536, Math.ceil(item.height / item.lineHeight))),
         });
         for (let i = 0; i < layout.rows.length; i++)
-          ctx.fillText(layout.rows[i].text, x + 3, y + item.lineHeight * (i + 0.5));
+          ctx.fillText(
+            layout.rows[i].text,
+            x + (item.textOffset ?? FORM_TEXT_LEFT),
+            y + item.lineHeight * (i + 0.5),
+          );
       } else {
         ctx.fillText(
           item.label,
-          x + (ctx.textAlign === 'center' ? item.width / 2 : 3),
+          x + (ctx.textAlign === 'center' ? item.width / 2 : (item.textOffset ?? FORM_TEXT_LEFT)),
           y + item.height / 2,
         );
       }

@@ -1,3 +1,4 @@
+import { FORM_CHOICE_SIZE, FORM_CHOICE_GAP } from './form-face-geometry.mjs';
 // Source-sized inline checkbox/caption. Font raster equivalence remains external.
 import { paintCheckBoxProxy } from './checkbox-proxy-paint.mjs';
 export function paintSourceCheckBox(ctx, box, scrollTop) {
@@ -12,7 +13,7 @@ export function paintSourceCheckBox(ctx, box, scrollTop) {
       ctx.fillStyle = checkBox.backColor;
       ctx.fillRect(box.x, y, box.width, box.height);
     }
-    const size = Math.min(16, box.height, box.width);
+    const size = Math.min(FORM_CHOICE_SIZE, box.height, box.width);
     paintCheckBoxProxy(
       ctx,
       {
@@ -28,7 +29,7 @@ export function paintSourceCheckBox(ctx, box, scrollTop) {
     ctx.font = font;
     ctx.textBaseline = 'middle';
     ctx.fillStyle = checkBox.foreColor;
-    ctx.fillText(checkBox.caption, box.x + size + 4, y + box.height / 2);
+    ctx.fillText(checkBox.caption, box.x + size + FORM_CHOICE_GAP, y + box.height / 2);
   } finally {
     ctx.restore();
   }

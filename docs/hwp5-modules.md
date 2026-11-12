@@ -571,3 +571,5 @@
 - [HWP5 편집 용지 실제 쓰기·수명·history·CFB·공개 DTO](hwp5-page-settings-edit.md)
 
 - [편집 용지 통합 범위와 검증](page-settings-delivery.md) — 형식별 계약을 공유하는 SDK·CLI·웹 연결과 현재 합본 검증.
+
+- [양식 AutoSize의 측정과 편집](hwp5-form-text-layout-flags.md)

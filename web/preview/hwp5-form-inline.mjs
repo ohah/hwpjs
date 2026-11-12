@@ -1,3 +1,4 @@
+import { requestFormAutoSizeFrame } from './form-autosize-frame.mjs';
 import { paragraphCharacterRange } from './projection-measure-memo.mjs';
 import { validateHwp5FormSources, validateHwp5FormAnchors } from '../../js/hwp5-form-sources.mjs';
 import { validateHwp5FormProperties } from '../../js/hwp5-form-properties.mjs';
@@ -10,7 +11,10 @@ import { sourceDisplayPosition } from './text-offsets.mjs';
 export const formPositionKey = (section, paragraph, unit) => `${section}:${paragraph}:${unit}`;
 
 /** Source-sized static preview only. Native owns values; no event is executed. */
-export function inlineHwp5FormIndex(content, { draft } = {}) {
+export function inlineHwp5FormIndex(
+  content,
+  { draft, autoSizeFrames, requestAutoSize, measurementSnapshot = content } = {},
+) {
   const result = new Map(),
     fontAt = createTextStyle(content, FONT),
     paragraphs = new Map();
@@ -99,7 +103,10 @@ export function inlineHwp5FormIndex(content, { draft } = {}) {
       const wordWrap = number('word_wrap', 'boolean', 1) === 1;
       // Radio selection never edits Caption; retain the source box explicitly
       // rather than pretending current font metrics reproduce AutoSize.
-      if ((sourceAutoSize && source.kind !== 'radio_button') || (wordWrap && !multiline))
+      if (
+        (sourceAutoSize && source.kind !== 'radio_button' && !autoSizeFrames) ||
+        (wordWrap && !multiline)
+      )
         throw Error('UnsupportedFormPreviewAutosize');
       const follow = number('follow_context', 'boolean', 1),
         id = number('char_shape_id');
@@ -131,6 +138,32 @@ export function inlineHwp5FormIndex(content, { draft } = {}) {
       const lineHeight = multiline ? fontAt.fontHeight(fontParagraph, 0) : null;
       if (multiline && (!Number.isFinite(lineHeight) || lineHeight <= 0))
         throw Error('MissingFormPreviewFont');
+      const storedFrame = Object.freeze({
+        width: hwpUnitPixels(source.width),
+        height: hwpUnitPixels(source.height),
+      });
+      const autoSizeContext = Object.freeze({
+        kind: source.kind,
+        label,
+        name: fields.get('name')?.kind === 'wstring' ? text('name', 'wstring') : null,
+        font,
+        fontHeight: fontAt.fontHeight(fontParagraph, 0),
+        lineHeight,
+        multiline,
+        wordWrap,
+        storedFrame,
+      });
+      const autoSizeFrame = sourceAutoSize
+        ? requestFormAutoSizeFrame(
+            autoSizeFrames,
+            measurementSnapshot,
+            form,
+            autoSizeContext,
+            requestAutoSize,
+          )
+        : null;
+      if (sourceAutoSize && source.kind !== 'radio_button' && !autoSizeFrame)
+        throw Error('FormAutoSizeGeometryUnavailable');
       let checkBox = null;
       if (source.kind === 'check_box' || source.kind === 'radio_button') {
         const radio = source.kind === 'radio_button';
@@ -189,17 +222,26 @@ export function inlineHwp5FormIndex(content, { draft } = {}) {
           ? { ...form, editable: textEditable }
           : form,
         label,
+        textOffset: autoSizeFrame?.textOffset,
         multiline,
         wordWrap,
-        lineHeight,
+        lineHeight: autoSizeFrame?.lineHeight ?? lineHeight,
         font,
         foreground,
         background,
         checkBox,
         sourceAutoSize,
         drawFrame: number('draw_frame', 'boolean', 1) === 1,
-        width: hwpUnitPixels(source.width),
-        height: hwpUnitPixels(source.height),
+        width: autoSizeFrame?.width ?? storedFrame.width,
+        height: autoSizeFrame?.height ?? storedFrame.height,
+        ...(autoSizeFrame
+          ? {
+              storedFrame: autoSizeFrame.storedFrame,
+              frameBasis: autoSizeFrame.basis,
+              autoSizeContext,
+              autoSizeOwner: form,
+            }
+          : {}),
         affectLineSpacing: flags.affect_line_spacing,
         readOnly: true,
       });
