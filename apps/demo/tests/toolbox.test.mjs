@@ -70,7 +70,7 @@ test('기본 순서와 추가 도구 및 장식 SVG 접근성을 보존한다', 
   );
   assert.deepEqual(
     buttons(h.extra).map((n) => n.dataset.command),
-    ['save', 'insert-chart', 'word-count'],
+    ['save', 'insert-chart', 'edit-chart-data', 'edit-equation', 'word-count'],
   );
   assert.equal(h.primary.contains(h.extra), false);
   for (const b of [...buttons(h.primary), ...buttons(h.extra)]) {

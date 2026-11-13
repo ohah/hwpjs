@@ -112,7 +112,7 @@ test('파일열기 추가는 예제 선택·없는 fixture 거부·선택 유지
   assert.deepEqual(h.calls, ['one']);
   h.ui.destroy();
 });
-test('상단 진입·메뉴 진입·공유 설명은 인스턴스별로 존재하며 기존 도구25개와 새 문서 도구 하나를 유지한다', () => {
+test('상단·메뉴 진입과 공유 설명을 분리하고 새 문서·기존 도구·개체 편집 도구를 유지한다', () => {
   const doc = new Document(),
     roots = [],
     shells = [],
@@ -149,9 +149,14 @@ test('상단 진입·메뉴 진입·공유 설명은 인스턴스별로 존재�
       assert.equal(reason.textContent, '열기 대기');
     }
     const tools = all(root, (n) => n.className === 'hwp-demo-tool');
-    assert.equal(tools.length, 26);
+    assert.equal(tools.length, 28);
     assert.equal(tools.filter((n) => n.dataset.command === 'new-document').length, 1);
-    assert.equal(tools.filter((n) => n.dataset.command !== 'new-document').length, 25);
+    assert.equal(tools.filter((n) => n.dataset.command !== 'new-document').length, 27);
+    for (const command of ['edit-chart-data', 'edit-equation']) {
+      const matches = tools.filter((n) => n.dataset.command === command);
+      assert.equal(matches.length, 1);
+      assert.equal(matches[0].disabled, true, '문서가 없는 인스턴스는 편집 권한을 부여하지 않는다');
+    }
     ids.push(new Set(all(root, (n) => n.id).map((n) => n.id)));
   }
   assert.equal(

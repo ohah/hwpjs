@@ -10,6 +10,8 @@ on:
       - 'apps/demo/tests/existing-object-tools-shell.test.mjs'
       - 'apps/demo/tests/shape-copy-density.test.mjs'
       - 'apps/demo/tests/shell.test.mjs'
+      - 'apps/demo/tests/toolbox.test.mjs'
+      - 'apps/demo/tests/file-open-direct.test.mjs'
       - 'apps/demo/tests/fake-dom.mjs'
       - 'apps/demo/tests/formatting-dialog-test-dom.ts'
       - 'js/chart-point-batch.mjs'
@@ -44,4 +46,6 @@ jobs:
             apps/demo/tests/equation-tool.test.mjs \
             apps/demo/tests/existing-object-tools-shell.test.mjs \
             apps/demo/tests/shape-copy-density.test.mjs \
-            apps/demo/tests/shell.test.mjs
+            apps/demo/tests/shell.test.mjs \
+            apps/demo/tests/toolbox.test.mjs \
+            apps/demo/tests/file-open-direct.test.mjs
