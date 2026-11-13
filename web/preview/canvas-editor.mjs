@@ -608,7 +608,12 @@ export function createCanvasEditor({
     const interaction = {
       anchor,
       focus,
-      active: activeElement() === input || drag !== null,
+      // Keep the current cell-block highlight on its registered menu targets.
+      // Recheck ownership on every paint; focus retention grants no edit permission.
+      active:
+        activeElement() === input ||
+        drag !== null ||
+        Boolean(cellBlock && allowsCellBlockMenuFocus(activeElement(), input)),
       composition,
       historyPending,
       cellBlock: cellBlock?.paint,
@@ -804,6 +809,7 @@ export function createCanvasEditor({
   };
   const captureSourceTableCellBlock = (purpose = 'merge') => {
     const split = purpose === 'split';
+    const appearance = purpose === 'appearance';
     const equalizeWidth = purpose === 'width';
     const equalizeHeight = purpose === 'height';
     const block = cellBlock;
@@ -813,17 +819,19 @@ export function createCanvasEditor({
     if (
       !context ||
       context.created ||
-      (!split && (!block || block.paint.cells.size < 2)) ||
-      (split || equalizeWidth || equalizeHeight
+      (!split && !appearance && (!block || block.paint.cells.size < 2)) ||
+      (split || appearance || equalizeWidth || equalizeHeight
         ? !['hwpx', 'hwp5'].includes(content?.format)
         : content?.format !== 'hwpx') ||
-      (split
-        ? content.sourceTableCellSplitAvailable !== true
-        : equalizeHeight
-          ? content.sourceTableCellHeightAvailable !== true
-          : equalizeWidth
-            ? content.sourceTableCellWidthAvailable !== true
-            : content.sourceTableCellMergeAvailable !== true) ||
+      (appearance
+        ? false
+        : split
+          ? content.sourceTableCellSplitAvailable !== true
+          : equalizeHeight
+            ? content.sourceTableCellHeightAvailable !== true
+            : equalizeWidth
+              ? content.sourceTableCellWidthAvailable !== true
+              : content.sourceTableCellMergeAvailable !== true) ||
       renderer.viewEditPolicyActive?.() === true
     )
       return null;
@@ -3080,12 +3088,18 @@ export function createCanvasEditor({
     paint();
   });
   const exitCellBlockMenu = (event) => {
-    if (
-      !cellBlockMenuFocus ||
-      event.target === input ||
-      allowsCellBlockMenuFocus(event.target, input)
-    )
+    if (!cellBlockMenuFocus || event.target === input) return;
+    if (allowsCellBlockMenuFocus(event.target, input)) {
+      // During blur activeElement can still be the document body. Paint again
+      // only after focus has reached the registered owner of this held block.
+      if (
+        event.type === 'focusin' &&
+        cellBlock === cellBlockMenuFocus &&
+        activeElement() === event.target
+      )
+        paint();
       return;
+    }
     if (cellBlock === cellBlockMenuFocus) {
       clearCellBlockOnFocusExit();
       paint();

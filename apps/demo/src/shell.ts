@@ -300,6 +300,7 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
       return options.onAction?.(action);
     });
   let selectedFontLanguage: CharacterFontLanguage | null = null;
+  const shapeCopyFocusTargets: HTMLElement[] = [];
   const commandButton = (
     command: DemoCommand,
     label = labels.get(command) || command,
@@ -312,6 +313,7 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     if (icon) node.append(createShellIcon(doc, icon));
     node.append(el('span', '', label));
     const description = bindCommand(node, command);
+    if (command === 'format-copy') shapeCopyFocusTargets.push(node);
     // Pointer toolbar interaction retains the host's selection/focus. Keyboard
     // activation is still a normal button click; the bridge revalidates tokens.
     listen(node, 'pointerdown', (event) => {
@@ -366,6 +368,9 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
       popup = el('div', 'hwp-demo-popup');
     popup.id = `${prefix}-menu-${disclosures.length}`;
     summary.setAttribute('aria-controls', popup.id);
+    // Only the entry trigger and ShapeCopy buttons may retain a cell block.
+    // Binding the whole Edit menu would also admit unrelated commands.
+    if (items.includes('format-copy')) shapeCopyFocusTargets.push(summary);
     for (const id of items) {
       const opensDialog = id === 'print-preview' || id === 'insert-document';
       const button = commandButton(
@@ -746,6 +751,7 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     headlessMount,
     saveOptionsMount: picker,
     tableMenu,
+    shapeCopyFocusTargets: Object.freeze(shapeCopyFocusTargets),
     update,
     destroy,
     /** Preserve an available selection; never touch the document/host subtree. */

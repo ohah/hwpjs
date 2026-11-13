@@ -1,6 +1,7 @@
 # HWP5 모듈 계약 인덱스
 
 - [모양 복사: 현재 문서의 지원 항목](shape-copy.md)
+- [셀 모양 복사](cell-shape-copy.md)
 
 - [전문서 리터럴 전체 바꾸기와 Native 원자 편집](headless-replace-all.md)
 

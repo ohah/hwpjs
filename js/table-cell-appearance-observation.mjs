@@ -319,52 +319,132 @@ function hxFill(style) {
   return unsupported(plan.error ?? 'UnsupportedFillVariant', 'unknown', raw);
 }
 
-/** Pure current DTO observation. No parsing, authority, mutation or cross-call cache. */
-export function observeTableCellAppearance(content, target) {
+/** Build owner/resource indexes once for a current immutable Core DTO.
+ * Indexes are observations only, never mutation capabilities or cached across states.
+ */
+export function createTableCellAppearanceObserver(content) {
+  const tables = new Map(),
+    reports = new Map(),
+    errors = new Set();
+  const parts = new Map();
+  let styles, failure;
   try {
-    if (
-      !content ||
-      !target ||
-      Reflect.ownKeys(target).length !== 3 ||
-      !['section', 'tableNode', 'listNode'].every((key) => Object.hasOwn(target, key)) ||
-      ![target.section, target.tableNode, target.listNode].every(uint) ||
-      !['hwp5', 'hwpx'].includes(content.format)
-    )
-      return missing('InvalidAppearanceTarget');
-    if (content.limited === true || !Array.isArray(content.tables))
-      return missing('IncompleteTableObservation');
-    let table,
-      cell,
-      tableCount = 0,
-      cellCount = 0;
-    for (const item of content.tables) {
-      if (item?.section !== target.section || item.tableNode !== target.tableNode) continue;
-      table = item;
-      tableCount++;
-      for (const candidate of item.cells ?? [])
-        if (candidate?.listNode === target.listNode) {
-          cell = candidate;
-          cellCount++;
-        }
+    if (content?.limited === true || !Array.isArray(content?.tables))
+      failure = 'IncompleteTableObservation';
+    for (const table of content?.tables ?? []) {
+      const section = table?.section,
+        tableNode = table?.tableNode;
+      if (!uint(section) || !uint(tableNode)) continue;
+      let byTable = tables.get(section);
+      if (!byTable) tables.set(section, (byTable = new Map()));
+      let slot = byTable.get(tableNode);
+      if (!slot) byTable.set(tableNode, (slot = { table, count: 0, cells: new Map() }));
+      slot.count++;
+      for (const cell of Array.isArray(table?.cells) ? table.cells : []) {
+        const listNode = cell?.listNode;
+        if (!uint(listNode)) continue;
+        const previous = slot.cells.get(listNode);
+        slot.cells.set(listNode, { cell, count: (previous?.count ?? 0) + 1 });
+      }
     }
-    if (tableCount !== 1 || cellCount !== 1) return missing('MissingOrAmbiguousCellOwner');
-    if (table.partial !== false) return missing('CompleteOriginalTableRequired');
-    let style;
-    if (content.format === 'hwp5') {
-      if (content.hwp5BorderFillSourceError != null) return missing('Hwp5BorderFillSourceError');
-      const styles = validateHwp5BorderFillSources(content.hwp5BorderFillSources),
-        binding = cell.layoutSource;
+    if (content?.format === 'hwp5' && content.hwp5BorderFillSourceError == null)
+      styles = validateHwp5BorderFillSources(content.hwp5BorderFillSources);
+    if (content?.format === 'hwpx') {
+      for (const entry of content.tableBorderSourceErrors ?? []) errors.add(entry?.section);
+      for (const value of content.tableBorderSources ?? []) {
+        const section = value?.section;
+        if (!uint(section)) continue;
+        const old = reports.get(section);
+        if (old) {
+          old.count++;
+          continue;
+        }
+        let report;
+        try {
+          report = decodeTableBorderSources(new TextEncoder().encode(JSON.stringify(value)));
+        } catch {
+          reports.set(section, { count: 1, error: true });
+          continue;
+        }
+        const cells = new Map();
+        for (const cell of report.cells) {
+          // decodeTableBorderSources already validates both numeric uint owners.
+          let byList = cells.get(cell.table_node);
+          if (!byList) cells.set(cell.table_node, (byList = new Map()));
+          const previous = byList.get(cell.list_node);
+          byList.set(cell.list_node, { binding: cell, count: (previous?.count ?? 0) + 1 });
+        }
+        reports.set(section, { count: 1, report, cells });
+      }
+    }
+  } catch {
+    failure = 'InvalidAppearanceSource';
+  }
+  return (target) => {
+    try {
       if (
-        !binding ||
-        binding.table_record_node !== target.tableNode ||
-        binding.list_node !== target.listNode ||
-        !uint(binding.border_fill_id) ||
-        binding.border_fill_id === 0
+        !content ||
+        !target ||
+        Reflect.ownKeys(target).length !== 3 ||
+        !['section', 'tableNode', 'listNode'].every((k) => Object.hasOwn(target, k)) ||
+        ![target.section, target.tableNode, target.listNode].every(uint) ||
+        !['hwp5', 'hwpx'].includes(content.format)
       )
-        return missing('InvalidHwp5CellResourceBinding');
-      style = styles[binding.border_fill_id - 1];
-      if (!style || style.id !== binding.border_fill_id)
-        return missing('MissingBorderFillResource');
+        return missing('InvalidAppearanceTarget');
+      if (failure) return missing(failure);
+      const slot = tables.get(target.section)?.get(target.tableNode),
+        cell = slot?.cells.get(target.listNode);
+      if (slot?.count !== 1 || cell?.count !== 1) return missing('MissingOrAmbiguousCellOwner');
+      if (slot.table.partial !== false) return missing('CompleteOriginalTableRequired');
+      let style;
+      if (content.format === 'hwp5') {
+        if (content.hwp5BorderFillSourceError != null) return missing('Hwp5BorderFillSourceError');
+        const binding = cell.cell.layoutSource;
+        if (
+          !binding ||
+          binding.table_record_node !== target.tableNode ||
+          binding.list_node !== target.listNode ||
+          !uint(binding.border_fill_id) ||
+          binding.border_fill_id === 0
+        )
+          return missing('InvalidHwp5CellResourceBinding');
+        style = styles[binding.border_fill_id - 1];
+        if (!style || style.id !== binding.border_fill_id)
+          return missing('MissingBorderFillResource');
+      } else {
+        if (errors.has(target.section)) return missing('TableBorderSourceError');
+        const entry = reports.get(target.section);
+        if (entry?.count !== 1) return missing('MissingOrAmbiguousBorderReport');
+        if (entry.error) return missing('InvalidAppearanceSource');
+        const owner = entry.cells.get(target.tableNode)?.get(target.listNode),
+          binding = owner?.binding;
+        if (owner?.count !== 1 || !binding || binding.style_index === null)
+          return missing('MissingOrAmbiguousCellResourceBinding');
+        style = entry.report.styles[binding.style_index];
+        if (!style || style.id !== binding.border_fill_id)
+          return missing('MissingBorderFillResource');
+      }
+      let observed = parts.get(style);
+      if (!observed) {
+        observed =
+          content.format === 'hwp5'
+            ? {
+                edges: Object.fromEntries(names.map((name, i) => [name, h5Edge(style.borders[i])])),
+                fill: h5Fill(style),
+                diagonal: h5Diagonal(style),
+              }
+            : {
+                edges: Object.fromEntries(
+                  names.map((name, i) => [
+                    name,
+                    hxEdge(style.edges[i], style.source_color_profile),
+                  ]),
+                ),
+                fill: hxFill(style),
+                diagonal: hxDiagonal(style),
+              };
+        parts.set(style, observed);
+      }
       return finish(
         {
           format: content.format,
@@ -373,44 +453,16 @@ export function observeTableCellAppearance(content, target) {
           listNode: target.listNode,
           styleId: style.id,
         },
-        Object.fromEntries(names.map((name, i) => [name, h5Edge(style.borders[i])])),
-        h5Fill(style),
-        h5Diagonal(style),
+        observed.edges,
+        observed.fill,
+        observed.diagonal,
       );
+    } catch {
+      return missing('InvalidAppearanceSource');
     }
-    if (content.tableBorderSourceErrors?.some((entry) => entry?.section === target.section))
-      return missing('TableBorderSourceError');
-    const reports = (content.tableBorderSources ?? []).filter(
-      (report) => report?.section === target.section,
-    );
-    if (reports.length !== 1) return missing('MissingOrAmbiguousBorderReport');
-    const report = decodeTableBorderSources(new TextEncoder().encode(JSON.stringify(reports[0])));
-    let binding,
-      count = 0;
-    for (const candidate of report.cells)
-      if (candidate.table_node === target.tableNode && candidate.list_node === target.listNode) {
-        binding = candidate;
-        count++;
-      }
-    if (count !== 1 || !binding || binding.style_index === null)
-      return missing('MissingOrAmbiguousCellResourceBinding');
-    style = report.styles[binding.style_index];
-    if (!style || style.id !== binding.border_fill_id) return missing('MissingBorderFillResource');
-    return finish(
-      {
-        format: content.format,
-        section: target.section,
-        tableNode: target.tableNode,
-        listNode: target.listNode,
-        styleId: style.id,
-      },
-      Object.fromEntries(
-        names.map((name, i) => [name, hxEdge(style.edges[i], style.source_color_profile)]),
-      ),
-      hxFill(style),
-      hxDiagonal(style),
-    );
-  } catch {
-    return missing('InvalidAppearanceSource');
-  }
+  };
+}
+/** Pure current DTO observation; no mutation, resource permission or cross-call cache. */
+export function observeTableCellAppearance(content, target) {
+  return createTableCellAppearanceObserver(content)(target);
 }

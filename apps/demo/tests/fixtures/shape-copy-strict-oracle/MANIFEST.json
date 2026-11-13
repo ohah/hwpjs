@@ -1,0 +1,86 @@
+{
+  "entry": "js/table-cell-appearance-observation.mjs",
+  "files": {
+    "js/table-cell-appearance-observation.mjs": {
+      "sha256": "430fe92bed0b9151dbfbc41c0e7db2dffa2c195b87930396d43ea45e1deaed73",
+      "bytes": 16929
+    },
+    "js/border-fill-values.mjs": {
+      "sha256": "4727d5e6b30a6dae36d92c240815f73eb4440bc060b6fea43d90c5e2d08d845b",
+      "bytes": 509
+    },
+    "js/hwp5-border-fill-sources.mjs": {
+      "sha256": "95c0191bf83fea0bb4611819dfe43d3d54b50e1ae5afaf26e96cc58c3c27852d",
+      "bytes": 3598
+    },
+    "js/hwpx-table-border-sources.mjs": {
+      "sha256": "a6b923a5d30203febc24dfcdf85113c53936522dace523f4cdf45c10464ada15",
+      "bytes": 3083
+    },
+    "js/hwpx-fill-brushes.mjs": {
+      "sha256": "4958ed0f9967687a76fca97fe735b148626ab8f0fb39b6c03ac7f9f69aed4183",
+      "bytes": 2413
+    },
+    "js/hwpx-document-provenance.mjs": {
+      "sha256": "366ec476e7bc2587f2414b56ff123656987458f1ab89e53733377a95e691ece6",
+      "bytes": 2360
+    },
+    "js/character-color-args.mjs": {
+      "sha256": "16cb255a564ff5913c4b0c8eeb96878ca161f8511fe283c3c74eda5b6e8efe8b",
+      "bytes": 364
+    },
+    "web/preview/colorref-css.mjs": {
+      "sha256": "24cca508f3c27a9b817d40db13b209667c813a439475fc9f92c34b2f0dd8c0ea",
+      "bytes": 313
+    },
+    "web/preview/rgb-css.mjs": {
+      "sha256": "10f1d0baae0765a1dd51356ffb9d4a90ff8ae4ede6b671b3c256a9491cece013",
+      "bytes": 242
+    },
+    "web/preview/table-semantic-fill-source.mjs": {
+      "sha256": "9ce20685422deba889e388b9667714e15e2f0bfb47f759a8122898efd99ab94d",
+      "bytes": 5977
+    },
+    "web/preview/table-semantic-face-fill.mjs": {
+      "sha256": "55e2fbae8859884c681a836bc36cb4d01a19eee9d06dbf5db9ad74bc78644f4d",
+      "bytes": 2244
+    },
+    "web/preview/drawing-gradient-source.mjs": {
+      "sha256": "0c1b9a1e9ef434fab5d403d07e42abad112e1957e50fcae50bb5745f3073b9aa",
+      "bytes": 1851
+    },
+    "web/preview/drawing-solid-fill.mjs": {
+      "sha256": "1bb6837f469bd0942d50d43b913bb8a62f11945e275577741ca8e78a47098229",
+      "bytes": 2178
+    },
+    "web/preview/selected-fill-plan.mjs": {
+      "sha256": "300f0df55eba46cd2afb0f7cd6528c84f857000b132a7d0721e5c339b3c5c338",
+      "bytes": 1650
+    },
+    "web/preview/drawing-pattern-fill.mjs": {
+      "sha256": "9e2578a5bbc4d431551d2f7612f9ef7e62370976a9912b5a3cf4ee05b8188749",
+      "bytes": 2137
+    },
+    "web/preview/gradient-step-stops.mjs": {
+      "sha256": "4f3ccdaa3d5727030fbf07814fdafd2fa819996164c3a669d687aae1d7a127f3",
+      "bytes": 1607
+    },
+    "web/preview/table-image-fill.mjs": {
+      "sha256": "b26e89b215b76d68d354cf32009cd5c770bee36282bee7d1e3abf82de381aa58",
+      "bytes": 4279
+    },
+    "web/preview/table-image-tone.mjs": {
+      "sha256": "1c665eb79b167b60760d446b5b3748effe5bb81875225795960ae10fc6796c35",
+      "bytes": 2497
+    },
+    "js/hwp5-hatch-style.mjs": {
+      "sha256": "a4e5a6e2cdc1b072d2dcb8a001cab3d6e92972c1d3bbfaa3320a89cf5a9bb576",
+      "bytes": 340
+    },
+    "js/table-diagonal-directions.mjs": {
+      "sha256": "e581e4296aec6259741030b5f2a72fd32850d63f2a877c373d3cd560af8a424a",
+      "bytes": 1134
+    }
+  },
+  "provenance": "exact frozen pre-index implementation, test-only; no candidate wrapper"
+}

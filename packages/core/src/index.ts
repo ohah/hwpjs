@@ -249,3 +249,5 @@ export type {
   HwpxPageSettingsTarget,
   Hwp5PageSettingsTarget,
 } from './commands/page-settings-dto.ts';
+
+export { planCellAppearanceSelection } from './commands/cell-appearance-selection.ts';

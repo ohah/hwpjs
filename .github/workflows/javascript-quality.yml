@@ -53,6 +53,19 @@ jobs:
           test -f ./apps/docs/docs/public/editor/hwpjs/hwpjs.wasm || exit 1
           bun ./tools/build-packages.mjs --package=core --web --wasm="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
           bun ./tools/build-packages.mjs --package=vanilla --web --wasm="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
+      - name: Test save consent guidance and owned cell focus paint
+        timeout-minutes: 2
+        run: |
+          set -euo pipefail
+          for path in ./apps/demo/tests/save-layout-consent-guidance.test.mjs ./tests/hwp5/save-failure-guidance.test.mjs ./tests/canvas/cell-copy-focus-visual.test.mjs; do test -f "$path"; done
+          node --experimental-transform-types --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=30000 --test-reporter=tap \
+            ./apps/demo/tests/save-layout-consent-guidance.test.mjs \
+            ./tests/hwp5/save-failure-guidance.test.mjs \
+            ./tests/canvas/cell-copy-focus-visual.test.mjs | tee "$RUNNER_TEMP/hwpjs-save-cell-focus.tap"
+          grep -Eq '^# tests 56$' "$RUNNER_TEMP/hwpjs-save-cell-focus.tap"
+          grep -Eq '^# pass 56$' "$RUNNER_TEMP/hwpjs-save-cell-focus.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/hwpjs-save-cell-focus.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/hwpjs-save-cell-focus.tap"
       - name: Test ShapeCopy normal SDK Native and controlled DOM contracts
         timeout-minutes: 3
         shell: bash
@@ -60,7 +73,7 @@ jobs:
           set -euo pipefail
           test -f ./packages/core/dist/build-manifest.json
           test -f ./packages/vanilla/dist/build-manifest.json
-          node --test --test-concurrency=1 ./tools/tests/shape-copy-test-inputs.test.mjs
+          node --test --test-concurrency=1 ./tools/tests/shape-copy-test-inputs.test.mjs ./tools/tests/shape-copy-cell-test-inputs.test.mjs
           export HWPJS_SHAPE_COPY_INPUTS="$RUNNER_TEMP/hwpjs-shape-copy-inputs.json"
           export HWPJS_SHAPE_COPY_OUTPUT="$RUNNER_TEMP/hwpjs-shape-copy-cases"
           test ! -e "$HWPJS_SHAPE_COPY_INPUTS"
@@ -68,19 +81,33 @@ jobs:
           node ./tools/shape-copy-test-inputs.mjs \
             --wasm "$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm" \
             --out "$HWPJS_SHAPE_COPY_INPUTS"
+          export HWPJS_CELL_FIXTURE_INPUTS="$RUNNER_TEMP/hwpjs-shape-cell/cells.json"
+          export HWPJS_CELL_FOLLOWUP_FIXTURES="$RUNNER_TEMP/hwpjs-shape-cell/followup.json"
+          export HWPJS_CELL_OWNER_INPUTS="$RUNNER_TEMP/hwpjs-shape-cell/owner.json"
+          node --experimental-transform-types --max-old-space-size=512 \
+            --import ./tools/object-properties-test-css.mjs \
+            ./tools/shape-copy-cell-test-inputs.mjs --out "$RUNNER_TEMP/hwpjs-shape-cell"
           set -- \
             ./apps/demo/tests/shape-copy-native.test.mjs \
             ./apps/demo/tests/shape-copy-ui.test.mjs \
             ./apps/demo/tests/shape-copy-followup.test.mjs \
             ./apps/demo/tests/shape-copy-followup-ui.test.mjs \
-            ./apps/demo/tests/shape-copy-routing.test.mjs
+            ./apps/demo/tests/shape-copy-routing.test.mjs \
+            ./apps/demo/tests/shape-copy-cell.test.mjs \
+            ./apps/demo/tests/shape-copy-cell-ui.test.mjs \
+            ./apps/demo/tests/shape-copy-cell-observer.test.mjs \
+            ./apps/demo/tests/shape-copy-cell-observer-owner.test.mjs \
+            ./apps/demo/tests/shape-copy-cell-atomic-followup.test.mjs \
+            ./apps/demo/tests/shape-copy-cell-menu-focus.test.mjs \
+            ./tools/tests/table-cell-appearance-observation.test.mjs \
+            ./apps/demo/tests/table-cell-appearance-port.test.mjs
           for path in "$@" ./apps/demo/tests/shape-copy-native-fixture.mjs ./apps/demo/tests/shape-copy-followup-dom.mjs; do test -f "$path"; done
           node --experimental-transform-types --max-old-space-size=512 \
             --import ./tools/object-properties-test-css.mjs \
             --test --test-concurrency=1 --test-timeout=60000 --test-reporter=tap "$@" \
             | tee "$RUNNER_TEMP/hwpjs-shape-copy-node.tap"
-          grep -Eq '^# tests 59$' "$RUNNER_TEMP/hwpjs-shape-copy-node.tap"
-          grep -Eq '^# pass 59$' "$RUNNER_TEMP/hwpjs-shape-copy-node.tap"
+          grep -Eq '^# tests 275$' "$RUNNER_TEMP/hwpjs-shape-copy-node.tap"
+          grep -Eq '^# pass 275$' "$RUNNER_TEMP/hwpjs-shape-copy-node.tap"
           grep -Eq '^# fail 0$' "$RUNNER_TEMP/hwpjs-shape-copy-node.tap"
           grep -Eq '^# skipped 0$' "$RUNNER_TEMP/hwpjs-shape-copy-node.tap"
       - name: Preserve ShapeCopy focused evidence
@@ -92,6 +119,7 @@ jobs:
             ${{ runner.temp }}/hwpjs-shape-copy-node.tap
             ${{ runner.temp }}/hwpjs-shape-copy-inputs.json
             ${{ runner.temp }}/hwpjs-shape-copy-cases
+            ${{ runner.temp }}/hwpjs-shape-cell
             packages/core/dist/build-manifest.json
             packages/core/dist/wasm-artifact.json
           retention-days: 7

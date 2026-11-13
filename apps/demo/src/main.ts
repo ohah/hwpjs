@@ -78,6 +78,8 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       setDisplayOptions: (value) => ref.current?.surface?.setDisplayOptions(value) ?? false,
       getDisplayOptions: () => ref.current?.surface?.getDisplayOptions(),
       getContextPicture: () => ref.current?.surface?.getContextPicture(),
+      captureCellAppearanceSelection: () =>
+        ref.current?.surface?.captureCellAppearanceSelection?.() ?? null,
       captureSourceTableGridSelection: () =>
         ref.current?.surface?.captureSourceTableGridSelection?.() ?? null,
       captureGeneratedTableGridSelection: () =>
@@ -162,6 +164,7 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       setDisplayOptions: (value) => surface?.setDisplayOptions(value) ?? false,
       getDisplayOptions: () => surface?.getDisplayOptions(),
       getContextPicture: () => surface?.getContextPicture(),
+      captureCellAppearanceSelection: () => surface?.captureCellAppearanceSelection?.() ?? null,
       captureSourceTableGridSelection: () => surface?.captureSourceTableGridSelection?.() ?? null,
       captureGeneratedTableGridSelection: () =>
         surface?.captureGeneratedTableGridSelection?.() ?? null,

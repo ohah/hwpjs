@@ -241,9 +241,13 @@ export function createTableCellAppearancePort(
         reason: reason ? tableCellAppearanceReason(reason) : undefined,
       };
     },
-    async apply(captured: TableCellAppearanceCapture, draft: TableCellAppearanceDraft) {
+    async apply(
+      captured: TableCellAppearanceCapture,
+      draft: TableCellAppearanceDraft,
+      admitted: () => boolean = () => true,
+    ) {
       const source = sources.get(captured);
-      if (disposed || pending || !source)
+      if (disposed || pending || !source || !admitted())
         return {
           status: 'rejected-unapplied' as const,
           error: disposed
@@ -274,6 +278,7 @@ export function createTableCellAppearancePort(
       pending = true;
       try {
         return await selection.applyCapturedMutation(source, (current) => {
+          if (!admitted()) return { writeReason: 'StaleTableCellSelection' };
           const reason = writeReason(current.state);
           if (reason && reason !== 'CellAppearancePending') return { writeReason: reason };
           const checked = tableCellAppearanceValues(fixed, {
@@ -283,7 +288,7 @@ export function createTableCellAppearancePort(
             writeReason: null,
             ...readCurrent(current.state, current.cell),
           });
-          if (JSON.stringify(checked) !== fingerprint)
+          if (!admitted() || JSON.stringify(checked) !== fingerprint)
             return { writeReason: 'StaleTableCellSelection' };
           return {
             message: Object.freeze({

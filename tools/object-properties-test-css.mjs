@@ -3,6 +3,7 @@ import { registerHooks } from 'node:module';
 const styles = new Set([
   new URL('../apps/demo/src/object-properties.css', import.meta.url).href,
   new URL('../apps/demo/src/dialog-layer.css', import.meta.url).href,
+  new URL('../apps/demo/src/document-open-ui.css', import.meta.url).href,
 ]);
 registerHooks({
   load(url, context, next) {

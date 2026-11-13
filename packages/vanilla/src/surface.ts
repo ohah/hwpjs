@@ -1,3 +1,4 @@
+import { planCellAppearanceSelection } from '@hwpjs/core';
 // @ts-ignore Pure format admission shared with Core and the Worker.
 import { sourceTableCellWidthPlanForFormat } from '../../../web/preview/source-table-cell-width-format.mjs';
 import { openPrintPreview } from '../../../web/preview/print-preview-dialog.mjs';
@@ -2047,6 +2048,55 @@ export function createCanvasSurface({
     },
     registerCellBlockMenu(menu: HTMLElement, ownsInput?: (input: HTMLElement) => boolean): void {
       if (!closed && lease?.isActive() === true) direct.registerCellBlockMenu(menu, ownsInput);
+    },
+    /** F5 supplies a witness; Core validates canonical owners/capabilities, never pixels. */
+    captureCellAppearanceSelection() {
+      const state = editor.getEditorState();
+      const current = () =>
+        !closed &&
+        !nonTextHistoryPending &&
+        lease?.isActive() === true &&
+        !bridge?.busy() &&
+        !modalOpen() &&
+        editor.getEditorState() === state &&
+        state.status === 'ready' &&
+        state.stateVersion === observedStateVersion &&
+        displayed ===
+          `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}` &&
+        viewAllowsCurrentSelection() &&
+        renderer.historyModelMatches(state) &&
+        direct.settled();
+      if (!current() || !direct.hasCellBlock()) return null;
+      const captured = direct.captureSourceTableCellBlock('appearance');
+      if (!captured || !captured.current() || !current()) return null;
+      const witness = Object.freeze({
+        ...captured.witness,
+        cells: Object.freeze(
+          captured.witness.cells.map((c: any) =>
+            Object.freeze({ ...c, paragraphs: Object.freeze([...c.paragraphs]) }),
+          ),
+        ),
+      });
+      try {
+        planCellAppearanceSelection(state, witness);
+      } catch {
+        return null;
+      }
+      let invalid = false;
+      return Object.freeze({
+        state,
+        witness,
+        current() {
+          if (invalid) return false;
+          try {
+            if (current() && captured.current() && current()) return true;
+          } catch {
+            /* lost owner */
+          }
+          invalid = true;
+          return false;
+        },
+      });
     },
     captureSourceTableCellMerge() {
       const state = editor.getEditorState();

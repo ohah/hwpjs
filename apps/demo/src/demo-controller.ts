@@ -96,6 +96,7 @@ export interface DemoHost
   canRequestCellBlock?(requireFocus?: boolean): boolean;
   requestCellBlock?(extend?: boolean, fromContext?: boolean): boolean;
   hasCellBlock?(): boolean;
+  captureCellAppearanceSelection?(): import('./shape-copy-cell-port.ts').CellCopySelection | null;
   registerCellBlockMenu?(menu: HTMLElement, ownsInput?: (input: HTMLElement) => boolean): void;
   captureSourceTableCellSplit?(): TableCellSplitCapture | null;
   captureSourceTableCellMerge?(): {
@@ -190,6 +191,8 @@ export async function mountDemo(
   });
   const characterShapePort = createCharacterShapePort(editor);
   const shapeCopy = createShapeCopyTool({
+    getCellSelection: () => host?.captureCellAppearanceSelection?.() ?? null,
+    hasCellBlock: () => host?.hasCellBlock?.() ?? false,
     root,
     editor,
     onStatus: note,
@@ -508,7 +511,11 @@ export async function mountDemo(
     // Cell blocks carry display cells only. Keep edit commands scoped to ordinary caret selections.
     if (host?.hasCellBlock?.())
       for (const command of DEMO_COMMANDS) {
-        if (DEMO_COMMAND_REGISTRY[command].selection && command in availability)
+        if (
+          command !== 'format-copy' &&
+          DEMO_COMMAND_REGISTRY[command].selection &&
+          command in availability
+        )
           Object.assign(availability, {
             [command]: { enabled: false, reason: '셀 블록을 해제한 뒤 실행하세요.' },
           });
@@ -790,7 +797,16 @@ export async function mountDemo(
       return;
     }
     if (action.command !== 'save') throw Error('UnsupportedDemoAction');
-    const result = await editor.save(savePolicy.options());
+    const saveDocumentId = editor.getEditorState().documentId;
+    let result: Awaited<ReturnType<HeadlessEditor['save']>>;
+    try {
+      result = await editor.save(savePolicy.options());
+    } catch (error) {
+      const guidance = !closed && savePolicy.failureGuidance(error, saveDocumentId);
+      if (!guidance) throw error;
+      note(guidance);
+      return;
+    }
     const bytes = new Uint8Array(result.bytes.length);
     bytes.set(result.bytes);
     const url = URL.createObjectURL(new Blob([bytes], { type: 'application/octet-stream' }));
@@ -898,6 +914,9 @@ export async function mountDemo(
   try {
     if (shell.surfaceMount && mountHost) host = await mountHost(shell.surfaceMount, editor, note);
     if (shell.tableMenu) host?.registerCellBlockMenu?.(shell.tableMenu);
+    const shapeCopyHost = host;
+    for (const target of shell.shapeCopyFocusTargets)
+      shapeCopyHost?.registerCellBlockMenu?.(target, () => !closed && host === shapeCopyHost);
     contextMenu?.registerCellBlockMenu((menu, ownsInput) =>
       host?.registerCellBlockMenu?.(menu, ownsInput),
     );

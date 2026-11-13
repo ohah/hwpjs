@@ -1959,3 +1959,17 @@ node --expose-gc --max-old-space-size=384 --test --test-concurrency=1 \
 ```
 
 기존 canonical `dist/cli.mjs`/`dist/mcp.mjs`/`dist/hwpjs.wasm`를 소비합니다. Node 30개(실제 Native 28개 + 실제 패키지 CLI/MCP 묶음 1개 + receipt 1개), Python3 stdlib 독립 CFB/XML 일반/`-O`와 잘못된 기대값 반례를 포함합니다. readonly 거절 시 앞선 row/콤보 변경을 보존하고, 보호 셀/기대 행수 불일치 거절 시 앞선 폼 pending과 history/redo를 보존합니다. CLI/MCP는 별도 파일 세션이며 live Native history 공유를 주장하지 않습니다.
+
+## 저장 동의 안내와 셀 메뉴 포커스
+
+[저장 거부 안내](save-failure-guidance.md)와 [셀 모양 복사](cell-shape-copy.md)의 소스 경계를 검사합니다. 합성 안내25와 통제 paint31은 실제 GUI가 아닙니다.
+
+```sh
+node --experimental-transform-types --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=30000 \
+  apps/demo/tests/save-layout-consent-guidance.test.mjs tests/hwp5/save-failure-guidance.test.mjs \
+  tests/canvas/cell-copy-focus-visual.test.mjs
+```
+
+정상 Core/vanilla SDK와 명시한 기존 WASM으로 schema2 source ledger·artifact·Noori 두 형식 해시를 확인한 뒤 CI의 ShapeCopy 집중 단계가 기존261+menu focus14=275를 실행합니다. 새 테스트에서 SDK 대체 로더나 엔진 허용목록으로 입력 검사를 우회하지 않습니다. Native 컴파일 및 실제 브라우저·배포는 이 명령에 포함하지 않습니다.
+
+메뉴 강조의 focusin 후속은 실제 이벤트 순서의 `body 상태 blur → 등록 대상 focusin`을 통제한31개입니다. 저장 안내25는 앱23+기존 preview2이며 둘을 더한 CI synthetic 분모는56입니다. 같은 후보의 정상 Core/vanilla SDK를 새로 빌드한 후 기존 WASM879에서 ShapeCopy275와 metadata12를 별도로 검사합니다. 과거 synthetic47/source334를 새343의 증거로 재사용하지 않습니다.
