@@ -120,6 +120,7 @@ const icons = {
     ],
     ['rect', { x: '24', y: '7', width: '4', height: '18' }],
   ],
+  'edit-equation': [line('M5 5h21M5 27h21M24 5 12 16l12 11M5 21l4 5 5-13h12')],
   more: [
     ['circle', { cx: '7', cy: '16', r: '1.6', fill: 'currentColor' }],
     ['circle', { cx: '16', cy: '16', r: '1.6', fill: 'currentColor' }],

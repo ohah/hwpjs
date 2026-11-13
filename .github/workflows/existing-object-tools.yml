@@ -1,0 +1,47 @@
+name: Existing object editor tools
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/demo/src/**'
+      - 'apps/demo/tests/chart-data-*'
+      - 'apps/demo/tests/equation-*'
+      - 'apps/demo/tests/existing-object-tools-shell.test.mjs'
+      - 'apps/demo/tests/shape-copy-density.test.mjs'
+      - 'apps/demo/tests/shell.test.mjs'
+      - 'apps/demo/tests/fake-dom.mjs'
+      - 'apps/demo/tests/formatting-dialog-test-dom.ts'
+      - 'js/chart-point-batch.mjs'
+      - 'js/hwpx-equation-sources.mjs'
+      - 'web/preview/equation-controls.mjs'
+      - 'web/preview/equation-edit-state.mjs'
+      - 'tools/object-properties-test-css.mjs'
+      - '.github/workflows/existing-object-tools.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.20.0'
+      - name: Test existing object tools and shell lifecycle
+        env:
+          NODE_OPTIONS: '--experimental-transform-types --import ./apps/demo/tests/equation-style-preload.mjs'
+        run: |
+          node --test --test-concurrency=1 \
+            apps/demo/tests/chart-data-port.test.mjs \
+            apps/demo/tests/chart-data-controller.test.mjs \
+            apps/demo/tests/chart-data-view.test.mjs \
+            apps/demo/tests/equation-port.test.mjs \
+            apps/demo/tests/equation-tool.test.mjs \
+            apps/demo/tests/existing-object-tools-shell.test.mjs \
+            apps/demo/tests/shape-copy-density.test.mjs \
+            apps/demo/tests/shell.test.mjs

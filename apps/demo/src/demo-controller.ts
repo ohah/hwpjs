@@ -45,6 +45,8 @@ import { createSymbolDialogController } from './symbol-dialog-controller.ts';
 import { createSymbolInsertionPort } from './symbol-insertion-port.ts';
 import { createTableInsertTool } from './table-insert-tool.ts';
 import { createObjectPropertiesTool } from './object-properties-tool.ts';
+import { createChartDataTool } from './chart-data-tool.ts';
+import { createEquationTool } from './equation-tool.ts';
 import { createTableCellPropertiesTool } from './table-cell-properties-tool.ts';
 import { createTableCellAppearanceTool } from './table-cell-appearance-tool.ts';
 import { createClipboardBridge } from './clipboard-bridge.ts';
@@ -354,6 +356,24 @@ export async function mountDemo(
     onStatus: note,
     onPresentationChange: () => shell.update(),
   });
+  const chartData = createChartDataTool({
+    root,
+    editor,
+    onStatus: note,
+    onPresentationChange: () => shell.update(),
+    onClose: () => {
+      host?.focus?.();
+    },
+  });
+  const equation = createEquationTool({
+    root,
+    editor,
+    onStatus: note,
+    onPresentationChange: () => shell.update(),
+    onClose: () => {
+      host?.focus?.();
+    },
+  });
   const cellSplit = createTableCellSplitTool(root, editor, () => host, note);
   const presentation = (): DemoShellState => {
     const widthAvailability = host?.getSourceTableCellWidthAvailability?.();
@@ -396,6 +416,8 @@ export async function mountDemo(
       },
       ...textTools.presentation(),
       'insert-table': tableInsert.presentation(),
+      'edit-chart-data': chartData.presentation(),
+      'edit-equation': equation.presentation(),
       ...(host?.requestCellBlock
         ? { 'table-cell-block': cellBlock, 'table-cell-block-extend': cellBlock }
         : {}),
@@ -730,6 +752,14 @@ export async function mountDemo(
       objectProperties.open();
       return;
     }
+    if (action.command === 'edit-chart-data') {
+      chartData.open();
+      return;
+    }
+    if (action.command === 'edit-equation') {
+      equation.open();
+      return;
+    }
     if (action.command === 'font-name') {
       fontName.open(action.language);
       return;
@@ -977,6 +1007,8 @@ export async function mountDemo(
   } catch (error) {
     closed = true;
     cellSplit.dispose();
+    chartData.dispose();
+    equation.dispose();
     documentInsert.dispose();
     cancelFixtureRefresh();
     presentationRefresh.dispose();
@@ -1020,6 +1052,8 @@ export async function mountDemo(
       if (closed) return;
       closed = true;
       cellSplit.dispose();
+      chartData.dispose();
+      equation.dispose();
       documentInsert.dispose();
       formatting.dispose();
       cancelFixtureRefresh();

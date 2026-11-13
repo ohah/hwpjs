@@ -90,3 +90,112 @@
 .hwp-dialog-layer *::after {
   box-sizing: border-box;
 }
+
+/* Shape copy: independent layout for the existing label/text-node DOM. */
+.hwp-dialog-layer[data-role='shape-copy'] {
+  width: min(760px, calc(100vw - 24px));
+  max-height: min(640px, calc(100dvh - 32px));
+  font-size: 14px;
+  line-height: 1.5;
+}
+.hwp-dialog-layer[data-role='shape-copy'][open] {
+  display: flex;
+  flex-direction: column;
+}
+.hwp-dialog-layer[data-role='shape-copy'] .hwp-dialog-header,
+.hwp-dialog-layer[data-role='shape-copy'] .hwp-dialog-footer {
+  flex: 0 0 auto;
+}
+.hwp-dialog-layer[data-role='shape-copy'] .hwp-dialog-body {
+  min-height: 0;
+  max-height: none;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: 12px 16px;
+  overflow-wrap: anywhere;
+}
+.hwp-dialog-layer[data-role='shape-copy'] .hwp-dialog-body > p {
+  margin: 0 0 12px;
+}
+.hwp-dialog-layer[data-role='shape-copy'] .hwp-dialog-body > div {
+  display: grid;
+  gap: 12px;
+}
+.hwp-dialog-layer[data-role='shape-copy'] fieldset {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 6px 12px;
+  min-width: 0;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid #cbd4e6;
+  border-radius: 6px;
+  background: #fff;
+}
+.hwp-dialog-layer[data-role='shape-copy'] legend {
+  max-width: 100%;
+  padding: 0 6px;
+  font-weight: 600;
+  color: #334b70;
+}
+.hwp-dialog-layer[data-role='shape-copy'] label {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: start;
+  column-gap: 8px;
+  min-width: 0;
+  min-height: 36px;
+  padding: 7px 8px;
+  border-radius: 4px;
+  background: #f3f6fb;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.hwp-dialog-layer[data-role='shape-copy'] label:has(input:disabled) {
+  color: #536078;
+  background: #f6f7f9;
+  cursor: not-allowed;
+}
+.hwp-dialog-layer[data-role='shape-copy'] label:has(input:checked) {
+  background: #e7effc;
+  box-shadow: inset 0 0 0 1px #7096d2;
+}
+.hwp-dialog-layer[data-role='shape-copy'] label:has(input:focus-visible) {
+  outline: 2px solid #2463c4;
+  outline-offset: 1px;
+}
+.hwp-dialog-layer[data-role='shape-copy'] label input {
+  width: 16px;
+  height: 16px;
+  margin: 3px 0 0;
+  accent-color: #2463c4;
+}
+.hwp-dialog-layer[data-role='shape-copy'] fieldset > p {
+  grid-column: 1 / -1;
+  margin: 4px 0 0;
+  color: #536078;
+}
+.hwp-dialog-layer[data-role='shape-copy'] .hwp-dialog-body > [role='status'] {
+  margin: 12px 0 0;
+  padding: 8px 10px;
+  border-left: 3px solid #7096d2;
+  background: #eef3fb;
+}
+.hwp-dialog-layer[data-role='shape-copy'] .hwp-dialog-footer {
+  padding: 10px 16px;
+  border-top: 1px solid #cbd4e6;
+  background: #fbfcff;
+}
+.hwp-dialog-layer[data-role='shape-copy'] .hwp-dialog-footer button {
+  min-width: 72px;
+  min-height: 36px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 580px) {
+  .hwp-dialog-layer[data-role='shape-copy'] fieldset {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

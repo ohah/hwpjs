@@ -1,0 +1,41 @@
+.hwp-dialog-layer[data-role='equation-editor'] {
+  width: min(640px, calc(100vw - 24px));
+}
+.hwp-dialog-layer[data-role='equation-editor'] form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: end;
+}
+.hwp-dialog-layer[data-role='equation-editor'] label {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+}
+.hwp-dialog-layer[data-role='equation-editor'] input {
+  width: 100px;
+}
+.hwp-dialog-layer[data-role='equation-editor'] select {
+  max-width: 100%;
+}
+.hwp-dialog-layer[data-role='equation-editor'] fieldset,
+.hwp-dialog-layer[data-role='equation-editor'] form > p {
+  width: 100%;
+  margin: 0;
+  min-width: 0;
+}
+.hwp-dialog-layer[data-role='equation-editor'] textarea {
+  display: block;
+  width: 100%;
+  min-height: 120px;
+  margin: 8px 0;
+  resize: vertical;
+  font:
+    14px/1.5 ui-monospace,
+    monospace;
+}
+.hwp-dialog-layer[data-role='equation-editor'] [role='status'] {
+  overflow-wrap: anywhere;
+  color: #43516b;
+}

@@ -46,6 +46,8 @@ export const DEMO_COMMAND_REGISTRY = Object.freeze({
   'table-cell-background': entry('셀 배경', '표', true),
   'table-cell-border': entry('셀 테두리', '표', true),
   'insert-chart': entry('차트', '삽입', true),
+  'edit-chart-data': entry('기존 차트 데이터 편집', '개체'),
+  'edit-equation': entry('기존 수식 편집', '개체'),
   'insert-footnote': entry('각주', '삽입', true),
   'insert-endnote': entry('미주', '삽입', true),
   'insert-link': entry('링크', '삽입', true),

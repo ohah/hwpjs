@@ -92,6 +92,8 @@ const toolGroups: readonly (readonly [string, readonly Tool[]])[] = [
 const extraTools: readonly Tool[] = [
   ['save', '저장하기', 'save'],
   ['insert-chart', '차트', 'insert-chart'],
+  ['edit-chart-data', DEMO_COMMAND_REGISTRY['edit-chart-data'].label, 'insert-chart'],
+  ['edit-equation', DEMO_COMMAND_REGISTRY['edit-equation'].label, 'edit-equation'],
   ['word-count', '문서 통계', 'paragraph-properties'],
 ];
 const commands = [...toolGroups.flatMap(([, tools]) => tools), ...extraTools];
@@ -149,7 +151,7 @@ const menus: readonly [string, readonly DemoCommand[]][] = [
     ],
   ],
   ['검토', ['insert-comment']],
-  ['도구', ['word-count']],
+  ['도구', ['edit-chart-data', 'edit-equation', 'word-count']],
 ];
 const labels = new Map<DemoCommand, string>([
   ...commands.map(([id, label]) => [id, label] as [DemoCommand, string]),

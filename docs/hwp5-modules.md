@@ -576,3 +576,5 @@
 - [편집 용지 통합 범위와 검증](page-settings-delivery.md) — 형식별 계약을 공유하는 SDK·CLI·웹 연결과 현재 합본 검증.
 
 - [양식 AutoSize의 측정과 편집](hwp5-form-text-layout-flags.md)
+
+[기존 차트·수식 편집 도구](existing-object-editor-ui.md)는 최신 데모의 HWPX 개체 조회·수정과 Core token·창 수명·검증 범위를 소유합니다.
