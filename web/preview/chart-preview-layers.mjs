@@ -40,6 +40,7 @@ export function previewChartLayers(content, layout, columnWidth, read) {
       output.pending++;
       continue;
     }
+    if (resource.provisional === true) output.pending++;
     const value = resource.value;
     const primitives = chartPreviewPrimitives(value);
     if (primitives.state !== 'ready') {
@@ -157,7 +158,12 @@ export function previewChartLayers(content, layout, columnWidth, read) {
       refuse(placement.error ?? placement.state);
       continue;
     }
-    output.items.push({ target, primitives, ...placement.rectangle });
+    output.items.push({
+      target,
+      primitives,
+      provisional: resource.provisional === true,
+      ...placement.rectangle,
+    });
     output.height = Math.max(output.height, placement.rectangle.y + placement.rectangle.height);
   }
   return output;

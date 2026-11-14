@@ -13,7 +13,9 @@ export function projectDraftAnchoredObjects(content, objects, draft, stateField 
     if (
       object.section !== draft.section ||
       object.paragraph !== draft.paragraph ||
-      !['located', 'reference_located'].includes(object[stateField])
+      !(typeof stateField === 'function'
+        ? stateField(object)
+        : ['located', 'reference_located'].includes(object[stateField]))
     )
       return [object];
     const unit = object.anchorUnit;

@@ -53,6 +53,8 @@ jobs:
           test -f ./apps/docs/docs/public/editor/hwpjs/hwpjs.wasm || exit 1
           bun ./tools/build-packages.mjs --package=core --web --wasm="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
           bun ./tools/build-packages.mjs --package=vanilla --web --wasm="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
+      - name: Test chart typing display continuity
+        run: node --test tests/hwpx/chart-display-continuity.test.mjs
       - name: Test synthetic HWPX chart and equation creation
         timeout-minutes: 2
         shell: bash

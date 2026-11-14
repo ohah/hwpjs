@@ -16,3 +16,5 @@
 [주 눈금선 계약](hwpx-chart-major-ticks.md)의 변경은 2D 묶은 막대의 원본 명시 주 눈금 종류를 기존 preview 축에 반영하는 작은 구현입니다. 전체 차트 레이아웃, 웹한글기안기 동일 렌더링, 모든 타입 지원으로 확대하지 않습니다.
 
 이 표는 HWPX OOXML chart 경로의 source 조사입니다. HWP5 차트의 같은 수준 파싱·표시 지원으로 승계하지 않습니다.
+
+입력 중 표시 자원의 수명과 임시 화면의 경계는 [차트 입력 화면 유지](chart-input-display-continuity.md)가 소유합니다.

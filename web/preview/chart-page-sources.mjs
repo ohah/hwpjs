@@ -1,3 +1,4 @@
+import { chartDisplayMatchesOle } from './chart-source-frame.mjs';
 import { chartPreviewPrimitives } from './chart-preview-primitives.mjs';
 import { chartInlineItem } from './chart-inline.mjs';
 
@@ -71,29 +72,7 @@ export function selectChartPageSources(content, read) {
       return fail(resource?.error ? 'UnavailableChartPageSource' : 'PendingChartPageSource');
     const display = resource.value,
       source = ole.source;
-    const geometryKeys = [
-      'width',
-      'height',
-      'width_relative',
-      'height_relative',
-      'treat_as_character',
-      'horizontal_offset',
-      'vertical_offset',
-    ];
-    if (
-      display.pair?.section_ordinal !== ole.section ||
-      display.pair?.wrapper_node !== ole.chartWrapper ||
-      display.host?.wrapper_node !== ole.chartWrapper ||
-      geometryKeys.some((k) => display.host.geometry?.[k] !== source.geometry?.[k]) ||
-      ['flags', 'relations'].some(
-        (k) =>
-          !Array.isArray(display.host.position?.[k]) ||
-          !Array.isArray(source.position?.[k]) ||
-          display.host.position[k].length !== source.position[k].length ||
-          display.host.position[k].some((v, i) => v !== source.position[k][i]),
-      )
-    )
-      return fail('ChartOleGeometryMismatch');
+    if (!chartDisplayMatchesOle(display, ole)) return fail('ChartOleGeometryMismatch');
     if (![true, false].includes(source.geometry?.treat_as_character))
       return fail('UnsupportedInlineChartPage');
     const inlineItem = source.geometry.treat_as_character

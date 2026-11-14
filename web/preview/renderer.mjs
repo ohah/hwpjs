@@ -138,6 +138,11 @@ import { layoutPageContent } from './page-content-layout.mjs';
 import { layoutHwp5PageContent } from './hwp5-page-layout.mjs';
 import { HWP5_WINDOW_LAYOUT_SCOPE, layoutHwp5WindowContent } from './hwp5-window-page-layout.mjs';
 import { projectDraftAnchoredObjects } from './anchored-object-draft.mjs';
+import { projectDraftChartTargets } from './chart-draft.mjs';
+import {
+  compatibleChartPreviewKeys,
+  createChartPreviewResourceReader,
+} from './chart-preview-resource-reader.mjs';
 import { projectDraftDrawings } from './drawing-draft.mjs';
 import { paintRowTransform } from './row-transform-paint.mjs';
 import { paintTabLeader } from './tab-leader-paint.mjs';
@@ -294,6 +299,20 @@ export function createRenderer(
       reflow();
     },
   });
+  let chartPreviewRead = (section, wrapper) => chartResources.status(section, wrapper);
+  const beginChartReads = () => {
+    const pending = [];
+    if (closed || content.chartDisplayAvailable !== true || !chartReader) return pending;
+    for (const target of content.chartTargets ?? []) {
+      if (
+        !target.error_name &&
+        Number.isInteger(target.paragraph) &&
+        Number.isInteger(target.anchorUnit)
+      )
+        pending.push(chartResources.load(target.section, target.wrapper).catch(() => {}));
+    }
+    return pending;
+  };
   let pictureLayers = { behind: [], front: [] };
   let paintedPictures = { behind: [], front: [] };
   let picturePaintOrder = [];
@@ -513,11 +532,20 @@ export function createRenderer(
       formPaintScrollLeft = viewportElement.scrollLeft ?? 0;
     const { logicalWidth: width, logicalHeight: height, ratio, pixelWidth, pixelHeight } = metrics;
     if (!output) {
-      const { pendingPictures, resourcesPending } = prepareVisibleResources(metrics);
+      const pendingCharts = beginChartReads();
+      const { pendingPictures, resourcesPending: picturesPending } =
+        prepareVisibleResources(metrics);
+      const chartsPending = (content.chartTargets ?? []).some((target) => {
+        if (target.error_name) return false;
+        const entry = chartResources.status(target.section, target.wrapper);
+        return entry && !entry.value && !entry.error;
+      });
+      const resourcesPending = picturesPending || chartsPending;
+      canvas.dataset.chartPending = String(chartsPending);
       // Keep the last complete frame until the visible sources have been checked.
       // In particular, never erase a picture while an unchanged payload is read
       // again after a text operation. Failed sources settle and paint diagnostics.
-      canvas.dataset.picturePending = String(Boolean(resourcesPending));
+      canvas.dataset.picturePending = String(Boolean(picturesPending));
       if (resourcesPending && !pictureWaitExpired) {
         holdingFrame = true;
         canvas.dataset.paintPending = 'true';
@@ -529,7 +557,7 @@ export function createRenderer(
             pictureWaitExpired = true;
             schedule();
           }, pictureWaitMs);
-        Promise.all(pendingPictures).then(schedule);
+        Promise.all([...pendingPictures, ...pendingCharts]).then(schedule);
         return;
       }
       stopPictureWait();
@@ -840,35 +868,34 @@ export function createRenderer(
     );
     const chartPaintFailures = [],
       chartAnnotations = [];
-    if (!draft)
-      for (const item of chartLayers.items) {
-        if (item.y + item.height <= viewport.scrollTop || item.y >= viewport.scrollTop + height)
-          continue;
-        try {
-          if (
-            paintChartPreview(ctx, item, viewport.scrollTop, (summary) =>
-              chartAnnotations.push({
-                section: item.target.section,
-                wrapper: item.target.wrapper,
-                ...summary,
-              }),
-            )
-          )
-            paintedCharts.push(item);
-          else
-            chartPaintFailures.push({
+    for (const item of chartLayers.items) {
+      if (item.y + item.height <= viewport.scrollTop || item.y >= viewport.scrollTop + height)
+        continue;
+      try {
+        if (
+          paintChartPreview(ctx, item, viewport.scrollTop, (summary) =>
+            chartAnnotations.push({
               section: item.target.section,
               wrapper: item.target.wrapper,
-              reason: 'ChartPreviewPaintUnavailable',
-            });
-        } catch (error) {
+              ...summary,
+            }),
+          )
+        )
+          paintedCharts.push(item);
+        else
           chartPaintFailures.push({
             section: item.target.section,
             wrapper: item.target.wrapper,
-            reason: error?.message || 'ChartPreviewPaintFailed',
+            reason: 'ChartPreviewPaintUnavailable',
           });
-        }
+      } catch (error) {
+        chartPaintFailures.push({
+          section: item.target.section,
+          wrapper: item.target.wrapper,
+          reason: error?.message || 'ChartPreviewPaintFailed',
+        });
       }
+    }
     const sourceSpacing = paintedCharts.filter(
       (item) =>
         item.primitives.spacing?.gap_width_defaulted === false &&
@@ -1558,15 +1585,22 @@ export function createRenderer(
     pictureDisplay = {
       ...display,
       pictures: projectDraftPictures(content, draft),
+      ...(Array.isArray(content.chartTargets)
+        ? { chartTargets: projectDraftChartTargets(content, draft) }
+        : {}),
+      ...(Array.isArray(content.oles)
+        ? { oles: projectDraftAnchoredObjects(content, content.oles, draft) }
+        : {}),
       lines: projectDraftAnchoredObjects(content, content.lines, draft),
       drawings: projectDraftDrawings(content, draft),
       rectangles: projectDraftDrawings({ ...content, drawings: content.rectangles }, draft),
       checkBoxes: projectDraftAnchoredObjects(content, content.checkBoxes, draft, 'siteState'),
     };
+    chartPreviewRead = createChartPreviewResourceReader(pictureDisplay, chartResources, {
+      allowProvisional: !documentOutput,
+    });
     pictures = inlinePictureIndex(pictureDisplay);
-    const inlineCharts = inlineChartIndex(pictureDisplay, (section, wrapper) =>
-      chartResources.status(section, wrapper),
-    );
+    const inlineCharts = inlineChartIndex(pictureDisplay, chartPreviewRead);
     const formOwners = [
       ...new Set([
         ...(pictureDisplay.checkBoxes ?? []),
@@ -1640,7 +1674,7 @@ export function createRenderer(
             windowFragment ? {} : { oversizeInlineTablePreview: true },
           )
         : layoutPageContent(pictureDisplay, measure, undefined, {
-            chartDisplay: (section, wrapper) => chartResources.status(section, wrapper),
+            chartDisplay: chartPreviewRead,
             oversizeInlineTablePreview: true,
           });
     const logicalWidth = Math.max(1, viewport.clientWidth / viewScale - 2 * TEXT_LEFT);
@@ -1663,7 +1697,10 @@ export function createRenderer(
     if (
       !draft &&
       ['hwp5', 'hwpx'].includes(pictureDisplay.format) &&
-      pageLayout.state === 'paginated'
+      pageLayout.state === 'paginated' &&
+      (pictureDisplay.chartTargets ?? []).every((target) =>
+        Boolean(chartResources.get(target.section, target.wrapper)?.value),
+      )
     )
       cellHeightMeasurement = {
         source: content,
@@ -1671,7 +1708,9 @@ export function createRenderer(
         createMeasure: () =>
           createPreviewTextMeasure(ctx, fontAt, {
             pictures,
-            charts: inlineCharts,
+            charts: inlineChartIndex(pictureDisplay, (section, wrapper) =>
+              chartResources.status(section, wrapper),
+            ),
             checkBoxes: inlineCheckBoxes,
             forms: inlineForms,
             projectionMemo: true,
@@ -1694,9 +1733,7 @@ export function createRenderer(
     layout = retainOverflowPreviewBarrier(content, layout, previousOverflowLayout);
     overflowPreviewDocument = resourceDocument;
     pictureLayers = previewPictureLayers(pictureDisplay, layout, logicalWidth);
-    chartLayers = previewChartLayers(content, layout, logicalWidth, (section, wrapper) =>
-      chartResources.status(section, wrapper),
-    );
+    chartLayers = previewChartLayers(pictureDisplay, layout, logicalWidth, chartPreviewRead);
     lineLayers = previewLineLayers(pictureDisplay, layout, logicalWidth);
     drawingOutlineLayers = previewDrawingOutlineLayers(pictureDisplay, layout);
     layout.drawingOutlineCoverage = {
@@ -1996,7 +2033,12 @@ export function createRenderer(
     },
     chartReader(read) {
       queuedTypingHold = null;
-      chartReader = read;
+      if (chartReader !== read) {
+        chartReader = read;
+        resourceGeneration++;
+        chartResources.clear();
+        if (content.chartDisplayAvailable) reflow();
+      }
     },
     chartDisplay(section, wrapper) {
       return chartResources.get(section, wrapper);
@@ -2122,10 +2164,17 @@ export function createRenderer(
           paragraphFlowReuse.clear();
         }
       }
+      if (
+        changedResourceDocument ||
+        providerEpochChanged ||
+        !Object.hasOwn(options, 'resourceEpoch')
+      )
+        chartResources.clear();
+      else if (nextResourceEpoch !== resourceEpoch)
+        chartResources.refresh(value.chartTargets, compatibleChartPreviewKeys(content, value));
       resourceProviderEpoch = nextProviderEpoch;
       resourceEpoch = nextResourceEpoch;
       resourceDocument = nextResourceDocument;
-      chartResources.clear();
       ownedBodyDraftProjection = null;
       content = value;
       geometryEvidence = nextGeometryEvidence;
@@ -2135,15 +2184,7 @@ export function createRenderer(
       paragraphLookup.clear();
       draft = null;
       resizeGuide = null;
-      if (content.chartDisplayAvailable === true && chartReader)
-        for (const target of content.chartTargets ?? []) {
-          if (
-            !target.error_name &&
-            Number.isInteger(target.paragraph) &&
-            Number.isInteger(target.anchorUnit)
-          )
-            chartResources.load(target.section, target.wrapper).catch(() => {});
-        }
+      if (documentOutput || !Object.hasOwn(options, 'resourceEpoch')) beginChartReads();
       if (!preserveScroll) {
         selectedPicture = null;
         canvas.dataset.selectedPicture = '';
