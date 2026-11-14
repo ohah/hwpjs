@@ -23,6 +23,8 @@
     "headless"
   ],
   "fixtures": [
+    "chart-data-edit.hwpx",
+    "equation-edit.hwpx",
     "noori.hwp",
     "noori.hwpx",
     "c48ff5f6686da9fa-noori.hwp",
@@ -168,7 +170,7 @@
     {
       "path": "api/main.js",
       "bytes": 21584,
-      "sha256": "1852887f0bbbbf2ad4ccefd8079b0c65bcfe34c4dc849f9386f654e4f6307d31"
+      "sha256": "c403a06ef1cafb7b84daeb202274696eecb29d979c42c4b33083e98e355df0e6"
     },
     {
       "path": "api/playground.js",
@@ -369,6 +371,11 @@
       "path": "assets/core-DMFts_YU.js",
       "bytes": 1555,
       "sha256": "71d583457dd2d1d799f7223514697e8b58d13c5db7649cca7c6f0f8a3ca0b6fd"
+    },
+    {
+      "path": "assets/core-DtunxvTz.js",
+      "bytes": 1931,
+      "sha256": "d9228f36839905b86aa45249df67219c7a03a0af1035e235caa1cc5caeac3d83"
     },
     {
       "path": "assets/core-Dwjr87FZ.js",
@@ -1121,6 +1128,11 @@
       "sha256": "797c97691147fdd7df3596e29e87c3df51538425cc5b7764a22aee22f9d9d6e9"
     },
     {
+      "path": "assets/dist-CT6ydeVS.js",
+      "bytes": 1285612,
+      "sha256": "c8b7406d9a939f13c4392bead25535e1d14e15ca53485b0d2e35c510a9b52891"
+    },
+    {
       "path": "assets/dist-CUtCYmQC.js",
       "bytes": 1259875,
       "sha256": "eda3921084ad867ee7e8ea9fde5b7dfb1c9b2b5768eb74d980118afc88a0945a"
@@ -1174,6 +1186,16 @@
       "path": "assets/dist-D8uHpYuR.js",
       "bytes": 170000,
       "sha256": "4205d233d7e292a334926eff3e0da5fd4dd4edc46080910406238c9865c13fcf"
+    },
+    {
+      "path": "assets/dist-Darq8fuO.js",
+      "bytes": 57,
+      "sha256": "89e4cdc307de83c2a5b872630f415f0d28186bdfa79f05d97eec14a7065a8bef"
+    },
+    {
+      "path": "assets/dist-DAsQDj20.js",
+      "bytes": 173591,
+      "sha256": "4c558b418945c435eeddaf0a50a41510527187c5ddeaf5e8dc88209c07e91133"
     },
     {
       "path": "assets/dist-DCGiPipx.js",
@@ -2666,6 +2688,11 @@
       "sha256": "bb6d84425086743eae855ae22643147a35391a371cf5eddc186e133b4367a13d"
     },
     {
+      "path": "assets/main-8HN7kQfg.js",
+      "bytes": 674435,
+      "sha256": "342deed406de6ca6b20f3b0150460e203d2d55ac8d0788ace99e7eccbc2cc71e"
+    },
+    {
       "path": "assets/main-Alt1-SWf.js",
       "bytes": 648748,
       "sha256": "9f666e3395832794428a0b204bd7721ecc21b03967f52360ecc2e7efe06ef3f9"
@@ -3728,27 +3755,27 @@
     {
       "path": "demo/headless/index.html",
       "bytes": 1283,
-      "sha256": "a143bf18d34bc102804a7a1e49bc85ec403ae79ad733e40b3388461e08ebb12d"
+      "sha256": "c8771a229b86f8f2576010a91ea67f7b83f3b51c933114f042272a7312ff0ec8"
     },
     {
       "path": "demo/react/index.html",
       "bytes": 1283,
-      "sha256": "a143bf18d34bc102804a7a1e49bc85ec403ae79ad733e40b3388461e08ebb12d"
+      "sha256": "c8771a229b86f8f2576010a91ea67f7b83f3b51c933114f042272a7312ff0ec8"
     },
     {
       "path": "demo/svelte/index.html",
       "bytes": 1283,
-      "sha256": "a143bf18d34bc102804a7a1e49bc85ec403ae79ad733e40b3388461e08ebb12d"
+      "sha256": "c8771a229b86f8f2576010a91ea67f7b83f3b51c933114f042272a7312ff0ec8"
     },
     {
       "path": "demo/vanilla/index.html",
       "bytes": 1283,
-      "sha256": "a143bf18d34bc102804a7a1e49bc85ec403ae79ad733e40b3388461e08ebb12d"
+      "sha256": "c8771a229b86f8f2576010a91ea67f7b83f3b51c933114f042272a7312ff0ec8"
     },
     {
       "path": "fixture-catalog.json",
-      "bytes": 12892,
-      "sha256": "702b3cb5e13c01656d1d65e36478882416c882258bae87604f9eb8b6cac9f926"
+      "bytes": 13192,
+      "sha256": "4cf4340b3a00e2879e6939598abb8a2a8ac75c7182308267fd559b235f339fd0"
     },
     {
       "path": "fixtures/083de85813a1c050-noori.hwpx",
@@ -3841,6 +3868,11 @@
       "sha256": "9631ed976d646daddb6ae89c510ea1aa768c7d0fec10116deda3b911934e5123"
     },
     {
+      "path": "fixtures/chart-data-edit.hwpx",
+      "bytes": 16095,
+      "sha256": "2a3e2cec62233c0a49cf0acb441f4b5e0266d742a91e5ff6018ca42237ec4997"
+    },
+    {
       "path": "fixtures/chart.hwp",
       "bytes": 56320,
       "sha256": "7a4f1f312538cc1450427ae64bc351d6ea8e1bc88a4c7cb5b4ecf1986d14caaa"
@@ -3854,6 +3886,11 @@
       "path": "fixtures/distribution.hwp",
       "bytes": 282624,
       "sha256": "0d32f102ec60f24dd0479d229ab5bede21975ec81f8505c7ebfcc0da2f225e61"
+    },
+    {
+      "path": "fixtures/equation-edit.hwpx",
+      "bytes": 8225,
+      "sha256": "1a197476622a65221d2bb27de61fa2e7850159c8c3341a4d5c7669e922cd3c46"
     },
     {
       "path": "fixtures/example.hwp",
@@ -4263,7 +4300,7 @@
     {
       "path": "index.html",
       "bytes": 1235,
-      "sha256": "5c4a26973bf1ab1b2ad1b40c90ac59e1825519f370d30c1bd2b3bacd265d5192"
+      "sha256": "64addb86cc837044dd505fd74027f369493eedd062928e2257e7b5dd1e00039a"
     },
     {
       "path": "LICENSE.txt",
@@ -5663,7 +5700,7 @@
     {
       "path": "sdk/current/core.js",
       "bytes": 47,
-      "sha256": "1592659f2d3fe85430440a8eb9cbd7cca51df9c48eec4b3255e76ef67aebc02f"
+      "sha256": "10ce477bd45c5d9a4ee2abfd0bc0f24284941d2d0fb52cf5bb5449013f999982"
     },
     {
       "path": "sdk/current/native-geometry.js",

@@ -1,7 +1,23 @@
 {
   "schemaVersion": 1,
-  "catalogSHA256": "702b3cb5e13c01656d1d65e36478882416c882258bae87604f9eb8b6cac9f926",
+  "catalogSHA256": "4cf4340b3a00e2879e6939598abb8a2a8ac75c7182308267fd559b235f339fd0",
   "files": [
+    {
+      "id": "chart-data-edit.hwpx",
+      "name": "chart-data-edit.hwpx",
+      "label": "[기능 예제] 차트 데이터 편집",
+      "path": "fixtures/chart-data-edit.hwpx",
+      "bytes": 16095,
+      "sha256": "2a3e2cec62233c0a49cf0acb441f4b5e0266d742a91e5ff6018ca42237ec4997"
+    },
+    {
+      "id": "equation-edit.hwpx",
+      "name": "equation-edit.hwpx",
+      "label": "[기능 예제] 수식 편집",
+      "path": "fixtures/equation-edit.hwpx",
+      "bytes": 8225,
+      "sha256": "1a197476622a65221d2bb27de61fa2e7850159c8c3341a4d5c7669e922cd3c46"
+    },
     {
       "id": "noori.hwp",
       "name": "noori.hwp",

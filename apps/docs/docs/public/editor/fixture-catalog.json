@@ -1,5 +1,17 @@
 [
   {
+    "id": "chart-data-edit.hwpx",
+    "name": "chart-data-edit.hwpx",
+    "label": "[기능 예제] 차트 데이터 편집",
+    "available": true
+  },
+  {
+    "id": "equation-edit.hwpx",
+    "name": "equation-edit.hwpx",
+    "label": "[기능 예제] 수식 편집",
+    "available": true
+  },
+  {
     "id": "noori.hwp",
     "name": "noori.hwp",
     "label": "noori.hwp",
