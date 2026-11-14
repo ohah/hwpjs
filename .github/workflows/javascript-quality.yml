@@ -708,7 +708,7 @@ jobs:
             ./packages/vanilla/tests/renderer-ack-projection.test.mjs
           for path in "$@"; do test -f "$path" || exit 1; done
           node --import ./tools/renderer-test-core-provider.mjs --test "$@"
-          node --test --test-concurrency=1 ./tests/text-selection-paint.test.mjs ./tests/hwp5/canvas-edit.test.mjs
+          node --import ./tools/renderer-test-core-provider.mjs --test --test-concurrency=1 ./tests/text-selection-paint.test.mjs ./tests/hwp5/canvas-edit.test.mjs
       - name: 데모 표 만들기 공개 API 모델 검사
         run: |
           set -- \
