@@ -306,7 +306,7 @@ test('renderer shade paints before glyph and restores text color with measured a
     { style: {}, dataset: {}, getContext: () => ctx },
     {
       clientWidth: 500,
-      clientHeight: 100,
+      clientHeight: 200,
       scrollTop: 0,
       addEventListener() {},
       removeEventListener() {},
@@ -362,7 +362,10 @@ test('renderer shade paints before glyph and restores text color with measured a
   });
   frames.shift()();
   assert.equal(calls.filter((call) => call.kind === 'rect' && call.color === '#ffff00').length, 0);
-  assert.equal(calls.filter((call) => call.kind === 'rect' && call.color === '#bad9f4').length, 2);
+  assert.equal(
+    calls.filter((call) => call.kind === 'rect' && call.color === 'rgba(25, 128, 218, 0.3)').length,
+    2,
+  );
   calls.length = 0;
   renderer.select({
     active: true,
@@ -389,7 +392,7 @@ test('renderer shade paints before glyph and restores text color with measured a
     focus: { section: 0, paragraph: 1, unit: 1 },
   });
   frames.shift()();
-  assert(calls.some((call) => call.kind === 'rect' && call.color === '#bad9f4'));
+  assert(calls.some((call) => call.kind === 'rect' && call.color === 'rgba(25, 128, 218, 0.3)'));
   assert.equal(calls.filter((call) => call.kind === 'rect' && call.color === '#ffff00').length, 0);
   assert.equal(calls.find((call) => call.kind === 'text' && call.text === 'A').color, '#123456');
   calls.length = 0;
@@ -399,7 +402,7 @@ test('renderer shade paints before glyph and restores text color with measured a
     focus: { section: 0, paragraph: 1, unit: 0 },
   });
   frames.shift()();
-  assert(calls.some((call) => call.kind === 'rect' && call.color === '#bad9f4'));
+  assert(calls.some((call) => call.kind === 'rect' && call.color === 'rgba(25, 128, 218, 0.3)'));
   assert.equal(calls.filter((call) => call.kind === 'rect' && call.color === '#ffff00').length, 0);
   calls.length = 0;
   renderer.select({
@@ -580,7 +583,8 @@ test('renderer paints measured large text rows selection caret and scroll height
   });
   const frames = [],
     draws = [],
-    rectangles = [];
+    rectangles = [],
+    states = [];
   globalThis.window = { devicePixelRatio: 2 };
   globalThis.ResizeObserver = class {
     observe() {}
@@ -593,6 +597,12 @@ test('renderer paints measured large text rows selection caret and scroll height
   globalThis.cancelAnimationFrame = () => {};
   const ctx = {
     font: '',
+    save() {
+      states.push({ font: this.font, fillStyle: this.fillStyle });
+    },
+    restore() {
+      Object.assign(this, states.pop());
+    },
     translate(x, y) {
       assert(x === 0);
       assert.equal(y, 0);
@@ -618,9 +628,15 @@ test('renderer paints measured large text rows selection caret and scroll height
     },
     spacer = { style: {} };
   let layout;
-  renderer = createRenderer(canvas, viewport, spacer, (value) => {
-    layout = value;
-  });
+  renderer = createRenderer(
+    canvas,
+    viewport,
+    spacer,
+    (value) => {
+      layout = value;
+    },
+    { devicePixelRatio: () => 2 },
+  );
   const p = paragraph('AB', {
     label: '',
     characterRanges: [
@@ -645,7 +661,8 @@ test('renderer paints measured large text rows selection caret and scroll height
   assert(!draws.some((draw) => draw.text === 'B')); // Next row starts below the viewport.
   assert(
     rectangles.some(
-      (rect) => rect.color === '#bad9f4' && rect.args[1] === 36 && rect.args[3] === 80,
+      (rect) =>
+        rect.color === 'rgba(25, 128, 218, 0.3)' && rect.args[1] === 36 && rect.args[3] === 80,
     ),
   );
   assert(

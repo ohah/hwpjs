@@ -64,6 +64,7 @@ import { tablePaintScene } from './table-text-paint-order.mjs';
 import { hitPictureLayers } from './picture-hit-test.mjs';
 import { chartAnchorAtPoint } from './chart-anchor-geometry.mjs';
 import { paintPictureSelection } from './picture-selection-paint.mjs';
+import { paintTextSelectionBackground } from './text-selection-paint.mjs';
 import { canvasViewportMetrics } from './canvas-viewport-metrics.mjs';
 import { canvasHorizontalExtent } from './canvas-horizontal-extent.mjs';
 import { pictureResizeHandles } from './picture-resize-geometry.mjs';
@@ -930,15 +931,11 @@ export function createRenderer(
       )
         return;
       paintRowTransform(ctx, row, viewport.scrollTop, () => {
-        ctx.fillStyle = '#bad9f4';
-        for (const r of rowSelectionRects(
-          row,
-          i,
-          paintSelection.anchor,
-          paintSelection.focus,
-          displayRanges,
-        ))
-          ctx.fillRect(r.x, r.y - viewport.scrollTop, r.width, r.height);
+        paintTextSelectionBackground(
+          ctx,
+          rowSelectionRects(row, i, paintSelection.anchor, paintSelection.focus, displayRanges),
+          viewport.scrollTop,
+        );
         ctx.font = FONT;
         ctx.fillStyle = row.kind === 'label' ? '#526d80' : '#172b3b';
         if (row.kind === 'text') {
