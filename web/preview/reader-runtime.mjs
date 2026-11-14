@@ -1087,6 +1087,25 @@ export function createReaderRuntime({
         )
           historyRevisions = editor.historyRevisions();
         if (historyEnabled && editor) historyStats = editor.historyStats();
+        // A reused load projection predates history enable. Re-evaluate these
+        // mutation capabilities at reply publication, including that fast path.
+        if (value.content?.format === 'hwpx')
+          value = {
+            ...value,
+            content: {
+              ...value.content,
+              equationInsertionAvailable:
+                historyEnabled &&
+                historyStats?.protocolVersion === 2 &&
+                !historyPoisoned &&
+                editor?.supportsEquationInsertionAbi?.() === true,
+              chartCreationAvailable:
+                historyEnabled &&
+                historyStats?.protocolVersion === 2 &&
+                !historyPoisoned &&
+                editor?.supportsChartCreationAbi?.() === true,
+            },
+          };
         response = {
           origin: message.origin,
           ...value,
@@ -1855,6 +1874,38 @@ export function createReaderRuntime({
           binding: message.binding,
           bytes: message.bytes,
         });
+        applied = atomicOutcome.application === 'applied';
+        mutationUncertain = atomicOutcome.application === 'unknown';
+        if (mutationUncertain) historyPoisoned = true;
+        if (atomicOutcome.error || atomicOutcome.cleanupError)
+          throw Error(atomicOutcome.error || atomicOutcome.cleanupError);
+        if (atomicOutcome.nativeCode === 2) {
+          reply({ kind: message.kind, changed: false });
+          return;
+        }
+        reader = await createHwpxReader(module);
+        preview = reader.readTextEvents(editor.saveForDisplay());
+        reply({ kind: message.kind, content: hwpxDisplay() });
+      } else if (message.kind === 'insert-equation' || message.kind === 'create-chart') {
+        if (
+          format !== 'hwpx' ||
+          !editor ||
+          !historyEnabled ||
+          editor?.historyStats?.()?.protocolVersion !== 2
+        )
+          throw Error('InlineObjectInsertionUnavailable');
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        const equation = message.kind === 'insert-equation';
+        if (
+          (equation
+            ? editor.supportsEquationInsertionAbi?.()
+            : editor.supportsChartCreationAbi?.()) !== true
+        )
+          throw Error('InlineObjectInsertionUnavailable');
+        // Request already carries Native 1-based paragraph and exact text witness.
+        atomicOutcome = equation
+          ? editor.insertEquation(message.request)
+          : editor.createChart(message.request);
         applied = atomicOutcome.application === 'applied';
         mutationUncertain = atomicOutcome.application === 'unknown';
         if (mutationUncertain) historyPoisoned = true;

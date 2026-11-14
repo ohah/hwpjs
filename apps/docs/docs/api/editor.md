@@ -243,3 +243,43 @@ export async function setA4Page(editor: HeadlessEditor) {
 ```
 
 `scope: 'section'`은 조회 시 실제로 선택한 구역에 적용합니다. 선택 구역이 없으면 임의의 첫 구역을 사용하지 않습니다. 문서 전체 요청도 모든 대상 구역을 먼저 검사하며, 중복·조건부 owner나 해석할 수 없는 캐시가 있으면 변경을 거절합니다. 알려진 줄 배치 캐시는 해당 변경에서 무효화합니다. 용지 설정 변경은 하나의 Native 이력으로 처리하며, 저장은 기존 `save()` 계약을 따릅니다.
+
+## 새 HWPX 차트·수식 생성
+
+현재 GitHub 소스와 웹 데모는 `CREATE_CHART_COMMAND`, `INSERT_EQUATION_COMMAND`, `getInlineObjectInsertAvailability()`를 제공합니다. npm 릴리스 반영은 별도입니다. 새 생성 ABI가 있는 엔진과 Native history v2가 필요합니다.
+
+다음 예시는 새 HWPX 문서의 첫 본문에 차트를 만듭니다.
+
+```ts
+import {
+  CREATE_CHART_COMMAND,
+  createParagraphSelection,
+  getInlineObjectInsertAvailability,
+  type HeadlessEditor,
+} from '@ohah/hwpjs';
+
+export async function createChartDocument(editor: HeadlessEditor) {
+  await editor.createDocument({ format: 'hwpx' });
+  const coordinates = { section: 0, paragraph: 0, startUnit: 0 };
+  await editor.setSelection(createParagraphSelection(editor.getEditorState(), coordinates));
+  const state = editor.getEditorState();
+  const availability = getInlineObjectInsertAvailability(state, 'chart');
+  if (!availability.enabled) throw Error(availability.reason);
+  return editor.dispatchCommand(CREATE_CHART_COMMAND, {
+    target: createParagraphSelection(state, coordinates),
+    selectionVersion: state.stateVersion,
+    options: {
+      width: 20000,
+      height: 12000,
+      categories: ['가', '나', '다'],
+      series: [{ name: '계열 1', values: [10, 20, 30] }],
+    },
+  });
+}
+```
+
+`INSERT_EQUATION_COMMAND`도 `{ target, selectionVersion, options }`를 받습니다. options에 `script`, `width`, `height`, `baseLine`, `baseUnit`, `version`, `font`를 명시합니다. 예시는 `script: 'x over y'`, `width: 6000`, `height: 2000`, `baseLine: 85`, `baseUnit: 1000`, `version: 'Equation Version 60'`, `font: 'HYhwpEQ'`입니다. API의 크기는 HWPUNIT 원값이고, 데모는 mm·pt 입력을 변환합니다.
+
+첫 구역의 일반 본문 커서만 대상으로 합니다. 차트 뒤 Enter로 만든 빈 본문도 생성할 수 있지만 셀·선택 영역·기존 개체가 섞인 문단은 제외합니다. 차트는 표준 2D 묶은 세로 막대형이며, 모든 계열의 유한 숫자 개수가 범주 수와 같아야 합니다. 수식 크기는 자동 계산하지 않습니다. 같은 캡처로 두 번 호출하면 앞선 편집 뒤 낡은 상태가 된 요청을 거절합니다.
+
+생성·저장·실행 취소는 기존 Native 거래를 사용합니다. 세부 제한은 [생성 계약](https://github.com/ohah/hwpjs/blob/main/docs/hwpx-inline-object-creation.md), 화면 사용법은 [데모 안내](../guide/demo.md#새-차트수식-만들기)를 확인하세요.

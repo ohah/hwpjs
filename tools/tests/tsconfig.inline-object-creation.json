@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["bun"]
+  },
+  "files": [
+    "../../packages/core/src/index.ts",
+    "../../tests/hwpx/inline-object-js-core-public-types.ts"
+  ],
+  "include": []
+}

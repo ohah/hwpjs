@@ -1,3 +1,11 @@
+import {
+  INSERT_EQUATION_COMMAND,
+  CREATE_CHART_COMMAND,
+  inlineObjectInsertMessage,
+  captureInlineObjectInsertPayload,
+  type InsertEquationPayload,
+  type CreateChartPayload,
+} from '../commands/inline-object-insert.ts';
 import type { PageSettingsCapabilities } from '../commands/page-settings-dto.ts';
 import { EDIT_PAGE_SETTINGS_COMMAND } from '../commands/commands.ts';
 import { capturePageSettingsPayload } from '../commands/page-settings.ts';
@@ -1002,6 +1010,8 @@ export function createEditor(options: CreateEditorOptions) {
         verifyReply(reply, ctx);
         if (
           [
+            'insert-equation',
+            'create-chart',
             'insert-document',
             'source-table-grid',
             'source-table-cell-merge',
@@ -1050,6 +1060,8 @@ export function createEditor(options: CreateEditorOptions) {
             'formatting-patch',
             'independent-text',
             'splice-rich-character',
+            'insert-equation',
+            'create-chart',
             'insert-document',
           ].includes(message.kind) &&
           reply.formattingRefreshRequired === true
@@ -1060,6 +1072,8 @@ export function createEditor(options: CreateEditorOptions) {
             'formatting-patch',
             'independent-text',
             'splice-rich-character',
+            'insert-equation',
+            'create-chart',
             'insert-document',
           ].includes(message.kind) &&
           reply.formattingNativeCode === 2
@@ -1072,6 +1086,8 @@ export function createEditor(options: CreateEditorOptions) {
             'formatting-patch',
             'independent-text',
             'splice-rich-character',
+            'insert-equation',
+            'create-chart',
             'insert-document',
           ].includes(message.kind) &&
           reply.error
@@ -1245,17 +1261,25 @@ export function createEditor(options: CreateEditorOptions) {
     const height = command.id === EQUALIZE_SOURCE_TABLE_CELL_HEIGHT_COMMAND.id;
     const pageSettings = command.id === EDIT_PAGE_SETTINGS_COMMAND.id;
     const tableCell = merge || split || width || height || pageSettings;
-    const owned = pageSettings
-      ? capturePageSettingsPayload(payload)
-      : split
-        ? captureSourceTableCellSplitPayload(payload)
-        : merge || width || height
-          ? payload
-          : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
-            ? captureSourceTableGridRequest(payload, (snapshot.content as any)?.format)
-            : command.id === INSERT_DOCUMENT_COMMAND.id
-              ? captureDocumentInsertPayload(payload)
-              : copyOwned(payload);
+    const inlineKind =
+      command.id === INSERT_EQUATION_COMMAND.id
+        ? 'equation'
+        : command.id === CREATE_CHART_COMMAND.id
+          ? 'chart'
+          : undefined;
+    const owned = inlineKind
+      ? captureInlineObjectInsertPayload(payload, inlineKind)
+      : pageSettings
+        ? capturePageSettingsPayload(payload)
+        : split
+          ? captureSourceTableCellSplitPayload(payload)
+          : merge || width || height
+            ? payload
+            : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
+              ? captureSourceTableGridRequest(payload, (snapshot.content as any)?.format)
+              : command.id === INSERT_DOCUMENT_COMMAND.id
+                ? captureDocumentInsertPayload(payload)
+                : copyOwned(payload);
     return {
       command: command as EditorCommand<unknown>,
       payload: owned,
@@ -1281,6 +1305,24 @@ export function createEditor(options: CreateEditorOptions) {
       assertLive();
       if (handled) return result('handled-without-runtime', ctx);
       writePolicy.assertWritable();
+      if (
+        pending.command.id === INSERT_EQUATION_COMMAND.id ||
+        pending.command.id === CREATE_CHART_COMMAND.id
+      ) {
+        const payload = pending.payload as InsertEquationPayload | CreateChartPayload;
+        const kind = pending.command.id === INSERT_EQUATION_COMMAND.id ? 'equation' : 'chart';
+        const guard = () => {
+          requireReady(payload.target, true);
+          inlineObjectInsertMessage(payload, state, kind);
+        };
+        guard();
+        return await mutate(
+          inlineObjectInsertMessage(payload, state, kind),
+          payload.target,
+          false,
+          guard,
+        );
+      }
       if (pending.command.id === INSERT_DOCUMENT_COMMAND.id) {
         const payload = pending.payload as InsertDocumentPayload;
         const guard = () => {
@@ -2021,6 +2063,8 @@ export function createEditor(options: CreateEditorOptions) {
     const kind = Object.getOwnPropertyDescriptor(message ?? {}, 'kind')?.value;
     if (
       [
+        'insert-equation',
+        'create-chart',
         'insert-document',
         'document-insert-capabilities',
         'page-settings-capabilities',

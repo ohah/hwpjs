@@ -18,6 +18,7 @@ function setup() {
         save: { enabled: true },
         cut: { enabled: true },
         'insert-chart': { enabled: false, reason: '차트 연결 없음' },
+        'insert-equation': { enabled: false, reason: '현재 엔진에 수식 생성 ABI가 없습니다.' },
       },
     }),
     onAction: (a) => calls.push(a),
@@ -70,9 +71,25 @@ test('기본 순서와 추가 도구 및 장식 SVG 접근성을 보존한다', 
   );
   assert.deepEqual(
     buttons(h.extra).map((n) => n.dataset.command),
-    ['save', 'insert-chart', 'edit-chart-data', 'edit-equation', 'word-count'],
+    ['save', 'insert-chart', 'insert-equation', 'edit-chart-data', 'edit-equation', 'word-count'],
   );
   assert.equal(h.primary.contains(h.extra), false);
+  const inputMenu = all(h.root, (node) => node.className === 'hwp-demo-menu').find(
+    (node) => node.children[0]?.textContent === '입력',
+  );
+  assert.ok(inputMenu);
+  assert.deepEqual(
+    buttons(inputMenu).map((node) => node.dataset.command),
+    [
+      'insert-image',
+      'insert-table',
+      'insert-shape',
+      'insert-chart',
+      'insert-equation',
+      'insert-link',
+      'insert-symbol',
+    ],
+  );
   for (const b of [...buttons(h.primary), ...buttons(h.extra)]) {
     const icon = b.children[0];
     assert.equal(icon.namespaceURI, 'http://www.w3.org/2000/svg');
@@ -90,6 +107,11 @@ test('추가 도구의 판정·실행·닫기·키보드 복귀와 기존 메뉴
   assert.equal(save.disabled, false);
   assert.equal(chart.disabled, true);
   assert.match(chart.title, /차트 연결 없음/);
+  const equation = buttons(h.extra).find((button) => button.dataset.command === 'insert-equation');
+  assert.ok(equation);
+  assert.equal(equation.disabled, true);
+  assert.match(equation.title, /생성 ABI가 없습니다/);
+  fire(equation, 'click');
   fire(chart, 'click');
   assert.deepEqual(h.calls, []);
   h.extra.open = true;

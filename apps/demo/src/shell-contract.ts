@@ -36,6 +36,7 @@ export type DemoCommand =
   | 'table-cell-background'
   | 'table-cell-border'
   | 'insert-chart'
+  | 'insert-equation'
   | 'edit-chart-data'
   | 'edit-equation'
   | 'insert-footnote'

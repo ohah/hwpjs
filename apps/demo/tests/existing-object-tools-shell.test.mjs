@@ -35,15 +35,16 @@ test('existing object editing does not grant creation or require a text selectio
         false,
       );
   }
-  assert.equal(
-    resolveCommandSupport('insert-chart', {
-      connected: false,
-      document: 'ready',
-      hasSelection: true,
-      availability: { enabled: true },
-    }).enabled,
-    false,
-  );
+  for (const command of ['insert-chart', 'insert-equation'])
+    assert.equal(
+      resolveCommandSupport(command, {
+        connected: false,
+        document: 'ready',
+        hasSelection: true,
+        availability: { enabled: true },
+      }).enabled,
+      false,
+    );
 });
 
 test('menu and toolbox use the same editing intents and recheck availability', () => {
@@ -64,6 +65,8 @@ test('menu and toolbox use the same editing intents and recheck availability', (
       actions: {
         'edit-chart-data': { enabled: true },
         'edit-equation': { enabled: true },
+        'insert-chart': { enabled: false, reason: '현재 엔진에 차트 생성 ABI가 없습니다.' },
+        'insert-equation': { enabled: false, reason: '현재 엔진에 수식 생성 ABI가 없습니다.' },
       },
     }),
     onAction: (action) => calls.push(action.command),
@@ -82,11 +85,20 @@ test('menu and toolbox use the same editing intents and recheck availability', (
       busy = false;
       assert.equal(calls.filter((value) => value === command).length, 2);
     }
-    assert(
-      all(root, (node) => node.dataset.command === 'insert-chart').every(
-        (button) => button.disabled,
-      ),
-    );
+    for (const command of ['insert-chart', 'insert-equation']) {
+      const buttons = all(root, (node) => node.dataset.command === command);
+      assert.equal(buttons.length, 2);
+      for (const button of buttons) {
+        assert.equal(button.disabled, true);
+        assert.match(button.title, /생성 ABI가 없습니다/);
+        fire(button, 'click');
+      }
+      assert.equal(
+        calls.includes(command),
+        false,
+        '기존 개체 편집 권한이 새 생성 권한을 부여하지 않는다',
+      );
+    }
   } finally {
     shell.destroy();
   }

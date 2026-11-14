@@ -283,6 +283,7 @@
 
 현재 모듈별 책임·소유권·미지원 경계는 주제 문서에서 관리합니다. 구현 변경 시 해당 문서를 갱신하고 AGENTS.md에 상세를 누적하지 않습니다.
 
+- [HWPX 새 차트·수식 생성과 공통 caret](hwpx-inline-object-creation.md)
 - [공통 수식 장식 명령의 대상 구조](equation-decorations.md)
 - [적분 명령의 측정·곡선 배치](equation-integrals.md)
 - [극한 기호와 중앙 조건 배치](equation-limits.md)

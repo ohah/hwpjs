@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.inline-object-creation.json",
+  "files": [
+    "../../packages/core/src/index.ts",
+    "../../tests/hwpx/inline-object-js-core-public-types.ts",
+    "../../packages/core/tests/commands/current-caret.test.ts",
+    "../../packages/core/tests/commands/inline-object-empty-anchor-caret.test.ts"
+  ],
+  "include": []
+}

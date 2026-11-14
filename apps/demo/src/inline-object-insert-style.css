@@ -1,0 +1,188 @@
+.inline-object-insert-dialog {
+  box-sizing: border-box;
+  width: min(42rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  padding: 1.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+  color: #172b4d;
+  background: #fff;
+  box-shadow: 0 1rem 4rem #172b4d33;
+  font: inherit;
+}
+.inline-object-insert-dialog::backdrop {
+  background: #172b4d66;
+}
+.inline-object-insert-dialog h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+}
+.inline-object-insert-scope,
+.inline-object-insert-dialog small {
+  color: #4b5563;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+.inline-object-insert-dialog form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.inline-object-insert-dialog fieldset {
+  min-width: 0;
+  display: grid;
+  gap: 0.8rem;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid #dbe1ea;
+  border-radius: 0.5rem;
+}
+.inline-object-insert-dialog legend {
+  padding: 0 0.3rem;
+  font-weight: 600;
+}
+.inline-object-insert-type {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  background: #eff6ff;
+  border-radius: 0.3rem;
+}
+.inline-object-insert-dialog label {
+  min-width: 0;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+.inline-object-insert-dialog textarea {
+  min-height: 5rem;
+  resize: vertical;
+  font-family: ui-monospace, monospace;
+}
+.inline-object-insert-dialog input,
+.inline-object-insert-dialog textarea {
+  box-sizing: border-box;
+  width: 100%;
+  font-size: 1rem;
+  padding: 0.6rem;
+  border: 1px solid #94a3b8;
+  border-radius: 0.3rem;
+  background: #fff;
+  color: #172b4d;
+}
+.inline-object-insert-dialog .inline-object-insert-size {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.inline-object-insert-dialog details {
+  display: grid;
+  padding: 0.5rem;
+}
+.inline-object-insert-dialog details label {
+  margin-top: 0.75rem;
+}
+.inline-object-insert-dialog summary {
+  cursor: pointer;
+}
+.inline-object-insert-status {
+  min-height: 1.5em;
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #9a3412;
+  overflow-wrap: anywhere;
+}
+.inline-object-insert-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding-top: 0.5rem;
+}
+.inline-object-insert-dialog button {
+  padding: 0.65rem 1rem;
+  border: 1px solid #94a3b8;
+  border-radius: 0.35rem;
+  background: #fff;
+  color: #172b4d;
+  font: inherit;
+  cursor: pointer;
+}
+.inline-object-insert-dialog .inline-object-insert-primary {
+  background: #1d4ed8;
+  color: #fff;
+  border-color: #1d4ed8;
+}
+.inline-object-insert-dialog :focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
+}
+.inline-object-insert-dialog [aria-invalid='true'] {
+  border-color: #b91c1c;
+}
+.inline-object-insert-dialog :disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+@media (max-width: 480px) {
+  .inline-object-insert-dialog {
+    padding: 1rem;
+  }
+  .inline-object-insert-dialog .inline-object-insert-size {
+    grid-template-columns: 1fr;
+  }
+}
+.inline-object-insert-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  background: #fff;
+  border-top: 1px solid #dbe1ea;
+  padding: 0.75rem 0;
+}
+.inline-object-insert-grid-scroll {
+  max-width: 100%;
+  max-height: 21rem;
+  overflow: auto;
+  border: 1px solid #dbe1ea;
+  border-radius: 0.3rem;
+}
+.inline-object-insert-grid-scroll table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+.inline-object-insert-grid-scroll caption {
+  text-align: left;
+  padding: 0.6rem;
+  font-size: 0.85rem;
+}
+.inline-object-insert-grid-scroll th,
+.inline-object-insert-grid-scroll td {
+  min-width: 8rem;
+  padding: 0.35rem;
+  border-top: 1px solid #dbe1ea;
+  text-align: left;
+}
+.inline-object-insert-grid-scroll thead th {
+  position: sticky;
+  top: 0;
+  background: #eff6ff;
+  z-index: 1;
+}
+.inline-object-insert-grid-scroll th:last-child,
+.inline-object-insert-grid-scroll td:last-child {
+  min-width: 5.5rem;
+}
+.inline-object-insert-grid-scroll th button,
+.inline-object-insert-grid-scroll td button {
+  padding: 0.35rem 0.5rem;
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+}
+.inline-object-insert-grid-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.inline-object-insert-size small {
+  grid-column: 1 / -1;
+}

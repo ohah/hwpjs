@@ -1,5 +1,7 @@
 # 문서 도구 탭
 
+현재 데모의 `입력 → 차트`·`입력 → 수식`은 [HWPX 새 차트·수식 생성](hwpx-inline-object-creation.md)의 제한된 생성 명령으로 연결한다. 추가 도구의 생성 버튼과 기존 개체 편집 버튼을 구별하며 owner·선택·엔진·이력 가용성이 없으면 비활성화한다. 아래 과거 메뉴 실행 기록을 새 생성 GUI 증거로 승계하지 않는다.
+
 [쪽·단 나누기](paragraph-break-menu.md)는 삽입 리본·메뉴·명령 검색이 같은 권한/실행 경로를 공유하는 계약과 검증을 소유합니다.
 
 [Canvas 수정키 경계](canvas-shortcut-modifiers.md)는 전체 선택·undo/redo의 잘못된 Alt/Shift 조합 소비를 막는 계약과 실제 키 검증을 소유합니다.
@@ -48,12 +50,12 @@ tablist/tab/tabpanel 연결과 roving tabindex를 사용합니다. 방향키·Ho
 
 다음 실행은 모두 exit0·stderr0·검증/소유 브라우저 및 서버 종료를 확인했습니다. 스킬의 격리 세션·실제 클릭/키보드·종료 확인을 사용했습니다. 기본 WASM은 교체하지 않았습니다.
 
-| 로그 | WASM | 실제 확인 |
-| --- | --- | --- |
-| ribbon-plain-visible-browser.jsonl | eaaa0d20… | 홈/삽입/보기·방향키/Home/End/Tab·문서 없는 삽입 보호·실제 본문 입력·메뉴 U/R/S·독립 전체 XML/ZIP·재업로드 |
-| ribbon-unknown-visible-browser.jsonl | eaaa0d20… | 위 흐름과 원래 표2/unknownObj4의 삭제 보호 및 바깥 텍스트 편집 |
-| ribbon-roadmap-visible-browser.jsonl | eaaa0d20… | 실제 HWP5 문단 입력·이력·다운로드·독립 Section/비대상 stream/metadata·재열기 |
-| ribbon-default-visible-browser.jsonl | cbaaf27f… | 현재 기본 WASM으로 같은 일반 문단/탭/저장 흐름의 호환성 |
+| 로그                                 | WASM      | 실제 확인                                                                                                 |
+| ------------------------------------ | --------- | --------------------------------------------------------------------------------------------------------- |
+| ribbon-plain-visible-browser.jsonl   | eaaa0d20… | 홈/삽입/보기·방향키/Home/End/Tab·문서 없는 삽입 보호·실제 본문 입력·메뉴 U/R/S·독립 전체 XML/ZIP·재업로드 |
+| ribbon-unknown-visible-browser.jsonl | eaaa0d20… | 위 흐름과 원래 표2/unknownObj4의 삭제 보호 및 바깥 텍스트 편집                                            |
+| ribbon-roadmap-visible-browser.jsonl | eaaa0d20… | 실제 HWP5 문단 입력·이력·다운로드·독립 Section/비대상 stream/metadata·재열기                              |
+| ribbon-default-visible-browser.jsonl | cbaaf27f… | 현재 기본 WASM으로 같은 일반 문단/탭/저장 흐름의 호환성                                                   |
 
 후보 전체 SHA256은eaaa0d2007a2e02fce27335e6218379284108e756e285d4859cad28167d0fe5f, 기본은cbaaf27f858229fedd01b9996ce152bd31aa6d6f346481b7887bcc510ef68346입니다. HWPX 공통 흐름은 각 실행 전후 UI/도구 소스 해시·HTTP WASM 해시·원본 불변을 확인합니다. HWP5 도구는 명시한 WASM/원본으로 실제 왕복과 원본 불변을 검사하며 같은 HTTP 소스 해시 감사를 수행한 것으로 합산하지 않습니다. 세션은 hwpjs-menu-mnemonic-8bb0da6fc052, hwpjs-unknown-anchor-8bb0da6fc052, hwpjs-reference-roundtrip-8bb0da6fc052이며 포트58863/58864/58851을 각각 사용했습니다.
 
@@ -67,12 +69,12 @@ tablist/tab/tabpanel 연결과 roving tabindex를 사용합니다. 방향키·Ho
 
 기존 일반 브라우저 도구가 upload 경로만 검사해 픽스쳐 선택 UI를 검증하지 않는 공백을 확인했습니다. `document-menu-cases.mjs`의 plain 사례에만 `fixturePicker`를 지정했고 공통 흐름은 카탈로그의 원본 경로와 정확히 하나 일치하는 항목을 선택합니다. HTTP 응답 전체 해시가 독립 oracle 입력과 같고 버튼이 활성인 것을 확인한 뒤 실제 select/click으로 문서를 엽니다. 보호 개체 사례의 upload와 다운로드 사본의 재업로드는 그대로 유지합니다. UI 카탈로그/목록/로더 소스도 실행 전후 해시 감사에 포함합니다.
 
-| 로그 | 실제 확인 |
-| --- | --- |
-| menu-browser.jsonl/.stderr | 변경 전 upload 경로·탭 키보드·입력·메뉴 U/R/S·독립 XML/ZIP·재업로드 |
-| menu-picker-browser.jsonl/.stderr | 픽스쳐 선택/열기부터 동일 입력·이력·다운로드·독립 normal/-O XML/ZIP·재업로드 |
-| hwp5-roadmap-browser.jsonl/.stderr | roadmap HWP5의 실제 입력·이력·다운로드·독립 전체 Section/비대상 stream/metadata·재업로드 |
-| unknown-object-browser.jsonl/.stderr | 표2/unknownObj4 원본에서 실제 Delete 보호 거부·바깥 입력·이력·독립 XML/ZIP·재업로드 |
+| 로그                                 | 실제 확인                                                                                |
+| ------------------------------------ | ---------------------------------------------------------------------------------------- |
+| menu-browser.jsonl/.stderr           | 변경 전 upload 경로·탭 키보드·입력·메뉴 U/R/S·독립 XML/ZIP·재업로드                      |
+| menu-picker-browser.jsonl/.stderr    | 픽스쳐 선택/열기부터 동일 입력·이력·다운로드·독립 normal/-O XML/ZIP·재업로드             |
+| hwp5-roadmap-browser.jsonl/.stderr   | roadmap HWP5의 실제 입력·이력·다운로드·독립 전체 Section/비대상 stream/metadata·재업로드 |
+| unknown-object-browser.jsonl/.stderr | 표2/unknownObj4 원본에서 실제 Delete 보호 거부·바깥 입력·이력·독립 XML/ZIP·재업로드      |
 
 네 실행 모두 터미널 exit0·stderr0이며 cleanup 성공과 서버 종료를 확인했습니다. 새 picker 캡처는 `/var/folders/51/mr5cjhg13v324f1vgg9m237c0000gn/T/hwpjs-menu-browser-67diYX/reopened.png`, HWP5는 `hwpjs-reference-browser-IOCUE7`, 보호 개체는 `hwpjs-unknown-browser-KBY0U0` 디렉터리에 있습니다. 직접 확인한 초기 일반 캡처는 `hwpjs-menu-browser-NBmrXx/reopened.png`입니다. 소유 세션 세 개의 후속 조회도 active=false·pid=null입니다.
 
@@ -93,7 +95,6 @@ tablist/tab/tabpanel 연결과 roving tabindex를 사용합니다. 방향키·Ho
 문서 우클릭 메뉴는 조합을 시작한 실제 자식 대상을 집합으로 추적합니다. 부모에 위임된 blur는 캡처 단계에서 그 대상만 해제하며, 다른 Canvas의 blur나 다른 조합의 종료로 진행 중인 조합을 해제하지 않습니다. 메뉴 이벤트 진입 시 isConnected가 명시적으로 false인 대상만 제거하므로, 종료 이벤트 없이 분리된 입력란이 남은 메뉴를 영구 차단하지 않습니다. 연결 상태 미확인은 계속 차단하며 별도 감시자를 만들지 않습니다.
 
 새 독립 검사 `tests/hwpx/document-context-menu-composition.test.mjs`는 기존 미추적 메뉴 테스트나 외부 문서를 가져오지 않고 제품 모듈만 사용합니다. 위임 blur·여러 조합 대상·Escape와 단축키·종료·복사 권한·분리·연결 상태 미확인 7개 모의 이벤트 검사를 포함합니다. 실제 OS IME·브라우저·배포 검증은 별도입니다. 이전 19개 검사는 기존 미추적 테스트를 포함한 격리 기록으로 보존하며 새 독립 회귀의 의존성으로 사용하지 않습니다.
-
 
 ## 도구 상자 표시
 

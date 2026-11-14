@@ -53,6 +53,44 @@ jobs:
           test -f ./apps/docs/docs/public/editor/hwpjs/hwpjs.wasm || exit 1
           bun ./tools/build-packages.mjs --package=core --web --wasm="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
           bun ./tools/build-packages.mjs --package=vanilla --web --wasm="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
+      - name: Test synthetic HWPX chart and equation creation
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          NO_COLOR=1 FORCE_COLOR=0 bun test --no-install ./tests/hwpx/inline-object-js-core-queued.test.ts ./tests/hwpx/inline-object-js-facade.test.mjs ./tests/hwpx/inline-object-insert-sdk-newonly.test.mjs ./tests/hwpx/inline-object-js-core-guards.test.mjs 2>&1 | tee "$RUNNER_TEMP/inline-object-synthetic.log"
+          grep -Eq '^[[:space:]]*27 pass$' "$RUNNER_TEMP/inline-object-synthetic.log"
+          grep -Eq '^[[:space:]]*0 fail$' "$RUNNER_TEMP/inline-object-synthetic.log"
+          ! grep -Eq '[1-9][0-9]* skip' "$RUNNER_TEMP/inline-object-synthetic.log"
+          bunx --no-install tsc --noEmit -p ./tools/tests/tsconfig.inline-object-creation.json
+          bunx --no-install tsc --noEmit -p ./tools/tests/tsconfig.inline-object-ui.json
+      - name: Test shared caret and creation-only empty anchors
+        timeout-minutes: 2
+        run: |
+          bun test --no-install ./packages/core/tests/commands/current-caret.test.ts ./packages/core/tests/commands/inline-object-empty-anchor-caret.test.ts
+          bunx --no-install tsc --noEmit -p ./tools/tests/tsconfig.inline-object-caret.json
+      - name: Test normal SDK HWPX creation and old879 refusals
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin 680dbdee61ca51804104e050395301bb528f3faa
+          git show 680dbdee61ca51804104e050395301bb528f3faa:apps/docs/docs/public/editor/hwpjs/hwpjs.wasm > "$RUNNER_TEMP/inline-object-old879.wasm"
+          export HWPJS_TEST_WASM="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
+          export HWPJS_TEST_WASM_EXPECTED_SHA256="$(node tools/tests/helpers/native-wasm-pin.mjs --manifest ./packages/core/dist/build-manifest.json)"
+          export HWPJS_TEST_OLD_WASM="$RUNNER_TEMP/inline-object-old879.wasm"
+          export HWPJS_TEST_EVIDENCE_DIR="$RUNNER_TEMP/inline-object-creation"
+          node tools/tests/run-inline-object-creation-native.mjs
+          export HWPJS_TEST_EVIDENCE_DIR="$RUNNER_TEMP/inline-object-creation/caret-r9"
+          node tools/tests/run-inline-object-creation-native.mjs --caret
+      - name: Preserve new chart and equation SDK evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: inline-object-creation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/inline-object-creation
+          retention-days: 7
+          if-no-files-found: warn
       - name: Test save consent guidance and owned cell focus paint
         timeout-minutes: 2
         run: |
@@ -511,7 +549,7 @@ jobs:
           bun test --no-install ./apps/demo/tests/contextual-table-row-shortcut.test.ts
       - name: Test demo toolbar and find dialog
         run: |
-          bun test --no-install ./apps/demo/tests/shell.test.mjs ./apps/demo/tests/shell-fixture-availability.test.mjs ./apps/demo/tests/toolbox.test.mjs ./apps/demo/tests/text-tools-dialog-density.test.ts ./apps/demo/tests/file-open-direct.test.mjs
+          bun test --no-install ./apps/demo/tests/shell.test.mjs ./apps/demo/tests/shell-fixture-availability.test.mjs ./apps/demo/tests/toolbox.test.mjs ./apps/demo/tests/text-tools-dialog-density.test.ts ./apps/demo/tests/file-open-direct.test.mjs ./apps/demo/tests/existing-object-tools-shell.test.mjs ./apps/demo/tests/inline-object-insert-data-grid.test.ts
       - name: Test exclusive text snapshot reuse boundaries
         run: |
           node --test --test-concurrency=1 \

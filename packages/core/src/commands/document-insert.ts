@@ -1,7 +1,7 @@
 import type { SelectionTarget } from './commands.ts';
 import type { EditorState, StateToken } from '../state/editor-state.ts';
 import type { RuntimeMessage } from '../contracts.ts';
-import { validateSelection } from './selection.ts';
+import { validateCurrentCaret } from './current-caret.ts';
 
 export interface InsertDocumentPayload {
   readonly target: SelectionTarget;
@@ -111,21 +111,7 @@ export function currentDocumentInsertCaret(
   target: SelectionTarget,
   selectionVersion: number,
 ): SelectionTarget {
-  if (selectionVersion !== state.stateVersion) throw Error('StaleDocumentInsertSelection');
-  const live = state.selection as SelectionTarget | undefined;
-  if (!live) throw Error('DocumentInsertionRequiresCaret');
-  if (target?.startUnit !== target?.endUnit || live.startUnit !== live.endUnit)
-    throw Error('DocumentInsertionRequiresCaret');
-  const row = validateSelection(target, state, true);
-  validateSelection(live, state, true);
-  if (
-    live.section !== target.section ||
-    live.paragraph !== target.paragraph ||
-    live.startUnit !== target.startUnit ||
-    live.owner !== target.owner ||
-    live.affinity !== target.affinity
-  )
-    throw Error('StaleDocumentInsertSelection');
+  const row = validateCurrentCaret(state, target, selectionVersion);
   if (
     target.format !== 'hwpx' ||
     target.section !== 0 ||

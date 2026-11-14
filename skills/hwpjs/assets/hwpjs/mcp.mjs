@@ -1128,7 +1128,7 @@ function datetime$1(args) {
 	return new RegExp(`^${dateSource}T(?:${timeRegex})$`);
 }
 const anyString = /^[\s\S]{0,}$/;
-const integer$1 = /^-?\d+$/;
+const integer$2 = /^-?\d+$/;
 const number$4 = /^-?\d+(?:\.\d+)?$/;
 const boolean$2 = /^(?:true|false)$/i;
 const _null$2 = /^null$/i;
@@ -4747,7 +4747,7 @@ function stringifyKeyNames(bySchema, json, visited) {
 	else if (typeof rest.const === "number") rest.const = String(rest.const);
 	if (!numericType) return rest;
 	rest.type = "string";
-	if (!values) rest.pattern = (types.includes("number") ? number$4 : integer$1).source;
+	if (!values) rest.pattern = (types.includes("number") ? number$4 : integer$2).source;
 	return rest;
 }
 /** Every record of one conversion, so the carriers are found in a single pass rather than once per record. */
@@ -30410,27 +30410,27 @@ function decodeHwp5CreatedTables(bytes) {
 			"margins",
 			"prevent_page_break",
 			"description"
-		]) || !integer(c.flags, 0, 4294967295) || ![
+		]) || !integer$1(c.flags, 0, 4294967295) || ![
 			c.offset_y,
 			c.offset_x,
 			c.z_order
-		].every((n) => integer(n, -2147483648, 2147483647)) || !margins(c.margins) || typeof c.prevent_page_break !== "boolean" || typeof c.description !== "string" || !c.description.isWellFormed()) fail();
+		].every((n) => integer$1(n, -2147483648, 2147483647)) || !margins(c.margins) || typeof c.prevent_page_break !== "boolean" || typeof c.description !== "string" || !c.description.isWellFormed()) fail();
 		if (!keys$1(t, [
 			"page_break",
 			"repeat_header",
 			"cell_spacing",
 			"margins"
-		]) || !integer(t.page_break, 0, 2) || typeof t.repeat_header !== "boolean" || !integer(t.cell_spacing, -32768, 32767) || !margins(t.margins)) fail();
+		]) || !integer$1(t.page_break, 0, 2) || typeof t.repeat_header !== "boolean" || !integer$1(t.cell_spacing, -32768, 32767) || !margins(t.margins)) fail();
 		if (!keys$1(l, [
 			"layout",
 			"unknown",
 			"attributes",
 			"margins"
-		]) || !integer(l.attributes, 0, 4294967295) || !margins(l.margins) || !(l.layout === "spec6" && l.unknown === null || l.layout === "observed8" && integer(l.unknown, 0, 65535))) fail();
+		]) || !integer$1(l.attributes, 0, 4294967295) || !margins(l.margins) || !(l.layout === "spec6" && l.unknown === null || l.layout === "observed8" && integer$1(l.unknown, 0, 65535))) fail();
 	}
 	return rows;
 }
-var decoder$4, keys$1, integer, margins;
+var decoder$4, keys$1, integer$1, margins;
 var init_hwp5_created_tables = __esmMin((() => {
 	init_hwpx_created_tables();
 	decoder$4 = new TextDecoder("utf-8", {
@@ -30438,8 +30438,8 @@ var init_hwp5_created_tables = __esmMin((() => {
 		ignoreBOM: true
 	});
 	keys$1 = (v, names) => v && typeof v === "object" && !Array.isArray(v) && Object.keys(v).length === names.length && names.every((k) => Object.hasOwn(v, k));
-	integer = (v, low, high) => Number.isInteger(v) && v >= low && v <= high;
-	margins = (v) => Array.isArray(v) && v.length === 4 && v.every((n) => integer(n, -32768, 32767));
+	integer$1 = (v, low, high) => Number.isInteger(v) && v >= low && v <= high;
+	margins = (v) => Array.isArray(v) && v.length === 4 && v.every((n) => integer$1(n, -32768, 32767));
 }));
 // ../../js/table-creation-resources.mjs
 function decodeTableCreationResources(bytes) {
@@ -32001,6 +32001,187 @@ var init_hwpx_document_insert = __esmMin((() => {
 		if (!Number.isInteger(value) || value < 0 || value > 4294967295 || Object.is(value, -0)) throw new TypeError("InvalidDocumentInsertCoordinate");
 		return value;
 	};
+}));
+// ../../js/hwpx-inline-object-insert.mjs
+function inlineInsertRecord(input, keys) {
+	if (!input || typeof input !== "object" || ![Object.prototype, null].includes(Object.getPrototypeOf(input))) throw Error("InvalidInlineObjectRequest");
+	const descriptors = Object.getOwnPropertyDescriptors(input);
+	if (Reflect.ownKeys(descriptors).length !== keys.length) throw Error("InvalidInlineObjectRequest");
+	const result = {};
+	for (const key of keys) {
+		const entry = descriptors[key];
+		if (!entry || !Object.hasOwn(entry, "value")) throw Error("InvalidInlineObjectRequest");
+		result[key] = entry.value;
+	}
+	return result;
+}
+function integer(value, min = 0, max = 4294967295) {
+	if (!Number.isSafeInteger(value) || value < min || value > max || Object.is(value, -0)) throw Error("InvalidInlineObjectInteger");
+	return value;
+}
+function text$2(value, max, empty = false) {
+	if (typeof value !== "string" || !empty && !value.length || /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF\uD800-\uDFFF]/u.test(value) || new TextEncoder().encode(value).length > max) throw Error("InvalidInlineObjectText");
+	return value;
+}
+function list$1(input, limit, convert) {
+	if (!Array.isArray(input) || input.length < 1 || input.length > limit) throw Error("InvalidInlineObjectArray");
+	const entries = inlineInsertRecord(inputRecord(input), Array.from({ length: input.length }, (_, i) => String(i)));
+	return Array.from({ length: input.length }, (_, i) => convert(entries[String(i)]));
+}
+function inputRecord(input) {
+	const descriptors = Object.getOwnPropertyDescriptors(input);
+	delete descriptors.length;
+	return Object.defineProperties({}, descriptors);
+}
+function checkedEquationInsertOptions(input) {
+	const p = inlineInsertRecord(input, [
+		"script",
+		"width",
+		"height",
+		"baseLine",
+		"baseUnit",
+		"version",
+		"font"
+	]);
+	return {
+		script: text$2(p.script, 1048576, true),
+		width: integer(p.width, 1, maxInt),
+		height: integer(p.height, 1, maxInt),
+		baseLine: integer(p.baseLine),
+		baseUnit: integer(p.baseUnit, 1, maxInt),
+		version: text$2(p.version, 128),
+		font: text$2(p.font, 128)
+	};
+}
+function checkedChartCreateOptions(input) {
+	const p = inlineInsertRecord(input, [
+		"width",
+		"height",
+		"categories",
+		"series"
+	]);
+	const categories = list$1(p.categories, 4096, (value) => text$2(value, 4096));
+	const series = list$1(p.series, 64, (value) => {
+		const s = inlineInsertRecord(value, ["name", "values"]);
+		const values = list$1(s.values, 4096, (number) => {
+			if (typeof number !== "number" || !Number.isFinite(number)) throw Error("InvalidChartNumber");
+			return number;
+		});
+		if (values.length !== categories.length) throw Error("ChartCategoryCountMismatch");
+		return {
+			name: text$2(s.name, 4096),
+			values
+		};
+	});
+	if (categories.length * series.length > 16384) throw Error("ChartPointLimitExceeded");
+	return {
+		width: integer(p.width, 1, maxInt),
+		height: integer(p.height, 1, maxInt),
+		categories,
+		series
+	};
+}
+function checkedEquationInsertRequest(input) {
+	const p = inlineInsertRecord(input, [
+		"section",
+		"paragraph",
+		"start",
+		"expectedText",
+		"script",
+		"width",
+		"height",
+		"baseLine",
+		"baseUnit",
+		"version",
+		"font"
+	]);
+	return {
+		section: integer(p.section, 0, 0),
+		paragraph: integer(p.paragraph, 1),
+		start: integer(p.start),
+		expectedText: text$2(p.expectedText, 8388608, true),
+		...checkedEquationInsertOptions(Object.fromEntries([
+			"script",
+			"width",
+			"height",
+			"baseLine",
+			"baseUnit",
+			"version",
+			"font"
+		].map((k) => [k, p[k]])))
+	};
+}
+function checkedChartCreateRequest(input) {
+	const p = inlineInsertRecord(input, [
+		"target",
+		"size",
+		"data"
+	]);
+	const t = inlineInsertRecord(p.target, [
+		"section",
+		"paragraph",
+		"unit",
+		"expected_text"
+	]);
+	const size = inlineInsertRecord(p.size, ["width", "height"]);
+	const data = inlineInsertRecord(p.data, ["categories", "series"]);
+	const series = list$1(data.series, 64, (value) => {
+		const s = inlineInsertRecord(value, ["name", "values"]);
+		return {
+			name: s.name,
+			values: list$1(s.values, 4096, (value) => {
+				if (typeof value !== "string" || value.length > 32 || !/^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(value) || !Number.isFinite(Number(value))) throw Error("InvalidChartNumber");
+				return Number(value);
+			})
+		};
+	});
+	const options = checkedChartCreateOptions({
+		...size,
+		categories: data.categories,
+		series
+	});
+	return {
+		target: {
+			section: integer(t.section, 0, 0),
+			paragraph: integer(t.paragraph, 1),
+			unit: integer(t.unit),
+			expected_text: text$2(t.expected_text, 8388608, true)
+		},
+		size: {
+			width: options.width,
+			height: options.height
+		},
+		data: {
+			categories: options.categories,
+			series: list$1(data.series, 64, (value) => {
+				const s = inlineInsertRecord(value, ["name", "values"]);
+				return {
+					name: s.name,
+					values: list$1(s.values, 4096, (value) => value)
+				};
+			})
+		}
+	};
+}
+function createHwpxInlineObjectInsertApi({ wasm, memory, check }) {
+	const insert = (name, request) => {
+		check();
+		if (typeof wasm[name] !== "function") throw Error("InlineObjectInsertionUnavailable");
+		const bytes = new TextEncoder().encode(JSON.stringify(request));
+		if (bytes.length > 8388608) throw Error("InlineObjectRequestLimitExceeded");
+		return applyNativeEdit(memory, bytes, (ptr, size) => wasm[name](ptr, size), "InvalidInlineObjectInsertResult");
+	};
+	return {
+		supportsEquationInsertionAbi: () => typeof wasm.hwpx_edit_insert_equation === "function",
+		supportsChartCreationAbi: () => typeof wasm.hwpx_edit_create_chart === "function",
+		insertEquation: (input) => insert("hwpx_edit_insert_equation", checkedEquationInsertRequest(input)),
+		createChart: (input) => insert("hwpx_edit_create_chart", checkedChartCreateRequest(input))
+	};
+}
+var maxInt;
+var init_hwpx_inline_object_insert = __esmMin((() => {
+	init_native_edit_outcome();
+	maxInt = 2147483647;
 }));
 // ../../js/hwpx-page-number-display-wire.mjs
 function decodeHwpxPageNumberDisplaySource(bytes) {
@@ -35136,6 +35317,11 @@ async function createHwpxEditor(source) {
 			prefix: "hwpx_edit"
 		}),
 		...documentInsert,
+		...createHwpxInlineObjectInsertApi({
+			wasm,
+			memory,
+			check: ready
+		}),
 		...createSourceTableCellMergeApi({
 			wasm,
 			memory,
@@ -37438,6 +37624,7 @@ var init_hwpx_editor = __esmMin((() => {
 	init_paragraph_bullet_definition_write();
 	init_paragraph_bullet_definitions();
 	init_hwpx_document_insert();
+	init_hwpx_inline_object_insert();
 	init_hwpx_page_number_display_wire();
 	init_cell_diagonal_command();
 	init_cell_border_patch_command();

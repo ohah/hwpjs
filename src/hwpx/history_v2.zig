@@ -195,7 +195,7 @@ pub const History = struct {
         s.history_transaction_active = true;
         defer s.history_transaction_active = false;
         try self.stack.prepare();
-        for (commands) |command| if (command.kind == .insert_document or command.kind == .bullet_definition or command.kind == .page_settings) {
+        for (commands) |command| if (command.kind == .insert_document or command.kind == .equation_insert or command.kind == .chart_create or command.kind == .bullet_definition or command.kind == .page_settings) {
             if (commands.len != 1 or command.break_before != null or command.deleted != 0)
                 return error.InvalidInsertDocumentBatch;
             if (!self.managed) return error.HistoryProtocol2Required;
@@ -220,7 +220,19 @@ pub const History = struct {
         if (command.kind == .page_settings) try @import("page_settings_edit_owners.zig").validateTargets(s.allocator, s, (command.page_settings orelse return error.InvalidPageSettingsRequest).*);
         const before = try s.save();
         defer s.allocator.free(before);
-        var candidate = if (command.kind == .page_settings) blk: {
+        var candidate = if (command.kind == .equation_insert) blk: {
+            const request = command.equation_insert orelse return error.InvalidEquationInsertRequest;
+            if (request.target.section != command.section or request.target.paragraph != command.paragraph or request.target.unit != command.start) return error.SourceBindingMismatch;
+            var prepared = try @import("equation_insert.zig").prepare(s.allocator, before, request.*, .{});
+            defer prepared.deinit(s.allocator);
+            break :blk try editor.open(s.allocator, prepared.bytes, s.options);
+        } else if (command.kind == .chart_create) blk: {
+            const request = command.chart_create orelse return error.InvalidChartCreateRequest;
+            if (request.target.section != command.section or request.target.paragraph != command.paragraph or request.target.unit != command.start) return error.SourceBindingMismatch;
+            var prepared = try @import("chart_create.zig").prepare(s.allocator, before, request.*);
+            defer prepared.deinit(s.allocator);
+            break :blk try editor.open(s.allocator, prepared.bytes, s.options);
+        } else if (command.kind == .page_settings) blk: {
             break :blk (try @import("page_settings_write.zig").prepare(s.allocator, before, command.page_settings.?.*, s.options)) orelse return false;
         } else if (command.kind == .bullet_definition) blk: {
             const request = command.bullet_definition orelse return error.InvalidBulletDefinitionRequest;

@@ -1071,7 +1071,7 @@ fn apply(command: histories.Command) !void {
         _ = try @import("../hwpx/display_resource_generation.zig").applyOwned(value, session, &.{command});
     } else switch (command.kind) {
         // Independent source-axis batches require the existing owned History.
-        .page_settings, .bullet_definition, .paragraph_bullet, .independent_text, .insert_document, .named_field_rename, .named_field_create, .named_field_parameters, .source_table_cell_merge, .source_table_cell_split => return error.HistoryNotEnabled,
+        .page_settings, .bullet_definition, .paragraph_bullet, .independent_text, .insert_document, .equation_insert, .chart_create, .named_field_rename, .named_field_create, .named_field_parameters, .source_table_cell_merge, .source_table_cell_split => return error.HistoryNotEnabled,
         .source_table_grid => {
             _ = try @import("../hwpx/source_table_grid_session.zig").apply(session, .{ .section = command.section, .node = command.source_grid_node, .expected_rows = command.source_grid_expected_rows, .expected_columns = command.source_grid_expected_columns, .action = command.source_grid_action });
         },
@@ -2479,4 +2479,36 @@ export fn hwpx_edit_write_page_settings(ptr: [*]const u8, len: usize) u32 {
         return if (err == error.MutationUncertain or err == error.HistoryMutationUncertain or h.stats().poisoned) 3 else 0;
     };
     return if (changed) 1 else 2;
+}
+
+// Owned-history publication remains the sole source replacement boundary.
+fn inlineInsertSourceDigest() ![32]u8 {
+    try requireNoReadScope();
+    const session = if (active) |*value| value else return error.EditorNotOpen;
+    _ = try requireManagedHistory();
+    const current = try session.save();
+    defer a.free(current);
+    var digest: [32]u8 = undefined;
+    std.crypto.hash.sha2.Sha256.hash(current, &digest, .{});
+    return digest;
+}
+export fn hwpx_edit_insert_equation(ptr: [*]const u8, size: u32) u32 {
+    hwpx_edit_output_free();
+    if (size == 0 or size > 8 * 1024 * 1024) return fail(error.LimitExceeded);
+    const digest = inlineInsertSourceDigest() catch |err| return fail(err);
+    var parsed = @import("../hwpx/equation_insert.zig").parseRequest(a, ptr[0..size], digest) catch |err| return fail(err);
+    defer parsed.deinit();
+    const target = parsed.request.target;
+    apply(.{ .kind = .equation_insert, .section = target.section, .paragraph = target.paragraph, .start = target.unit, .deleted = 0, .inserted = "", .equation_insert = &parsed.request }) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_create_chart(ptr: [*]const u8, size: u32) u32 {
+    hwpx_edit_output_free();
+    if (size == 0 or size > 8 * 1024 * 1024) return fail(error.LimitExceeded);
+    const digest = inlineInsertSourceDigest() catch |err| return fail(err);
+    var parsed = @import("../hwpx/chart_create.zig").parseRequest(a, ptr[0..size], digest) catch |err| return fail(err);
+    defer parsed.deinit();
+    const target = parsed.request.target;
+    apply(.{ .kind = .chart_create, .section = target.section, .paragraph = target.paragraph, .start = target.unit, .deleted = 0, .inserted = "", .chart_create = &parsed.request }) catch |err| return fail(err);
+    return 1;
 }

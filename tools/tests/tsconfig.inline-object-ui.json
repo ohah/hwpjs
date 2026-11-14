@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "target": "ES2023",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["bun"]
+  },
+  "files": [
+    "../../apps/demo/src/assets.d.ts",
+    "../../apps/demo/src/shell.ts",
+    "../../apps/demo/src/demo-controller.ts",
+    "../../apps/demo/src/inline-object-insert-dialog.ts",
+    "../../apps/demo/src/inline-object-insert-port.ts",
+    "../../apps/demo/src/inline-object-insert-tool.ts",
+    "../../apps/demo/src/inline-object-insert-data-grid.ts"
+  ]
+}

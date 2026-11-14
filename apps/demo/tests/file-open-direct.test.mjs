@@ -149,10 +149,10 @@ test('상단·메뉴 진입과 공유 설명을 분리하고 새 문서·기존 
       assert.equal(reason.textContent, '열기 대기');
     }
     const tools = all(root, (n) => n.className === 'hwp-demo-tool');
-    assert.equal(tools.length, 28);
+    assert.equal(tools.length, 29);
     assert.equal(tools.filter((n) => n.dataset.command === 'new-document').length, 1);
-    assert.equal(tools.filter((n) => n.dataset.command !== 'new-document').length, 27);
-    for (const command of ['edit-chart-data', 'edit-equation']) {
+    assert.equal(tools.filter((n) => n.dataset.command !== 'new-document').length, 28);
+    for (const command of ['insert-chart', 'insert-equation', 'edit-chart-data', 'edit-equation']) {
       const matches = tools.filter((n) => n.dataset.command === command);
       assert.equal(matches.length, 1);
       assert.equal(matches[0].disabled, true, '문서가 없는 인스턴스는 편집 권한을 부여하지 않는다');

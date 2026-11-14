@@ -24,6 +24,8 @@ export const SURFACE_READ_KINDS = Object.freeze([
   'dutmal-text-query',
 ] as const);
 export const SURFACE_MUTATION_KINDS = Object.freeze([
+  'insert-equation',
+  'create-chart',
   'formatting-patch',
   'independent-text',
   'splice',

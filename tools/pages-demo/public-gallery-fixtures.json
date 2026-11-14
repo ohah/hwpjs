@@ -7,8 +7,8 @@
       "name": "chart-data-edit.hwpx",
       "label": "[기능 예제] 차트 데이터 편집",
       "path": "fixtures/chart-data-edit.hwpx",
-      "bytes": 16095,
-      "sha256": "2a3e2cec62233c0a49cf0acb441f4b5e0266d742a91e5ff6018ca42237ec4997"
+      "bytes": 16315,
+      "sha256": "37d006a817c5a15b4ff6cd3696e6e78511c353a5cd29f34939eceb7e854a90a2"
     },
     {
       "id": "equation-edit.hwpx",

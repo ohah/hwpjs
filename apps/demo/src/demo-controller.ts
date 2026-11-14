@@ -1,3 +1,4 @@
+import { createInlineObjectInsertTool } from './inline-object-insert-tool.ts';
 import { createShapeCopyTool } from './shape-copy-tool.ts';
 import { createPageSettingsTool } from './page-settings-tool.ts';
 import { createTableCellSplitTool, type TableCellSplitCapture } from './table-cell-split-tool.ts';
@@ -356,6 +357,16 @@ export async function mountDemo(
     onStatus: note,
     onPresentationChange: () => shell.update(),
   });
+  const inlineObjectInsert = createInlineObjectInsertTool({
+    root,
+    editor,
+    core: paragraphShapeCore,
+    onStatus: note,
+    onPresentationChange: () => shell.update(),
+    onClose: () => {
+      host?.focus?.();
+    },
+  });
   const chartData = createChartDataTool({
     root,
     editor,
@@ -416,6 +427,8 @@ export async function mountDemo(
       },
       ...textTools.presentation(),
       'insert-table': tableInsert.presentation(),
+      'insert-chart': inlineObjectInsert.presentation('chart'),
+      'insert-equation': inlineObjectInsert.presentation('equation'),
       'edit-chart-data': chartData.presentation(),
       'edit-equation': equation.presentation(),
       ...(host?.requestCellBlock
@@ -752,6 +765,10 @@ export async function mountDemo(
       objectProperties.open();
       return;
     }
+    if (action.command === 'insert-chart' || action.command === 'insert-equation') {
+      inlineObjectInsert.open(action.command === 'insert-chart' ? 'chart' : 'equation');
+      return;
+    }
     if (action.command === 'edit-chart-data') {
       chartData.open();
       return;
@@ -1007,6 +1024,7 @@ export async function mountDemo(
   } catch (error) {
     closed = true;
     cellSplit.dispose();
+    inlineObjectInsert.dispose();
     chartData.dispose();
     equation.dispose();
     documentInsert.dispose();
@@ -1052,6 +1070,7 @@ export async function mountDemo(
       if (closed) return;
       closed = true;
       cellSplit.dispose();
+      inlineObjectInsert.dispose();
       chartData.dispose();
       equation.dispose();
       documentInsert.dispose();

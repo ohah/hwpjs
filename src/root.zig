@@ -1559,3 +1559,7 @@ test {
 test {
     _ = @import("hwpx/header_resource_save.zig");
 }
+
+test {
+    _ = @import("inline_object_creation_probe.zig");
+}

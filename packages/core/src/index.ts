@@ -251,3 +251,17 @@ export type {
 } from './commands/page-settings-dto.ts';
 
 export { planCellAppearanceSelection } from './commands/cell-appearance-selection.ts';
+
+export {
+  INSERT_EQUATION_COMMAND,
+  CREATE_CHART_COMMAND,
+  getInlineObjectInsertAvailability,
+} from './commands/inline-object-insert.ts';
+export type {
+  InlineObjectKind,
+  InlineObjectInsertPayload,
+  InsertEquationPayload,
+  CreateChartPayload,
+  EquationInsertOptions,
+  ChartCreateOptions,
+} from './commands/inline-object-insert.ts';

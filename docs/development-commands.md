@@ -1,5 +1,57 @@
 # 개발·검증 명령
 
+<a id="hwpx-inline-object-creation"></a>
+
+## HWPX 새 차트·수식 생성
+
+[생성 계약](hwpx-inline-object-creation.md)의 합성 검사와 실제 SDK 검사를 분리한다. 저장소 루트에서 실행하며 패킷 경로를 사용하지 않는다.
+
+```sh
+bun test --no-install \
+  ./tests/hwpx/inline-object-js-core-queued.test.ts \
+  ./tests/hwpx/inline-object-js-facade.test.mjs \
+  ./tests/hwpx/inline-object-insert-sdk-newonly.test.mjs \
+  ./tests/hwpx/inline-object-js-core-guards.test.mjs
+bunx --no-install tsc --noEmit -p ./tools/tests/tsconfig.inline-object-creation.json
+bun test --no-install \
+  ./apps/demo/tests/toolbox.test.mjs \
+  ./apps/demo/tests/file-open-direct.test.mjs \
+  ./apps/demo/tests/existing-object-tools-shell.test.mjs
+```
+
+공통 caret과 생성 전용 빈 anchor의 후속 검사도 별도로 실행한다.
+
+```sh
+bun test --no-install ./packages/core/tests/commands/current-caret.test.ts ./packages/core/tests/commands/inline-object-empty-anchor-caret.test.ts
+bunx --no-install tsc --noEmit -p ./tools/tests/tsconfig.inline-object-caret.json
+```
+
+shared4/empty6 합성10개는 기존27개와 구별한다. r9 제품3파일을 포함한 최종 Core가 필요하다.
+
+앞의 네 entry는 합성27개다. 뒤의 UI 목록 검사는 mock DOM이며 GUI 생성 완료가 아니다. toolbar는 전체29개·새 문서 제외28개이고 입력 메뉴의 수식·추가 도구 순서·생성 미지원 시 비활성화를 확인한다.
+
+실제 일반 SDK13개(facade6/Core7)는 새 생성 ABI가 있는 명시 WASM과 정확한 구879를 사용한다. packages/core/dist/build-manifest.json은 같은 WASM으로 공식 build-packages.mjs --package=core --web --wasm=...를 실행한 산출물이어야 한다. 누락·해시 불일치·구 엔진을 candidate로 지정하면 실패하며 skip/fallback하지 않는다.
+
+```sh
+test -n "$HWPJS_TEST_WASM" || exit 1
+export HWPJS_TEST_WASM_EXPECTED_SHA256="$(node tools/tests/helpers/native-wasm-pin.mjs --manifest packages/core/dist/build-manifest.json)"
+mkdir -p zig-out/verification
+creation_inputs="$(mktemp -d "$PWD/zig-out/verification/inline-object-ci.XXXXXX")"
+git show 680dbdee61ca51804104e050395301bb528f3faa:apps/docs/docs/public/editor/hwpjs/hwpjs.wasm > "$creation_inputs/old879.wasm"
+export HWPJS_TEST_OLD_WASM="$creation_inputs/old879.wasm"
+export HWPJS_TEST_EVIDENCE_DIR="$creation_inputs/results"
+node tools/tests/run-inline-object-creation-native.mjs --check-inputs
+node tools/tests/run-inline-object-creation-native.mjs
+export HWPJS_TEST_EVIDENCE_DIR="$creation_inputs/caret-r9"
+node tools/tests/run-inline-object-creation-native.mjs --caret
+```
+
+HWPJS_TEST_WASM는 절대경로다. 구879 SHA는 검사 코드에 고정한다. 고정 Git 객체가 없는 shallow clone은 먼저 해당 commit을 가져와야 하며 CI는 명시 fetch한다. --check-inputs는 바이트·해시·경로만 확인하고 WASM을 컴파일/실행하지 않는다.
+
+실제 runner의 기본 경로는 Node24.20 이상에서13개, --caret는 r9 추가7개를 각각 수집/통과·skip0으로 확인하고 Python ZIP/XML normal/-O 및 wrong-expectation 음성을 순차 실행한다. 증거 디렉터리는 새 경로여야 하며 seed는 추적된 독립 합성 HWPX다. 최초 로그·실패 산출물을 보존하고 자동 재시도하지 않는다. 구879는 history v2가 있어도 생성 ABI 부재로 SDK/Core 모두 거부하고 bytes/history를 보존해야 한다.
+
+이는 일반 SDK Node·독립 ZIP/XML 증거다. 별도 Native 집중29/OOM, GUI·설치 패키지·배포 증거와 합산하지 않는다. 이 runner는 새 Native 바이너리를 빌드하지 않는다.
+
 ## HWPX 폼 조회 scope
 
 [동기 폼 조회 계약](hwpx-read-observation-scope.md)의 Native 원본·현재값 동치, owner·오류 우선순위, 할당 실패와 조회 수명을 집중 검사합니다.

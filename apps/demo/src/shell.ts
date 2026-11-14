@@ -92,6 +92,7 @@ const toolGroups: readonly (readonly [string, readonly Tool[]])[] = [
 const extraTools: readonly Tool[] = [
   ['save', '저장하기', 'save'],
   ['insert-chart', '차트', 'insert-chart'],
+  ['insert-equation', '수식', 'edit-equation'],
   ['edit-chart-data', DEMO_COMMAND_REGISTRY['edit-chart-data'].label, 'insert-chart'],
   ['edit-equation', DEMO_COMMAND_REGISTRY['edit-equation'].label, 'edit-equation'],
   ['word-count', '문서 통계', 'paragraph-properties'],
@@ -111,7 +112,18 @@ const menus: readonly [string, readonly DemoCommand[]][] = [
       'toggle-grid',
     ],
   ],
-  ['입력', ['insert-image', 'insert-table', 'insert-shape', 'insert-link', 'insert-symbol']],
+  [
+    '입력',
+    [
+      'insert-image',
+      'insert-table',
+      'insert-shape',
+      'insert-chart',
+      'insert-equation',
+      'insert-link',
+      'insert-symbol',
+    ],
+  ],
   [
     '서식',
     [

@@ -6,6 +6,7 @@ import {
 import { checkedBulletDefinitionEdit } from './paragraph-bullet-definition-write.mjs';
 import { decodeParagraphBulletDefinitions } from './paragraph-bullet-definitions.mjs';
 import { createHwpxDocumentInsertApi } from './hwpx-document-insert.mjs';
+import { createHwpxInlineObjectInsertApi } from './hwpx-inline-object-insert.mjs';
 import { decodeHwpxPageNumberDisplaySource } from './hwpx-page-number-display-wire.mjs';
 import { encodeCellDiagonals } from './cell-diagonal-command.mjs';
 import { encodeCellBorderPatches } from './cell-border-patch-command.mjs';
@@ -241,6 +242,7 @@ export async function createHwpxEditor(source) {
     ...createAtomicFormattingApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
     ...createIndependentTextApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
     ...documentInsert,
+    ...createHwpxInlineObjectInsertApi({ wasm, memory, check: ready }),
     ...createSourceTableCellMergeApi({ wasm, memory, check: ready, documentInsert }),
     ...createSourceTableCellSplitApi({ wasm, memory, check: ready, documentInsert }),
     ...createParagraphBreakApi({
