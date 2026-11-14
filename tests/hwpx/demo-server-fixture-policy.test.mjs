@@ -41,7 +41,7 @@ const privateCatalog = demoFixtures.map(({ id, name, label }) => ({
   label: label ?? name,
   available: true,
 }));
-assert.equal(gallery.length, 101);
+assert(gallery.length > noori.length);
 assert(privateCatalog.length > noori.length);
 let counter = 0;
 async function put(directory, files, extra = {}) {
@@ -161,17 +161,17 @@ test('누락·중복·bundle 없는 정책 옵션 거부', () => {
   ])
     assert.throws(() => parseDemoServerArguments(args, workspace));
 });
-test('기본 Noori2 양성 입력은 현재 공개101과 독립', async () => {
+test('기본 Noori2 양성 입력은 현재 공개 목록 크기와 독립', async () => {
   const bundle = await loadDemoServerBundle(legacy.directory, { root: legacy.root });
   assert.equal(bundle.manifest.wasmSha256, legacy.manifest.wasmSha256);
 });
-test('명시 정책 없는 공개101은 여전히 거부', async () => {
+test('명시 정책 없는 확장 공개 목록은 여전히 거부', async () => {
   await assert.rejects(
     loadDemoServerBundle(current.directory, { root: current.root }),
     /UnapprovedFixture/,
   );
 });
-test('옵션에서 loader로 전달한 명시101 양성', async () => {
+test('명시 정책의 전체 목록과 파일은 loader 응답에 정확히 유지', async () => {
   const options = parseDemoServerArguments(
     ['--bundle-dir', current.directory, '--fixture-policy', current.fixturePolicyPath],
     current.root,
@@ -181,6 +181,19 @@ test('옵션에서 loader로 전달한 명시101 양성', async () => {
     ...options,
   });
   assert.equal(bundle.manifest.wasmSha256, current.manifest.wasmSha256);
+  for (const path of ['fixture-catalog.json', ...actualPolicy.files.map((row) => row.path)]) {
+    let status, body;
+    await bundle.respond('/hwpjs/editor/' + path, 'GET', {
+      writeHead(code) {
+        status = code;
+      },
+      end(bytes) {
+        body = bytes;
+      },
+    });
+    assert.equal(status, 200, path);
+    assert.deepEqual(body, current.files.get(path), path);
+  }
 });
 test('누락 정책 파일은 fallback 없이 거부', async () => {
   await assert.rejects(loadPublic(join(workspace, 'missing.json')), { code: 'ENOENT' });
@@ -220,7 +233,7 @@ test('public manifest symlink 거부 유지', async () => {
     /SymlinkBundlePath/,
   );
 });
-test('사설 catalog는 공개101 정책과 별도로 엄격 일치', async () => {
+test('사설 catalog는 공개 정책과 별도로 엄격 일치', async () => {
   const bundle = await loadPrivate(goodPrivate);
   assert.equal(bundle.manifest.privateDemo.catalogCount, privateCatalog.length);
 });
