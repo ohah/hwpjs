@@ -119,7 +119,15 @@ fn check(source: []const u8, output: []const u8, layout: Layout, rows: usize, co
     defer a.free(before);
     const after = try records(output);
     defer a.free(after);
-    try std.testing.expectEqual(6 + rows * columns * 4 + 4, after.len);
+    try std.testing.expectEqual(rows * columns, matrix.len);
+    try std.testing.expectEqual(matrix.len, templates.len);
+    var fresh_count: usize = 0;
+    for (matrix) |cell| if (cell < 0) {
+        fresh_count += 1;
+    };
+    // Retained cells keep LIST/HEADER/TEXT/RUNS. A newly authored empty cell
+    // declares one implicit terminator and has LIST/HEADER/RUNS, not lost text.
+    try std.testing.expectEqual(10 + (matrix.len - fresh_count) * 4 + fresh_count * 3, after.len);
     for (0..4) |i| try std.testing.expectEqualSlices(u8, before[i].raw, after[i].raw);
     for (0..4) |i| try std.testing.expectEqualSlices(u8, before[before.len - 4 + i].raw, after[after.len - 4 + i].raw);
     var common: [46]u8 = undefined;
@@ -141,8 +149,10 @@ fn check(source: []const u8, output: []const u8, layout: Layout, rows: usize, co
     for (0..rows) |r| try std.testing.expectEqual(@as(u16, @intCast(columns)), std.mem.readInt(u16, t[18 + r * 2 ..][0..2], .little));
     try std.testing.expectEqualSlices(u8, before[5].payload[22..], t[18 + rows * 2 ..]);
     var new_index: usize = 0;
+    var cursor: usize = 6;
     for (matrix, 0..) |old, i| {
-        const start = 6 + i * 4;
+        const start = cursor;
+        cursor += if (old >= 0) @as(usize, 4) else 3;
         const original: usize = if (old >= 0) @intCast(old) else templates[i];
         const old_start = 6 + original * 4;
         const base: usize = if (layout == .spec6) 6 else 8;
@@ -164,14 +174,23 @@ fn check(source: []const u8, output: []const u8, layout: Layout, rows: usize, co
             put(u32, &h, 18, fresh[new_index]);
             new_index += 1;
             try std.testing.expectEqualSlices(u8, &h, after[start + 1].payload);
-            try std.testing.expectEqualSlices(u8, &.{ 13, 0 }, after[start + 2].payload);
-            try std.testing.expectEqualSlices(u8, before[old_start + 3].payload[0..8], after[start + 3].payload);
-            for (1..4) |j| {
-                try std.testing.expectEqual(@as(u10, @intCast(65 + j)), after[start + j].tag);
-                try std.testing.expectEqual(@as(u10, if (j == 1) 2 else 3), after[start + j].level);
-            }
+            const parsed = try @import("../body/paragraph_header.zig").Header.parse(after[start + 1].payload, version);
+            try std.testing.expectEqual(@as(u32, 1), parsed.characterUnits());
+            try std.testing.expect(parsed.countHighBit());
+            try std.testing.expectEqual(@as(u16, 1), parsed.char_shape_count);
+            try std.testing.expectEqual(@as(u16, 0), parsed.range_tag_count);
+            try std.testing.expectEqual(@as(u16, 0), parsed.line_segment_count);
+            try std.testing.expectEqual(@as(u10, 66), after[start + 1].tag);
+            try std.testing.expectEqual(@as(u10, 2), after[start + 1].level);
+            // No PARA_TEXT is manufactured here. The next and only paragraph
+            // child is its exact single character run over the virtual CR.
+            try std.testing.expectEqual(@as(u10, 68), after[start + 2].tag);
+            try std.testing.expectEqual(@as(u10, 3), after[start + 2].level);
+            try std.testing.expectEqualSlices(u8, before[old_start + 3].payload[0..8], after[start + 2].payload);
         }
     }
+    try std.testing.expectEqual(after.len - 4, cursor);
+    try std.testing.expectEqual(fresh_count, new_index);
 }
 
 fn wrap(raw: []const u8, compressed: bool, flags: u32) ![]u8 {
