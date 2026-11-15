@@ -17,3 +17,5 @@ export type {
 } from './surface.ts';
 export { createKeyboardShortcuts } from './shortcuts.ts';
 export type { KeyboardShortcutsOptions } from './shortcuts.ts';
+
+export type { CanvasObjectActivation, CanvasObjectTarget } from './object-activation.ts';

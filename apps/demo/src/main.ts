@@ -1,3 +1,4 @@
+import { createObjectActivationRelay } from './object-activation-relay.ts';
 import { createDemoSurfaceEnvironment } from './surface-environment.ts';
 import { createCanvasSurface } from '@hwpjs/vanilla';
 import { createElement, createRef, StrictMode } from 'react';
@@ -42,7 +43,8 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
     createCanvasSurface({ root, editor, onStatus, environment: createDemoSurfaceEnvironment() }),
   react: (root, editor, onStatus) => {
     const pages = createPageStatusRelay(),
-      cellBlockMenus = createCellBlockMenuRelay();
+      cellBlockMenus = createCellBlockMenuRelay(),
+      objectActivations = createObjectActivationRelay();
     const tree = createRoot(root),
       ref = createRef<CanvasSurfaceHandle>();
     tree.render(
@@ -56,6 +58,7 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
           onReady: (surface) => {
             pages.connect(surface as DemoPageStatusHost);
             cellBlockMenus.connect(surface);
+            objectActivations.connect(surface);
           },
           ref,
           style: { height: '100%' },
@@ -104,6 +107,7 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
         ref.current?.surface?.requestCellBlock(extend, fromContext) ?? false,
       hasCellBlock: () => ref.current?.surface?.hasCellBlock() ?? false,
       registerCellBlockMenu: cellBlockMenus.register,
+      registerObjectActivation: objectActivations.register,
       captureSourceTableCellSplit: () =>
         ref.current?.surface?.captureSourceTableCellSplit() ?? null,
       captureSourceTableCellMerge: () =>
@@ -126,13 +130,15 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       dispose: () => {
         pages.dispose();
         cellBlockMenus.dispose();
+        objectActivations.dispose();
         tree.unmount();
       },
     };
   },
   svelte: (root, editor, onStatus) => {
     const pages = createPageStatusRelay(),
-      cellBlockMenus = createCellBlockMenuRelay();
+      cellBlockMenus = createCellBlockMenuRelay(),
+      objectActivations = createObjectActivationRelay();
     let surface: SvelteSurface | undefined;
     const component = mount(CanvasEditor, {
       target: root,
@@ -145,6 +151,7 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
           surface = value;
           pages.connect(value as DemoPageStatusHost);
           cellBlockMenus.connect(value);
+          objectActivations.connect(value);
         },
       },
     });
@@ -184,6 +191,7 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
         surface?.requestCellBlock(extend, fromContext) ?? false,
       hasCellBlock: () => surface?.hasCellBlock() ?? false,
       registerCellBlockMenu: cellBlockMenus.register,
+      registerObjectActivation: objectActivations.register,
       captureSourceTableCellSplit: () => surface?.captureSourceTableCellSplit() ?? null,
       captureSourceTableCellMerge: () => surface?.captureSourceTableCellMerge() ?? null,
       captureSourceTableCellWidth: () => surface?.captureSourceTableCellWidth() ?? null,
@@ -202,6 +210,7 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       dispose: () => {
         pages.dispose();
         cellBlockMenus.dispose();
+        objectActivations.dispose();
         surface = undefined;
         return unmount(component);
       },

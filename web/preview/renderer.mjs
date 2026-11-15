@@ -1,3 +1,4 @@
+import { objectActivationTarget } from './object-activation-target.mjs';
 import { createFormTextDraftMeasurements } from './form-text-draft-measurements.mjs';
 import { createFormAutoSizeFrames } from './form-autosize-frame.mjs';
 import { createCanvasFormAutoSizer } from './form-autosize-provider.mjs';
@@ -2475,6 +2476,23 @@ export function createRenderer(
       );
     },
     chartPreviews: () => paintedCharts.slice(),
+    objectAtLogicalPoint(x, y) {
+      if (!isPaintedFrameCurrent() || draft) return null;
+      return objectActivationTarget(
+        {
+          content,
+          layout,
+          charts: paintedCharts,
+          picture: hitPictureLayers(paintedPictures, x, y, () => true, {
+            paintOrder: picturePaintOrder,
+          }),
+          outlines: drawingOutlineLayers,
+          borderTolerance: 5 / viewScale,
+        },
+        x,
+        y,
+      );
+    },
     chartAtLogicalPoint: (x, y) => {
       flushProjection();
       return (

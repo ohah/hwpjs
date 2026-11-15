@@ -6,7 +6,7 @@ import { fixture } from './chart-data-fixture.mjs';
 const hooks = installFormattingTestStyles();
 const { chartDataViewFactory } = await import('../src/chart-data-view.ts');
 hooks.deregister();
-function setup() {
+function setup(targets = [{ section: 0, wrapper: 7 }]) {
   const dom = documentFixture(),
     calls = [];
   let dismissed = 0;
@@ -20,7 +20,7 @@ function setup() {
     };
     return element;
   };
-  const view = chartDataViewFactory(dom.root)([{ section: 0, wrapper: 7 }], {
+  const view = chartDataViewFactory(dom.root)(targets, {
     onSelect(t) {
       calls.push(['select', t]);
     },
@@ -90,4 +90,46 @@ test('destroy removes callbacks and raw source labels stay text', async () => {
   fire(f.apply, 'click');
   assert.equal(f.calls.length, 0);
   assert.equal(f.root.children.length, 0);
+});
+
+test('capture of the clicked second chart selects its matching option without changing source values', async () => {
+  const f = setup([
+    { section: 0, wrapper: 7 },
+    { section: 0, wrapper: 9 },
+  ]);
+  const captured = await fixture().port.capture({ section: 0, wrapper: 7 });
+  const capture = {
+    ...captured,
+    target: { section: 0, wrapper: 9 },
+    points: [{ kind: 'numeric_literal', value: '101' }],
+  };
+  f.view.showCapture(capture);
+  const select = f.nodes().find((n) => n.tagName === 'SELECT');
+  assert.equal(select.value, '1');
+  assert.equal(f.nodes().find((n) => n.tagName === 'INPUT').value, '101');
+  assert.deepEqual(
+    f
+      .nodes()
+      .filter((n) => n.tagName === 'OPTION')
+      .map((n) => n.textContent),
+    ['차트 1 (1구역)', '차트 2 (1구역)'],
+  );
+  assert.equal(f.calls.length, 0);
+  f.view.destroy();
+});
+test('an absent or ambiguous captured chart cannot display another target data', async () => {
+  const captured = await fixture().port.capture({ section: 0, wrapper: 7 });
+  for (const targets of [
+    [{ section: 0, wrapper: 9 }],
+    [
+      { section: 0, wrapper: 7 },
+      { section: 0, wrapper: 7 },
+    ],
+  ]) {
+    const f = setup(targets);
+    f.view.showCapture(captured);
+    assert.equal(f.apply.disabled, true);
+    assert.equal(f.nodes().filter((n) => n.tagName === 'INPUT').length, 0);
+    f.view.destroy();
+  }
 });

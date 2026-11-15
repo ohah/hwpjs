@@ -1,0 +1,13 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "types": [],
+    "allowJs": true,
+    "checkJs": false,
+    "paths": {
+      "@hwpjs/core": ["../../../packages/core/dist/index.d.ts"]
+    }
+  },
+  "files": ["../src/assets.d.ts", "../src/drawing-properties-tool.ts"],
+  "include": []
+}

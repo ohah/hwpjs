@@ -170,7 +170,7 @@ export function createChartDataController(options: {
         };
       return options.port.presentation();
     },
-    open() {
+    open(initial?: ChartTarget) {
       if (disposed || pending) return;
       if (session) {
         session.view.focus();
@@ -183,6 +183,12 @@ export function createChartDataController(options: {
       }
       try {
         const targets = options.port.targets();
+        const selected = initial
+          ? targets.find(
+              (target) => target.section === initial.section && target.wrapper === initial.wrapper,
+            )
+          : targets[0];
+        if (!selected) throw Error('선택한 차트를 확인할 수 없습니다. 다시 선택하세요.');
         const state = options.port.getState();
         const view = options.createView(targets, {
           onSelect: (target) => {
@@ -198,7 +204,7 @@ export function createChartDataController(options: {
           return;
         }
         session = { view, capture: null, state };
-        void select(targets[0]);
+        void select(selected);
       } catch (error) {
         notify(() => options.onStatus(String(error)));
       }

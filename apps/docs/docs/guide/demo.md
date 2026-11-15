@@ -57,3 +57,7 @@ Canvas 데모에서 HWP5 또는 HWPX 표의 셀 안을 클릭한 뒤 아래 기�
 이미 병합된 셀, 보호된 영역, 중첩 표나 개체가 포함된 영역에는 합치기를 제공하지 않습니다. 생성한 표는 저장하고 다시 연 뒤 시도할 수 있습니다. HWP5 셀 합치기와 셀 너비·높이 균등화는 별도 범위입니다.
 
 동작 참고 [한컴 WebHwp 단축키 일람](https://webhwpctrl.cloud.hancom.com/webhwpctrl/js/rights/shortcut/shortcut.htm) · [한컴 셀 블록 도움말](https://help.hancom.com/hoffice100/ko-KR/Hwp/table/table%28cell%29.htm)
+
+## 개체 더블클릭
+
+지원되는 차트·그림을 더블클릭하면 개체 속성 창이 열립니다. 차트의 데이터 편집 버튼은 클릭한 차트에 연결되며, 그림은 지원 조건에서 크기를 바꿀 수 있습니다. 글상자는 테두리 더블클릭으로 정보를 보고 내부 더블클릭으로 텍스트를 편집합니다. 차트·글상자의 크기와 배치 변경, 그룹·회전 개체의 일반 편집은 아직 제공하지 않습니다. [상세 경계](https://github.com/ohah/hwpjs/blob/main/docs/canvas-object-activation.md)를 참고하세요.

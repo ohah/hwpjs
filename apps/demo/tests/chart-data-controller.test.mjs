@@ -153,3 +153,28 @@ test('dismiss during query and dispose during edit ignore late UI callbacks', as
   assert.equal(f.messages.length, 0);
   assert.equal(f.tool.presentation().enabled, false);
 });
+
+test('opening a clicked second chart never substitutes the first chart target', async () => {
+  const f = setup();
+  f.content.chartTargets.push({ section: 0, wrapper: 9 });
+  f.onRead((request) => {
+    const reply = structuredClone(f.reply);
+    reply.wrapper = request.wrapper;
+    reply.chart.pair.wrapper_node = request.wrapper;
+    return reply;
+  });
+  f.tool.open({ section: 0, wrapper: 9 });
+  await tick();
+  assert.equal(f.calls[0][1].wrapper, 9);
+  assert.equal(f.views[0].capture.target.wrapper, 9);
+  f.tool.dispose();
+});
+test('opening a missing chart target refuses before creating a dialog or issuing a read', async () => {
+  const f = setup();
+  f.tool.open({ section: 0, wrapper: 99 });
+  await tick();
+  assert.equal(f.views.length, 0);
+  assert.equal(f.calls.length, 0);
+  assert.equal(f.messages.length, 1);
+  f.tool.dispose();
+});

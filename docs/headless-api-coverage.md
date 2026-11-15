@@ -162,3 +162,5 @@ HWPX의 완료 poll은 감시·전송을 포함한 관측이므로 응답 속도
 `listParagraphBulletDefinitions({token?})`는 HWP5 DocInfo·HWPX 현재 헤더 전체 선언을 complete inventory로 반환합니다. 기존 선언의 UI 적용/해제 및 형식별 unavailable·수명·저장 검증은 [글머리표 정의 목록](paragraph-bullet-inventory.md)을 따릅니다.
 
 HWP5·HWPX 문자 정의의 생성·수정은 같은 `EDIT_PARAGRAPH_BULLET_DEFINITION_COMMAND`를 제공합니다. HWP5의 표현 한도와 생성 문단 지원은 [HWP5 글머리표](hwp5-paragraph-bullets.md)를 따릅니다. 전체 헤더 query의 optional writer/definition과 한 이력 적용 범위는 [정의 편집](paragraph-bullet-definition-editing.md)을 따릅니다.
+
+Canvas에서 발생한 개체 활성화는 [Canvas 개체 활성화](canvas-object-activation.md)의 호스트 이벤트이며 편집 명령이나 호환 액션 API와 구분합니다.

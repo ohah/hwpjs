@@ -170,7 +170,7 @@
     {
       "path": "api/main.js",
       "bytes": 21584,
-      "sha256": "75b0f3968059f68f7a5c70a75d25632c864a9a57e75345fb5284b9e2ff2bf9c8"
+      "sha256": "b765eaa857f40d79acad08d8a2b7ad82b36eed7383ef8b8ab24bed6df6bd2fc9"
     },
     {
       "path": "api/playground.js",
@@ -958,6 +958,11 @@
       "sha256": "9288ed7744d797e400bf4c238fd330c7ef68bf05cd9e27bb16902ec74d5b7a78"
     },
     {
+      "path": "assets/dist-BysSWEpP.js",
+      "bytes": 1292338,
+      "sha256": "df9bd1b03c235bd131d035c383b2edf50c25e86068d5cc2251f944ebbbdc9a6d"
+    },
+    {
       "path": "assets/dist-BzEtgZff.js",
       "bytes": 1191623,
       "sha256": "9f41362eec45272003fa1e27bace6ef5c13aa42716126e098a81d4a7442be189"
@@ -1416,6 +1421,11 @@
       "path": "assets/dist-j66vaTUq.js",
       "bytes": 57,
       "sha256": "d7e3a1fa692ab1abaf82fa33cc877a43ac990742bdd5cb79ba27357813beab33"
+    },
+    {
+      "path": "assets/dist-jXSRuxhJ.js",
+      "bytes": 57,
+      "sha256": "ebc302c78dabde61a899e40d4594e7494dd9c5994026be291559837e92b6bbdb"
     },
     {
       "path": "assets/dist-kBpUjD5_.js",
@@ -2888,6 +2898,11 @@
       "sha256": "19df77b0ac5e3dabef6feefa041023cfb5973178c1449add90135c70d230f23c"
     },
     {
+      "path": "assets/main-Cn1CFN9M.css",
+      "bytes": 41807,
+      "sha256": "23b261becf748730ca81f1283c6fe5c2b295c705cf9b34fca35ea111b6dc220e"
+    },
+    {
       "path": "assets/main-CnfLz6d0.js",
       "bytes": 605770,
       "sha256": "79d83344a0c8f7a8b4f985361c6a91760de88c6c074846ba82a2c3483fda2fe4"
@@ -2956,6 +2971,11 @@
       "path": "assets/main-dpitMfbt.js",
       "bytes": 648748,
       "sha256": "8231b8e37a1214ecfae112f2cf6add0cb6248e3f1c412bc2726208de7723baec"
+    },
+    {
+      "path": "assets/main-DqB9DlqO.js",
+      "bytes": 706494,
+      "sha256": "e544d469d2b965ba6f86590b288f79fc8e1d63c89b414a389266c0d63f35ac98"
     },
     {
       "path": "assets/main-DS_KfP7k.js",
@@ -3855,22 +3875,22 @@
     {
       "path": "demo/headless/index.html",
       "bytes": 1283,
-      "sha256": "6d4113bfcb6bc19f5932f0404266e71fc96f81bd6aacfe9b45025c23cded828e"
+      "sha256": "79b79e5f43ed2199df4150f47c00ea1643f9e9dc01c3c71308b84887d6f55e25"
     },
     {
       "path": "demo/react/index.html",
       "bytes": 1283,
-      "sha256": "6d4113bfcb6bc19f5932f0404266e71fc96f81bd6aacfe9b45025c23cded828e"
+      "sha256": "79b79e5f43ed2199df4150f47c00ea1643f9e9dc01c3c71308b84887d6f55e25"
     },
     {
       "path": "demo/svelte/index.html",
       "bytes": 1283,
-      "sha256": "6d4113bfcb6bc19f5932f0404266e71fc96f81bd6aacfe9b45025c23cded828e"
+      "sha256": "79b79e5f43ed2199df4150f47c00ea1643f9e9dc01c3c71308b84887d6f55e25"
     },
     {
       "path": "demo/vanilla/index.html",
       "bytes": 1283,
-      "sha256": "6d4113bfcb6bc19f5932f0404266e71fc96f81bd6aacfe9b45025c23cded828e"
+      "sha256": "79b79e5f43ed2199df4150f47c00ea1643f9e9dc01c3c71308b84887d6f55e25"
     },
     {
       "path": "fixture-catalog.json",
@@ -4400,7 +4420,7 @@
     {
       "path": "index.html",
       "bytes": 1235,
-      "sha256": "14eb8ad29d1126972785f625a33138699f861d31b120707db6e27810fb6672af"
+      "sha256": "36bd12d200580b228eb65b344c1348264af263829ea3ddd0c12adec5d29a83ae"
     },
     {
       "path": "LICENSE.txt",

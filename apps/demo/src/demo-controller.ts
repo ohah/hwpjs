@@ -1,3 +1,7 @@
+import { createChartPropertiesTool } from './chart-properties-tool.ts';
+import { connectObjectActivation } from './object-activation-bridge.ts';
+import { createDrawingPropertiesTool } from './drawing-properties-tool.ts';
+import type { CanvasObjectActivation } from '@hwpjs/vanilla';
 import { createInlineObjectInsertTool } from './inline-object-insert-tool.ts';
 import { createShapeCopyTool } from './shape-copy-tool.ts';
 import { createPageSettingsTool } from './page-settings-tool.ts';
@@ -88,6 +92,7 @@ export interface DemoHost
   extends SurfaceFormattingHost, SurfaceClipboardPort, DemoPageStatusHost, TableGridHost {
   /** undefined는 관측 미연결/불확실, null은 현재 그림 선택 없음입니다. */
   getContextPicture?(): ContextPicture | null | undefined;
+  registerObjectActivation?(listener: (event: CanvasObjectActivation) => void): () => void;
   canRequestHistory?(kind: 'undo' | 'redo'): boolean;
   canEditCellProperties?(section: number, listNode: number): boolean;
   requestHistory?(kind: 'undo' | 'redo'): boolean;
@@ -325,6 +330,25 @@ export async function mountDemo(
     root,
     editor,
     host: () => host,
+    onStatus: note,
+    onClose: () => {
+      host?.focus?.();
+    },
+    onPresentationChange: () => shell.update(),
+  });
+  const chartProperties = createChartPropertiesTool({
+    root,
+    editor,
+    onStatus: note,
+    onClose: () => {
+      host?.focus?.();
+    },
+    onEditData: (target) => chartData.open(target),
+    getDataEditAvailability: () => chartData.presentation(),
+  });
+  const drawingProperties = createDrawingPropertiesTool({
+    root,
+    editor,
     onStatus: note,
     onClose: () => {
       host?.focus?.();
@@ -955,11 +979,17 @@ export async function mountDemo(
   });
   let unsubscribe = () => {};
   let unsubscribePages = () => {};
+  let unsubscribeObjects = () => {};
   let headless: ReturnType<typeof mountHeadlessPanel> | undefined;
   let shortcuts: ReturnType<typeof mountShortcutSettings> | undefined;
   void refreshFixtures();
   try {
     if (shell.surfaceMount && mountHost) host = await mountHost(shell.surfaceMount, editor, note);
+    unsubscribeObjects = connectObjectActivation(host, editor, {
+      picture: objectProperties,
+      chart: chartProperties,
+      drawing: drawingProperties,
+    });
     if (shell.tableMenu) host?.registerCellBlockMenu?.(shell.tableMenu);
     const shapeCopyHost = host;
     for (const target of shell.shapeCopyFocusTargets)
@@ -1031,6 +1061,7 @@ export async function mountDemo(
     cancelFixtureRefresh();
     presentationRefresh.dispose();
     unsubscribePages();
+    unsubscribeObjects();
     unsubscribe();
     shortcuts?.dispose();
     contextMenu?.close();
@@ -1041,6 +1072,8 @@ export async function mountDemo(
     tableCellAppearance.dispose();
     tableInsert.dispose();
     objectProperties.dispose();
+    drawingProperties.dispose();
+    chartProperties.dispose();
     pageSettingsTool.dispose();
     paragraphBullet.dispose();
     paragraphShape.dispose();
@@ -1079,6 +1112,7 @@ export async function mountDemo(
       const drained = admission.dispose();
       presentationRefresh.dispose();
       unsubscribePages();
+      unsubscribeObjects();
       unsubscribe();
       headless?.dispose();
       shortcuts?.dispose();
@@ -1090,6 +1124,8 @@ export async function mountDemo(
       tableCellAppearance.dispose();
       tableInsert.dispose();
       objectProperties.dispose();
+      drawingProperties.dispose();
+      chartProperties.dispose();
       pageSettingsTool.dispose();
       paragraphBullet.dispose();
       paragraphShape.dispose();

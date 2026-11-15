@@ -1,3 +1,4 @@
+import { bindObjectActivation, type CanvasObjectActivation } from './object-activation.ts';
 import { planCellAppearanceSelection } from '@hwpjs/core';
 // @ts-ignore Pure format admission shared with Core and the Worker.
 import { sourceTableCellWidthPlanForFormat } from '../../../web/preview/source-table-cell-width-format.mjs';
@@ -603,7 +604,46 @@ export function createCanvasSurface({
     sourceGridDialogRecords(sourceGridModalObserver?.takeRecords() ?? []);
     return sourceGridModalEpoch;
   };
+  const objectActivation = bindObjectActivation({
+    canvas,
+    viewport,
+    renderer: {
+      viewScale: () => renderer?.viewScale() ?? 1,
+      isPaintedFrameCurrent: () => renderer?.isPaintedFrameCurrent() === true,
+      objectAtLogicalPoint: (x, y) => renderer?.objectAtLogicalPoint(x, y) ?? null,
+    },
+    capture() {
+      if (
+        closed ||
+        nonTextHistoryPending ||
+        !lease?.isActive() ||
+        bridge?.busy() ||
+        !direct?.settled() ||
+        modalOpen()
+      )
+        return undefined;
+      const state = editor.getEditorState();
+      const frame = renderer?.paintedFrame();
+      const key = `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}`;
+      return state.status === 'ready' &&
+        observedStateVersion === state.stateVersion &&
+        key === displayed &&
+        frame?.resourceDocument === `${state.documentId}:${state.generation}` &&
+        frame?.resourceEpoch ===
+          `${state.documentId}:${state.generation}:${state.operationRevision}`
+        ? state
+        : undefined;
+    },
+    current: (state) =>
+      !closed &&
+      !nonTextHistoryPending &&
+      lease?.isActive() === true &&
+      editor.getEditorState() === state &&
+      observedStateVersion === state.stateVersion,
+    onError: (error) => status(`개체 정보 창을 열지 못했습니다: ${String(error)}`),
+  });
   const cleanup = () => {
+    objectActivation.dispose();
     outputLifetime.abort(Error('PrintSurfaceDetached'));
     closed = true;
     doc.removeEventListener?.('beforetoggle', sourceGridDialogEvent, true);
@@ -2201,6 +2241,9 @@ export function createCanvasSurface({
       return closed ? undefined : renderer.getDisplayOptions();
     },
     /** 표시용 선택 identity만 반환하며 크기 편집 권한을 만들지 않습니다. */
+    registerObjectActivation(listener: (event: CanvasObjectActivation) => void) {
+      return objectActivation.register(listener);
+    },
     getContextPicture() {
       const state = editor.getEditorState();
       const key = `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}`;

@@ -1,0 +1,23 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": [],
+    "allowJs": false,
+    "checkJs": false,
+    "paths": {
+      "@hwpjs/core": ["../packages/core/dist/index.d.ts"],
+      "@hwpjs/core/_internal/native-geometry": [
+        "../packages/core/dist/_internal/native-geometry.d.ts"
+      ],
+      "@hwpjs/vanilla": ["../packages/vanilla/src/index.ts"]
+    }
+  },
+  "files": [
+    "../packages/vanilla/src/object-activation.ts",
+    "../packages/vanilla/src/surface.ts",
+    "../apps/demo/src/object-activation-relay.ts",
+    "../apps/demo/src/object-activation-bridge.ts",
+    "../apps/demo/src/chart-data-controller.ts"
+  ],
+  "include": []
+}

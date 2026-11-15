@@ -24,10 +24,15 @@ export function chartDataViewFactory(root: HTMLElement): ChartDataViewFactory {
       select = doc.createElement('select');
     label.textContent = '기존 차트 ';
     select.setAttribute('aria-label', '편집할 기존 차트');
+    const targetKey = (target: { section: number; wrapper: number }) =>
+      `${target.section}:${target.wrapper}`;
+    const targetIndices = new Map<string, number | null>();
     targets.forEach((target, i) => {
+      const id = targetKey(target);
+      targetIndices.set(id, targetIndices.has(id) ? null : i);
       const option = doc.createElement('option');
       option.value = String(i);
-      option.textContent = `차트 ${i + 1} · 구역 ${target.section} · 노드 ${target.wrapper}`;
+      option.textContent = `차트 ${i + 1} (${target.section + 1}구역)`;
       select.append(option);
     });
     label.append(select);
@@ -103,21 +108,31 @@ export function chartDataViewFactory(root: HTMLElement): ChartDataViewFactory {
       showCapture(capture: ChartCapture | null) {
         rows.replaceChildren();
         fields = [];
-        valid = capture !== null && capture.points.some(editableChartPoint);
-        capture?.points.forEach((point, i) => {
+        const selected = capture ? targetIndices.get(targetKey(capture.target)) : undefined;
+        const current = capture && typeof selected === 'number' ? capture : null;
+        if (capture) select.value = current ? String(selected) : '';
+        valid = current !== null && current.points.some(editableChartPoint);
+        const counts = { number: 0, text: 0, other: 0 };
+        current?.points.forEach((point) => {
           const row = doc.createElement('label'),
             input = doc.createElement('input');
           row.style.display = 'block';
-          row.textContent = `포인트 ${i} · ${point.kind} `;
+          const name = ['numeric_cache', 'numeric_literal'].includes(point.kind)
+            ? `값 ${++counts.number}`
+            : ['string_cache', 'string_literal', 'multilevel_cache'].includes(point.kind)
+              ? `문자 항목 ${++counts.text}`
+              : `기타 항목 ${++counts.other}`;
+          row.textContent = `${name} `;
           input.type = 'text';
           input.value = point.value;
-          input.setAttribute('aria-label', `포인트 ${i} 값 (${point.kind})`);
+          input.setAttribute('aria-label', name);
           input.dataset.editable = String(editableChartPoint(point));
           fields.push(input);
           row.append(input);
           rows.append(row);
         });
-        if (capture && !valid) status.textContent = '지원되는 편집 값이 없습니다.';
+        if (capture && !current) status.textContent = '선택한 차트를 확인할 수 없습니다.';
+        else if (current && !valid) status.textContent = '지원되는 편집 값이 없습니다.';
         update();
       },
       invalidate() {

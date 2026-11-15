@@ -53,6 +53,16 @@ jobs:
           test -f ./apps/docs/docs/public/editor/hwpjs/hwpjs.wasm || exit 1
           bun ./tools/build-packages.mjs --package=core --web --wasm="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
           bun ./tools/build-packages.mjs --package=vanilla --web --wasm="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
+      - name: Test object activation and current properties dialogs
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --experimental-transform-types --test --test-concurrency=1 --test-reporter=tap tests/canvas/object-activation-target.test.mjs packages/vanilla/tests/object-activation.test.mjs apps/demo/tests/object-activation-relay.test.mjs apps/demo/tests/chart-data-controller.test.mjs apps/demo/tests/chart-data-view.test.mjs apps/demo/tests/drawing-properties.test.mjs apps/demo/tests/drawing-properties-view.test.mjs apps/demo/tests/chart-properties.test.mjs 2>&1 | tee "$RUNNER_TEMP/object-activation.tap"
+          grep -Eq '^# tests 70$' "$RUNNER_TEMP/object-activation.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/object-activation.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/object-activation.tap"
+          bunx --no-install tsc --noEmit -p tools/tsconfig.object-activation.json
       - name: Test chart typing display continuity
         run: node --test tests/hwpx/chart-display-continuity.test.mjs
       - name: Test synthetic HWPX chart and equation creation
