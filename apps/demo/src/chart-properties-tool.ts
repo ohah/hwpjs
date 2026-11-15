@@ -18,6 +18,6 @@ export function createChartPropertiesTool(options: {
   return createChartPropertiesController({
     ...options,
     port: createChartPropertiesPort(options.editor),
-    createView: chartPropertiesViewFactory(options.root),
+    createView: chartPropertiesViewFactory(options.root, options.editor),
   });
 }

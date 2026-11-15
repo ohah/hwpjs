@@ -1,8 +1,9 @@
+import { hasOleSourceFrame } from '../../js/ole-source-frame.mjs';
 import { placeFloatingComponentSource } from './component-placement.mjs';
 
 /** Source rectangle only: does not establish a page, reserve flow or paint OLE. */
 export function placeFloatingOleSource(source, boxes, options) {
-  if (source?.transform_identity !== true)
+  if (!hasOleSourceFrame(source))
     return {
       state: 'unavailable',
       error:

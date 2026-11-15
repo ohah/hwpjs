@@ -110,6 +110,10 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       registerCellBlockMenu: cellBlockMenus.register,
       registerObjectActivation: objectActivations.register,
       registerObjectPropertiesRequest: objectActivations.registerProperties,
+      getSelectedObject: objectActivations.getSelectedObject,
+      requestSelectedObjectProperties: objectActivations.requestSelectedObjectProperties,
+      registerObjectPropertiesControl: objectActivations.registerObjectPropertiesControl,
+      subscribeObjectSelection: objectActivations.subscribeObjectSelection,
       captureSourceTableCellSplit: () =>
         ref.current?.surface?.captureSourceTableCellSplit() ?? null,
       captureSourceTableCellMerge: () =>
@@ -196,6 +200,10 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       registerCellBlockMenu: cellBlockMenus.register,
       registerObjectActivation: objectActivations.register,
       registerObjectPropertiesRequest: objectActivations.registerProperties,
+      getSelectedObject: objectActivations.getSelectedObject,
+      requestSelectedObjectProperties: objectActivations.requestSelectedObjectProperties,
+      registerObjectPropertiesControl: objectActivations.registerObjectPropertiesControl,
+      subscribeObjectSelection: objectActivations.subscribeObjectSelection,
       captureSourceTableCellSplit: () => surface?.captureSourceTableCellSplit() ?? null,
       captureSourceTableCellMerge: () => surface?.captureSourceTableCellMerge() ?? null,
       captureSourceTableCellWidth: () => surface?.captureSourceTableCellWidth() ?? null,

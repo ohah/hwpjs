@@ -195,7 +195,7 @@ pub const History = struct {
         s.history_transaction_active = true;
         defer s.history_transaction_active = false;
         try self.stack.prepare();
-        for (commands) |command| if (command.kind == .insert_document or command.kind == .equation_insert or command.kind == .chart_create or command.kind == .bullet_definition or command.kind == .page_settings) {
+        for (commands) |command| if (command.kind == .insert_document or command.kind == .equation_insert or command.kind == .chart_create or command.kind == .bullet_definition or command.kind == .page_settings or command.kind == .object_geometry) {
             if (commands.len != 1 or command.break_before != null or command.deleted != 0)
                 return error.InvalidInsertDocumentBatch;
             if (!self.managed) return error.HistoryProtocol2Required;
@@ -211,12 +211,17 @@ pub const History = struct {
         const s = self.owner;
         if (command.section != 0) return error.UnsupportedInsertSections;
         // Reopening the composed package must not replace pending table owner identities.
-        for (s.sections) |section| {
+        if (command.kind != .object_geometry) for (s.sections) |section| {
             if (section.created_tables.entries.items.len != 0) return error.UnsupportedInsertPendingTable;
-        }
+        };
         const policy_limit = self.stack.policy;
         try document.validateParkable(s, policy_limit.max_checkpoint_bytes);
 
+        if (command.kind == .object_geometry) {
+            const request = command.object_geometry orelse return error.InvalidObjectGeometryRequest;
+            if (request.historyRevision != self.stack.current.revision) return error.StaleObjectGeometryBinding;
+            try @import("object_geometry_owner.zig").validate(s.allocator, s, request.*);
+        }
         if (command.kind == .page_settings) try @import("page_settings_edit_owners.zig").validateTargets(s.allocator, s, (command.page_settings orelse return error.InvalidPageSettingsRequest).*);
         const before = try s.save();
         defer s.allocator.free(before);
@@ -232,6 +237,8 @@ pub const History = struct {
             var prepared = try @import("chart_create.zig").prepare(s.allocator, before, request.*);
             defer prepared.deinit(s.allocator);
             break :blk try editor.open(s.allocator, prepared.bytes, s.options);
+        } else if (command.kind == .object_geometry) blk: {
+            break :blk (try @import("object_geometry_write.zig").prepare(s.allocator, before, command.object_geometry.?.*, s.options)) orelse return false;
         } else if (command.kind == .page_settings) blk: {
             break :blk (try @import("page_settings_write.zig").prepare(s.allocator, before, command.page_settings.?.*, s.options)) orelse return false;
         } else if (command.kind == .bullet_definition) blk: {

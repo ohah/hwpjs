@@ -1,3 +1,4 @@
+import { hasOleSourceFrame } from '../../js/ole-source-frame.mjs';
 import { chartDisplayMatchesOle, sameChartSourceFrame } from './chart-source-frame.mjs';
 const key = (section, wrapper) => `${section}:${wrapper}`;
 function owners(content) {
@@ -20,7 +21,7 @@ function owners(content) {
       ole.error ||
       ole.sourceError ||
       ole.representation !== 'chart-alternative' ||
-      ole.source?.transform_identity !== true ||
+      !hasOleSourceFrame(ole.source) ||
       !Number.isSafeInteger(ole.chartWrapper)
     )
       continue;

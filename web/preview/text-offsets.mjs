@@ -121,15 +121,23 @@ export function sourceTextChanges(changes, offsets, visit) {
 
 /** Exact raw boundary -> visible boundary; never maps inside protected anchors. */
 export function sourceDisplayPosition(unit, offsets, displayLength) {
+  return sourceDisplayPositions([unit], offsets, displayLength)[0];
+}
+
+/** Sorted raw boundaries share one validated, monotonically advancing cursor.
+ * O(offsets + units); no per-object rescans of a paragraph's control anchors. */
+export function sourceDisplayPositions(units, offsets, displayLength) {
+  const invalid = () => {
+    throw new RangeError('InvalidSourceDisplayPosition');
+  };
   if (
-    !Number.isInteger(unit) ||
-    unit < 0 ||
+    !Array.isArray(units) ||
     !Number.isInteger(displayLength) ||
     displayLength < 0 ||
     !Array.isArray(offsets) ||
     offsets.length === 0
   )
-    throw new RangeError('InvalidSourceDisplayPosition');
+    invalid();
   let previous;
   for (const row of offsets) {
     if (
@@ -140,17 +148,20 @@ export function sourceDisplayPosition(unit, offsets, displayLength) {
       row.source < 0 ||
       (previous && (row.at <= previous.at || row.source <= previous.source))
     )
-      throw new RangeError('InvalidSourceDisplayPosition');
+      invalid();
     previous = row;
   }
-  if (offsets[0].at !== 0 || offsets[0].source !== 0)
-    throw new RangeError('InvalidSourceDisplayPosition');
-  const index = offsets.findLastIndex((row) => row.source <= unit);
-  if (index < 0) throw new RangeError('InvalidSourceDisplayPosition');
-  const row = offsets[index],
-    result = row.at + unit - row.source,
-    next = offsets[index + 1];
-  if (result > displayLength || (next && result >= next.at && unit < next.source))
-    throw new RangeError('InvalidSourceDisplayPosition');
-  return result;
+  if (offsets[0].at !== 0 || offsets[0].source !== 0) invalid();
+  let index = 0,
+    last = -1;
+  return units.map((unit) => {
+    if (!Number.isInteger(unit) || unit < 0 || unit < last) invalid();
+    last = unit;
+    while (index + 1 < offsets.length && offsets[index + 1].source <= unit) index++;
+    const row = offsets[index],
+      next = offsets[index + 1];
+    const result = row.at + unit - row.source;
+    if (result > displayLength || (next && result >= next.at && unit < next.source)) invalid();
+    return result;
+  });
 }

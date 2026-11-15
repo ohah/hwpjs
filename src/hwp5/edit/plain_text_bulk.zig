@@ -57,6 +57,7 @@ pub fn applyScoped(a: std.mem.Allocator, context: ?*@import("plain_text_source.z
     }
     var active: std.ArrayList(runs.Independent) = .empty;
     defer active.deinit(a);
+    const terminal = try runs.visibleTextEnd(before);
     for (edits, 0..) |edit, index| {
         if (testing) work.edit_checks += 1;
         const bytes = try @import("plain_text.zig").inserted(a, edit.text);
@@ -116,6 +117,7 @@ pub fn applyScoped(a: std.mem.Allocator, context: ?*@import("plain_text_source.z
         return false;
     }
     try runs.validate(p.character_runs, before, char_count);
+    for (active.items) |*edit| edit.insertion_id = runs.typingInsertionId(p.character_runs, terminal, edit.start, edit.end, edit.added);
     const owned_runs = try runs.replaceIndependent(a, p.character_runs, active.items, if (testing) &work.run_rows else {});
     errdefer a.free(owned_runs);
     const starts = try a.alloc(u32, @as(usize, before_units) + 2);

@@ -117,7 +117,8 @@ fn applyWith(a: std.mem.Allocator, source: []const u8, version: Version, p: *mod
     if (formulas) try @import("../body/field_span.zig").protectFormulaLabels(before, edit.start_unit, edit.end_unit);
     const run_editor = @import("character_runs.zig");
     try run_editor.validate(p.character_runs, before, char_count);
-    const owned_runs = try run_editor.replace(a, p.character_runs, edit.start_unit, edit.end_unit, units, null);
+    const insertion_id = run_editor.typingInsertionId(p.character_runs, try run_editor.visibleTextEnd(before), edit.start_unit, edit.end_unit, units);
+    const owned_runs = try run_editor.replace(a, p.character_runs, edit.start_unit, edit.end_unit, units, insertion_id);
     errdefer a.free(owned_runs);
     const owned_fields = if (cross_fields) (if (p.field_attributes) |fields| try a.dupe(model.FieldAttributes, fields) else null) else try @import("field_attributes.zig").prepare(a, source, version, p.*, before, edit.start_unit, edit.end_unit);
     errdefer if (owned_fields) |fields| a.free(fields);

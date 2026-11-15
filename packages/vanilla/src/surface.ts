@@ -1,3 +1,4 @@
+import { createObjectPropertiesControls } from './object-properties-controls.ts';
 import {
   createObjectSelection,
   bindObjectSelectionEvents,
@@ -289,6 +290,7 @@ export function createCanvasSurface({
   let nonTextHistoryPending: object | undefined;
   let nonTextSelectionProjection: ReturnType<HeadlessEditor['getEditorState']> | undefined;
   type ObjectSceneState = ReturnType<HeadlessEditor['getEditorState']>;
+  const objectSelectionListeners = new Set<() => void>();
   let objectSelection: ReturnType<typeof createObjectSelection<ObjectSceneState>> | undefined;
   let committingObjectState: ObjectSceneState | undefined;
   let nonTextHistoryTask: Promise<void> = Promise.resolve();
@@ -807,6 +809,16 @@ export function createCanvasSurface({
       renderer.canAcknowledgeObjectSelectionPaint(previous.frame, next.frame, target),
     hostFocused: objectHostFocused,
     onClear: () => renderer?.selectObject(null),
+    onChange: () => {
+      for (const listener of Array.from(objectSelectionListeners)) {
+        if (!objectSelectionListeners.has(listener)) continue;
+        try {
+          listener();
+        } catch {
+          /* Presentation observers cannot interrupt selection cleanup. */
+        }
+      }
+    },
     async commit(request) {
       if (!request.current() || !lease?.isActive()) return null;
       const ownedLease = lease;
@@ -854,12 +866,17 @@ export function createCanvasSurface({
     },
     onError: (error) => status(`개체 선택을 확인하지 못했습니다: ${String(error)}`),
   });
+  const objectPropertiesControls = createObjectPropertiesControls(
+    canvas.ownerDocument,
+    () => !closed && objectHostFocused() && objectSelection?.current() != null,
+  );
   const unbindObjectSelection = bindObjectSelectionEvents({
     canvas,
     input,
     viewport,
     document: doc,
     selection: objectSelection,
+    retainPropertiesControl: objectPropertiesControls.retain,
     point: (event) =>
       canvasDocumentPoint(
         event,
@@ -873,6 +890,8 @@ export function createCanvasSurface({
     if (closed) return;
     closed = true;
     unbindObjectSelection();
+    objectPropertiesControls.dispose();
+    objectSelectionListeners.clear();
     objectSelection?.dispose();
     objectActivation.dispose();
     // Final null observation is synchronous, before listeners are discarded.
@@ -2493,6 +2512,20 @@ export function createCanvasSurface({
     /** Object mode identity only. Existing property ports retain all mutation admission. */
     getSelectedObject() {
       return objectSelection?.current() ?? null;
+    },
+    /** Explicit UI command, with the same current selection and callback owner as focused P. */
+    requestSelectedObjectProperties() {
+      return objectSelection?.requestProperties() ?? false;
+    },
+    registerObjectPropertiesControl(element: HTMLElement) {
+      return objectPropertiesControls.register(element);
+    },
+    subscribeObjectSelection(listener: () => void) {
+      if (closed) return () => {};
+      objectSelectionListeners.add(listener);
+      return () => {
+        objectSelectionListeners.delete(listener);
+      };
     },
     registerObjectPropertiesRequest(
       listener: (event: CanvasObjectPropertiesRequest) => void | Promise<void>,

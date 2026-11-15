@@ -93,6 +93,10 @@ export interface DemoHost
   extends SurfaceFormattingHost, SurfaceClipboardPort, DemoPageStatusHost, TableGridHost {
   /** undefined는 관측 미연결/불확실, null은 현재 그림 선택 없음입니다. */
   getContextPicture?(): ContextPicture | null | undefined;
+  getSelectedObject?(): import('@hwpjs/vanilla').CanvasSelectedObject | null;
+  requestSelectedObjectProperties?(): boolean;
+  registerObjectPropertiesControl?(element: HTMLElement): () => void;
+  subscribeObjectSelection?(listener: () => void): () => void;
   registerObjectPropertiesRequest?(
     listener: (event: CanvasObjectPropertiesRequest) => void,
   ): () => void;
@@ -500,7 +504,10 @@ export async function mountDemo(
         enabled: host?.captureSourceTableCellMerge?.() != null,
         reason: '편집 가능한 HWPX 표에서 연속된 셀을 두 개 이상 선택하세요.',
       },
-      'object-properties': objectProperties.presentation(),
+      'object-properties': {
+        enabled: host?.getSelectedObject?.() != null,
+        reason: '문서에서 차트, 그림 또는 글상자 테두리를 선택하세요.',
+      },
       ...generatedTableGrid.presentation(),
       'table-cell-properties': tableCellProperties.presentation(),
       'table-cell-background': tableCellAppearance.presentation(),
@@ -790,7 +797,7 @@ export async function mountDemo(
       return;
     }
     if (action.command === 'object-properties') {
-      objectProperties.open();
+      host?.requestSelectedObjectProperties?.();
       return;
     }
     if (action.command === 'insert-chart' || action.command === 'insert-equation') {
@@ -984,6 +991,8 @@ export async function mountDemo(
   let unsubscribe = () => {};
   let unsubscribePages = () => {};
   let unsubscribeObjects = () => {};
+  let unsubscribeObjectSelection = () => {};
+  const stopObjectPropertiesControls: (() => void)[] = [];
   let pageRuler: ReturnType<typeof mountPageRuler> | undefined;
   let headless: ReturnType<typeof mountHeadlessPanel> | undefined;
   let shortcuts: ReturnType<typeof mountShortcutSettings> | undefined;
@@ -995,6 +1004,11 @@ export async function mountDemo(
       chart: chartProperties,
       drawing: drawingProperties,
     });
+    for (const control of shell.objectPropertiesFocusTargets)
+      if (host?.registerObjectPropertiesControl)
+        stopObjectPropertiesControls.push(host.registerObjectPropertiesControl(control));
+    unsubscribeObjectSelection =
+      host?.subscribeObjectSelection?.(() => presentationRefresh.request()) ?? (() => {});
     if (shell.rulerMount && shell.surfaceMount && host?.getPageGeometry)
       pageRuler = mountPageRuler(shell.rulerMount, shell.surfaceMount, () => host);
     if (shell.tableMenu) host?.registerCellBlockMenu?.(shell.tableMenu);
@@ -1070,6 +1084,8 @@ export async function mountDemo(
     presentationRefresh.dispose();
     pageRuler?.dispose();
     unsubscribePages();
+    unsubscribeObjectSelection();
+    for (const stop of stopObjectPropertiesControls.splice(0)) stop();
     unsubscribeObjects();
     unsubscribe();
     shortcuts?.dispose();
@@ -1122,6 +1138,8 @@ export async function mountDemo(
       presentationRefresh.dispose();
       pageRuler?.dispose();
       unsubscribePages();
+      unsubscribeObjectSelection();
+      for (const stop of stopObjectPropertiesControls.splice(0)) stop();
       unsubscribeObjects();
       unsubscribe();
       headless?.dispose();

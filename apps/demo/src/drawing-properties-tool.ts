@@ -1,3 +1,4 @@
+import type { ObjectGeometryEditor } from './object-geometry-form.ts';
 import {
   createDrawingPropertiesPort,
   type DrawingPropertiesEditor,
@@ -7,7 +8,7 @@ import { createDrawingPropertiesView } from './drawing-properties-view.ts';
 
 export interface DrawingPropertiesToolOptions {
   root: HTMLElement;
-  editor: DrawingPropertiesEditor;
+  editor: DrawingPropertiesEditor & Partial<ObjectGeometryEditor>;
   onStatus?(text: string): void;
   onClose?(): void;
   onPresentationChange?(): void;
@@ -19,7 +20,7 @@ export interface DrawingPropertiesTool {
   dispose(): void;
 }
 
-/** Current source information only; no Native editing capability is requested or implied. */
+/** Source observation and fresh typed Native geometry edits use separate authority. */
 export function createDrawingPropertiesTool(
   options: DrawingPropertiesToolOptions,
 ): DrawingPropertiesTool {
@@ -27,7 +28,15 @@ export function createDrawingPropertiesTool(
     ...options,
     port: createDrawingPropertiesPort(options.editor),
     createView: (capture, onDismiss) =>
-      createDrawingPropertiesView(options.root, capture, onDismiss),
+      createDrawingPropertiesView(
+        options.root,
+        capture,
+        onDismiss,
+        typeof options.editor.getObjectGeometry === 'function' &&
+          typeof options.editor.dispatchCommand === 'function'
+          ? (options.editor as ObjectGeometryEditor)
+          : undefined,
+      ),
   });
   return {
     open(target) {

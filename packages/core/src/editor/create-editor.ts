@@ -1,4 +1,17 @@
 import {
+  SET_OBJECT_GEOMETRY_COMMAND,
+  captureObjectGeometryPayload,
+  type ObjectGeometryTarget,
+  type SetObjectGeometryPayload,
+  type ObjectGeometryRead,
+  type ObjectGeometrySelector,
+} from '../commands/object-geometry.ts';
+import {
+  checkedObjectGeometrySelector,
+  checkedObjectGeometryObservation,
+  objectGeometryMessage,
+} from '../../../../js/object-geometry-edit.mjs';
+import {
   INSERT_EQUATION_COMMAND,
   CREATE_CHART_COMMAND,
   inlineObjectInsertMessage,
@@ -1245,6 +1258,10 @@ export function createEditor(options: CreateEditorOptions) {
       current: () => boolean;
     }
   >();
+  const objectGeometryTargets = new WeakMap<
+    ObjectGeometryTarget,
+    { state: EditorState; native: ReturnType<typeof checkedObjectGeometryObservation> }
+  >();
   const pageSettingsTargets = new WeakMap<
     PageSettingsTarget,
     { state: EditorState; native: PageSettingsCapabilities; section: number | null }
@@ -1260,26 +1277,29 @@ export function createEditor(options: CreateEditorOptions) {
     const width = command.id === EQUALIZE_SOURCE_TABLE_CELL_WIDTH_COMMAND.id;
     const height = command.id === EQUALIZE_SOURCE_TABLE_CELL_HEIGHT_COMMAND.id;
     const pageSettings = command.id === EDIT_PAGE_SETTINGS_COMMAND.id;
-    const tableCell = merge || split || width || height || pageSettings;
+    const objectGeometry = command.id === SET_OBJECT_GEOMETRY_COMMAND.id;
+    const tableCell = merge || split || width || height || pageSettings || objectGeometry;
     const inlineKind =
       command.id === INSERT_EQUATION_COMMAND.id
         ? 'equation'
         : command.id === CREATE_CHART_COMMAND.id
           ? 'chart'
           : undefined;
-    const owned = inlineKind
-      ? captureInlineObjectInsertPayload(payload, inlineKind)
-      : pageSettings
-        ? capturePageSettingsPayload(payload)
-        : split
-          ? captureSourceTableCellSplitPayload(payload)
-          : merge || width || height
-            ? payload
-            : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
-              ? captureSourceTableGridRequest(payload, (snapshot.content as any)?.format)
-              : command.id === INSERT_DOCUMENT_COMMAND.id
-                ? captureDocumentInsertPayload(payload)
-                : copyOwned(payload);
+    const owned = objectGeometry
+      ? captureObjectGeometryPayload(payload)
+      : inlineKind
+        ? captureInlineObjectInsertPayload(payload, inlineKind)
+        : pageSettings
+          ? capturePageSettingsPayload(payload)
+          : split
+            ? captureSourceTableCellSplitPayload(payload)
+            : merge || width || height
+              ? payload
+              : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
+                ? captureSourceTableGridRequest(payload, (snapshot.content as any)?.format)
+                : command.id === INSERT_DOCUMENT_COMMAND.id
+                  ? captureDocumentInsertPayload(payload)
+                  : copyOwned(payload);
     return {
       command: command as EditorCommand<unknown>,
       payload: owned,
@@ -1322,6 +1342,26 @@ export function createEditor(options: CreateEditorOptions) {
           false,
           guard,
         );
+      }
+      if (pending.command.id === SET_OBJECT_GEOMETRY_COMMAND.id) {
+        const payload = pending.payload as SetObjectGeometryPayload;
+        const owned = objectGeometryTargets.get(payload.target);
+        if (!owned) throw Error('ForeignObjectGeometryTarget');
+        const guard = () => {
+          requireReady(pending.token, true);
+          if (state !== owned.state) throw Error('StaleObjectGeometryTarget');
+          if (state.nativeHistoryRevision !== owned.native.historyRevision)
+            throw Error('StaleObjectGeometryBinding');
+        };
+        guard();
+        const message = objectGeometryMessage(owned.native, payload.patch);
+        if (
+          Object.entries(payload.patch).every(
+            ([key, value]) => value === owned.native.frame[key as keyof typeof owned.native.frame],
+          )
+        )
+          return result('known-no-op', ctx);
+        return await mutate(message, pending.token, false, guard);
       }
       if (pending.command.id === INSERT_DOCUMENT_COMMAND.id) {
         const payload = pending.payload as InsertDocumentPayload;
@@ -1838,6 +1878,13 @@ export function createEditor(options: CreateEditorOptions) {
   function dispatchCommand<T>(command: EditorCommand<T>, payload: T): Promise<CommandResult> {
     assertPublicMutation();
     const pending = capture(command, payload);
+    if (command.id === SET_OBJECT_GEOMETRY_COMMAND.id) {
+      const owned = objectGeometryTargets.get((pending.payload as SetObjectGeometryPayload).target);
+      if (!owned)
+        return Promise.resolve(reject(context(pending.token), 'ForeignObjectGeometryTarget'));
+      if (state !== owned.state)
+        return Promise.resolve(reject(context(pending.token), 'StaleObjectGeometryTarget'));
+    }
     if (command.id === EDIT_PAGE_SETTINGS_COMMAND.id) {
       const found = pageSettingsTargets.get((pending.payload as EditPageSettingsPayload).target);
       if (!found)
@@ -2067,6 +2114,8 @@ export function createEditor(options: CreateEditorOptions) {
         'create-chart',
         'insert-document',
         'document-insert-capabilities',
+        'object-geometry-query',
+        'object-geometry-set',
         'page-settings-capabilities',
         'write-page-settings',
         'source-table-cell-split',
@@ -2168,6 +2217,66 @@ export function createEditor(options: CreateEditorOptions) {
     )
       throw Error('InvalidNamedFieldOptions');
     return copyOwned(settings.token ?? state.token);
+  }
+  function getObjectGeometry(
+    selector: ObjectGeometrySelector,
+    options: { token?: StateToken } = {},
+  ): Promise<ObjectGeometryRead> {
+    assertPublicMutation();
+    const snapshot = state;
+    const selected = checkedObjectGeometrySelector(selector);
+    const settings = copyOwned(options);
+    if (
+      !settings ||
+      typeof settings !== 'object' ||
+      Array.isArray(settings) ||
+      Object.keys(settings).some((key) => key !== 'token')
+    )
+      throw Error('InvalidObjectGeometryOptions');
+    const token = copyOwned(settings.token ?? snapshot.token);
+    if (state !== snapshot) throw Error('StaleObjectGeometryTarget');
+    return enqueue(async () => {
+      requireReady(token, true);
+      if (state !== snapshot) throw Error('StaleObjectGeometryTarget');
+      const guard = () => {
+        requireReady(token, true);
+        if (state !== snapshot) throw Error('StaleObjectGeometryTarget');
+      };
+      if (
+        (snapshot.content as any)?.readOnly === true ||
+        (snapshot.capabilities as any)?.readOnly === true
+      )
+        return { state: 'unavailable', reason: 'ReadOnlyDocument' };
+      if (snapshot.nativeHistoryStats?.protocolVersion !== 2)
+        return { state: 'unavailable', reason: 'HistoryProtocol2Required' };
+      if (!hasRuntimeAdmission(active, 'object-geometry-query'))
+        return { state: 'unavailable', reason: 'UnsupportedObjectGeometryRuntime' };
+      const reply = await readRequest(
+        { kind: 'object-geometry-query', selector: selected },
+        token,
+        guard,
+        true,
+      );
+      guard();
+      if (reply.geometry === null)
+        return {
+          state: 'unavailable',
+          reason: typeof reply.reason === 'string' ? reply.reason : 'ObjectGeometryUnavailable',
+        };
+      const native = checkedObjectGeometryObservation(reply.geometry);
+      if (
+        native.selector.kind !== selected.kind ||
+        native.selector.section !== selected.section ||
+        native.selector.node !== selected.node ||
+        native.format !== (state.content as any)?.format ||
+        native.historyRevision !== state.nativeHistoryRevision
+      )
+        throw Error('StaleObjectGeometryBinding');
+      guard();
+      const target = Object.freeze({}) as ObjectGeometryTarget;
+      objectGeometryTargets.set(target, { state: snapshot, native });
+      return Object.freeze({ state: 'available', target, observation: native });
+    });
   }
   function getPageSettings(
     options: { token?: StateToken; section?: number } = {},
@@ -3102,6 +3211,7 @@ export function createEditor(options: CreateEditorOptions) {
     getFormattingCapabilities: geometryGuard(getFormattingCapabilities),
     getReplaceAllCapabilities: geometryGuard(getReplaceAllCapabilities),
     getDocumentInsertionCapabilities: geometryGuard(getDocumentInsertionCapabilities),
+    getObjectGeometry: geometryGuard(getObjectGeometry),
     getPageSettings: geometryGuard(getPageSettings),
     getSourceTableCellSplitCapabilities: geometryGuard(getSourceTableCellSplitCapabilities),
     queryFormatting: geometryGuard(queryFormatting),

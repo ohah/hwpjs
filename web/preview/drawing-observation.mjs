@@ -7,8 +7,12 @@ import { sourceDisplayPosition, sourceTextChanges } from './text-offsets.mjs';
 import { drawingAxisGeometry } from './drawing-axis-geometry.mjs';
 
 const uint = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 0xffffffff && !Object.is(n, -0);
-const identity = (m) =>
-  Array.isArray(m) && m.length === 6 && [1, 0, 0, 0, 1, 0].every((v, i) => m[i] === v);
+const sameMatrix = (left, right) =>
+  Array.isArray(left) &&
+  Array.isArray(right) &&
+  left.length === 6 &&
+  right.length === 6 &&
+  left.every((value, index) => Number.isFinite(value) && value === right[index]);
 const noText = Object.freeze({ state: 'unavailable' });
 const emptyText = Object.freeze({ state: 'available', paragraphs: Object.freeze([]) });
 const noQuery = Object.freeze({ get: () => null });
@@ -144,7 +148,7 @@ export function createDrawingObservationQuery(content) {
       let root = null,
         geometry = source.geometry;
       let activationSafe =
-        source.transform_identity === true &&
+        (source.transform_identity === true || drawingAxisGeometry(source)) &&
         source.rendering?.angle === 0 &&
         source.group_context === null;
       if (!h5) {
@@ -220,16 +224,17 @@ export function createDrawingObservationQuery(content) {
           component.current_height === raw.current_height &&
           component.original_width === raw.original_width &&
           component.original_height === raw.original_height &&
-          identity(local.matrix) &&
-          identity(source.rendering?.matrix) &&
+          sameMatrix(local.matrix, source.rendering?.matrix) &&
           source.rendering?.angle === 0 &&
           drawingAxisGeometry(source) &&
           raw.component_offset_x === 0 &&
           raw.component_offset_y === 0 &&
           raw.current_width === raw.width &&
           raw.current_height === raw.height &&
-          raw.original_width === raw.width &&
-          raw.original_height === raw.height &&
+          uint(raw.original_width) &&
+          raw.original_width > 0 &&
+          uint(raw.original_height) &&
+          raw.original_height > 0 &&
           source.geometry?.width === raw.width &&
           source.geometry?.height === raw.height;
         for (const name of [

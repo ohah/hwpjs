@@ -1,3 +1,4 @@
+import { createObjectGeometryApi } from './object-geometry-api.mjs';
 import { createPageSettingsEditApi } from './page-settings-edit.mjs';
 import {
   decodeNamedFieldParameters,
@@ -223,6 +224,7 @@ export async function createHwpxEditor(source) {
   }
   const documentInsert = createHwpxDocumentInsertApi({ wasm, memory, check: ready });
   return {
+    ...createObjectGeometryApi({ wasm, memory, check: ready, format: 'hwpx' }),
     ...createPageSettingsEditApi({ wasm, memory, check: ready }),
     ...createCreatedTableGridApi({
       wasm,

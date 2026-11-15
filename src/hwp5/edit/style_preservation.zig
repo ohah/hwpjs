@@ -44,6 +44,7 @@ pub const Command = union(enum) {
     resize_picture: @import("picture_resize_values.zig").Edit,
     set_paragraph_format: @import("paragraph_format.zig").Edit,
     set_paragraph_bullet: struct { section: usize, paragraph: usize, value: @import("../../model/formatting_patch.zig").Bullet },
+    edit_object_geometry: *const @import("../../model/object_geometry.zig").Request,
     edit_page_settings: *const @import("page_settings_types.zig").Request,
     edit_bullet_definition: @import("../../model/paragraph_bullet_definition.zig").Request,
     set_paragraph_alignment: struct { section: usize, paragraph: usize, alignment: u32 },
@@ -846,6 +847,18 @@ pub const Session = opaque {
         if (section >= state.document.sections.len) return error.InvalidSection;
         return @import("caption_sources.zig").read(a, state.decoded[section], state.source.header.version());
     }
+    pub fn equationSites(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("equation_sources.zig").Site {
+        try self.materializeLiveText();
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("equation_sources.zig").sites(a, state.decoded[section], state.source.header.version(), state.document.sections[section].paragraphs, .{});
+    }
+    pub fn equationSnapshot(self: *const Session, a: std.mem.Allocator, section: usize, layout: @import("../body/equation.zig").Layout) ![]u8 {
+        try self.materializeLiveText();
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("equation_snapshot.zig").encode(a, state.decoded[section], state.source.header.version(), state.document.sections[section].paragraphs, layout);
+    }
     pub fn formSources(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("form_sources.zig").Source {
         try self.materializeLiveText();
         const state = self.stateConst();
@@ -868,6 +881,13 @@ pub const Session = opaque {
         const state = self.stateConst();
         if (section >= state.document.sections.len) return error.InvalidSection;
         return @import("form_anchor_positions.zig").read(a, state.decoded[section], state.source.header.version(), state.document.sections[section].paragraphs);
+    }
+    pub fn objectGeometry(self: *const Session, a: std.mem.Allocator, selector: @import("../../model/object_geometry.zig").Selector, revision: u64, binding: @import("../../model/object_geometry.zig").Binding) !@import("../../model/object_geometry.zig").Observation {
+        try self.materializeLiveText();
+        const state = self.stateConst();
+        if (selector.section >= state.document.sections.len) return error.InvalidSection;
+        const read_only = state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview);
+        return @import("object_geometry.zig").observe(a, state.decoded[selector.section], state.source.header.version(), state.document.sections[selector.section].paragraphs, selector, revision, binding, read_only);
     }
     pub fn drawingSources(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("drawing_sources.zig").Source {
         try self.materializeLiveText();
@@ -1621,6 +1641,24 @@ pub const Session = opaque {
                 const prepared = try self.originalInfo();
                 defer if (prepared.owned) state.allocator.free(prepared.bytes);
                 try @import("bullet_apply.zig").applyReference(state.allocator, &state.document, prepared.bytes, state.source.header.version(), state.para_count, state.char_count, value.section, value.paragraph, value.value, max_stream);
+            },
+            .edit_object_geometry => |request| {
+                const state = self.getState();
+                const section_index = request.selector.section;
+                if (section_index >= state.document.sections.len) return error.InvalidSection;
+                if (state.formatting_batch != null) return error.MutationInProgress;
+                const section = &state.document.sections[section_index];
+                const read_only = state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview);
+                const bytes = (try @import("object_geometry.zig").write(state.allocator, state.decoded[section_index], state.source.header.version(), section.paragraphs, request.*, read_only)) orelse return;
+                errdefer state.allocator.free(bytes);
+                // Fixed topology, length and record offsets: retain all live model intents.
+                // History already owns the preimage Section basis through its checkpoint.
+                if (bytes.len != state.decoded[section_index].len) return error.SourceBindingMismatch;
+                const offsets = try state.allocator.dupe(usize, state.style_offsets[section_index]);
+                var old = section.rebased_source;
+                section.rebased_source = .{ .bytes = bytes, .style_offsets = offsets, .original_record_count = if (old) |basis| basis.original_record_count else section.source_record_count };
+                state.refreshSourceViews();
+                if (old) |*basis| basis.deinit(state.allocator);
             },
             .edit_page_settings => |request| {
                 const state = self.getState();

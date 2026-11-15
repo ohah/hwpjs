@@ -283,3 +283,28 @@ export async function createChartDocument(editor: HeadlessEditor) {
 첫 구역의 일반 본문 커서만 대상으로 합니다. 차트 뒤 Enter로 만든 빈 본문도 생성할 수 있지만 셀·선택 영역·기존 개체가 섞인 문단은 제외합니다. `chart`를 생략하면 기존 2D 묶은 세로 막대형을 생성합니다. 명시적 `chart`로 막대·꺾은선·영역·원형의 2D/3D, 도넛·보조 원형·방사형·분산형·버블·주가·표면형을 선택할 수 있습니다. 종류별 필수 필드를 검사하며 분산형·버블의 X·Y·크기와 주가 역할을 자동 추정하지 않습니다. 구형 엔진은 명시 종류를 거절합니다. 수식 크기는 자동 계산하지 않습니다. 같은 캡처로 두 번 호출하면 앞선 편집 뒤 낡은 상태가 된 요청을 거절합니다.
 
 생성·저장·실행 취소는 기존 Native 거래를 사용합니다. 세부 제한은 [생성 계약](https://github.com/ohah/hwpjs/blob/main/docs/hwpx-inline-object-creation.md), 화면 사용법은 [데모 안내](../guide/demo.md#새-차트수식-만들기)를 확인하세요.
+
+## 차트·글상자의 크기와 위치 {#object-geometry}
+
+최신 소스의 `getObjectGeometry(selector)`는 현재 Native 소유자와 크기·위치를 조회하고 불투명한 편집 대상을 반환합니다. 선택자에는 현재 문서에서 관측한 `kind`, `section`, `node`를 사용합니다. 이전 파일의 번호나 Canvas 사각형을 수정 권한으로 사용하지 않습니다. npm 게시 상태는 소스 지원과 별도로 확인하세요.
+
+```ts
+import {
+  SET_OBJECT_GEOMETRY_COMMAND,
+  type HeadlessEditor,
+  type ObjectGeometrySelector,
+} from '@ohah/hwpjs';
+
+export async function resizeObject(editor: HeadlessEditor, selector: ObjectGeometrySelector) {
+  const read = await editor.getObjectGeometry(selector);
+  if (read.state !== 'available') return read;
+  return editor.dispatchCommand(SET_OBJECT_GEOMETRY_COMMAND, {
+    target: read.target,
+    patch: { width: 20000, height: 12000, horizontalOffset: -500, verticalOffset: 300 },
+  });
+}
+```
+
+단위는 HWPUNIT이며 위치 간격은 음수를 허용합니다. 바꾸지 않을 필드는 생략합니다. `target`은 같은 편집기의 현재 상태에만 유효하며 JSON으로 저장·복원할 수 없습니다. 조회와 명령 사이에 저장·선택 변경·undo/redo를 수행했다면 다시 조회하세요.
+
+현재 경로는 지원하는 원본 HWPX 차트·글상자와 HWP5 글상자를 대상으로 합니다. 크기·위치 편집, 저장·다시 열기, 실행 취소·다시 실행을 별도로 검증했습니다. HWP5 변경 뒤 일반 저장이 `LayoutReflowRequired`로 거부되면 레이아웃 제한을 확인한 뒤 `save({ allowStaleLayout: true })`로 명시 동의할 수 있습니다. 완전 재조판이나 그룹·회전·임의 OLE 편집을 뜻하지 않습니다.

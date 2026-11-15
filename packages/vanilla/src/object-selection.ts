@@ -20,7 +20,7 @@ export interface CanvasSelectedObject {
   readonly token: StateToken;
 }
 export interface CanvasObjectPropertiesRequest extends CanvasSelectedObject {
-  readonly type: 'properties-shortcut';
+  readonly type: 'properties-shortcut' | 'properties-command';
 }
 export interface ObjectSelectionPointer {
   readonly trusted: boolean;
@@ -161,6 +161,8 @@ export function createObjectSelection<State extends ObjectSelectionState>(option
     confirm(scene: ObjectSelectionScene<State>): object | null;
   }): Promise<object | null>;
   onClear?(): void;
+  /** Presentation notification only; observers receive no selection or mutation authority. */
+  onChange?(): void;
   onError(error: unknown): void;
 }) {
   type Selected = { scene: ObjectSelectionScene<State>; value: CanvasSelectedObject };
@@ -203,11 +205,13 @@ export function createObjectSelection<State extends ObjectSelectionState>(option
     return !!now && sceneEqual(scene, now) && sameToken(now.state.token, token);
   };
   const clear = (_reason?: string) => {
+    const changed = selected !== null;
     epoch++;
     down = committing = observed = selected = null;
     continuation = null;
     finishPending?.();
     if (_reason !== 'pointerdown') options.onClear?.();
+    if (changed) options.onChange?.();
   };
   const failure = (error: unknown) => {
     try {
@@ -295,6 +299,42 @@ export function createObjectSelection<State extends ObjectSelectionState>(option
       clear('scene');
       return null;
     }
+  }
+
+  function requestProperties(type: CanvasObjectPropertiesRequest['type']): boolean {
+    if (closed || dispatching || !owner || down || committing || continuation) return false;
+    const value = current(),
+      saved = selected,
+      callback = owner;
+    if (closed || dispatching || !callback) return false;
+    if (!value || !saved || !options.hostFocused()) {
+      clear('focus');
+      return false;
+    }
+    clear('properties');
+    const propertiesTicket = epoch,
+      focused = options.hostFocused();
+    const nativeCurrent = exactCurrent(saved.scene, value.token);
+    if (!focused || !nativeCurrent || closed || epoch !== propertiesTicket || owner !== callback)
+      return false;
+    const request = Object.freeze({ type, ...value });
+    dispatching = true;
+    try {
+      const result = callback.callback(request);
+      if (result && typeof result.then === 'function') {
+        void result
+          .catch((error) => {
+            if (!closed && exactCurrent(saved.scene, value.token)) failure(error);
+          })
+          .finally(() => {
+            dispatching = false;
+          });
+      } else dispatching = false;
+    } catch (error) {
+      dispatching = false;
+      if (!closed && exactCurrent(saved.scene, value.token)) failure(error);
+    }
+    return true;
   }
 
   return {
@@ -453,7 +493,10 @@ export function createObjectSelection<State extends ObjectSelectionState>(option
       ) {
         // Re-clicking an already certified object does not clear/repaint again.
         // In particular the second click must not create a new Core clear before dblclick.
-        if (reuseEpoch === epoch) selected = reuse;
+        if (reuseEpoch === epoch) {
+          selected = reuse;
+          options.onChange?.();
+        }
         return;
       }
       const ticket = ++epoch,
@@ -510,6 +553,7 @@ export function createObjectSelection<State extends ObjectSelectionState>(option
           scene,
           value: Object.freeze({ target: candidate.target, token: candidate.token }),
         };
+        options.onChange?.();
       } catch (error) {
         if (!closed && ticket === epoch) failure(error);
       } finally {
@@ -575,38 +619,9 @@ export function createObjectSelection<State extends ObjectSelectionState>(option
         !owner
       )
         return false;
-      const value = current(),
-        saved = selected,
-        callback = owner;
-      if (!value || !saved || !options.hostFocused()) {
-        clear('focus');
-        return false;
-      }
-      clear('properties');
-      const propertiesTicket = epoch,
-        focused = options.hostFocused();
-      const nativeCurrent = exactCurrent(saved.scene, value.token);
-      if (!focused || !nativeCurrent || closed || epoch !== propertiesTicket || owner !== callback)
-        return false;
-      const request = Object.freeze({ type: 'properties-shortcut' as const, ...value });
-      dispatching = true;
-      try {
-        const result = callback.callback(request);
-        if (result && typeof result.then === 'function') {
-          void result
-            .catch((error) => {
-              if (!closed && exactCurrent(saved.scene, value.token)) failure(error);
-            })
-            .finally(() => {
-              dispatching = false;
-            });
-        } else dispatching = false;
-      } catch (error) {
-        dispatching = false;
-        if (!closed && exactCurrent(saved.scene, value.token)) failure(error);
-      }
-      return true;
+      return requestProperties('properties-shortcut');
     },
+    requestProperties: () => requestProperties('properties-command'),
     registerPropertiesRequest(
       callback: (event: CanvasObjectPropertiesRequest) => void | Promise<void>,
     ) {
@@ -635,6 +650,7 @@ export function bindObjectSelectionEvents<State extends ObjectSelectionState>(op
   document: Document;
   selection: ReturnType<typeof createObjectSelection<State>>;
   point(event: PointerEvent): { x: number; y: number };
+  retainPropertiesControl?(event: PointerEvent): boolean;
 }) {
   const removals: (() => void)[] = [];
   let claimed: number | null = null;
@@ -663,7 +679,10 @@ export function bindObjectSelectionEvents<State extends ObjectSelectionState>(op
     shiftKey: event.shiftKey,
   });
   listen(options.document, 'pointerdown', (event: PointerEvent) => {
-    if (origin(event) !== options.canvas) clear('outside-pointer');
+    if (origin(event) !== options.canvas) {
+      if (options.retainPropertiesControl?.(event)) return;
+      clear('outside-pointer');
+    }
   });
   listen(options.canvas, 'pointerdown', (event: PointerEvent) => {
     claimed = options.selection.pointerDown(pointer(event)) ? event.pointerId : null;

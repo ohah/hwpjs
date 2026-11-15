@@ -1,3 +1,4 @@
+import { checkedOleAxisFrame } from './ole-source-frame.mjs';
 import { validateShapeSourceValues } from './hwpx-shape-source-values.mjs';
 
 const uint = (v) => Number.isInteger(v) && v >= 0 && v <= 0xffffffff;
@@ -77,6 +78,12 @@ export function decodeOleSource(bytes) {
   if (
     Object.hasOwn(value, 'transform_identity') &&
     ![null, false, true].includes(value.transform_identity)
+  )
+    fail();
+  if (
+    value.axis_frame !== undefined &&
+    value.axis_frame !== null &&
+    !checkedOleAxisFrame(value.axis_frame)
   )
     fail();
   return value;

@@ -944,6 +944,21 @@ export fn hwp5_edit_caption_sources(section: u32) u32 {
     output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
     return 1;
 }
+export fn hwp5_edit_equation_sites(section: u32) u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    const sites = s.equationSites(a, section) catch |err| return fail(err);
+    defer a.free(sites);
+    output = @import("hwp5_equation_sources.zig").encodeSites(a, sites) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_equation_snapshot(section: u32, selected_layout: u32) u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    const layout = @import("hwp5_equation_sources.zig").layout(selected_layout) catch |err| return fail(err);
+    output = s.equationSnapshot(a, section, layout) catch |err| return fail(err);
+    return 1;
+}
 export fn hwp5_edit_form_sources(section: u32) u32 {
     hwp5_edit_output_free();
     const s = session() catch |err| return fail(err);
@@ -1680,6 +1695,47 @@ export fn hwp5_edit_write_page_settings(ptr: [*]const u8, len: usize) u32 {
     apply(.{ .edit_page_settings = &r }) catch |err| {
         _ = fail(err);
         return if (err == error.HistoryMutationUncertain or err == error.MutationUncertain or h.stats().poisoned) 3 else 0;
+    };
+    return if (h.revision() == before) 2 else 1;
+}
+
+export fn hwp5_edit_object_geometry(section: u32, node: u32, kind: u32) u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    const h = if (history) |*v| v else return fail(error.HistoryNotEnabled);
+    if (h.stats().protocolVersion != 2) return fail(error.HistoryProtocol2Required);
+    if (h.stats().poisoned) return fail(error.HistoryMutationUncertain);
+    if (kind > 1) return fail(error.InvalidObjectGeometryTarget);
+    const epoch = formatting_lifetime.session(a) catch |err| return fail(err);
+    defer a.free(epoch);
+    var buffer: [20]u8 = undefined;
+    const serial = std.fmt.bufPrint(&buffer, "{d}", .{view_epoch.current() catch |err| return fail(err)}) catch unreachable;
+    var observation = s.objectGeometry(a, .{ .kind = if (kind == 0) .chart else .drawing, .section = section, .node = node }, h.revision(), .{ .session = epoch, .serial = serial }) catch |err| return fail(err);
+    defer observation.deinit(a);
+    output = std.json.Stringify.valueAlloc(a, observation, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_set_object_geometry(ptr: [*]const u8, len: usize) u32 {
+    hwp5_edit_output_free();
+    if (len > 16384) return fail(error.LimitExceeded);
+    _ = session() catch |err| return fail(err);
+    const h = if (history) |*v| v else return fail(error.HistoryNotEnabled);
+    if (h.stats().protocolVersion != 2) return fail(error.HistoryProtocol2Required);
+    if (h.stats().poisoned) {
+        _ = fail(error.HistoryMutationUncertain);
+        return 3;
+    }
+    var parsed = @import("../model/object_geometry.zig").parse(a, ptr[0..len]) catch |err| return fail(err);
+    defer parsed.deinit();
+    const request = parsed.json.value;
+    if (request.historyRevision != h.revision()) return fail(error.StaleObjectGeometryBinding);
+    formatting_lifetime.check(.{ .session = request.binding.session, .revision = @as(u32, @intCast(request.historyRevision)) }, h.revision()) catch return fail(error.StaleObjectGeometryBinding);
+    const serial = @import("../model/formatting_binding.zig").decimal(request.binding.serial) catch |err| return fail(err);
+    if (serial != (view_epoch.current() catch |err| return fail(err))) return fail(error.StaleObjectGeometryBinding);
+    const before = h.revision();
+    apply(.{ .edit_object_geometry = &request }) catch |err| {
+        _ = fail(err);
+        return if (err == error.MutationUncertain or err == error.HistoryMutationUncertain or h.stats().poisoned) 3 else 0;
     };
     return if (h.revision() == before) 2 else 1;
 }

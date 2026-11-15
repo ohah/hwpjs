@@ -118,14 +118,15 @@ export function mergeCaretRichCharacter(previous, patch) {
 }
 
 export function richTypingOwnerAllowed(format, row) {
+  if (row?.editable !== true || row.clipped || row.createdCell) return false;
+  const owner = paragraphSelectionOwner(row);
   if (
-    !row?.editable ||
-    row.clipped ||
-    row.createdCell ||
-    paragraphSelectionOwner(row) !== `section:${row.section}:body`
+    owner === null ||
+    (owner !== `section:${row.section}:body` && !row.tableCell && !row.drawingText)
   )
     return false;
   return format === 'hwp5'
-    ? ['original', 'generated'].includes(row.currentReference?.kind)
-    : format === 'hwpx' && row.plainEditable === true;
+    ? row.currentReference?.kind === 'original' ||
+        (row.currentReference?.kind === 'generated' && owner === `section:${row.section}:body`)
+    : format === 'hwpx' && (row.plainEditable === true || row.anchorEditable === true);
 }

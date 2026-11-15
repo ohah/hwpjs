@@ -7,6 +7,26 @@ export function validateHwp5CurrentBodyReference(
   ownerError,
   sections,
 ) {
+  return validateHwp5CurrentReference(
+    editor,
+    message,
+    referenceError,
+    ownerError,
+    (host) => host.host === 'body' && host.top_level === true,
+    sections,
+  );
+}
+
+// The current native reference and native flow, not a display label, identify
+// the paragraph. Existing body-only callers retain their original policy.
+export function validateHwp5CurrentReference(
+  editor,
+  message,
+  referenceError,
+  ownerError,
+  acceptsFlow,
+  sections,
+) {
   if (Object.hasOwn(message, 'reference')) {
     const ref = message.reference;
     const keys = ['epoch', 'scope', 'kind', 'section', 'id', 'row', 'column'];
@@ -72,8 +92,8 @@ export function validateHwp5CurrentBodyReference(
     if (
       flow.length !== window.total ||
       host?.paragraph !== message.paragraph ||
-      host.host !== 'body' ||
-      host.top_level !== true
+      typeof acceptsFlow !== 'function' ||
+      !acceptsFlow(host)
     )
       throw new Error(ownerError);
   }

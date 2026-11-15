@@ -1,3 +1,4 @@
+import { attachHwp5EquationRendering } from './hwp5-equation-content.mjs';
 import {
   observedChartCreateProfileVersion,
   requireChartCreateProfile,
@@ -12,7 +13,7 @@ import { attachParagraphNumbering } from './paragraph-numbering.mjs';
 import { copyDocumentInsertRuntimeMessage } from '../../js/hwpx-document-insert.mjs';
 import { renameHwpxNamedField, setHwpxNamedFieldValue } from './hwpx-named-field-value.mjs';
 import { projectHwp5NamedFields } from './hwp5-named-fields.mjs';
-import { richTypingOwnerAllowed } from './caret-formatting-intent.mjs';
+import { prepareRichTypingTarget, richTypingProjectionOwners } from './rich-typing-admission.mjs';
 import { prepareReplaceAllTransaction } from './replace-all-transaction.mjs';
 import { validateHwp5CurrentBodyReference } from './hwp5-current-body-reference.mjs';
 import { validateCellStylesMessage } from '../../js/cell-style-command.mjs';
@@ -472,7 +473,7 @@ export function createReaderRuntime({
     );
     if (protectionRemoved) content.passwordProtectionRemoved = true;
     attachHwp5TextSourcePolicy(editor, content);
-    if (content.window) return content;
+    if (content.window) return attachHwp5EquationRendering(editor, content);
     const paragraphFormatAvailable = hwp5ParagraphFormatsAvailable();
     const prepared = attachHwp5PictureTails(
       editor,
@@ -522,14 +523,20 @@ export function createReaderRuntime({
     );
     const roots = projectHwp5RootContent(prepared);
     if (roots.state === 'projected')
-      return attachParagraphNumbering(editor, attachHwp5NoteSelectionOwners(roots.content));
+      return attachHwp5EquationRendering(
+        editor,
+        attachParagraphNumbering(editor, attachHwp5NoteSelectionOwners(roots.content)),
+      );
     if (
       prepared.hwp5Drawings?.length &&
       prepared.hwp5Drawings.every((row) => row.source.kind_id === 0x24636f6e)
     )
       prepared.hwp5GroupPageModelError = roots.error;
     else prepared.hwp5DrawingPageModelError = roots.error;
-    return attachParagraphNumbering(editor, attachHwp5NoteSelectionOwners(prepared));
+    return attachHwp5EquationRendering(
+      editor,
+      attachParagraphNumbering(editor, attachHwp5NoteSelectionOwners(prepared)),
+    );
   }
   function anchorView(section, paragraph) {
     try {
@@ -1178,6 +1185,47 @@ export function createReaderRuntime({
     };
     displayResources.beginRequest(message, { format, editor, historyEnabled });
     try {
+      if (message.kind === 'object-geometry-query') {
+        if (
+          !['hwpx', 'hwp5'].includes(format) ||
+          !historyEnabled ||
+          !editor?.supportsObjectGeometry?.()
+        )
+          throw Error('ObjectGeometryUnavailable');
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        reply({ kind: message.kind, geometry: editor.objectGeometry(message.selector) });
+        return;
+      }
+      if (message.kind === 'object-geometry-set') {
+        if (
+          !['hwpx', 'hwp5'].includes(format) ||
+          !historyEnabled ||
+          !editor?.supportsObjectGeometry?.()
+        )
+          throw Error('ObjectGeometryUnavailable');
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        atomicOutcome = editor.setObjectGeometry(message.request);
+        applied = atomicOutcome.application === 'applied';
+        mutationUncertain = atomicOutcome.application === 'unknown';
+        if (mutationUncertain) historyPoisoned = true;
+        if (atomicOutcome.error || atomicOutcome.cleanupError)
+          throw Error(atomicOutcome.error || atomicOutcome.cleanupError);
+        if (atomicOutcome.nativeCode === 2) {
+          reply({ kind: message.kind, changed: false });
+          return;
+        }
+        documentWindow = null;
+        if (format === 'hwpx') {
+          reader = await createHwpxReader(module);
+          preview = reader.readTextEvents(editor.saveForDisplay());
+        } else {
+          hwp5PreviewDirty = true;
+          await refreshHwp5PreviewFallback();
+        }
+        displayResources.invalidate();
+        reply({ kind: message.kind, content: format === 'hwpx' ? hwpxDisplay() : hwp5Display() });
+        return;
+      }
       if (message.kind === 'page-settings-capabilities') {
         if (!['hwpx', 'hwp5'].includes(format) || !editor?.supportsPageSettingsWrite?.())
           throw Error('PageSettingsWriteUnavailable');
@@ -1942,53 +1990,15 @@ export function createReaderRuntime({
         if (!editor || !historyEnabled || editor.supportsRichTypingAbi?.() !== true)
           throw Error('RichTypingUnavailable');
         if (historyPoisoned) throw Error('HistoryMutationUncertain');
-        if (
-          message.richTypingScope !== richTypingScope ||
-          !Number.isInteger(message.expectedHistoryRevision) ||
-          message.expectedHistoryRevision !== editor.historyRevision()
-        )
-          throw Error('StaleRichTypingBinding');
-        if (message.rangePolicy !== undefined && message.rangePolicy !== 'reject')
-          throw Error('InvalidRangePolicy');
-        if (typeof message.text !== 'string' || !message.text || /[\r\n]/.test(message.text))
-          throw Error('UnsupportedRichTypingText');
-        const maximum = format === 'hwpx' ? 0xfffffffe : 0xffffffff;
-        if (
-          !Number.isInteger(message.paragraph) ||
-          message.paragraph < 0 ||
-          message.paragraph > maximum
-        )
-          throw RangeError('Invalid paragraph');
-        const paragraph = message.paragraph + (format === 'hwpx' ? 1 : 0);
-        if (format === 'hwp5') {
-          if (!['original', 'generated'].includes(message.reference?.kind))
-            throw Error('UnsupportedRichTypingOwner');
-          validateHwp5CurrentBodyReference(
-            editor,
-            message,
-            'InvalidCurrentTextTransactionReference',
-            'UnsupportedRichTypingOwner',
-          );
-        } else if (format === 'hwpx') {
-          const projected = hwpxRichTypingOwners;
-          if (
-            hwpxCreatedTablesPending ||
-            projected?.editor !== editor ||
-            projected.scope !== richTypingScope ||
-            projected.revision !== message.expectedHistoryRevision ||
-            !projected.owners.get(message.section)?.has(message.paragraph) ||
-            !editor.canEdit(message.section, paragraph)
-          )
-            throw Error('UnsupportedRichTypingOwner');
-        } else throw Error('RichTypingUnavailable');
-        atomicOutcome = editor.spliceWithRichCharacter({
-          section: message.section,
-          paragraph,
-          startUnit: message.startUnit,
-          endUnit: message.endUnit,
-          text: message.text,
-          insertion: message.insertion,
+        const target = prepareRichTypingTarget({
+          editor,
+          format,
+          message,
+          scope: richTypingScope,
+          projection: hwpxRichTypingOwners,
+          createdTablesPending: hwpxCreatedTablesPending,
         });
+        atomicOutcome = editor.spliceWithRichCharacter(target);
         applied = atomicOutcome.application === 'applied';
         mutationUncertain = atomicOutcome.application === 'unknown';
         if (mutationUncertain) historyPoisoned = true;
@@ -3521,15 +3531,9 @@ export function createReaderRuntime({
         if (response.content || historyPoisoned || (response.error && applied))
           hwpxRichTypingOwners = null;
         if (!response.error && response.content?.richTypingScope === richTypingScope) {
-          // The display projection already proves top-level ownership and plain
-          // editability. Keep only coordinate membership, bound to its exact epoch.
-          const owners = new Map();
-          for (const row of response.content.paragraphs) {
-            if (!richTypingOwnerAllowed(format, row)) continue;
-            let section = owners.get(row.section);
-            if (!section) owners.set(row.section, (section = new Set()));
-            section.add(row.paragraph);
-          }
+          // Native plain editability also covers source-owned cell/drawing text.
+          // Bind the bounded coordinate receipt to this exact editor and revision.
+          const owners = richTypingProjectionOwners(response.content.paragraphs);
           hwpxRichTypingOwners = { editor, scope: richTypingScope, revision, owners };
         }
       }

@@ -177,7 +177,12 @@ pub fn prepareLive(live_a: std.mem.Allocator, storage: std.mem.Allocator, bindin
     var record = try journal.Record.prepare(storage, binding, .{ .range = .{ .owner = binding.owner, .start = edit.start_unit }, .remove = removed, .insert = add }, limit);
     errdefer record.deinit();
     var draft = p; // 이 함수 내부에서만 메타데이터 계산에 사용. 토큰 borrow는 반환하지 않는다.
-    draft.character_runs = try @import("character_runs.zig").replace(live_a, p.character_runs, edit.start_unit, edit.end_unit, @intCast(add.len), null);
+    const runs = @import("character_runs.zig");
+    // Backing.init validates plain text and prepareLive rejects inserted
+    // controls; its final unit is a real paragraph terminator, not payload.
+    const terminal: ?u32 = if (backing.len() > 1 and backing.at(backing.len() - 1) == 13) @intCast(backing.len() - 1) else null;
+    const insertion_id = runs.typingInsertionId(p.character_runs, terminal, edit.start_unit, edit.end_unit, @intCast(add.len));
+    draft.character_runs = try runs.replace(live_a, p.character_runs, edit.start_unit, edit.end_unit, @intCast(add.len), insertion_id);
     errdefer live_a.free(draft.character_runs);
     draft.range_tags = try live_a.alloc(model.TextRange, 0);
     errdefer live_a.free(draft.range_tags.?);

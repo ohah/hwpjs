@@ -23,6 +23,58 @@ pub fn build(b: *std.Build) void {
     const core_test_step = b.step("test", "Run core and controlled text unit tests");
     core_test_step.dependOn(&run_tests.step);
 
+    const equation_display_step = b.step("test-hwp5-equation-display", "Verify HWP5 equation snapshots, ownership, allocation failures and read-only session roundtrip");
+    for ([_]struct { path: []const u8, filters: []const []const u8 }{
+        .{ .path = "src/hwp5_equation_snapshot_probe.zig", .filters = &.{ "HWP5 equation snapshot", "equation query" } },
+        .{ .path = "src/hwp5_equation_session_probe.zig", .filters = &.{"HWP5 equation session snapshot"} },
+    }) |entry| {
+        const equation_tests = b.addTest(.{
+            .use_llvm = true,
+            .filters = entry.filters,
+            .root_module = b.createModule(.{
+                .root_source_file = b.path(entry.path),
+                .target = target,
+                .optimize = optimize,
+            }),
+        });
+        const run_equation_tests = b.addRunArtifact(equation_tests);
+        run_equation_tests.step.dependOn(&abi_check.step);
+        run_equation_tests.step.dependOn(&icc_registry_check.step);
+        equation_display_step.dependOn(&run_equation_tests.step);
+        core_test_step.dependOn(&run_equation_tests.step);
+    }
+
+    const editor_extensions_step = b.step("test-editor-extensions", "Verify equation projection, source caret typing and editable object geometry");
+    editor_extensions_step.dependOn(equation_display_step);
+    for ([_]struct { path: []const u8, filters: []const []const u8, step: []const u8, description: []const u8 }{
+        .{ .path = "src/object_geometry_probe.zig", .filters = &.{"object geometry"}, .step = "test-object-geometry", .description = "Verify source-owned object geometry, history and allocation failure rollback" },
+        .{ .path = "src/caret_rich_native_probe.zig", .filters = &.{"caret rich"}, .step = "test-caret-rich", .description = "Verify HWP5 and HWPX source body and cell rich typing" },
+        .{ .path = "src/caret_eof_native_probe.zig", .filters = &.{"caret EOF"}, .step = "test-caret-eof", .description = "Verify character-style inheritance at the visible paragraph end" },
+        .{ .path = "src/caret_eof_delta_native_probe.zig", .filters = &.{"caret EOF managed"}, .step = "test-caret-eof-managed", .description = "Verify direct live EOF insertion, source windows and history in body cells and textboxes" },
+        .{ .path = "src/h5_grid_implicit_empty_oracle_probe.zig", .filters = &.{
+            "HWP5 source table grid explicit spec6 observed8 all actions independent matrix and exact record survival",
+            "HWP5 source file grid all four commands compressed and raw save reopen exact oracle document IDs",
+            "HWP5 source grid semantic oracle rejects wrong retained text and empty header",
+        }, .step = "test-hwp5-implicit-empty-grid", .description = "Verify preserved source cells and implicit empty paragraphs after grid edits" },
+    }) |entry| {
+        const extension_tests = b.addTest(.{
+            .use_llvm = true,
+            .filters = entry.filters,
+            .root_module = b.createModule(.{
+                .root_source_file = b.path(entry.path),
+                .target = target,
+                .optimize = optimize,
+            }),
+        });
+        const run_extension_tests = b.addRunArtifact(extension_tests);
+        run_extension_tests.step.dependOn(&abi_check.step);
+        run_extension_tests.step.dependOn(&icc_registry_check.step);
+        const extension_step = b.step(entry.step, entry.description);
+        extension_step.dependOn(&run_extension_tests.step);
+        editor_extensions_step.dependOn(&run_extension_tests.step);
+        core_test_step.dependOn(&run_extension_tests.step);
+    }
+
     const portable_tests = b.addTest(.{
         .use_llvm = true,
         .filters = &.{"portable five"},

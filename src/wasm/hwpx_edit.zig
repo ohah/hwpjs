@@ -1071,7 +1071,7 @@ fn apply(command: histories.Command) !void {
         _ = try @import("../hwpx/display_resource_generation.zig").applyOwned(value, session, &.{command});
     } else switch (command.kind) {
         // Independent source-axis batches require the existing owned History.
-        .page_settings, .bullet_definition, .paragraph_bullet, .independent_text, .insert_document, .equation_insert, .chart_create, .named_field_rename, .named_field_create, .named_field_parameters, .source_table_cell_merge, .source_table_cell_split => return error.HistoryNotEnabled,
+        .page_settings, .object_geometry, .bullet_definition, .paragraph_bullet, .independent_text, .insert_document, .equation_insert, .chart_create, .named_field_rename, .named_field_create, .named_field_parameters, .source_table_cell_merge, .source_table_cell_split => return error.HistoryNotEnabled,
         .source_table_grid => {
             _ = try @import("../hwpx/source_table_grid_session.zig").apply(session, .{ .section = command.section, .node = command.source_grid_node, .expected_rows = command.source_grid_expected_rows, .expected_columns = command.source_grid_expected_columns, .action = command.source_grid_action });
         },
@@ -2516,4 +2516,42 @@ export fn hwpx_edit_create_chart(ptr: [*]const u8, size: u32) u32 {
     const target = parsed.request.target;
     apply(.{ .kind = .chart_create, .section = target.section, .paragraph = target.paragraph, .start = target.unit, .deleted = 0, .inserted = "", .chart_create = &parsed.request }) catch |err| return fail(err);
     return 1;
+}
+
+// Exact source-frame geometry: lifetime and serial fences precede owner validation.
+export fn hwpx_edit_object_geometry(section: u32, node: u32, kind: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const h = requireManagedHistory() catch |err| return fail(err);
+    if (kind > 1) return fail(error.InvalidObjectGeometryTarget);
+    const epoch = formatting_lifetime.session(a) catch |err| return fail(err);
+    defer a.free(epoch);
+    var buffer: [20]u8 = undefined;
+    const serial = std.fmt.bufPrint(&buffer, "{d}", .{session.mutation_serial}) catch unreachable;
+    var value = @import("../hwpx/object_geometry_owner.zig").observe(a, session, .{ .kind = if (kind == 0) .chart else .drawing, .section = section, .node = node }, h.revision(), .{ .session = epoch, .serial = serial }) catch |err| return fail(err);
+    defer value.deinit(a);
+    output = std.json.Stringify.valueAlloc(a, value, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_set_object_geometry(ptr: [*]const u8, len: usize) u32 {
+    hwpx_edit_output_free();
+    if (len > 16384) return fail(error.LimitExceeded);
+    requireNoReadScope() catch |err| return fail(err);
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const h = requireManagedHistory() catch |err| {
+        _ = fail(err);
+        return if (err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    var parsed = @import("../model/object_geometry.zig").parse(a, ptr[0..len]) catch |err| return fail(err);
+    defer parsed.deinit();
+    const request = parsed.json.value;
+    if (request.historyRevision != h.revision()) return fail(error.StaleObjectGeometryBinding);
+    formatting_lifetime.check(.{ .session = request.binding.session, .revision = @as(u32, @intCast(request.historyRevision)) }, h.revision()) catch return fail(error.StaleObjectGeometryBinding);
+    const serial = @import("../model/formatting_binding.zig").decimal(request.binding.serial) catch |err| return fail(err);
+    if (serial != session.mutation_serial) return fail(error.StaleObjectGeometryBinding);
+    const changed = @import("../hwpx/display_resource_generation.zig").applyOwned(h, session, &.{.{ .kind = .object_geometry, .object_geometry = &request, .section = 0, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "" }}) catch |err| {
+        _ = fail(err);
+        return if (err == error.MutationUncertain or err == error.HistoryMutationUncertain or h.stats().poisoned) 3 else 0;
+    };
+    return if (changed) 1 else 2;
 }

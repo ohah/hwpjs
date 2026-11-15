@@ -4,6 +4,7 @@ type Profile = Readonly<{ contract: NativeModuleContract; ownerWindow: boolean }
 const profiles = new Map<string, Profile>(
   (
     [
+      ['fe6092257efb40ff93b92c7de59bb9bd75c3828ebde6db48116a3fe219225334', true],
       ['8e0ff0d0e80f185f255024cb9d946b0469648fd5eb175ef6c7aa3562124c91ff', false],
       ['a38f4df7993c8f645fd28fd13df0108f9be4ba5ca55736e76e334d7d8968343f', false],
       ['d849a4b22357e62d2425c3f1632edc07f2948ac18ce6d97009aede9d2b6cb1eb', true],

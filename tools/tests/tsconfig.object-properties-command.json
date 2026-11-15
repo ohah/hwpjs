@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@hwpjs/core": ["../../packages/core/dist/index.d.ts"],
+      "@hwpjs/vanilla": ["../../packages/vanilla/src/index.ts"],
+      "@hwpjs/core/*": ["../../packages/core/dist/*"]
+    }
+  },
+  "files": [
+    "../../apps/demo/src/assets.d.ts",
+    "../../apps/demo/src/main.ts",
+    "../../apps/demo/src/demo-controller.ts",
+    "../../packages/vanilla/tests/object-properties-command.test.ts"
+  ],
+  "include": []
+}

@@ -1,10 +1,15 @@
+import { createObjectGeometryForm, type ObjectGeometryEditor } from './object-geometry-form.ts';
 import { createDialogLayer } from './dialog-layer.ts';
 import { pictureMillimeters } from './object-properties-input.ts';
 import type { ChartPropertiesViewFactory } from './chart-properties-controller.ts';
 
-export function chartPropertiesViewFactory(root: HTMLElement): ChartPropertiesViewFactory {
+export function chartPropertiesViewFactory(
+  root: HTMLElement,
+  editor?: ObjectGeometryEditor,
+): ChartPropertiesViewFactory {
   return (callbacks) => {
     const doc = root.ownerDocument;
+    let geometry: ReturnType<typeof createObjectGeometryForm> | undefined;
     let disposed = false,
       ready = false;
     const dismiss = () => {
@@ -19,8 +24,7 @@ export function chartPropertiesViewFactory(root: HTMLElement): ChartPropertiesVi
     const rows = doc.createElement('dl'),
       note = doc.createElement('p'),
       status = doc.createElement('p');
-    note.textContent =
-      '현재 차트의 속성을 읽기 전용으로 표시합니다. 크기와 위치 변경은 지원하지 않습니다.';
+    note.textContent = '차트 제목과 데이터는 아래 데이터 편집에서 변경합니다.';
     status.setAttribute('role', 'status');
     status.setAttribute('aria-live', 'polite');
     const edit = doc.createElement('button'),
@@ -68,6 +72,14 @@ export function chartPropertiesViewFactory(root: HTMLElement): ChartPropertiesVi
             : (availability.reason ?? '현재 차트 데이터를 편집할 수 없습니다.')
           : '현재 차트 속성을 읽고 있습니다.';
         if (!capture) return;
+        if (!geometry)
+          geometry = createObjectGeometryForm(
+            layer.body,
+            layer.footer,
+            editor,
+            { kind: 'chart', section: capture.target.section, node: capture.target.wrapper },
+            dismiss,
+          );
         const g = capture.source.host.geometry;
         row(
           capture.title?.shortened ? '제목 (일부)' : '제목',
@@ -92,6 +104,7 @@ export function chartPropertiesViewFactory(root: HTMLElement): ChartPropertiesVi
         ready = false;
         edit.removeEventListener('click', onEdit);
         close.removeEventListener('click', dismiss);
+        geometry?.dispose();
         layer.destroy();
       },
     };

@@ -1,3 +1,13 @@
+## 수식 표시·원본 커서 서식·개체 위치 편집
+
+형식별 원본의 조회·서식 상속·개체 위치/크기 저장 회귀는 다음 집중 대상에서 검사합니다. 전체 `test`에도 연결됩니다.
+
+```sh
+zig build test-editor-extensions -Doptimize=ReleaseSafe -j1 --summary all
+```
+
+`test-hwp5-equation-display`, `test-object-geometry`, `test-caret-rich`, `test-caret-eof`, `test-caret-eof-managed`로 책임별 검사를 실행할 수 있습니다. 코어 검사는 정상 SDK·실제 Canvas 입력·저장 파일의 독립 검사와 구분합니다. 지원 조건은 [수식 표시](hwp5-equation-rendering.md), [커서 서식](collapsed-caret-formatting.md), [개체 위치 편집](object-geometry-editing.md)의 주제 계약을 따릅니다.
+
 # 개발·검증 명령
 
 <a id="hwpx-inline-object-creation"></a>
@@ -2025,3 +2035,19 @@ node --experimental-transform-types --max-old-space-size=512 --test --test-concu
 정상 Core/vanilla SDK와 명시한 기존 WASM으로 schema2 source ledger·artifact·Noori 두 형식 해시를 확인한 뒤 CI의 ShapeCopy 집중 단계가 기존261+menu focus14=275를 실행합니다. 새 테스트에서 SDK 대체 로더나 엔진 허용목록으로 입력 검사를 우회하지 않습니다. Native 컴파일 및 실제 브라우저·배포는 이 명령에 포함하지 않습니다.
 
 메뉴 강조의 focusin 후속은 실제 이벤트 순서의 `body 상태 blur → 등록 대상 focusin`을 통제한31개입니다. 저장 안내25는 앱23+기존 preview2이며 둘을 더한 CI synthetic 분모는56입니다. 같은 후보의 정상 Core/vanilla SDK를 새로 빌드한 후 기존 WASM879에서 ShapeCopy275와 metadata12를 별도로 검사합니다. 과거 synthetic47/source334를 새343의 증거로 재사용하지 않습니다.
+
+## HWP5 수식 조회와 표시
+
+[조회·표시 계약](hwp5-equation-rendering.md)의 원문·앵커·NoResize 할당 실패와 실제 `latex.hwp` 편집 세션 회귀는 다음과 같습니다. 이 단계는 `zig build test`에도 연결됩니다. 브라우저나 한/글 조판 동치 검사가 아닙니다.
+
+```sh
+nice -n 10 mise exec -- zig build test-hwp5-equation-display -Doptimize=ReleaseSafe -j1
+mise exec -- node --test tests/hwp5/equation-snapshot.test.mjs tests/hwp5/equation-content.test.mjs
+```
+
+실제 선택적 ABI와 구역의 수식 snapshot·저장 재열기·이력 불변 검사는 해당 ABI가 있는 명시적 후보 WASM으로 실행합니다. Node의 글꼴 측정 대역과 실제 Canvas 글꼴 검사는 별도입니다.
+
+```sh
+test -n "$HWPJS_TEST_WASM" || exit 1
+mise exec -- node tests/hwp5/equation-snapshot-native.mjs
+```

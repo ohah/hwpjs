@@ -1,0 +1,22 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["bun"],
+    "paths": {
+      "@hwpjs/core": ["../../packages/core/src/index.ts"],
+      "@hwpjs/core/*": ["../../packages/core/src/*"],
+      "@hwpjs/vanilla": ["../../packages/vanilla/src/index.ts"]
+    }
+  },
+  "files": [
+    "../../apps/demo/src/assets.d.ts",
+    "../../apps/demo/src/chart-properties-tool.ts",
+    "../../apps/demo/src/drawing-properties-tool.ts",
+    "../../packages/core/tests/commands/object-geometry.test.ts",
+    "../../packages/core/tests/editor/object-geometry-runtime.test.ts"
+  ],
+  "include": []
+}

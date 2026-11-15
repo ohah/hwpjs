@@ -1,3 +1,4 @@
+import { createObjectGeometryForm, type ObjectGeometryEditor } from './object-geometry-form.ts';
 import { createDialogLayer } from './dialog-layer.ts';
 import type { DrawingPropertiesCapture } from './drawing-properties-port.ts';
 import type { DrawingPropertiesView } from './drawing-properties-controller.ts';
@@ -6,6 +7,7 @@ export function createDrawingPropertiesView(
   root: HTMLElement,
   capture: DrawingPropertiesCapture,
   onDismiss: () => void,
+  editor?: ObjectGeometryEditor,
 ): DrawingPropertiesView {
   const doc = root.ownerDocument;
   const layer = createDialogLayer(root, {
@@ -16,7 +18,7 @@ export function createDrawingPropertiesView(
   });
   const scope = doc.createElement('p');
   scope.textContent =
-    '확인 가능한 속성과 내용을 읽기 전용으로 보여 줍니다. 이 창에서는 변경할 수 없습니다.';
+    '아래 내용은 현재 문서에서 조회한 정보입니다. 크기와 위치는 편집 가능한 경우 적용할 수 있습니다.';
   const values = doc.createElement('dl');
   for (const field of capture.fields) {
     const term = doc.createElement('dt'),
@@ -48,6 +50,13 @@ export function createDrawingPropertiesView(
   dismiss.textContent = '닫기';
   dismiss.addEventListener('click', onDismiss);
   layer.footer.append(dismiss);
+  const geometry = createObjectGeometryForm(
+    layer.body,
+    layer.footer,
+    editor,
+    { kind: 'drawing', section: capture.target.section, node: capture.target.drawingNode },
+    onDismiss,
+  );
   let disposed = false;
   return {
     show() {
@@ -57,6 +66,7 @@ export function createDrawingPropertiesView(
       if (disposed) return;
       disposed = true;
       dismiss.removeEventListener('click', onDismiss);
+      geometry.dispose();
       layer.destroy();
     },
   };

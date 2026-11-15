@@ -58,6 +58,7 @@ const ranges = new Set([
 // A visible-cell proof permits text/character changes, never structure or cell geometry.
 const visibleText = new Set([
   'splice',
+  'splice-rich-character',
   'splice-font-name',
   'splice-character-properties',
   'query-edit-range',

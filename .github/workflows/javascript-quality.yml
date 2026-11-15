@@ -114,6 +114,18 @@ jobs:
           grep -Eq '^# tests 10$' "$RUNNER_TEMP/object-selection-frame10.tap"
           grep -Eq '^# fail 0$' "$RUNNER_TEMP/object-selection-frame10.tap"
           grep -Eq '^# skipped 0$' "$RUNNER_TEMP/object-selection-frame10.tap"
+      - name: Test selected object property commands and focus boundaries
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          export HWPJS_TEST_CORE_DIST="$PWD/packages/core/dist"
+          node --experimental-transform-types --import ./tools/renderer-test-core-provider.mjs --test --test-concurrency=1 --test-reporter=tap packages/vanilla/tests/object-properties-command.test.ts apps/demo/tests/object-properties-command.test.mjs 2>&1 | tee "$RUNNER_TEMP/object-properties-command.tap"
+          grep -Eq '^# tests 15$' "$RUNNER_TEMP/object-properties-command.tap"
+          grep -Eq '^# pass 15$' "$RUNNER_TEMP/object-properties-command.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/object-properties-command.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/object-properties-command.tap"
+          bunx --no-install tsc --noEmit -p tools/tests/tsconfig.object-properties-command.json
       - name: Test object selection window and descendant blur boundaries
         timeout-minutes: 2
         shell: bash
@@ -300,6 +312,48 @@ jobs:
             --import ./tools/renderer-test-core-provider.mjs \
             --import ./packages/vanilla/tests/non-text-history-renderer-hook.mjs \
             --test --test-concurrency=1 --test-timeout=50000 "$@"
+      - name: Test HWP5 equation projection and source-owner caret formatting
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          export HWPJS_TEST_CORE_DIST="$PWD/packages/core/dist"
+          set -- \
+            ./tests/hwp5/equation-snapshot.test.mjs \
+            ./tests/hwp5/equation-content.test.mjs \
+            ./tests/canvas/caret-rich-owner-admission.test.mjs \
+            ./packages/vanilla/tests/caret-rich-source-owner.test.mjs \
+            ./packages/vanilla/tests/caret-eof-history-inheritance.test.mjs
+          for path in "$@"; do test -f "$path" || exit 1; done
+          node --experimental-transform-types --max-old-space-size=512 \
+            --import ./tools/renderer-test-core-provider.mjs \
+            --import ./packages/vanilla/tests/non-text-history-renderer-hook.mjs \
+            --test --test-concurrency=1 --test-timeout=50000 \
+            --test-reporter=tap "$@" 2>&1 | tee "$RUNNER_TEMP/equation-source-owner.tap"
+          grep -Eq '^# tests 35$' "$RUNNER_TEMP/equation-source-owner.tap"
+          grep -Eq '^# pass 35$' "$RUNNER_TEMP/equation-source-owner.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/equation-source-owner.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/equation-source-owner.tap"
+      - name: Test Native EOF caret reference through the controlled Canvas route
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          export HWPJS_TEST_CORE_DIST="$PWD/packages/core/dist"
+          export HWPJS_TEST_WASM="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
+          export HWPJS_TEST_WASM_SHA256="$(node --input-type=module -e 'import{readFileSync}from"node:fs";import{createHash}from"node:crypto";console.log(createHash("sha256").update(readFileSync(process.env.HWPJS_TEST_WASM)).digest("hex"))')"
+          unset HWPJS_EXPECT_CR_EOF_DEFECT
+          test -f ./packages/vanilla/tests/caret-eof-current-reference-route.test.mjs
+          node --experimental-transform-types --max-old-space-size=512 \
+            --import ./tools/renderer-test-core-provider.mjs \
+            --import ./packages/vanilla/tests/non-text-history-renderer-hook.mjs \
+            --test --test-concurrency=1 --test-reporter=tap \
+            ./packages/vanilla/tests/caret-eof-current-reference-route.test.mjs \
+            2>&1 | tee "$RUNNER_TEMP/caret-eof-native-route.tap"
+          grep -Eq '^# tests 1$' "$RUNNER_TEMP/caret-eof-native-route.tap"
+          grep -Eq '^# pass 1$' "$RUNNER_TEMP/caret-eof-native-route.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/caret-eof-native-route.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/caret-eof-native-route.tap"
       - name: Test generated table grid commands and actual surface selection
         timeout-minutes: 2
         run: |

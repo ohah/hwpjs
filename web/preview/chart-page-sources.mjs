@@ -1,3 +1,4 @@
+import { hasOleSourceFrame } from '../../js/ole-source-frame.mjs';
 import { chartDisplayMatchesOle } from './chart-source-frame.mjs';
 import { chartPreviewPrimitives } from './chart-preview-primitives.mjs';
 import { chartInlineItem } from './chart-inline.mjs';
@@ -33,7 +34,7 @@ export function selectChartPageSources(content, read) {
       ole.representation !== 'chart-alternative' ||
       !Number.isSafeInteger(ole.chartWrapper) ||
       ole.chartWrapper < 0 ||
-      ole.source?.transform_identity !== true
+      !hasOleSourceFrame(ole.source)
     )
       return fail('UnsupportedOlePageContent');
     const targets = content.chartTargets.filter(

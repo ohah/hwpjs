@@ -284,6 +284,7 @@
 현재 모듈별 책임·소유권·미지원 경계는 주제 문서에서 관리합니다. 구현 변경 시 해당 문서를 갱신하고 AGENTS.md에 상세를 누적하지 않습니다.
 
 - [HWPX 새 차트·수식 생성과 공통 caret](hwpx-inline-object-creation.md)
+- [HWP5 수식 조회와 Canvas 표시](hwp5-equation-rendering.md)
 - [공통 수식 장식 명령의 대상 구조](equation-decorations.md)
 - [적분 명령의 측정·곡선 배치](equation-integrals.md)
 - [극한 기호와 중앙 조건 배치](equation-limits.md)
@@ -579,3 +580,6 @@
 - [양식 AutoSize의 측정과 편집](hwp5-form-text-layout-flags.md)
 
 [기존 차트·수식 편집 도구](existing-object-editor-ui.md)는 최신 데모의 HWPX 개체 조회·수정과 Core token·창 수명·검증 범위를 소유합니다.
+
+- [문단 끝의 입력 서식 상속](caret-eof-inheritance.md) — 실제 문단 종료 문자와 보이는 입력 위치의 서식·실행 취소 계약.
+- [개체 위치·크기 편집](object-geometry-editing.md) — 현재 물리 소유자·형식별 원자적 저장과 조판 경계.

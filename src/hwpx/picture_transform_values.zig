@@ -132,6 +132,11 @@ pub fn readCurve(a: std.mem.Allocator, tree: *const Tree, node: usize, max_matri
     return readComponent(a, tree, node, max_matrices);
 }
 
+pub fn readChart(a: std.mem.Allocator, tree: *const Tree, node: usize, max_matrices: usize) !Values {
+    if (node >= tree.elements.len or !fields.childIs(tree, node, "chart")) return error.InvalidChartGeometryNode;
+    return readComponent(a, tree, node, max_matrices);
+}
+
 pub fn readOle(a: std.mem.Allocator, tree: *const Tree, node: usize, max_matrices: usize) !Values {
     if (node >= tree.elements.len or !fields.childIs(tree, node, "ole")) return error.InvalidOleDisplayNode;
     return readComponent(a, tree, node, max_matrices);

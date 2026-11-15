@@ -21,6 +21,34 @@ fn styleAt(rows: []const model.CharacterRun, unit: u32) u32 {
     return id;
 }
 
+/// A physical PARA_BREAK after visible text, never a CR-valued code unit
+/// inside a retained control payload. Empty and control-ended paragraphs keep
+/// their existing insertion affinity. Caller retains source/control validation.
+pub fn visibleTextEnd(bytes: []const u8) !?u32 {
+    var iterator = try @import("../body/text.zig").Iterator.init(bytes);
+    var preceding_text = false;
+    var terminal: ?u32 = null;
+    while (try iterator.next()) |token| {
+        terminal = if (token.value == .control and token.value.control.code == 13 and
+            token.raw.len == 2 and token.start_unit + 1 == bytes.len / 2 and preceding_text)
+            std.math.cast(u32, token.start_unit) orelse return error.LimitExceeded
+        else
+            null;
+        preceding_text = token.value == .text and token.raw.len != 0;
+    }
+    return terminal;
+}
+
+/// Only nonempty pure insertion directly before the terminal CR inherits the
+/// preceding visible scalar's complete resource. Interior boundaries, selected
+/// replacements, explicit paint IDs and the CR's own style remain unchanged.
+/// A live gap may provide its validated plain-text terminal without rescanning.
+pub fn typingInsertionId(rows: []const model.CharacterRun, terminal: ?u32, start: u32, end: u32, added: u32) ?u32 {
+    const at = terminal orelse return null;
+    if (at == 0 or start != at or start != end or added == 0) return null;
+    return styleAt(rows, at - 1);
+}
+
 /// 빈 continuation의 현재 가시 끝 스타일. CR은 입력 문자가 아닙니다.
 pub fn continuationStyle(rows: []const model.CharacterRun, bytes: []const u8, at: u32, count: usize) !u32 {
     try validate(rows, bytes, count);
@@ -60,7 +88,7 @@ pub fn replace(a: std.mem.Allocator, rows: []const model.CharacterRun, start: u3
     return out.toOwnedSlice(a);
 }
 
-pub const Independent = struct { start: u32, end: u32, added: u32 };
+pub const Independent = struct { start: u32, end: u32, added: u32, insertion_id: ?u32 = null };
 /// Validated active edits only. No per-edit row scan; original start affinity
 /// and right-side restoration use the same canonical append() as replace().
 pub fn replaceIndependent(a: std.mem.Allocator, rows: []const model.CharacterRun, edits: []const Independent, visited: if (@import("builtin").is_test) *usize else void) ![]model.CharacterRun {
@@ -80,7 +108,7 @@ pub fn replaceIndependent(a: std.mem.Allocator, rows: []const model.CharacterRun
             style = rows[cursor].char_shape_id;
         }
         const start: u32 = @intCast(@as(i64, edit.start) + delta);
-        if (edit.added != 0) try append(a, &output, start, style);
+        if (edit.added != 0) try append(a, &output, start, edit.insertion_id orelse style);
         while (cursor < rows.len and rows[cursor].start_unit <= edit.end) : (cursor += 1) {
             if (@import("builtin").is_test) visited.* += 1;
             style = rows[cursor].char_shape_id;

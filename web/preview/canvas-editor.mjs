@@ -45,6 +45,7 @@ import { normalizeParagraphReplacement } from '../../js/paragraph-replacement.mj
 import {
   documentBlockRange,
   paragraphSelectionEdge,
+  paragraphSelectionOwner,
   paragraphSelectionRanges,
 } from './paragraph-selection.mjs';
 import { paragraphCompositionProjection } from './paragraph-composition.mjs';
@@ -979,8 +980,9 @@ export function createCanvasEditor({
     const patch = caretRichCharacter(owned);
     if (!patch || !Object.keys(patch).length) return false;
     const scope = renderer.richTypingScope(target);
+    const owner = paragraphSelectionOwner(renderer.paragraph(target));
     const current = currentRichTyping();
-    let previous = current?.scope === scope ? current.character : {};
+    let previous = current?.scope === scope && current.owner === owner ? current.character : {};
     if (typingProperties && sameParagraph(typingProperties, target))
       previous = mergeCaretRichCharacter(previous, typingProperties.properties);
     if (typingFont && sameParagraph(typingFont, target))
@@ -988,7 +990,12 @@ export function createCanvasEditor({
         previous,
         caretRichCharacter({ kind: 'font-name', ...typingFont }),
       );
-    richTyping = { ...target, scope, character: mergeCaretRichCharacter(previous, patch) };
+    richTyping = {
+      ...target,
+      scope,
+      owner,
+      character: mergeCaretRichCharacter(previous, patch),
+    };
     typingProperties = typingFont = null;
     changedTypingIntent();
     onCommit?.(typingIntentRevision);
@@ -1046,6 +1053,7 @@ export function createCanvasEditor({
       (!richTypingAvailable() ||
         !sameParagraph(intent, target) ||
         intent.scope !== renderer.richTypingScope(target) ||
+        intent.owner !== paragraphSelectionOwner(renderer.paragraph(target)) ||
         /[\r\n]/.test(change.text))
     ) {
       rejectRichDraft('현재 입력 위치 또는 여러 줄 입력에 지정한 서식을 적용할 수 없습니다.');

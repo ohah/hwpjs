@@ -276,3 +276,14 @@ export type {
   ChartBubbleSeries,
   ChartStockSeries,
 } from './commands/inline-object-insert.ts';
+
+export { SET_OBJECT_GEOMETRY_COMMAND } from './commands/object-geometry.ts';
+export type {
+  ObjectGeometryTarget,
+  ObjectGeometryRead,
+  ObjectGeometrySelector,
+  ObjectGeometryObservation,
+  ObjectGeometryFrame,
+  ObjectGeometryPatch,
+  SetObjectGeometryPayload,
+} from './commands/object-geometry.ts';

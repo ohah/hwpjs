@@ -62,7 +62,8 @@ export function connectObjectActivation(
   let stopProperties: (() => void) | undefined;
   try {
     stopProperties = host?.registerObjectPropertiesRequest?.((event) => {
-      if (event.type === 'properties-shortcut') dispatch(event);
+      if (event.type === 'properties-shortcut' || event.type === 'properties-command')
+        dispatch(event);
     });
   } catch (error) {
     stop?.();

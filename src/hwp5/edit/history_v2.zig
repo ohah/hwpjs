@@ -133,6 +133,10 @@ pub const History = struct {
     }
     pub fn applyBatch(self: *Self, s: *edit.Session, commands: []const edit.Command) !bool {
         try self.bind(s);
+        for (commands) |command| if (command == .edit_object_geometry) {
+            if (commands.len != 1) return error.InvalidObjectGeometryBatch;
+            if (command.edit_object_geometry.historyRevision != self.stack.current.revision) return error.StaleObjectGeometryBinding;
+        };
         try self.stack.prepare();
         try self.begin();
         // 각 분기는 성공·실패 모두 같은 Session 거래를 종료한다.
