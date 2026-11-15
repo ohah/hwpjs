@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.object-activation.json",
+  "files": [
+    "../apps/demo/src/assets.d.ts",
+    "../apps/demo/src/shortcut-settings.ts",
+    "../apps/demo/src/shortcut-presentation.ts",
+    "../apps/demo/src/formatting-marks-shortcut.ts",
+    "../packages/vanilla/src/shortcuts.ts"
+  ],
+  "include": []
+}

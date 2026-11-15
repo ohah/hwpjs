@@ -1,0 +1,66 @@
+/* The ruler is a fixed viewport sibling; only its track follows document scrolling. */
+.hwp-demo-ruler {
+  flex: 0 0 40px;
+  height: 40px;
+  min-width: 0;
+  overflow: hidden;
+  background: #eef0f3;
+  color: #435267;
+  user-select: none;
+}
+/* Keep the viewport height stable while a scroll/zoom frame is being repainted.
+   Collapsing this row would move the scroll anchor and invalidate another frame. */
+.hwp-demo .hwp-demo-ruler[hidden] {
+  display: block !important;
+  visibility: hidden;
+}
+.hwp-demo-ruler-label {
+  height: 18px;
+  padding-inline: 12px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 10px;
+  line-height: 18px;
+}
+.hwp-demo-ruler-clip {
+  position: relative;
+  height: 22px;
+  overflow: hidden;
+}
+.hwp-demo-ruler-track {
+  position: absolute;
+  top: 0;
+  height: 21px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px #aeb8c4;
+}
+.hwp-demo-ruler-margin {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: #d8dee7;
+}
+.hwp-demo-ruler-margin-left {
+  left: 0;
+  border-right: 1px solid #78889a;
+}
+.hwp-demo-ruler-margin-right {
+  right: 0;
+  border-left: 1px solid #78889a;
+}
+.hwp-demo-ruler-tick {
+  position: absolute;
+  bottom: 0;
+  height: 4px;
+  border-left: 1px solid #7e8b9b;
+  font-size: 9px;
+  line-height: 11px;
+  padding-left: 2px;
+}
+.hwp-demo-ruler-tick.medium {
+  height: 7px;
+}
+.hwp-demo-ruler-tick.major {
+  height: 17px;
+}

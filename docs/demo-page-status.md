@@ -1,23 +1,23 @@
 # 데모 쪽 상태
 
-`docs/webhwp-gap-audit.md`의 쪽 상태 gap은 작업 전 소스에도 남아 있었다. `demo-controller.ts`는 ready일 때 `pageLabel: '문서 열림'`만 전달했고, shell은 문자열 또는 `쪽 정보 없음`을 표시했다. 이 작업은 controller의 투영과 framework host 연결, 기존 vanilla Surface의 읽기 전용 관측만 변경한다. Core·Native·renderer 구현·원본 문서 필드는 변경하지 않는다.
+데모의 쪽 상태는 현재 Canvas 미리보기의 가시 용지와 전체 미리보기 범위를 표시합니다. Core·Native·원본 문서의 쪽 번호 필드를 변경하지 않습니다.
 
 ## 표시 의미
 
-- `미리보기 2 / 5쪽`: 현재 미리보기의 가시 쪽 순번과 측정된 전체 미리보기 쪽 수다. 가시 쪽은 세로 viewport와 교차하는 첫 용지이며, 여러 용지가 보이면 앞 용지를 선택한다.
+- `미리보기 2 / 5쪽`: 현재 미리보기의 가시 쪽 순번과 측정된 전체 미리보기 쪽 수다. 가시 쪽은 viewport의 세로·가로 구간 모두와 교차하는 첫 용지이며, 여러 용지가 보이면 앞 용지를 선택한다.
 - `부분 미리보기 내 2쪽 · 전체 쪽수 미확인`: limited 콘텐츠 또는 paragraph-window fragment 안의 로컬 순번이다. 부분 배치의 페이지 배열 길이를 전체 문서 쪽 수로 사용하지 않는다.
 - 쪽 사이 빈 공간에 viewport 전체가 놓이면 현재 쪽은 `미확인`이다. 관측되지 않은 값에 1을 넣거나 근접 쪽으로 보정하지 않는다.
 - 원본 쪽 번호(시작 번호·새 번호·구역별 번호)는 표시하지 않는다. 캐럿 쪽도 가시 쪽과 별개이며 이 기능의 관측값이 아니다. 미리보기 배치와 원본 한글 조판이 같다는 보증은 없다.
 
 ## 관측과 수명
 
-Surface의 `getPageStatus()`는 `{ current, total, partial }` 또는 `null`을 반환한다. mutable layout/문서 모델은 반환하지 않는다. 기존 renderer의 `paintedFrame()`과 `isPaintedFrameCurrent()`를 재사용하며, 새 측정이나 `layout()` flush를 일으키지 않는다. 같은 painted frame·viewport 위치·높이에서는 용지 순회 결과를 재사용한다. 새 frame이 게시되면 같은 layout 객체가 재사용되어도 관측을 재계산한다.
+Surface의 `getPageStatus()`는 `{ current, total, partial }` 또는 `null`을 반환한다. mutable layout/문서 모델은 반환하지 않는다. 기존 renderer의 `paintedFrame()`과 `isPaintedFrameCurrent()`를 재사용하며, 새 측정이나 `layout()` flush를 일으키지 않는다. 같은 painted frame·viewport의 세로·가로 위치·크기에서는 용지 순회 결과를 재사용한다. 새 frame이 게시되면 같은 layout 객체가 재사용되어도 관측을 재계산한다.
 
 세로 용지 좌표는 renderer와 동일하게 `scrollTop / scale`, viewport 높이는 `clientHeight / scale`로 해석한다. Surface stage는 가로 margin만 적용하며 세로 원점을 추가하지 않는다. Renderer의 scroll listener는 paint를 예약하고, paint도 기존 `onLayout`을 호출하므로 순수 scroll에 재조판 없이 알림이 연결된다. 이 소스 근거는 실제 브라우저 page 2/3 검증을 대신하지 않는다.
 
 현재 문서·generation·operation/view revision에 연결된 표시만 허용한다. inactive lease, unpainted/deferred/stale frame, non-ready 상태 또는 disposed Surface는 `null`이다. disposed Surface는 Core를 읽지 않는다. Controller는 non-ready·busy·closed일 때 관측을 읽지 않고 빈 pageLabel을 전달하여 기존 shell의 `쪽 정보 없음`을 표시한다. 교체 후 새 프레임이 없으면 이전 숫자를 재사용하지 않는다.
 
-`subscribePageStatus()`는 layout/paint 이후 microtask에서 scalar 값이 바뀔 때만 알린다. 반복 paint는 같은 숫자를 중복 통지하지 않는다. 알림은 listener snapshot을 순회하여 동기 재구독을 같은 알림에서 반복 실행하지 않는다. unsubscribe와 Surface dispose는 구독을 정리한다.
+`subscribePageStatus()`는 layout/paint 이후 microtask에서 쪽 상태 또는 [페이지별 자의 지오메트리](demo-page-ruler.md)가 바뀔 때 알린다. 반복 paint는 같은 숫자를 중복 통지하지 않는다. 알림은 listener snapshot을 순회하여 동기 재구독을 같은 알림에서 반복 실행하지 않는다. unsubscribe와 Surface dispose는 구독을 정리한다.
 
 React/Svelte는 늦은 onReady와 StrictMode 재마운트를 relay로 연결한다. 교체 시 이전 Surface 구독을 해제한다. relay dispose는 terminal이며 이후 connect/subscribe는 구독·읽기·알림을 만들지 않는다. Surface 기능이 없는 host와 headless는 쪽 숫자를 추정하지 않는다.
 
@@ -44,3 +44,9 @@ Private Vite 서버와 이 SDK로 실제 Vanilla·React·Svelte UI를 각각 검
 ## 변경 증거
 
 Production 4개와 별도 테스트 3개, 이 문서만 이 작업 소유다. 변경 전 별도 preimage 캡처는 하지 못했다. 처음 기록한 git status에서 clean이었던 세 기존 소스의 HEAD를 편집 후 복원했으며, 그 경위와 기준 HEAD는 `preimage-provenance.json`에 있다. 신규 파일의 preimage는 부재다. `production.patch`와 `sanitized.patch`는 이 소유 파일만 포함하며 기존 사용자 WIP는 포함하지 않는다. 로컬 커밋은 검증 후 진행하며 푸시·npm 게시·배포는 수행하지 않는다.
+
+## ruler successor의 2D 가시성과 무효화
+
+현재 쪽은 현재 viewport와 세로·가로 모두 교차하는 첫 paper의 측정 ordinal이다. 혼합 방향에서 세로로는 걸려 있어도 가로로 완전히 화면 밖인 쪽을 선택하지 않는다. 가로 원점은 실제 stage와 viewport의 화면 좌표 차이로 환산하고, selector cache에 가로 구간과 폭을 포함한다. 양 축 모두에서 경계 접촉만으로는 가시 쪽을 만들지 않는다.
+
+페이지/geometry 구독은 Core의 non-ready 상태·revision 변경 및 lease 취소에도 무효화를 알린다. Surface가 폐기될 때는 최종 null 관측을 구독 정리 전에 알리므로 renderer repaint나 새 Surface 연결이 없어도 유지된 ruler를 숨긴다. 공개 `CanvasPageStatus`는 current/total/partial의 불변 nullable 관측을 명시한다. 테스트와 실제 제품 결합 증거의 구분은 [페이지별 용지 자](demo-page-ruler.md)의 successor 절을 따른다.

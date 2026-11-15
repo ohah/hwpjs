@@ -67,6 +67,7 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
     );
     return {
       getPageStatus: pages.getPageStatus,
+      getPageGeometry: pages.getPageGeometry,
       subscribePageStatus: pages.subscribePageStatus,
       getPrintAvailability: () =>
         ref.current?.getPrintAvailability() ?? { available: false, reason: 'detached' },
@@ -157,6 +158,7 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
     });
     return {
       getPageStatus: pages.getPageStatus,
+      getPageGeometry: pages.getPageGeometry,
       subscribePageStatus: pages.subscribePageStatus,
       getPrintAvailability: () =>
         surface?.getPrintAvailability() ?? { available: false, reason: 'detached' },

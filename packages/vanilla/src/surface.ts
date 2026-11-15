@@ -53,6 +53,8 @@ import { createCheckBoxCanvasControls } from '../../../web/preview/checkbox-canv
 import { createFormTextCanvasControls } from '../../../web/preview/form-text-canvas-controls.mjs';
 import { createControlBridge } from './core-bridge.ts';
 import { canvasSurfacePageFrame } from './page-frame.ts';
+import { projectPageGeometry } from './page-geometry.ts';
+import type { CanvasPageGeometry, CanvasPageStatus } from './page-geometry.ts';
 // @ts-ignore Canonical owner projection shared with headless selection validation.
 import { paragraphSelectionOwner } from '../../../web/preview/paragraph-selection.mjs';
 
@@ -332,14 +334,12 @@ export function createCanvasSurface({
         frame: unknown;
         top: number;
         height: number;
+        left: number;
+        width: number;
         current: number | null;
       }
     | undefined;
-  function getPageStatus(): Readonly<{
-    current: number | null;
-    total: number | null;
-    partial: boolean;
-  }> | null {
+  function getPageStatus(): CanvasPageStatus | null {
     if (closed) return null;
     const state = editor.getEditorState();
     const key = `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}`;
@@ -360,28 +360,76 @@ export function createCanvasSurface({
     if (layout?.state !== 'paginated' || !Array.isArray(layout.pages) || !layout.pages.length)
       return null;
     const scale = renderer.viewScale();
-    const top = viewport.scrollTop / scale,
+    const stageBox = stage.getBoundingClientRect(),
+      viewportBox = viewport.getBoundingClientRect();
+    // The centered stage may have a different origin than the scroll viewport.
+    // Use its actual screen origin rather than assuming logical x = scrollLeft / scale.
+    const left = (viewportBox.left + (viewport.clientLeft ?? 0) - stageBox.left) / scale,
+      top = viewport.scrollTop / scale,
+      width = viewport.clientWidth / scale,
       height = viewport.clientHeight / scale;
-    if (![top, height, scale].every(Number.isFinite) || top < 0 || height <= 0 || scale <= 0)
+    if (
+      ![
+        left,
+        top,
+        width,
+        height,
+        scale,
+        left + width,
+        top + height,
+        stageBox.width,
+        viewportBox.width,
+        viewportBox.height,
+      ].every(Number.isFinite) ||
+      top < 0 ||
+      width <= 0 ||
+      height <= 0 ||
+      scale <= 0 ||
+      root.clientWidth <= 0 ||
+      stageBox.width <= 0 ||
+      viewportBox.width <= 0 ||
+      viewportBox.height <= 0
+    )
       return null;
-    // First paper intersecting the viewport. A viewport wholly in a gap has no current page.
+    // First paper with positive intersection on BOTH viewport axes. Edge contact
+    // and a viewport wholly in a gap have no current page.
     const cache = visiblePageCache;
     let current: number | null = cache?.current ?? null;
-    if (!cache || cache.frame !== frame || cache.top !== top || cache.height !== height) {
+    if (
+      !cache ||
+      cache.frame !== frame ||
+      cache.top !== top ||
+      cache.height !== height ||
+      cache.left !== left ||
+      cache.width !== width
+    ) {
       current = null;
       for (const [index, page] of layout.pages.entries()) {
         const paper = page?.paper;
         if (
           !paper ||
-          !Number.isFinite(paper.y) ||
-          !Number.isFinite(paper.height) ||
+          ![
+            paper.x,
+            paper.y,
+            paper.width,
+            paper.height,
+            paper.x + paper.width,
+            paper.y + paper.height,
+          ].every(Number.isFinite) ||
+          paper.width <= 0 ||
           paper.height <= 0
         )
           return null;
-        if (current === null && paper.y < top + height && paper.y + paper.height > top)
+        if (
+          current === null &&
+          paper.y < top + height &&
+          paper.y + paper.height > top &&
+          paper.x < left + width &&
+          paper.x + paper.width > left
+        )
           current = index + 1;
       }
-      visiblePageCache = { frame, top, height, current };
+      visiblePageCache = { frame, top, height, left, width, current };
     }
     const partial =
       layout.limited === true ||
@@ -391,17 +439,60 @@ export function createCanvasSurface({
       layout.documentPageNumbersExact === false;
     return Object.freeze({ current, total: partial ? null : layout.pages.length, partial });
   }
+  function getPageGeometry(): CanvasPageGeometry | null {
+    const status = getPageStatus();
+    if (
+      !status?.current ||
+      root.clientWidth <= 0 ||
+      viewport.clientHeight <= 0 ||
+      !stage.getBoundingClientRect ||
+      !viewport.getBoundingClientRect
+    )
+      return null;
+    const page = renderer.paintedFrame()?.layout?.pages?.[status.current - 1];
+    const stageBox = stage.getBoundingClientRect(),
+      viewportBox = viewport.getBoundingClientRect();
+    if (stageBox.width <= 0 || viewportBox.width <= 0 || viewportBox.height <= 0) return null;
+    return projectPageGeometry(
+      page,
+      status.current,
+      status.partial,
+      renderer.viewScale(),
+      stageBox.left,
+      viewportBox.left + viewport.clientLeft,
+      viewport.clientWidth,
+    );
+  }
+  function publishPageStatusListeners() {
+    for (const listener of Array.from(pageStatusListeners)) {
+      if (!pageStatusListeners.has(listener)) continue;
+      try {
+        listener();
+      } catch {
+        // Read-only observers must not interrupt lease cleanup or other observers.
+      }
+    }
+  }
   function notifyPageStatus() {
     if (closed || !pageStatusListeners.size || pageStatusPending) return;
     pageStatusPending = true;
     void Promise.resolve().then(() => {
       pageStatusPending = false;
       if (closed) return;
-      const next = JSON.stringify(getPageStatus());
+      // Repaint completion must wake the ruler even within the same page. A scroll
+      // observer may have hidden stale geometry before this painted frame was ready.
+      const next = JSON.stringify([
+        getPageStatus(),
+        getPageGeometry(),
+        displayed,
+        viewport.scrollTop,
+        viewport.scrollLeft,
+        viewport.clientHeight,
+        viewport.clientWidth,
+      ]);
       if (next === lastPageStatus) return;
       lastPageStatus = next;
-      const listenersSnapshot = Array.from(pageStatusListeners);
-      for (const listener of listenersSnapshot) listener();
+      publishPageStatusListeners();
     });
   }
   const alignFrame = (layout = renderer?.layout()) => {
@@ -467,6 +558,9 @@ export function createCanvasSurface({
     // can repeat a snapshot the listener rendered, or arrive after a newer one.
     if (state.stateVersion <= observedStateVersion) return;
     observedStateVersion = state.stateVersion;
+    // Invalidation may never repaint (loading/error/refresh-required or revoked
+    // lease). Subscribers must observe null without waiting for a layout callback.
+    notifyPageStatus();
     const key = `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}`;
     if (state.status === 'refresh-required') {
       renderer.suspendGeometryEvidence();
@@ -643,9 +737,13 @@ export function createCanvasSurface({
     onError: (error) => status(`개체 정보 창을 열지 못했습니다: ${String(error)}`),
   });
   const cleanup = () => {
-    objectActivation.dispose();
-    outputLifetime.abort(Error('PrintSurfaceDetached'));
+    if (closed) return;
     closed = true;
+    objectActivation.dispose();
+    // Final null observation is synchronous, before listeners are discarded.
+    // A retained ruler/relay can hide even when no replacement Surface arrives.
+    publishPageStatusListeners();
+    outputLifetime.abort(Error('PrintSurfaceDetached'));
     doc.removeEventListener?.('beforetoggle', sourceGridDialogEvent, true);
     sourceGridModalObserver?.disconnect();
     visiblePageCache = undefined;
@@ -700,7 +798,14 @@ export function createCanvasSurface({
         return direct?.settled() ? 'unchanged' : 'blocked';
       },
       isOutputInputSettled,
-      cancelComposition: () => direct?.cancelComposition(),
+      cancelComposition: () => {
+        try {
+          direct?.cancelComposition();
+        } finally {
+          // Core release/dispose revokes the lease before invoking this hook.
+          notifyPageStatus();
+        }
+      },
     });
     geometryLease = nativeLease; // Private geometry is bound to the original lease identity.
     // Recheck at the actual asynchronous Native gateway, not only at capture.
@@ -1415,6 +1520,7 @@ export function createCanvasSurface({
   return {
     /** Measured visible page only; never a source page number or caret page. */
     getPageStatus,
+    getPageGeometry,
     subscribePageStatus(listener: () => void): () => void {
       if (closed) return () => {};
       pageStatusListeners.add(listener);
@@ -2372,16 +2478,25 @@ export function createCanvasSurface({
     },
     dispose(): Promise<void> {
       if (!disposal) {
-        cleanup();
-        disposal = Promise.allSettled([
-          bridge!.flush(),
-          nonTextHistoryTask,
-          ...formattingTasks,
-        ]).then((results) => {
-          // 기존 Native 처리 오류는 유지하되 새 readonly 작업도 먼저 모두 정리한다.
-          for (const result of results.slice(0, 2))
-            if (result.status === 'rejected') throw result.reason;
+        let resolveDisposal!: () => void, rejectDisposal!: (reason: unknown) => void;
+        // Publish the shared Promise before the final observer notification:
+        // an observer may call dispose again while teardown is in progress.
+        disposal = new Promise<void>((resolve, reject) => {
+          resolveDisposal = resolve;
+          rejectDisposal = reject;
         });
+        try {
+          cleanup();
+          void Promise.allSettled([bridge!.flush(), nonTextHistoryTask, ...formattingTasks])
+            .then((results) => {
+              // 기존 Native 처리 오류는 유지하되 새 readonly 작업도 먼저 모두 정리한다.
+              for (const result of results.slice(0, 2))
+                if (result.status === 'rejected') throw result.reason;
+            })
+            .then(resolveDisposal, rejectDisposal);
+        } catch (error) {
+          rejectDisposal(error);
+        }
       }
       return disposal;
     },

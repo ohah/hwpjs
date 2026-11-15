@@ -289,3 +289,19 @@ test('custom paste keys and hosts without a focused native input retain explicit
   assert.deepEqual(fallback.calls, ['paste']);
   fallback.adapter.dispose();
 });
+test('host focus/modal boundary declines a key without consuming or checking command authority', () => {
+  let authorityChecks = 0;
+  const f = fixture(true, {
+    shouldHandle: () => false,
+    isAvailable: () => {
+      authorityChecks++;
+      return true;
+    },
+  });
+  const event = f.key();
+  assert.equal(event.defaultPrevented, false);
+  assert.equal(event.stopped, false);
+  assert.equal(authorityChecks, 0);
+  assert.deepEqual(f.calls, []);
+  f.adapter.dispose();
+});

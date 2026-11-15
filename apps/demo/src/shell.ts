@@ -611,9 +611,8 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     workspace.append(headlessMount);
   }
   const ruler = el('div', 'hwp-demo-ruler');
-  ruler.setAttribute('aria-hidden', 'true');
-  // Decorative scale only. Drag handles/precise document units belong to the host.
-  for (let i = 0; i <= 18; i++) ruler.append(el('span', '', String(i)));
+  ruler.dataset.role = 'page-ruler';
+  ruler.hidden = true;
   const empty = el(
     'p',
     'hwp-demo-empty',
@@ -720,7 +719,9 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
       node.disabled = !value.enabled;
       const label = node.getAttribute('aria-label') || node.textContent || '';
       description.textContent = value.enabled ? '' : value.reason || '현재 사용할 수 없습니다.';
-      node.title = value.enabled ? label : `${label} — ${description.textContent}`;
+      const shortcut = node.dataset.shortcutLabel;
+      const hint = shortcut ? `${label} (${shortcut})` : label;
+      node.title = value.enabled ? hint : `${hint} — ${description.textContent}`;
       if (value.pressed !== undefined) node.setAttribute('aria-pressed', String(value.pressed));
       else node.removeAttribute('aria-pressed');
     }
@@ -762,6 +763,7 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
   return {
     element: shell,
     surfaceMount,
+    rulerMount: surfaceMount ? ruler : null,
     headlessMount,
     saveOptionsMount: picker,
     tableMenu,

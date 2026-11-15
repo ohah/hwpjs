@@ -10,6 +10,8 @@ export interface KeyboardShortcutsOptions {
   readonly platform: KeymapPlatform;
   /** Suppress old built-in handlers when a consumer disables/reassigns a default binding. */
   readonly fallback?: KeymapConfig;
+  /** Host focus/modal boundary, evaluated before claiming any key. */
+  readonly shouldHandle?: (event: KeyboardEvent) => boolean;
   readonly isAvailable: (command: string) => boolean;
   readonly execute: (command: string) => void | Promise<void>;
   /** Focus a ready document input for the browser's trusted primary+V action. */
@@ -23,7 +25,7 @@ export function createKeyboardShortcuts(options: KeyboardShortcutsOptions) {
     closed = false;
   const fallback = options.fallback ? compileKeymap(options.fallback, options.platform) : undefined;
   const keyboard = (event: KeyboardEvent) => {
-    if (closed || event.defaultPrevented) return;
+    if (closed || event.defaultPrevented || options.shouldHandle?.(event) === false) return;
     const target = event.target as Element | null;
     if (
       target &&

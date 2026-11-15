@@ -1,0 +1,20 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": [],
+    "allowJs": false,
+    "checkJs": false,
+    "paths": {
+      "@hwpjs/vanilla": ["../packages/vanilla/src/index.ts"]
+    }
+  },
+  "files": [
+    "../apps/demo/src/assets.d.ts",
+    "../apps/demo/src/page-ruler.ts",
+    "../apps/demo/src/page-ruler-model.ts",
+    "../apps/demo/src/page-status.ts",
+    "../packages/vanilla/src/page-geometry.ts",
+    "../apps/demo/tests/page-ruler-api.types.ts"
+  ],
+  "include": []
+}

@@ -53,6 +53,26 @@ jobs:
           test -f ./apps/docs/docs/public/editor/hwpjs/hwpjs.wasm || exit 1
           bun ./tools/build-packages.mjs --package=core --web --wasm="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
           bun ./tools/build-packages.mjs --package=vanilla --web --wasm="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
+      - name: Test shortcut defaults, presentation and input boundaries
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          NO_COLOR=1 FORCE_COLOR=0 bun test --no-install ./apps/demo/tests/shortcut-settings-persistence.test.ts ./apps/demo/tests/formatting-marks-shortcut.test.ts ./apps/demo/tests/shortcut-presentation.test.ts ./apps/demo/tests/new-document-shortcut.test.ts ./apps/demo/tests/contextual-table-row-shortcut.test.ts ./packages/core/tests/keymap/defaults.test.ts ./packages/core/tests/keymap/resolve.test.ts ./packages/core/tests/keymap/config.test.ts ./packages/vanilla/tests/shortcuts.test.ts 2>&1 | tee "$RUNNER_TEMP/shortcuts.log"
+          grep -Eq '^[[:space:]]*65 pass$' "$RUNNER_TEMP/shortcuts.log"
+          grep -Eq '^[[:space:]]*0 fail$' "$RUNNER_TEMP/shortcuts.log"
+          ! grep -Eq '[1-9][0-9]* skip' "$RUNNER_TEMP/shortcuts.log"
+          bunx --no-install tsc --noEmit -p tools/tsconfig.editor-shortcuts.json
+      - name: Test page ruler geometry and lifecycle
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --experimental-transform-types --test --test-concurrency=1 --test-reporter=tap apps/demo/tests/page-ruler.test.mjs apps/demo/tests/page-ruler-surface.test.mjs apps/demo/tests/page-ruler-lifetime.test.mjs apps/demo/tests/page-status.test.mjs packages/vanilla/tests/page-frame.test.ts 2>&1 | tee "$RUNNER_TEMP/page-ruler.tap"
+          grep -Eq '^# tests 35$' "$RUNNER_TEMP/page-ruler.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/page-ruler.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/page-ruler.tap"
+          bunx --no-install tsc --noEmit -p tools/tsconfig.page-ruler.json
       - name: Test object activation and current properties dialogs
         timeout-minutes: 2
         shell: bash

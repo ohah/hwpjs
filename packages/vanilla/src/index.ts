@@ -18,4 +18,6 @@ export type {
 export { createKeyboardShortcuts } from './shortcuts.ts';
 export type { KeyboardShortcutsOptions } from './shortcuts.ts';
 
+export type { CanvasPageGeometry, CanvasPageStatus } from './page-geometry.ts';
+
 export type { CanvasObjectActivation, CanvasObjectTarget } from './object-activation.ts';

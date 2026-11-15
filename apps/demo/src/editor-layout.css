@@ -76,10 +76,6 @@
   min-height: 0;
   padding: 0;
 }
-/* Existing numbered scale is decorative, not a calibrated document ruler. */
-#app .hwp-demo-ruler {
-  display: none;
-}
 #app .hwp-demo-surface {
   min-height: 0;
 }

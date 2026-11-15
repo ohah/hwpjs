@@ -191,6 +191,48 @@
       "code": "KeyY",
       "modifiers": ["Mod"],
       "labelKey": "command.redo"
+    },
+    {
+      "id": "open-document",
+      "command": "open-document",
+      "code": "KeyO",
+      "modifiers": ["Mod"],
+      "labelKey": "command.open-document"
+    },
+    {
+      "id": "insert-table",
+      "command": "insert-table",
+      "code": "KeyT",
+      "modifiers": ["Mod", "Alt"],
+      "labelKey": "command.insert-table"
+    },
+    {
+      "id": "align-left",
+      "command": "align-left",
+      "code": "KeyL",
+      "modifiers": ["Control", "Shift"],
+      "labelKey": "command.align-left"
+    },
+    {
+      "id": "align-center",
+      "command": "align-center",
+      "code": "KeyC",
+      "modifiers": ["Control", "Shift"],
+      "labelKey": "command.align-center"
+    },
+    {
+      "id": "align-right",
+      "command": "align-right",
+      "code": "KeyR",
+      "modifiers": ["Control", "Shift"],
+      "labelKey": "command.align-right"
+    },
+    {
+      "id": "align-justify",
+      "command": "align-justify",
+      "code": "KeyM",
+      "modifiers": ["Control", "Shift"],
+      "labelKey": "command.align-justify"
     }
   ],
   "messages": {
@@ -209,7 +251,13 @@
       "command.bold": "굵게",
       "command.italic": "기울임",
       "command.underline": "밑줄",
-      "command.new-document": "새 문서"
+      "command.new-document": "새 문서",
+      "command.open-document": "열기",
+      "command.insert-table": "표 만들기",
+      "command.align-left": "왼쪽 정렬",
+      "command.align-center": "가운데 정렬",
+      "command.align-right": "오른쪽 정렬",
+      "command.align-justify": "양쪽 정렬"
     },
     "en": {
       "command.block-selection": "Set block",
@@ -226,7 +274,13 @@
       "command.bold": "Bold",
       "command.italic": "Italic",
       "command.underline": "Underline",
-      "command.new-document": "New document"
+      "command.new-document": "New document",
+      "command.open-document": "Open",
+      "command.insert-table": "Insert table",
+      "command.align-left": "Align left",
+      "command.align-center": "Align center",
+      "command.align-right": "Align right",
+      "command.align-justify": "Justify"
     }
   }
 }

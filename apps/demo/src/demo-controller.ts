@@ -81,6 +81,7 @@ import { askObservedDocInfoConsent } from './observed-docinfo-dialog.ts';
 import { mountObservedDocInfoNotice } from './observed-docinfo-notice.ts';
 import { createDocumentLoader } from './document-loader.ts';
 import { askDistributionConsent, askAvailableSectionsConsent } from './source-policy-dialog.ts';
+import { mountPageRuler } from './page-ruler.ts';
 import { askNormalizationConsent } from './normalization-dialog.ts';
 import { mountSourcePolicyNotice } from './source-policy-notice.ts';
 import { mountNormalizationNotice } from './normalization-notice.ts';
@@ -980,6 +981,7 @@ export async function mountDemo(
   let unsubscribe = () => {};
   let unsubscribePages = () => {};
   let unsubscribeObjects = () => {};
+  let pageRuler: ReturnType<typeof mountPageRuler> | undefined;
   let headless: ReturnType<typeof mountHeadlessPanel> | undefined;
   let shortcuts: ReturnType<typeof mountShortcutSettings> | undefined;
   void refreshFixtures();
@@ -990,6 +992,8 @@ export async function mountDemo(
       chart: chartProperties,
       drawing: drawingProperties,
     });
+    if (shell.rulerMount && shell.surfaceMount && host?.getPageGeometry)
+      pageRuler = mountPageRuler(shell.rulerMount, shell.surfaceMount, () => host);
     if (shell.tableMenu) host?.registerCellBlockMenu?.(shell.tableMenu);
     const shapeCopyHost = host;
     for (const target of shell.shapeCopyFocusTargets)
@@ -1005,6 +1009,7 @@ export async function mountDemo(
     // after all synchronous state observers have seen the current state.
     unsubscribe = editor.registerStateListener((state) => {
       if (closed) return;
+      pageRuler?.refresh();
       traces.push({
         event: 'state',
         detail: `${state.status} · operation ${state.operationRevision} · view ${state.viewRevision}`,
@@ -1060,6 +1065,7 @@ export async function mountDemo(
     documentInsert.dispose();
     cancelFixtureRefresh();
     presentationRefresh.dispose();
+    pageRuler?.dispose();
     unsubscribePages();
     unsubscribeObjects();
     unsubscribe();
@@ -1111,6 +1117,7 @@ export async function mountDemo(
       cancelFixtureRefresh();
       const drained = admission.dispose();
       presentationRefresh.dispose();
+      pageRuler?.dispose();
       unsubscribePages();
       unsubscribeObjects();
       unsubscribe();

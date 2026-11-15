@@ -6,6 +6,7 @@ export function mountFormattingMarksShortcut(options: {
   execute: (command: MarkCommand) => void | Promise<void>;
   claimed: (event: KeyboardEvent) => boolean;
   onError: (error: unknown) => void;
+  onUnavailable?: (command: MarkCommand) => void;
   now?: () => number;
 }) {
   let armedUntil = 0,
@@ -41,10 +42,15 @@ export function mountFormattingMarksShortcut(options: {
         : event.code === 'KeyT'
           ? 'toggle-paragraph-marks'
           : undefined;
-    if (armed && command && options.available(command)) {
+    if (armed && command) {
       event.preventDefault();
       event.stopImmediatePropagation();
+      // A recognized sequence must never turn its terminal key into a text edit.
       try {
+        if (!options.available(command)) {
+          options.onUnavailable?.(command);
+          return;
+        }
         Promise.resolve(options.execute(command)).catch(options.onError);
       } catch (error) {
         options.onError(error);

@@ -1,3 +1,8 @@
+import {
+  mountShortcutPresentation,
+  shortcutText,
+  SHORTCUT_STORAGE_KEY,
+} from './shortcut-presentation.ts';
 import { demoCommandAction } from './demo-command-action.ts';
 import { mountFormattingMarksShortcut } from './formatting-marks-shortcut.ts';
 import {
@@ -38,19 +43,45 @@ export function mountShortcutSettings(options: {
     : /Win/.test(nav?.platform ?? '')
       ? 'windows'
       : 'linux';
+  const shell = options.surface.closest?.('.hwp-demo') as HTMLElement | null;
+  let composing = false;
+  const compositionStart = () => {
+    composing = true;
+  };
+  const compositionEnd = () => {
+    composing = false;
+  };
+  const focusOut = (event: FocusEvent) => {
+    if (!options.surface.contains(event.relatedTarget as Node | null)) composing = false;
+  };
+  const openButton = () =>
+    shell?.querySelector<HTMLButtonElement>('[data-role="open-document-direct"]');
+  const available = (command: string) =>
+    !composing &&
+    (command === 'open-document'
+      ? openButton()?.disabled === false
+      : options.available(command as DemoCommand));
   const known = (config: KeymapConfig) => {
     for (const b of config.bindings)
       if (
-        !Object.hasOwn(DEMO_COMMAND_REGISTRY, b.command) ||
+        (!Object.hasOwn(DEMO_COMMAND_REGISTRY, b.command) && b.command !== 'open-document') ||
         ['set-font-size', 'set-zoom'].includes(b.command)
       )
         throw Error('UnknownShortcutCommand:' + b.command);
     return config;
   };
   const defaults = mergeKeymap(DEFAULT_KEYMAP, TABLE_ROW_KEYMAP);
+  let saved: unknown;
+  try {
+    const value = doc.defaultView?.localStorage?.getItem(SHORTCUT_STORAGE_KEY);
+    if (value) saved = known(mergeKeymap(defaults, parseKeymapConfig(JSON.parse(value))));
+  } catch {
+    options.onStatus('저장된 단축키 설정을 읽지 못해 기본값을 사용합니다.');
+  }
+  let presentation: ReturnType<typeof mountShortcutPresentation> | undefined;
   let config = known(
       options.config === undefined
-        ? defaults
+        ? ((saved as KeymapConfig | undefined) ?? defaults)
         : mergeKeymap(defaults, parseKeymapConfig(options.config)),
     ),
     closed = false,
@@ -58,9 +89,14 @@ export function mountShortcutSettings(options: {
   let compiled = compileKeymap(config, platform);
   const initialShortcuts = tableRowShortcutConfig(config);
   let globalCompiled = compileKeymap(initialShortcuts.global, platform);
+  options.surface.addEventListener('compositionstart', compositionStart, true);
+  options.surface.addEventListener('compositionend', compositionEnd, true);
+  options.surface.addEventListener('focusout', focusOut);
   const marksKeyboard = mountFormattingMarksShortcut({
     root: options.surface,
-    available: options.available,
+    available,
+    onUnavailable: (command) =>
+      options.onStatus(`${DEMO_COMMAND_REGISTRY[command].label}: 현재 실행할 수 없습니다.`),
     execute: (command) => options.execute({ command }),
     claimed: (event) =>
       Boolean(
@@ -96,28 +132,41 @@ export function mountShortcutSettings(options: {
         }),
       ),
     context: options.tableRowContext ?? (() => 'body'),
-    available: () => options.available(TABLE_ROW_COMMAND),
+    available: () => available(TABLE_ROW_COMMAND),
     execute: () => options.execute({ command: TABLE_ROW_COMMAND }),
     onUnavailable: () => options.onStatus('현재 선택에서는 아래에 행을 삽입할 수 없습니다.'),
     onError: (error) => options.onStatus(error instanceof Error ? error.message : String(error)),
   });
   const keyboard = createKeyboardShortcuts({
-    root: options.surface,
+    root: shell ?? options.surface,
+    shouldHandle: (event) => {
+      if (composing) return false;
+      const target = event.target as Element | null;
+      if (target?.closest?.('dialog,[role=dialog],iframe')) return false;
+      if (shell?.querySelector('dialog[open][aria-modal=true]')) return false;
+      // Selection-sensitive commands still require the actual document input path.
+      return true;
+    },
     config: initialShortcuts.global,
     platform,
     fallback: DEFAULT_KEYMAP,
     nativePaste: options.nativePaste,
     isAvailable: (command) => {
+      if (command === 'open-document') return available(command);
       const action = demoCommandAction(command);
-      return action !== null && options.available(action.command);
+      return action !== null && available(action.command);
     },
     execute: (command) => {
+      if (command === 'open-document') {
+        openButton()?.click();
+        return;
+      }
       const action = demoCommandAction(command);
-      if (action) options.execute(action);
+      if (action) return options.execute(action);
     },
     onUnavailable: (command) =>
       options.onStatus(
-        `${DEMO_COMMAND_REGISTRY[command as DemoCommand].label}: 현재 실행할 수 없습니다.`,
+        `${DEMO_COMMAND_REGISTRY[command as DemoCommand]?.label ?? '열기'}: 현재 실행할 수 없습니다.`,
       ),
     onError: (error) => options.onStatus(error instanceof Error ? error.message : String(error)),
   });
@@ -151,13 +200,12 @@ export function mountShortcutSettings(options: {
   const render = () => {
     if (closed) return;
     list.replaceChildren();
-    for (const b of compileKeymap(config, platform).bindings) {
+    for (const b of config.bindings.filter(
+      (b) => !b.platform || b.platform === 'all' || b.platform === platform,
+    )) {
       const li = doc.createElement('li');
       li.dataset.bindingId = b.id;
-      const modifiers = b.modifiers.map((m) =>
-        m === 'Mod' ? (platform === 'mac' ? '⌘' : 'Ctrl') : m,
-      );
-      li.textContent = `${resolveShortcutLabel(config, b, locale.value)} — ${[...modifiers, b.code.replace(/^Key/, '')].join('+')}`;
+      li.textContent = `${resolveShortcutLabel(config, b, locale.value)} — ${shortcutText(b, platform)}${b.enabled === false ? ' (사용 안 함)' : ''}`;
       list.append(li);
     }
   };
@@ -176,6 +224,16 @@ export function mountShortcutSettings(options: {
     compiled = nextCompiled;
     globalCompiled = nextGlobalCompiled;
     render();
+    presentation?.render();
+    try {
+      const storage = doc.defaultView?.localStorage;
+      if (!storage) throw Error('ShortcutStorageUnavailable');
+      storage.setItem(SHORTCUT_STORAGE_KEY, JSON.stringify(config));
+      return true;
+    } catch {
+      options.onStatus('설정은 적용했지만 브라우저에 저장하지 못했습니다. JSON으로 내보내세요.');
+      return false;
+    }
   };
   // Every explicit replacement fences previous asynchronous imports, even on validation failure.
   const apply = (input: unknown) => {
@@ -192,8 +250,7 @@ export function mountShortcutSettings(options: {
       if (selected.size > 262144) throw Error('ShortcutConfigTooLarge');
       const text = await selected.text();
       if (closed || generation !== current) return;
-      commit(JSON.parse(text));
-      options.onStatus('단축키 설정을 적용했습니다.');
+      if (commit(JSON.parse(text))) options.onStatus('단축키 설정을 적용했습니다.');
     } catch (error) {
       if (!closed && generation === current) report(error);
     } finally {
@@ -201,7 +258,11 @@ export function mountShortcutSettings(options: {
     }
   };
   file.addEventListener('change', changed);
-  locale.addEventListener('change', render);
+  const changeLocale = () => {
+    render();
+    presentation?.render();
+  };
+  locale.addEventListener('change', changeLocale);
   const reset = doc.createElement('button');
   reset.type = 'button';
   reset.dataset.role = 'shortcut-reset';
@@ -230,6 +291,17 @@ export function mountShortcutSettings(options: {
   details.append(summary, marksHint, locale, label, reset, download, list);
   options.root.append(details);
   render();
+  if (shell) {
+    presentation = mountShortcutPresentation({
+      shell,
+      details,
+      platform,
+      getConfig: () => config,
+      apply: (input) => apply(mergeKeymap(config, parseKeymapConfig(input))),
+      report,
+    });
+    presentation.render();
+  }
   const resolveCommand = (event: KeyboardEvent) =>
     resolveKeyboardShortcut(compiled, {
       code: event.code,
@@ -250,13 +322,17 @@ export function mountShortcutSettings(options: {
       if (closed) return;
       closed = true;
       generation++;
+      options.surface.removeEventListener('compositionstart', compositionStart, true);
+      options.surface.removeEventListener('compositionend', compositionEnd, true);
+      options.surface.removeEventListener('focusout', focusOut);
       marksKeyboard.dispose();
       keyboard.dispose();
       tableKeyboard.dispose();
       reset.onclick = null;
       download.onclick = null;
       file.removeEventListener('change', changed);
-      locale.removeEventListener('change', render);
+      locale.removeEventListener('change', changeLocale);
+      presentation?.dispose();
       details.remove();
     },
   };

@@ -1,13 +1,9 @@
+import type { CanvasPageGeometry, CanvasPageStatus } from '@hwpjs/vanilla';
+
 /** Surface measurement ordinals are independent of source numbering and caret selection. */
 export interface DemoPageStatusHost {
-  getPageStatus?():
-    | Readonly<{
-        current: number | null;
-        total: number | null;
-        partial: boolean;
-      }>
-    | null
-    | undefined;
+  getPageGeometry?(): CanvasPageGeometry | null | undefined;
+  getPageStatus?(): CanvasPageStatus | null | undefined;
   subscribePageStatus?(listener: () => void): () => void;
 }
 
@@ -18,10 +14,18 @@ export function createPageStatusRelay() {
   const listeners = new Set<() => void>();
   const notify = () => {
     const listenersSnapshot = Array.from(listeners);
-    for (const listener of listenersSnapshot) listener();
+    for (const listener of listenersSnapshot) {
+      if (!listeners.has(listener)) continue;
+      try {
+        listener();
+      } catch {
+        // One presentation observer must not block invalidation of the others.
+      }
+    }
   };
   return {
     getPageStatus: () => source?.getPageStatus?.(),
+    getPageGeometry: () => source?.getPageGeometry?.(),
     subscribePageStatus(listener: () => void) {
       if (disposed) return () => {};
       listeners.add(listener);
@@ -33,14 +37,18 @@ export function createPageStatusRelay() {
       if (disposed) return;
       unsubscribe?.();
       source = next;
-      unsubscribe = next.subscribePageStatus?.(notify);
+      unsubscribe = next.subscribePageStatus?.(() => {
+        if (!disposed && source === next) notify();
+      });
       notify();
     },
     dispose() {
+      if (disposed) return;
       disposed = true;
       unsubscribe?.();
       unsubscribe = undefined;
       source = undefined;
+      notify();
       listeners.clear();
     },
   };
