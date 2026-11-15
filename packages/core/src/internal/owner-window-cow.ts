@@ -174,6 +174,12 @@ const ROOT_KEYS = new Set([
   'formulas',
   'formulaErrors',
   'formulaDefinitionAvailable',
+  'equationAvailable',
+  'equationErrors',
+  'equationPaintAvailable',
+  'equationSourceStylesAvailable',
+  'equationPaintErrors',
+  'equationPaintWarnings',
   'drawings',
   'containers',
 ]);
@@ -211,6 +217,8 @@ const OWNER_KEYS = new Set([
   'automaticNumbers',
   'automaticNumberPrefixes',
   'pageControls',
+  'equations',
+  'equationPaint',
 ]);
 export function isPlainOwnerBaseline(content: any, section: number, paragraph: number): boolean {
   try {
@@ -238,6 +246,15 @@ export function isPlainOwnerBaseline(content: any, section: number, paragraph: n
       Object.keys(content).some((k) => !ROOT_KEYS.has(k))
     )
       return false;
+    for (const key of [
+      'equationAvailable',
+      'equationPaintAvailable',
+      'equationSourceStylesAvailable',
+    ])
+      if (Object.hasOwn(content, key) && typeof content[key] !== 'boolean') return false;
+    for (const key of ['equationErrors', 'equationPaintErrors', 'equationPaintWarnings'])
+      if (Object.hasOwn(content, key) && (!Array.isArray(content[key]) || content[key].length))
+        return false;
     for (const key of EMPTY_KEYS)
       if (!Array.isArray(content[key]) || content[key].length !== 0) return false;
     for (const [key, value] of Object.entries(content))
@@ -285,6 +302,8 @@ export function isPlainOwnerBaseline(content: any, section: number, paragraph: n
     let scope: any, epoch: any;
     for (const row of content.paragraphs) {
       if (typeof row.text !== 'string') return false;
+      for (const key of ['equations', 'equationPaint'])
+        if (Object.hasOwn(row, key) && (!Array.isArray(row[key]) || row[key].length)) return false;
       visibleUnits += row.text.length;
       if (!Number.isSafeInteger(visibleUnits) || visibleUnits > 100000) return false;
       const flow = flows.get(row.section + ':' + row.paragraph);

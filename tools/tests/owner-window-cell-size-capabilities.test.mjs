@@ -39,6 +39,47 @@ test('actual HWP5 cell-size capabilities retain plain-owner admission and reject
     for (const value of [undefined, null, false, '', 'static-source-cell-rectangle', {}, []])
       assert.equal(probe({ sourceTableCellSplitProfile: value }), false);
     assert.equal(probe({ futureCellCapability: true }), false);
+    for (const key of [
+      'equationAvailable',
+      'equationPaintAvailable',
+      'equationSourceStylesAvailable',
+    ]) {
+      for (const value of [true, false]) assert.equal(probe({ [key]: value }), true);
+      for (const value of [undefined, null, 0, 1, '', 'true', {}, []])
+        assert.equal(probe({ [key]: value }), false);
+    }
+    for (const key of ['equationErrors', 'equationPaintErrors', 'equationPaintWarnings']) {
+      assert.equal(probe({ [key]: [] }), true);
+      for (const value of [undefined, null, false, 0, '', {}, [{ section: 0 }]])
+        assert.equal(probe({ [key]: value }), false);
+    }
+    for (const index of [0, 15])
+      for (const key of ['equations', 'equationPaint']) {
+        const paragraphProbe = (value) =>
+          probe({
+            paragraphs: state.content.paragraphs.map((row, at) =>
+              at === index ? { ...row, [key]: value } : row,
+            ),
+          });
+        assert.equal(paragraphProbe([]), true);
+        for (const value of [undefined, null, false, 0, '', {}, [{ node: 1, unit: 0 }]])
+          assert.equal(paragraphProbe(value), false);
+      }
+    const legacy = { ...state.content };
+    for (const key of [
+      'equationAvailable',
+      'equationPaintAvailable',
+      'equationSourceStylesAvailable',
+      'equationErrors',
+      'equationPaintErrors',
+      'equationPaintWarnings',
+    ])
+      delete legacy[key];
+    legacy.paragraphs = legacy.paragraphs.map(
+      ({ equations: _equations, equationPaint: _equationPaint, ...row }) => row,
+    );
+    assert.equal(isPlainOwnerBaseline(ownObservation(legacy)(), 0, 15), true);
+    assert.equal(probe({ futureEquationCapability: true }), false);
     assert.equal(editor.getEditorState(), state);
     assert.equal(state.nativeHistoryRevision, 0);
   } finally {

@@ -65,3 +65,11 @@ HWP5 원본 셀 너비·높이 균등화가 full snapshot에 두 boolean capabil
 두 키를 기존 root schema에 명시하고 존재할 때 boolean인지 검사합니다. unknown key·잘못된 타입의 fallback과 전체 값·owner·receipt 검증은 유지합니다. 새 키를 포괄 허용하거나 full snapshot을 그대로 COW로 승인하지 않습니다. admission의 추가 비용은 두 필드의 상수 시간 검사입니다. 검증 입력과 실패/수정 결과는 `zig-out/verification/cell-size-cow-fix-r1`에 보존합니다. 실제 Noori 원본 owner4/15/18의 입력·undo/redo 및40회 입력·취소·분기 복구는 기존 집중 회귀를 재실행하며, 새로운 malformed/unknown capability 반례도 CI에 연결합니다.
 
 수정 전 실제 입력/이력 검사8건 중6건 실패를 재현했고 수정 후 Native/Worker/shape/원본 capability 반례40건이 skip 없이 통과했습니다. 최종 공개 번들의 Vanilla 높이 편집 뒤 신뢰된40키 입력과 키보드 실행 취소로 원문 및 저장 바이트를 복원했습니다. Svelte 높이·React 너비를 포함한 GUI3건의 독립 CFB 비교·undo/redo·저장 재열기가 완료됐고 모든 소유 브라우저/서버를 종료했습니다. 이 결과는 경로 복원 증거이며 입력 지연의 새 성능 수치를 측정한 것은 아닙니다.
+
+## 수식 관측이 비어 있는 문서의 증분 경로
+
+HWP5 수식 표시를 연결하면서 모든 문단에 빈 `equations`·`equationPaint` 배열과 문서에 수식 기능·진단 필드가 추가됩니다. 기존 plain-owner schema가 이 알려진 빈 관측도 미지 필드로 거부해, 수식 없는 Noori의 입력·실행 취소가 전체 snapshot 경로로 돌아가는 회귀를 실제 CI에서 확인했습니다.
+
+기능 필드 세 개는 존재하면 boolean이어야 하며, 문서 진단 배열 세 개와 모든 문단의 수식·paint 배열 두 개는 존재하면 빈 배열이어야 합니다. 대상 문단뿐 아니라 비대상 문단도 검사합니다. 실제 수식·paint·오류·경고가 있거나 타입이 잘못되면 계속 full fallback을 사용합니다. 이전 producer의 필드 부재와 미지 필드 거부 정책은 유지합니다. 추가 검사는 문단 수에 선형이며 별도 자원 할당이나 수식 레이아웃을 수행하지 않습니다.
+
+같은 Native·원본 Noori를 사용하는 정규 Native/Worker 집중 검사 40개는 수정 전 33개 성공·7개 실패에서 수정 후 40개 성공·skip 0이었습니다. 기존 전체 값·header identity·입력/실행 취소·분기 복구 검사를 유지하고, 새 필드의 잘못된 타입·비대상 문단의 수식·과거 필드 부재 반례를 추가했습니다. 이는 빠른 경로 복원 검증이며 새 입력 지연 측정이나 수식 포함 문서의 증분 지원 완료를 뜻하지 않습니다.
