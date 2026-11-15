@@ -4,7 +4,9 @@
     "paths": {
       "@hwpjs/core": ["../../packages/core/dist/index.d.ts"],
       "@hwpjs/vanilla": ["../../packages/vanilla/src/index.ts"],
-      "@hwpjs/core/*": ["../../packages/core/dist/*"]
+      "@hwpjs/core/*": ["../../packages/core/dist/*"],
+      "@hwpjs/react": ["../../packages/react/src/index.ts"],
+      "@hwpjs/svelte": ["../../packages/svelte/src/index.ts"]
     }
   },
   "files": [
