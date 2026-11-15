@@ -8,8 +8,8 @@
       "bytes": 903845
     },
     "mcp.mjs": {
-      "sha256": "5ce0f9169447239be4bec52adadc99f2a6432e268150243214da7d4f45a6c7fd",
-      "bytes": 1862353
+      "sha256": "d707c4d5e7f7e356a0792480d9f207dbdbda5de3ffc07c7599ed104fc0b49e3b",
+      "bytes": 1863363
     },
     "hwpjs.wasm": {
       "sha256": "a3a363615683bffcace0212df625c8351f8546bab9aa23a824c91863db95a6e3",
@@ -24,5 +24,5 @@
       "bytes": 32113
     }
   },
-  "sourceFingerprint": "c0127afbc8f2196d3cb04723d6bd14c5c78a7134c0f56aa0fad085896ab4bd5e"
+  "sourceFingerprint": "695aa0accc8b5c98900ae5a5e407a3e541aaaa5df38940729e18530d4110e4b4"
 }
