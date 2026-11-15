@@ -1,3 +1,10 @@
+import {
+  createObjectSelection,
+  bindObjectSelectionEvents,
+  type CanvasObjectPropertiesRequest,
+} from './object-selection.ts';
+// @ts-ignore Existing client/scroll/scale projection, never a synthetic hit target.
+import { canvasDocumentPoint } from '../../../web/preview/canvas-pointer-coordinates.mjs';
 import { bindObjectActivation, type CanvasObjectActivation } from './object-activation.ts';
 import { planCellAppearanceSelection } from '@hwpjs/core';
 // @ts-ignore Pure format admission shared with Core and the Worker.
@@ -281,6 +288,9 @@ export function createCanvasSurface({
   let nonTextHistoryAdmissionReady = false;
   let nonTextHistoryPending: object | undefined;
   let nonTextSelectionProjection: ReturnType<HeadlessEditor['getEditorState']> | undefined;
+  type ObjectSceneState = ReturnType<HeadlessEditor['getEditorState']>;
+  let objectSelection: ReturnType<typeof createObjectSelection<ObjectSceneState>> | undefined;
+  let committingObjectState: ObjectSceneState | undefined;
   let nonTextHistoryTask: Promise<void> = Promise.resolve();
   let activeHistoryAcknowledgement: ReturnType<HeadlessEditor['getEditorState']> | undefined;
   let deferredTypingAcknowledgement: ReturnType<HeadlessEditor['getEditorState']> | undefined;
@@ -553,6 +563,7 @@ export function createCanvasSurface({
     }
   };
   const render = (state: ReturnType<HeadlessEditor['getEditorState']>) => {
+    objectSelection?.observeState(state);
     if (closed || !renderer) return;
     // Only new observations may change the projection. Native acknowledgment
     // can repeat a snapshot the listener rendered, or arrive after a newer one.
@@ -699,6 +710,16 @@ export function createCanvasSurface({
     return sourceGridModalEpoch;
   };
   const objectActivation = bindObjectActivation({
+    prepare: (event) => {
+      const point = canvasDocumentPoint(
+        event,
+        canvas.getBoundingClientRect(),
+        viewport.scrollTop,
+        renderer?.viewScale() ?? 1,
+        viewport.scrollLeft,
+      );
+      return objectSelection?.prepareDoubleClick({ trusted: event.isTrusted, ...point });
+    },
     canvas,
     viewport,
     renderer: {
@@ -736,9 +757,123 @@ export function createCanvasSurface({
       observedStateVersion === state.stateVersion,
     onError: (error) => status(`개체 정보 창을 열지 못했습니다: ${String(error)}`),
   });
+  // No generic target is selected until the direct controller
+  // commits its UX mode and this host receives its own Core clear + current paint.
+  const captureObjectScene = () => {
+    if (
+      closed ||
+      nonTextHistoryPending ||
+      !lease?.isActive() ||
+      bridge?.busy() ||
+      !direct?.settled() ||
+      modalOpen() ||
+      !renderer?.isPaintedFrameCurrent()
+    )
+      return null;
+    const state = editor.getEditorState(),
+      frame = renderer.paintedFrame();
+    const key = `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}`;
+    if (
+      state.status !== 'ready' ||
+      state.historyRecoveryRequired ||
+      state.nativeHistoryStats?.poisoned === true ||
+      observedStateVersion !== state.stateVersion ||
+      key !== displayed ||
+      frame?.resourceDocument !== `${state.documentId}:${state.generation}` ||
+      frame?.resourceEpoch !==
+        `${state.documentId}:${state.generation}:${state.operationRevision}` ||
+      !state.content ||
+      typeof state.content !== 'object'
+    )
+      return null;
+    return Object.freeze({
+      state,
+      lease,
+      frame,
+      source: state.content,
+      modalRevision: sourceGridModalRevision(),
+    });
+  };
+  const objectHostFocused = () =>
+    ((canvas.getRootNode() as Document | ShadowRoot).activeElement ?? doc.activeElement) === canvas;
+  objectSelection = createObjectSelection<ObjectSceneState>({
+    capture: captureObjectScene,
+    hit: (_scene, x, y) =>
+      renderer.readOnlyPreviewAtLogicalPoint?.(x, y) === true
+        ? null
+        : renderer.objectAtLogicalPoint(x, y),
+    pendingHit: (scene, x, y) => (scene.frame as any).objectIntentAtLogicalPoint?.(x, y) ?? null,
+    acknowledgePaint: (previous, next, target) =>
+      renderer.canAcknowledgeObjectSelectionPaint(previous.frame, next.frame, target),
+    hostFocused: objectHostFocused,
+    onClear: () => renderer?.selectObject(null),
+    async commit(request) {
+      if (!request.current() || !lease?.isActive()) return null;
+      const ownedLease = lease;
+      committingObjectState = request.scene.state;
+      try {
+        if (
+          !direct.selectPaintedObject(request.target, request.x, request.y, request.current) ||
+          editor.getEditorState() !== request.scene.state ||
+          !ownedLease.isActive() ||
+          modalOpen()
+        )
+          return null;
+        if (request.target.kind !== 'picture') renderer.selectObject(request.target);
+        // This is selection publication only, never a Native mutation request.
+        selectionKey = JSON.stringify(null);
+        const cleared = await ownedLease.publishSelection(null);
+        if (
+          editor.getEditorState() !== cleared ||
+          !ownedLease.isActive() ||
+          modalOpen() ||
+          direct.historyRoute() !== 'none' ||
+          !direct.settled()
+        )
+          return null;
+        const requestFrame = environment.requestFrame ?? realm.requestAnimationFrame?.bind(realm);
+        if (typeof requestFrame !== 'function') return null;
+        await new Promise<void>((resolve) => requestFrame(() => resolve()));
+        if (editor.getEditorState() !== cleared || !ownedLease.isActive() || !objectHostFocused())
+          return null;
+        if (request.target.kind === 'picture') {
+          const selected = renderer.selectedPicture?.();
+          if (
+            selected?.section !== request.target.section ||
+            selected?.pictureNode !== request.target.pictureNode
+          )
+            return null;
+        }
+        if (request.target.kind !== 'picture' && !renderer.isObjectSelectionPainted(request.target))
+          return null;
+        const scene = captureObjectScene();
+        return scene?.state === cleared ? request.confirm(scene) : null;
+      } finally {
+        committingObjectState = undefined;
+      }
+    },
+    onError: (error) => status(`개체 선택을 확인하지 못했습니다: ${String(error)}`),
+  });
+  const unbindObjectSelection = bindObjectSelectionEvents({
+    canvas,
+    input,
+    viewport,
+    document: doc,
+    selection: objectSelection,
+    point: (event) =>
+      canvasDocumentPoint(
+        event,
+        canvas.getBoundingClientRect(),
+        viewport.scrollTop,
+        renderer?.viewScale() ?? 1,
+        viewport.scrollLeft,
+      ),
+  });
   const cleanup = () => {
     if (closed) return;
     closed = true;
+    unbindObjectSelection();
+    objectSelection?.dispose();
     objectActivation.dispose();
     // Final null observation is synchronous, before listeners are discarded.
     // A retained ruler/relay can hide even when no replacement Surface arrives.
@@ -792,6 +927,7 @@ export function createCanvasSurface({
     if (environment.decodeImage) renderer.pictureDecoder(environment.decodeImage);
     const nativeLease = editor.acquireInputSurface({
       commitComposition: async () => {
+        objectSelection?.clear('external-admission');
         const result = direct?.flushComposition() ?? 'unchanged';
         if (result === 'blocked') return result;
         await bridge?.flush();
@@ -799,6 +935,7 @@ export function createCanvasSurface({
       },
       isOutputInputSettled,
       cancelComposition: () => {
+        objectSelection?.clear('cancel-composition');
         try {
           direct?.cancelComposition();
         } finally {
@@ -1018,6 +1155,9 @@ export function createCanvasSurface({
       querySplitRange: (m: RuntimeMessage) => viewAllowsRequest(m) && bridge!.request(m),
       onCommittedSelection(value: any, observation?: { origin?: string }) {
         if (closed || !lease?.isActive()) return;
+        if (value) objectSelection?.clear('text-selection');
+        // One explicit leased clear below owns object-mode publication.
+        if (!value && committingObjectState) return;
         const state = editor.getEditorState();
         if (state.status !== 'ready') return;
         const singleOwnerRange =
@@ -2349,6 +2489,15 @@ export function createCanvasSurface({
     /** 표시용 선택 identity만 반환하며 크기 편집 권한을 만들지 않습니다. */
     registerObjectActivation(listener: (event: CanvasObjectActivation) => void) {
       return objectActivation.register(listener);
+    },
+    /** Object mode identity only. Existing property ports retain all mutation admission. */
+    getSelectedObject() {
+      return objectSelection?.current() ?? null;
+    },
+    registerObjectPropertiesRequest(
+      listener: (event: CanvasObjectPropertiesRequest) => void | Promise<void>,
+    ) {
+      return objectSelection!.registerPropertiesRequest(listener);
     },
     getContextPicture() {
       const state = editor.getEditorState();

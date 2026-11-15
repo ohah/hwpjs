@@ -616,5 +616,101 @@
     "name": "noori.hwp",
     "label": "noori.hwp (프로젝트 예제 101)",
     "available": true
+  },
+  {
+    "id": "chart-create-barChart.hwpx",
+    "name": "chart-create-barChart.hwpx",
+    "label": "[기능 예제] 가로 막대 · 100% 누적",
+    "available": true
+  },
+  {
+    "id": "chart-create-bar3DChart.hwpx",
+    "name": "chart-create-bar3DChart.hwpx",
+    "label": "[기능 예제] 3차원 세로 막대 · 누적",
+    "available": true
+  },
+  {
+    "id": "chart-create-lineChart.hwpx",
+    "name": "chart-create-lineChart.hwpx",
+    "label": "[기능 예제] 누적 꺾은선",
+    "available": true
+  },
+  {
+    "id": "chart-create-line3DChart.hwpx",
+    "name": "chart-create-line3DChart.hwpx",
+    "label": "[기능 예제] 3차원 꺾은선",
+    "available": true
+  },
+  {
+    "id": "chart-create-areaChart.hwpx",
+    "name": "chart-create-areaChart.hwpx",
+    "label": "[기능 예제] 100% 누적 영역",
+    "available": true
+  },
+  {
+    "id": "chart-create-area3DChart.hwpx",
+    "name": "chart-create-area3DChart.hwpx",
+    "label": "[기능 예제] 3차원 영역",
+    "available": true
+  },
+  {
+    "id": "chart-create-pieChart.hwpx",
+    "name": "chart-create-pieChart.hwpx",
+    "label": "[기능 예제] 원형",
+    "available": true
+  },
+  {
+    "id": "chart-create-pie3DChart.hwpx",
+    "name": "chart-create-pie3DChart.hwpx",
+    "label": "[기능 예제] 3차원 원형",
+    "available": true
+  },
+  {
+    "id": "chart-create-doughnutChart.hwpx",
+    "name": "chart-create-doughnutChart.hwpx",
+    "label": "[기능 예제] 도넛형",
+    "available": true
+  },
+  {
+    "id": "chart-create-ofPieChart.hwpx",
+    "name": "chart-create-ofPieChart.hwpx",
+    "label": "[기능 예제] 원형 대 가로 막대",
+    "available": true
+  },
+  {
+    "id": "chart-create-radarChart.hwpx",
+    "name": "chart-create-radarChart.hwpx",
+    "label": "[기능 예제] 표식 있는 방사형",
+    "available": true
+  },
+  {
+    "id": "chart-create-scatterChart.hwpx",
+    "name": "chart-create-scatterChart.hwpx",
+    "label": "[기능 예제] 분산형 · 선·표식 없음",
+    "available": true
+  },
+  {
+    "id": "chart-create-bubbleChart.hwpx",
+    "name": "chart-create-bubbleChart.hwpx",
+    "label": "[기능 예제] 거품형",
+    "available": true
+  },
+  {
+    "id": "chart-create-stockChart.hwpx",
+    "name": "chart-create-stockChart.hwpx",
+    "label": "[기능 예제] 주식형 · 시가·고가·저가·종가",
+    "available": true
+  },
+  {
+    "id": "chart-create-surfaceChart.hwpx",
+    "name": "chart-create-surfaceChart.hwpx",
+    "label": "[기능 예제] 표면형",
+    "available": true
+  },
+  {
+    "id": "chart-create-surface3DChart.hwpx",
+    "name": "chart-create-surface3DChart.hwpx",
+    "label": "[기능 예제] 3차원 표면형 · 와이어프레임",
+    "available": true
   }
 ]

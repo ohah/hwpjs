@@ -6,6 +6,7 @@ const Wire = struct {
     target: @import("inline_object_insert.zig").Target,
     size: @import("chart_create_host.zig").Size,
     data: api.Data,
+    chart: ?api.Profile = null,
 };
 pub const ParsedRequest = struct {
     json: std.json.Parsed(Wire),
@@ -22,7 +23,9 @@ pub fn parseRequest(a: std.mem.Allocator, bytes: []const u8, before_sha256: [32]
     const kinds = try std.json.parseFromSlice(std.json.Value, a, bytes, .{ .duplicate_field_behavior = .@"error" });
     defer kinds.deinit();
     const root = kinds.value;
-    try object(root, 3);
+    const chart = if (root == .object) root.object.get("chart") else null;
+    try object(root, if (chart != null) 4 else 3);
+    if (chart) |value| try @import("chart_create_wire.zig").profile(value);
     const target = try field(root, "target");
     try object(target, 4);
     try unsigned(try field(target, "section"), std.math.maxInt(u32));
@@ -36,15 +39,15 @@ pub fn parseRequest(a: std.mem.Allocator, bytes: []const u8, before_sha256: [32]
     const data = try field(root, "data");
     try object(data, 2);
     const categories = try field(data, "categories");
-    if (categories != .array or categories.array.items.len == 0 or categories.array.items.len > @import("chart_create_data.zig").max_categories) return error.InvalidChartCreateRequest;
+    if (categories != .array or categories.array.items.len > @import("chart_create_data.zig").max_categories) return error.InvalidChartCreateRequest;
     for (categories.array.items) |value| try string(value);
     const series = try field(data, "series");
     if (series != .array or series.array.items.len == 0 or series.array.items.len > @import("chart_create_data.zig").max_series) return error.InvalidChartCreateRequest;
     for (series.array.items) |item| {
-        try object(item, 2);
+        try @import("chart_create_wire.zig").series(item, chart != null);
         try string(try field(item, "name"));
         const values = try field(item, "values");
-        if (values != .array or values.array.items.len != categories.array.items.len) return error.InvalidChartCreateRequest;
+        if (values != .array) return error.InvalidChartCreateRequest;
         for (values.array.items) |value| try string(value);
     }
     const parsed = try std.json.parseFromSlice(Wire, a, bytes, .{ .allocate = .alloc_always, .ignore_unknown_fields = false, .duplicate_field_behavior = .@"error" });
@@ -54,8 +57,8 @@ pub fn parseRequest(a: std.mem.Allocator, bytes: []const u8, before_sha256: [32]
     if (wire.target.paragraph == 0) return error.InvalidParagraphIndex;
     _ = try @import("../image/image_insertion.zig").byteOffset(wire.target.expected_text, wire.target.unit);
     try @import("chart_create_host.zig").validateSize(wire.size);
-    try @import("chart_create_data.zig").validate(wire.data);
-    return .{ .json = parsed, .request = .{ .expected_source_sha256 = before_sha256, .target = wire.target, .size = wire.size, .data = wire.data } };
+    try @import("chart_create_data.zig").validateFor(wire.data, wire.chart);
+    return .{ .json = parsed, .request = .{ .expected_source_sha256 = before_sha256, .target = wire.target, .size = wire.size, .data = wire.data, .chart = wire.chart } };
 }
 
 fn object(value: std.json.Value, count: usize) !void {

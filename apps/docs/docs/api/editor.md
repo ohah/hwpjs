@@ -280,6 +280,6 @@ export async function createChartDocument(editor: HeadlessEditor) {
 
 `INSERT_EQUATION_COMMAND`도 `{ target, selectionVersion, options }`를 받습니다. options에 `script`, `width`, `height`, `baseLine`, `baseUnit`, `version`, `font`를 명시합니다. 예시는 `script: 'x over y'`, `width: 6000`, `height: 2000`, `baseLine: 85`, `baseUnit: 1000`, `version: 'Equation Version 60'`, `font: 'HYhwpEQ'`입니다. API의 크기는 HWPUNIT 원값이고, 데모는 mm·pt 입력을 변환합니다.
 
-첫 구역의 일반 본문 커서만 대상으로 합니다. 차트 뒤 Enter로 만든 빈 본문도 생성할 수 있지만 셀·선택 영역·기존 개체가 섞인 문단은 제외합니다. 차트는 표준 2D 묶은 세로 막대형이며, 모든 계열의 유한 숫자 개수가 범주 수와 같아야 합니다. 수식 크기는 자동 계산하지 않습니다. 같은 캡처로 두 번 호출하면 앞선 편집 뒤 낡은 상태가 된 요청을 거절합니다.
+첫 구역의 일반 본문 커서만 대상으로 합니다. 차트 뒤 Enter로 만든 빈 본문도 생성할 수 있지만 셀·선택 영역·기존 개체가 섞인 문단은 제외합니다. `chart`를 생략하면 기존 2D 묶은 세로 막대형을 생성합니다. 명시적 `chart`로 막대·꺾은선·영역·원형의 2D/3D, 도넛·보조 원형·방사형·분산형·버블·주가·표면형을 선택할 수 있습니다. 종류별 필수 필드를 검사하며 분산형·버블의 X·Y·크기와 주가 역할을 자동 추정하지 않습니다. 구형 엔진은 명시 종류를 거절합니다. 수식 크기는 자동 계산하지 않습니다. 같은 캡처로 두 번 호출하면 앞선 편집 뒤 낡은 상태가 된 요청을 거절합니다.
 
 생성·저장·실행 취소는 기존 Native 거래를 사용합니다. 세부 제한은 [생성 계약](https://github.com/ohah/hwpjs/blob/main/docs/hwpx-inline-object-creation.md), 화면 사용법은 [데모 안내](../guide/demo.md#새-차트수식-만들기)를 확인하세요.

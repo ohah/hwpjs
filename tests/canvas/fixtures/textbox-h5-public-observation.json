@@ -1,0 +1,575 @@
+{
+  "format": "hwp5",
+  "drawings": [
+    {
+      "section": 0,
+      "drawingNode": 19,
+      "controlNode": 12,
+      "hostParagraph": 0,
+      "anchorUnit": 2,
+      "source": {
+        "size_protected": false,
+        "geometry": {
+          "width": 11763,
+          "height": 5476,
+          "width_relative": 4,
+          "height_relative": 2,
+          "treat_as_character": false,
+          "horizontal_offset": 9736,
+          "vertical_offset": 11163
+        },
+        "position": {
+          "relations": [0, 0, 0, 0],
+          "flags": [false, false, true, null]
+        },
+        "flow": {
+          "text_wrap": 3,
+          "text_flow": 0,
+          "z_order": 4,
+          "outside_margins": [0, 0, 0, 0]
+        },
+        "text_wrap": 3,
+        "text_flow": 0,
+        "flow_with_text": false,
+        "allow_overlap": true,
+        "affect_line_spacing": false,
+        "hold_anchor": null,
+        "has_caption": true,
+        "out_margin": [0, 0, 0, 0],
+        "z_order": 4,
+        "group_context": null,
+        "rendering": {
+          "matrix": [1, 0, 0, 0, 1, 0],
+          "angle": 0,
+          "flip": [false, false],
+          "reverse": null,
+          "unknown_component_attributes": 16777216
+        },
+        "rendering_corners": [
+          [0, 0],
+          [11763, 0],
+          [11763, 5476],
+          [0, 5476]
+        ],
+        "rectangle": {
+          "points": [
+            [0, 0],
+            [11763, 0],
+            [11763, 5476],
+            [0, 5476]
+          ]
+        },
+        "round_rate": 0,
+        "text": {
+          "list_node": 20,
+          "text_direction": 0,
+          "line_wrap": 0,
+          "vertical_alignment": 1,
+          "margin_present": true,
+          "margins": [283, 283, 283, 283],
+          "extra_bytes": 13
+        },
+        "caption": {
+          "caption_node": 13,
+          "list_node": 13,
+          "side": 3,
+          "full_size": false,
+          "width": 8504,
+          "gap": 850,
+          "text_direction": 0,
+          "line_wrap": 0,
+          "vertical_alignment": 0
+        },
+        "stroke": {
+          "color": 0,
+          "width": 33,
+          "style": 1
+        },
+        "paint": {
+          "shadow_type": 0
+        }
+      },
+      "hwp5Style": {
+        "component_node": 19,
+        "owner_node": 12,
+        "border": {
+          "color": 0,
+          "width": 33,
+          "attributes": {
+            "raw": 3506438209
+          },
+          "outline": 0
+        },
+        "fill_flags": 0,
+        "fill_known": true,
+        "pattern": null,
+        "gradient_colors": null,
+        "gradient": null,
+        "image": null,
+        "additional_bytes": 0,
+        "alpha": {
+          "pattern": null,
+          "gradient": null,
+          "image": null
+        },
+        "shadow": {
+          "kind": 0,
+          "color": 0,
+          "offset_x": 0,
+          "offset_y": 0
+        },
+        "metadata": {
+          "instance_id": 1017952105,
+          "reserved": 0,
+          "shadow_alpha": 0
+        },
+        "extra_bytes": 0,
+        "section": 0,
+        "fileVersion": 83951617,
+        "borderLayout": "observed13",
+        "tailLayout": "alpha_shadow_metadata"
+      },
+      "fillPlan": {
+        "state": "none"
+      }
+    }
+  ],
+  "paragraphs": [
+    {
+      "section": 0,
+      "paragraph": 0,
+      "editable": true,
+      "label": "구역 1 · 문단 1 · 제어 표식 4개 (표시 의미 미적용)",
+      "text": "￼￼￼",
+      "selectionOwner": "section:0:body",
+      "sourceOffsets": [
+        {
+          "at": 0,
+          "source": 0
+        },
+        {
+          "at": 1,
+          "source": 8
+        },
+        {
+          "at": 2,
+          "source": 16
+        },
+        {
+          "at": 3,
+          "source": 24
+        }
+      ],
+      "currentReference": {
+        "epoch": "2",
+        "kind": "original",
+        "section": 0,
+        "id": "0",
+        "row": 0,
+        "column": 0,
+        "scope": "1"
+      },
+      "textSourcePolicyError": null,
+      "characterRanges": [
+        {
+          "start": 0,
+          "end": 3,
+          "charShapeId": 1
+        }
+      ],
+      "paraShapeId": 1,
+      "paragraphShape": {
+        "id": 1,
+        "alignment": 0,
+        "left": 0,
+        "right": 0,
+        "indent": 0,
+        "before": 0,
+        "after": 0,
+        "legacySpacingKind": 0,
+        "legacySpacing": 160,
+        "modernSpacing": {
+          "attributes": 0,
+          "value": 160
+        },
+        "headingKind": 0,
+        "headingId": 0,
+        "packedHeadingLevel": 0,
+        "extendedHeadingLevel": 0,
+        "headingLevel": 0,
+        "headingMarker": null,
+        "spacingFormat": "hwp5"
+      },
+      "structuralAnchors": [
+        {
+          "kind": "section",
+          "control_node": 4,
+          "paragraph": 0,
+          "source_unit": 0,
+          "current_unit": 0,
+          "unit": 0
+        },
+        {
+          "kind": "column",
+          "control_node": 11,
+          "paragraph": 0,
+          "source_unit": 8,
+          "current_unit": 8,
+          "unit": 1
+        }
+      ],
+      "automaticNumbers": [],
+      "automaticNumberPrefixes": [],
+      "pageControls": []
+    },
+    {
+      "section": 0,
+      "paragraph": 1,
+      "editable": true,
+      "label": "구역 1 · 문단 2 · 중첩 · 제어 표식 2개 (표시 의미 미적용)",
+      "text": "그림 ￼ 캡션",
+      "selectionOwner": null,
+      "sourceOffsets": [
+        {
+          "at": 0,
+          "source": 0
+        },
+        {
+          "at": 4,
+          "source": 11
+        }
+      ],
+      "currentReference": {
+        "epoch": "2",
+        "kind": "original",
+        "section": 0,
+        "id": "14",
+        "row": 0,
+        "column": 0,
+        "scope": "1"
+      },
+      "textSourcePolicyError": null,
+      "characterRanges": [
+        {
+          "start": 0,
+          "end": 7,
+          "charShapeId": 1
+        }
+      ],
+      "paraShapeId": 2,
+      "paragraphShape": {
+        "id": 2,
+        "alignment": 0,
+        "left": 0,
+        "right": 0,
+        "indent": 0,
+        "before": 0,
+        "after": 0,
+        "legacySpacingKind": 0,
+        "legacySpacing": 160,
+        "modernSpacing": {
+          "attributes": 0,
+          "value": 160
+        },
+        "headingKind": 0,
+        "headingId": 0,
+        "packedHeadingLevel": 0,
+        "extendedHeadingLevel": 0,
+        "headingLevel": 0,
+        "headingMarker": null,
+        "spacingFormat": "hwp5"
+      },
+      "automaticNumbers": [
+        {
+          "unit": 3,
+          "numberNode": 18,
+          "hwp5Source": {
+            "control_node": 18,
+            "paragraph": 1,
+            "source_unit": 3,
+            "current_unit": 3,
+            "attributes": 3,
+            "kind": 3,
+            "shape": 0,
+            "superscript": false,
+            "number": 1,
+            "symbol": 0,
+            "prefix": 0,
+            "suffix": 0,
+            "extra_bytes": 0,
+            "extra_nonzero": false
+          },
+          "source": {
+            "values": {
+              "type_known": true,
+              "num": 1
+            },
+            "format": {
+              "type_known": true,
+              "raw": ["DIGIT", "", "", ""],
+              "supscript": false
+            },
+            "hwp5PageNumber": false
+          }
+        }
+      ],
+      "automaticNumberPrefixes": [],
+      "pageControls": [],
+      "drawingCaption": {
+        "drawingNode": 19,
+        "listNode": 13,
+        "captionNode": 13
+      }
+    },
+    {
+      "section": 0,
+      "paragraph": 2,
+      "editable": true,
+      "label": "구역 1 · 문단 3 · 중첩 · 제어 표식 1개 (표시 의미 미적용)",
+      "text": "글상자",
+      "selectionOwner": null,
+      "currentReference": {
+        "epoch": "2",
+        "kind": "original",
+        "section": 0,
+        "id": "21",
+        "row": 0,
+        "column": 0,
+        "scope": "1"
+      },
+      "textSourcePolicyError": null,
+      "characterRanges": [
+        {
+          "start": 0,
+          "end": 3,
+          "charShapeId": 1
+        }
+      ],
+      "paraShapeId": 2,
+      "paragraphShape": {
+        "id": 2,
+        "alignment": 0,
+        "left": 0,
+        "right": 0,
+        "indent": 0,
+        "before": 0,
+        "after": 0,
+        "legacySpacingKind": 0,
+        "legacySpacing": 160,
+        "modernSpacing": {
+          "attributes": 0,
+          "value": 160
+        },
+        "headingKind": 0,
+        "headingId": 0,
+        "packedHeadingLevel": 0,
+        "extendedHeadingLevel": 0,
+        "headingLevel": 0,
+        "headingMarker": null,
+        "spacingFormat": "hwp5"
+      },
+      "automaticNumbers": [],
+      "automaticNumberPrefixes": [],
+      "pageControls": [],
+      "drawingText": {
+        "drawingNode": 19,
+        "listNode": 20
+      }
+    }
+  ],
+  "currentParagraphFlows": [
+    {
+      "paragraph": 0,
+      "source_node": 0,
+      "template_node": 0,
+      "parent_node": null,
+      "generated": false,
+      "top_level": true,
+      "break_flags": 3,
+      "section_break": true,
+      "multicolumn_break": true,
+      "page_break": false,
+      "column_break": false,
+      "host": "body",
+      "list_node": null,
+      "memo_index": null,
+      "memo_node": null,
+      "empty_line_eligible": false,
+      "section": 0
+    },
+    {
+      "paragraph": 1,
+      "source_node": 14,
+      "template_node": 14,
+      "parent_node": 12,
+      "generated": false,
+      "top_level": false,
+      "break_flags": 0,
+      "section_break": false,
+      "multicolumn_break": false,
+      "page_break": false,
+      "column_break": false,
+      "host": "drawing",
+      "list_node": 13,
+      "memo_index": null,
+      "memo_node": null,
+      "empty_line_eligible": false,
+      "section": 0
+    },
+    {
+      "paragraph": 2,
+      "source_node": 21,
+      "template_node": 21,
+      "parent_node": 19,
+      "generated": false,
+      "top_level": false,
+      "break_flags": 0,
+      "section_break": false,
+      "multicolumn_break": false,
+      "page_break": false,
+      "column_break": false,
+      "host": "drawing",
+      "list_node": 20,
+      "memo_index": null,
+      "memo_node": null,
+      "empty_line_eligible": false,
+      "section": 0
+    }
+  ],
+  "hwp5Drawings": [
+    {
+      "section": 0,
+      "controlNode": 12,
+      "componentNode": 19,
+      "hostParagraph": 0,
+      "anchorUnit": 2,
+      "source": {
+        "control_node": 12,
+        "component_node": 19,
+        "paragraph_node": 0,
+        "kind_id": 611476835,
+        "flags": 610942976,
+        "offset_x": 9736,
+        "offset_y": 11163,
+        "width": 11763,
+        "height": 5476,
+        "instance_id": 1732707051,
+        "z_order": 4,
+        "outer_margins": [0, 0, 0, 0],
+        "prevent_page_break": 0,
+        "description_bytes": 0,
+        "object_extra_bytes": 0,
+        "component_offset_x": 0,
+        "component_offset_y": 0,
+        "original_width": 11763,
+        "original_height": 5476,
+        "current_width": 11763,
+        "current_height": 5476,
+        "component_attributes": 16777216,
+        "rotation_angle": 0,
+        "matrix_pairs": 1,
+        "component_extra_bytes": 43
+      },
+      "anchor": {
+        "control_node": 12,
+        "component_node": 19,
+        "paragraph": 0,
+        "source_unit": 16,
+        "current_unit": 16
+      }
+    }
+  ],
+  "hwp5DrawingLocalTransforms": [
+    {
+      "component_node": 19,
+      "owner_node": 12,
+      "matrix": [1, 0, 0, 0, 1, 0],
+      "section": 0
+    }
+  ],
+  "hwp5DrawingComponents": [
+    {
+      "component_node": 19,
+      "owner_node": 12,
+      "kind_id": 611476835,
+      "second_id": 611476835,
+      "offset_x": 0,
+      "offset_y": 0,
+      "group_count": 0,
+      "local_version": 1,
+      "original_width": 11763,
+      "original_height": 5476,
+      "current_width": 11763,
+      "current_height": 5476,
+      "attributes": 16777216,
+      "rotation_angle": 0,
+      "rotation_x": 5881,
+      "rotation_y": 2738,
+      "matrix_pairs": 1,
+      "extra_bytes": 43,
+      "section": 0
+    }
+  ],
+  "hwp5DrawingBodies": [
+    {
+      "section": 0,
+      "kind": "caption",
+      "controlNode": 12,
+      "ownerNode": 12,
+      "listNode": 13,
+      "paragraphs": [1],
+      "source": {
+        "kind": "caption",
+        "control_node": 12,
+        "owner_node": 12,
+        "list_node": 13,
+        "paragraph_count": 1,
+        "attributes": 0,
+        "unknown": 0,
+        "extra_bytes": 22,
+        "extra_nonzero": true,
+        "margins": null,
+        "last_width": null,
+        "body_extra_bytes": null,
+        "caption": {
+          "flags": 3,
+          "width": 8504,
+          "gap": 850,
+          "max_text_width": 11763,
+          "extra_bytes": 8,
+          "extra_nonzero": false
+        }
+      }
+    },
+    {
+      "section": 0,
+      "kind": "body",
+      "controlNode": 12,
+      "ownerNode": 19,
+      "listNode": 20,
+      "paragraphs": [2],
+      "source": {
+        "kind": "body",
+        "control_node": 12,
+        "owner_node": 19,
+        "list_node": 20,
+        "paragraph_count": 1,
+        "attributes": 32,
+        "unknown": 0,
+        "extra_bytes": 25,
+        "extra_nonzero": true,
+        "margins": [283, 283, 283, 283],
+        "last_width": 11763,
+        "body_extra_bytes": 13,
+        "caption": null
+      }
+    }
+  ],
+  "hwp5DrawingErrors": [],
+  "hwp5DrawingComponentErrors": [],
+  "hwp5DrawingLocalErrors": [],
+  "hwp5DrawingGeometryErrors": [],
+  "hwp5DrawingMatrixErrors": [],
+  "hwp5DrawingCornerErrors": [],
+  "hwp5DrawingBodyErrors": []
+}

@@ -15,3 +15,7 @@
 그룹·회전·소유자가 모호한 겹침·표시되지 않은 개체를 임의의 사각형이나 첫 번째 개체로 대체하지 않는다. 그림은 직접 입력의 기존 선택 우선순위를 유지하여 글상자 안의 그림을 다른 개체로 열지 않는다. 지원 가능한 Native 원값만 표시하고 상대 크기를 절대 mm로 추정하지 않는다. 글상자 텍스트는 기존 문서 순서와 증가하는 문단 번호를 검증해 선형으로 순회하며 정렬하거나 큰 번호 간격을 반복하지 않는다.
 
 공식 공개 데모의 관측에서 차트·그림 더블클릭은 개체 속성, 글상자 내부는 텍스트 편집이었다. 선택 개체의 P 키 진입도 관측했지만 이 더블클릭 API 자체가 기본 단축키 전체나 범용 개체 선택 모델을 구현한 것은 아니다.
+
+## 형식별 글상자 관측
+
+`web/preview/drawing-observation.mjs`는 hit·demo relay·속성 조회의 읽기 SSOT다. H5 projected drawing에 HWPX source 필드를 요구하거나 누락 필드를 만들어 넣지 않고, 현재 raw component/control·anchor·local transform·body list/flow와 연결한다. H5는 증명된 독립 사각형·무회전·identity 변환만 허용한다. HWPX는 기존 원본 주소/transform 증명을 유지한다. 한 동기 query의 지역 index만 사용하며 문서/토큰 사이에 권위를 재사용하지 않는다. 소유 Surface 코드는 바꾸지 않으며 P handler는 별도의 현재 선택·token fence를 유지해야 한다.

@@ -12,6 +12,11 @@ export interface CanvasObjectActivation {
   readonly target: CanvasObjectTarget;
   readonly token: StateToken;
 }
+type PreparedObjectActivation<State> = Readonly<{
+  target: CanvasObjectTarget;
+  state: State;
+  current(state: State): boolean;
+}>;
 export function bindObjectActivation<State extends { token?: StateToken }>(options: {
   canvas: HTMLCanvasElement;
   viewport: HTMLElement;
@@ -20,6 +25,7 @@ export function bindObjectActivation<State extends { token?: StateToken }>(optio
     isPaintedFrameCurrent(): boolean;
     objectAtLogicalPoint(x: number, y: number): CanvasObjectTarget | null;
   };
+  prepare?(event: MouseEvent): Promise<PreparedObjectActivation<State> | null> | undefined;
   capture(): State | undefined;
   current?(state: State): boolean;
   onError(error: unknown): void;
@@ -27,10 +33,10 @@ export function bindObjectActivation<State extends { token?: StateToken }>(optio
   const listeners = new Set<(event: CanvasObjectActivation) => void | Promise<void>>();
   let closed = false;
   const current = (state: State) => options.current?.(state) ?? options.capture() === state;
-  const activate = (event: MouseEvent) => {
+  const dispatch = (event: MouseEvent, expected?: PreparedObjectActivation<State>) => {
     if (
       closed ||
-      event.defaultPrevented ||
+      (!expected && event.defaultPrevented) ||
       event.button !== 0 ||
       event.ctrlKey ||
       event.metaKey ||
@@ -50,6 +56,13 @@ export function bindObjectActivation<State extends { token?: StateToken }>(optio
     );
     const target = options.renderer.objectAtLogicalPoint(point.x, point.y);
     if (!target || options.capture() !== state || !options.renderer.isPaintedFrameCurrent()) return;
+    if (
+      expected &&
+      (expected.state !== state ||
+        !expected.current(state) ||
+        JSON.stringify(target) !== JSON.stringify(expected.target))
+    )
+      return;
     const token = state.token;
     if (!token || options.capture() !== state) return;
     const value: CanvasObjectActivation = Object.freeze({
@@ -79,6 +92,41 @@ export function bindObjectActivation<State extends { token?: StateToken }>(optio
       }
     }
   };
+  // Installed before direct input's stale-frame gate. Only the private owned
+  // selection receipt may await its first paint; all unowned events retain the
+  // original bubble path and stale-frame gate. No DOM event is redispatched.
+  let preparing = false;
+  const prepare = (event: MouseEvent) => {
+    if (
+      closed ||
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.altKey ||
+      event.shiftKey ||
+      !listeners.size
+    )
+      return;
+    const pending = options.prepare?.(event);
+    if (!pending) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if (preparing) return;
+    preparing = true;
+    void pending
+      .then((target) => {
+        if (target && !closed) dispatch(event, target);
+      })
+      .catch((error) => {
+        if (!closed) options.onError(error);
+      })
+      .finally(() => {
+        preparing = false;
+      });
+  };
+  const activate = (event: MouseEvent) => dispatch(event);
+  options.canvas.addEventListener('dblclick', prepare, true);
   options.canvas.addEventListener('dblclick', activate);
   return {
     register(listener: (event: CanvasObjectActivation) => void | Promise<void>) {
@@ -92,6 +140,7 @@ export function bindObjectActivation<State extends { token?: StateToken }>(optio
       if (closed) return;
       closed = true;
       listeners.clear();
+      options.canvas.removeEventListener('dblclick', prepare, true);
       options.canvas.removeEventListener('dblclick', activate);
     },
   };

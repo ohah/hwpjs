@@ -1,3 +1,7 @@
+import {
+  observedChartCreateProfileVersion,
+  requireChartCreateProfile,
+} from './chart-create-capability.mjs';
 import { sourceTableCellWidthPlanForFormat } from './source-table-cell-width-format.mjs';
 import {
   readHwpxNamedFieldParameters,
@@ -1099,6 +1103,13 @@ export function createReaderRuntime({
                 historyStats?.protocolVersion === 2 &&
                 !historyPoisoned &&
                 editor?.supportsEquationInsertionAbi?.() === true,
+              chartCreateProfileVersion: observedChartCreateProfileVersion(
+                editor,
+                format,
+                historyEnabled,
+                historyStats,
+                historyPoisoned,
+              ),
               chartCreationAvailable:
                 historyEnabled &&
                 historyStats?.protocolVersion === 2 &&
@@ -1902,6 +1913,15 @@ export function createReaderRuntime({
             : editor.supportsChartCreationAbi?.()) !== true
         )
           throw Error('InlineObjectInsertionUnavailable');
+        if (!equation)
+          requireChartCreateProfile(
+            editor,
+            message.request,
+            format,
+            historyEnabled,
+            editor.historyStats(),
+            historyPoisoned,
+          );
         // Request already carries Native 1-based paragraph and exact text witness.
         atomicOutcome = equation
           ? editor.insertEquation(message.request)

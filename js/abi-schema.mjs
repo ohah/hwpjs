@@ -126,3 +126,8 @@ export const REQUIRED_FUNCTIONS = Object.freeze([
   'hwp5_text_len',
   'hwp5_text_free',
 ]);
+
+// Optional HWPX creation-profile query; ABI6 required exports remain unchanged.
+export const HWPX_CHART_CREATE_PROFILE_FUNCTIONS = Object.freeze([
+  'hwpx_edit_chart_create_profile_version',
+]);

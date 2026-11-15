@@ -8,7 +8,8 @@
   },
   "files": [
     "../../packages/core/src/index.ts",
-    "../../tests/hwpx/inline-object-js-core-public-types.ts"
+    "../../tests/hwpx/inline-object-js-core-public-types.ts",
+    "../../tests/chart-kinds-types.ts"
   ],
   "include": []
 }

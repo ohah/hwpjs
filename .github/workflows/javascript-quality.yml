@@ -78,11 +78,69 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node --experimental-transform-types --test --test-concurrency=1 --test-reporter=tap tests/canvas/object-activation-target.test.mjs packages/vanilla/tests/object-activation.test.mjs apps/demo/tests/object-activation-relay.test.mjs apps/demo/tests/chart-data-controller.test.mjs apps/demo/tests/chart-data-view.test.mjs apps/demo/tests/drawing-properties.test.mjs apps/demo/tests/drawing-properties-view.test.mjs apps/demo/tests/chart-properties.test.mjs 2>&1 | tee "$RUNNER_TEMP/object-activation.tap"
-          grep -Eq '^# tests 70$' "$RUNNER_TEMP/object-activation.tap"
+          node --experimental-transform-types --test --test-concurrency=1 --test-reporter=tap tests/canvas/object-activation-target.test.mjs tests/canvas/drawing-observation.test.mjs tests/canvas/drawing-observation-body-completeness.test.mjs packages/vanilla/tests/object-activation.test.mjs apps/demo/tests/object-activation-relay.test.mjs apps/demo/tests/chart-data-controller.test.mjs apps/demo/tests/chart-data-view.test.mjs apps/demo/tests/drawing-properties.test.mjs apps/demo/tests/drawing-properties-view.test.mjs apps/demo/tests/chart-properties.test.mjs 2>&1 | tee "$RUNNER_TEMP/object-activation.tap"
+          # H5 query/body cohort is 89; the merged P relay contributes 5 additional tests.
+          object_expected_tests=$((89 + 5))
+          grep -Eq "^# tests ${object_expected_tests}$" "$RUNNER_TEMP/object-activation.tap"
           grep -Eq '^# fail 0$' "$RUNNER_TEMP/object-activation.tap"
           grep -Eq '^# skipped 0$' "$RUNNER_TEMP/object-activation.tap"
           bunx --no-install tsc --noEmit -p tools/tsconfig.object-activation.json
+          bunx --no-install tsc --noEmit -p apps/demo/tests/tsconfig.drawing-properties.json
+      - name: Test selected object P source contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --experimental-transform-types --test --test-concurrency=1 --test-reporter=tap packages/vanilla/tests/object-selection.test.ts tests/canvas/object-selection-paint.test.mjs tests/canvas/object-selection-direct-input.test.mjs 2>&1 | tee "$RUNNER_TEMP/object-selection-p.tap"
+          grep -Eq '^# tests 38$' "$RUNNER_TEMP/object-selection-p.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/object-selection-p.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/object-selection-p.tap"
+          node --experimental-transform-types --test --test-concurrency=1 --test-reporter=tap tests/canvas/object-selection-frame-currentness.test.mjs 2>&1 | tee "$RUNNER_TEMP/object-selection-frame10.tap"
+          grep -Eq '^# tests 10$' "$RUNNER_TEMP/object-selection-frame10.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/object-selection-frame10.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/object-selection-frame10.tap"
+      - name: Test object selection window and descendant blur boundaries
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --experimental-transform-types --test --test-concurrency=1 --test-reporter=tap tests/canvas/object-selection-window-blur.test.mjs 2>&1 | tee "$RUNNER_TEMP/object-selection-window-blur.tap"
+          grep -Eq '^# tests 14$' "$RUNNER_TEMP/object-selection-window-blur.tap"
+          grep -Eq '^# pass 14$' "$RUNNER_TEMP/object-selection-window-blur.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/object-selection-window-blur.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/object-selection-window-blur.tap"
+      - name: Test object selection viewport and textarea scroll boundaries
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --experimental-transform-types --test --test-concurrency=1 --test-reporter=tap tests/canvas/object-selection-viewport-scroll.test.mjs 2>&1 | tee "$RUNNER_TEMP/object-selection-viewport-scroll.tap"
+          grep -Eq '^# tests 14$' "$RUNNER_TEMP/object-selection-viewport-scroll.tap"
+          grep -Eq '^# pass 14$' "$RUNNER_TEMP/object-selection-viewport-scroll.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/object-selection-viewport-scroll.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/object-selection-viewport-scroll.tap"
+      - name: Test ordinary plain ACK draft settlement
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --experimental-transform-types --test --test-concurrency=1 --test-reporter=tap tests/canvas/plain-ack-draft-settlement.test.mjs 2>&1 | tee "$RUNNER_TEMP/plain-ack-settlement.tap"
+          grep -Eq '^# tests 15$' "$RUNNER_TEMP/plain-ack-settlement.tap"
+          grep -Eq '^# pass 15$' "$RUNNER_TEMP/plain-ack-settlement.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/plain-ack-settlement.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/plain-ack-settlement.tap"
+      - name: Test chart16 JS source regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          NO_COLOR=1 FORCE_COLOR=0 bun test --no-install ./apps/demo/tests/chart-integration-tool.test.ts ./apps/demo/tests/inline-object-chart-kinds.test.ts ./packages/core/tests/commands/inline-object-chart-kinds.test.ts 2>&1 | tee "$RUNNER_TEMP/chart16-source-bun.log"
+          grep -Eq '^[[:space:]]*17 pass$' "$RUNNER_TEMP/chart16-source-bun.log"
+          grep -Eq '^[[:space:]]*0 fail$' "$RUNNER_TEMP/chart16-source-bun.log"
+          ! grep -Eq '[1-9][0-9]* skip' "$RUNNER_TEMP/chart16-source-bun.log"
+          node --test --test-concurrency=1 --test-reporter=tap tests/hwpx/chart-capability-runtime.test.mjs tests/hwpx/chart-create-decimal.test.mjs tests/hwpx/chart-family-completion.test.mjs tests/hwpx/chart-family-display-contract.test.mjs tests/hwpx/chart-kinds-js-contract.test.mjs tests/hwpx/chart-native-family-bridge.test.mjs tests/hwpx/chart-profile-abi.test.mjs tests/hwpx/chart-scatter-none.test.mjs tests/hwpx/chart-family-3d-linear.test.mjs 2>&1 | tee "$RUNNER_TEMP/chart16-source-node.tap"
+          grep -Eq '^# tests 82$' "$RUNNER_TEMP/chart16-source-node.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/chart16-source-node.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/chart16-source-node.tap"
+
       - name: Test chart typing display continuity
         run: node --test tests/hwpx/chart-display-continuity.test.mjs
       - name: Test synthetic HWPX chart and equation creation

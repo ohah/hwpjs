@@ -1,0 +1,3349 @@
+{
+  "schema": 1,
+  "baselineHead": "4e99043237a7e9c5c62bb4a690a8b1110370f192",
+  "cases": {
+    "barChart": {
+      "input": {
+        "kind": "chart_display",
+        "pair": {
+          "chart_path": "Chart/test.xml",
+          "ole_path": "BinData/test.ole",
+          "wrapper_node": 0,
+          "section_ordinal": 0,
+          "section_sha256": [
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0
+          ],
+          "declared_external": false
+        },
+        "host": {
+          "wrapper_node": 0,
+          "chart_node": 2,
+          "geometry": {
+            "width": 600,
+            "height": 400,
+            "width_relative": null,
+            "height_relative": null,
+            "treat_as_character": false,
+            "horizontal_offset": 0,
+            "vertical_offset": 0
+          },
+          "position": {
+            "flags": [null, null, null, null],
+            "relations": [null, null, null, null]
+          }
+        },
+        "plots": [
+          {
+            "node": 3,
+            "area_node": 2,
+            "kind": "barChart",
+            "series_nodes": [10]
+          }
+        ],
+        "plot_settings": [
+          {
+            "direction": {
+              "node": 5,
+              "value": "col"
+            },
+            "grouping": {
+              "node": 4,
+              "value": "clustered"
+            },
+            "vary_colors": null,
+            "gap_width": null,
+            "overlap": null,
+            "scatter_style": null,
+            "first_slice_angle": null,
+            "of_pie_type": null,
+            "second_pie_size": null,
+            "split_type": null,
+            "split_position": null,
+            "custom_split_node": null,
+            "stock": null,
+            "spatial": null,
+            "axis_references": [
+              {
+                "node": 800,
+                "value": 1
+              },
+              {
+                "node": 801,
+                "value": 2
+              }
+            ]
+          }
+        ],
+        "series_text": [],
+        "rich_text": [],
+        "point_settings": [],
+        "series_settings": [
+          {
+            "plot_node": 3,
+            "series_node": 10,
+            "index": null,
+            "order": null,
+            "marker": null,
+            "smooth": null,
+            "explosion": null
+          }
+        ],
+        "axes": [
+          {
+            "node": 900,
+            "area_node": 2,
+            "kind": "valAx",
+            "id": {
+              "node": 901,
+              "value": 1
+            },
+            "cross_axis": null,
+            "position": {
+              "node": 902,
+              "value": "l"
+            },
+            "deleted": null,
+            "scaling": null
+          },
+          {
+            "node": 910,
+            "area_node": 2,
+            "kind": "catAx",
+            "id": {
+              "node": 911,
+              "value": 2
+            },
+            "cross_axis": null,
+            "position": {
+              "node": 912,
+              "value": "b"
+            },
+            "deleted": null,
+            "scaling": null
+          }
+        ],
+        "axis_links": [
+          {
+            "plot_node": 3,
+            "reference_node": 800,
+            "id": 1,
+            "target": {
+              "status": "resolved",
+              "node": 900
+            }
+          },
+          {
+            "plot_node": 3,
+            "reference_node": 801,
+            "id": 2,
+            "target": {
+              "status": "resolved",
+              "node": 910
+            }
+          }
+        ],
+        "points": [
+          {
+            "cache_node": 12,
+            "point_node": 32,
+            "value_node": 33,
+            "index": 0,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "1"
+          },
+          {
+            "cache_node": 12,
+            "point_node": 34,
+            "value_node": 35,
+            "index": 1,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "2"
+          },
+          {
+            "cache_node": 12,
+            "point_node": 36,
+            "value_node": 37,
+            "index": 2,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "3"
+          }
+        ],
+        "bindings": [
+          {
+            "point": 0,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 11,
+            "role": "value"
+          },
+          {
+            "point": 1,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 11,
+            "role": "value"
+          },
+          {
+            "point": 2,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 11,
+            "role": "value"
+          }
+        ],
+        "blank_policy": null,
+        "view_3d": null
+      },
+      "geometry": {
+        "state": "ready",
+        "exact": false,
+        "direction": "col",
+        "grouping": "clustered",
+        "minimum": 0,
+        "maximum": 3,
+        "value_reversed": false,
+        "category_reversed": false,
+        "categories": [
+          {
+            "index": 0,
+            "text": null,
+            "ambiguous": false
+          },
+          {
+            "index": 1,
+            "text": null,
+            "ambiguous": false
+          },
+          {
+            "index": 2,
+            "text": null,
+            "ambiguous": false
+          }
+        ],
+        "axes_hidden": {
+          "value": false,
+          "category": false
+        },
+        "major_tick_marks": {
+          "value": {
+            "$chartBaseline": "undefined"
+          },
+          "category": {
+            "$chartBaseline": "undefined"
+          }
+        },
+        "major_tick_positions": {
+          "value": "l",
+          "category": "b"
+        },
+        "value_ticks": [
+          {
+            "value": 0,
+            "fraction": 0
+          },
+          {
+            "value": 0.75,
+            "fraction": 0.25
+          },
+          {
+            "value": 1.5,
+            "fraction": 0.5
+          },
+          {
+            "value": 2.25,
+            "fraction": 0.75
+          },
+          {
+            "value": 3,
+            "fraction": 1
+          }
+        ],
+        "legend": [
+          {
+            "series_node": 10,
+            "text": null
+          }
+        ],
+        "spacing": {
+          "gap_width": 150,
+          "overlap": 0,
+          "gap_width_defaulted": true,
+          "overlap_defaulted": true
+        },
+        "warnings": ["DefaultGapWidth", "PreviewDefaultOverlap", "SourceStylesNotApplied"],
+        "bars": [
+          {
+            "kind": "bar",
+            "series_node": 10,
+            "index": 0,
+            "ordinal": 0,
+            "value": 1,
+            "normalized_value": 1,
+            "start_value": 0,
+            "end_value": 1,
+            "rectangle": {
+              "x": 0.09999999999999999,
+              "y": 0.6666666666666667,
+              "width": 0.13333333333333333,
+              "height": 0.3333333333333333
+            }
+          },
+          {
+            "kind": "bar",
+            "series_node": 10,
+            "index": 1,
+            "ordinal": 1,
+            "value": 2,
+            "normalized_value": 2,
+            "start_value": 0,
+            "end_value": 2,
+            "rectangle": {
+              "x": 0.4333333333333333,
+              "y": 0.33333333333333337,
+              "width": 0.13333333333333333,
+              "height": 0.6666666666666666
+            }
+          },
+          {
+            "kind": "bar",
+            "series_node": 10,
+            "index": 2,
+            "ordinal": 2,
+            "value": 3,
+            "normalized_value": 3,
+            "start_value": 0,
+            "end_value": 3,
+            "rectangle": {
+              "x": 0.7666666666666666,
+              "y": 0,
+              "width": 0.13333333333333333,
+              "height": 1
+            }
+          }
+        ]
+      },
+      "canvasCalls": [
+        ["save"],
+        ["measureText", "0"],
+        ["measureText", "0.75"],
+        ["measureText", "1.5"],
+        ["measureText", "2.25"],
+        ["measureText", "3"],
+        ["beginPath"],
+        ["rect", 2, 3, 600, 400],
+        ["clip"],
+        ["beginPath"],
+        ["moveTo", 34, 379],
+        ["lineTo", 594, 379],
+        ["stroke"],
+        ["beginPath"],
+        ["moveTo", 34, 287.5],
+        ["lineTo", 594, 287.5],
+        ["stroke"],
+        ["beginPath"],
+        ["moveTo", 34, 196],
+        ["lineTo", 594, 196],
+        ["stroke"],
+        ["beginPath"],
+        ["moveTo", 34, 104.5],
+        ["lineTo", 594, 104.5],
+        ["stroke"],
+        ["beginPath"],
+        ["moveTo", 34, 13],
+        ["lineTo", 594, 13],
+        ["stroke"],
+        ["fillRect", 90, 257, 74.66666666666667, 122],
+        ["fillRect", 276.66666666666663, 135, 74.66666666666667, 244],
+        ["fillRect", 463.3333333333333, 13, 74.66666666666667, 366],
+        ["fillText", "0", 28, 379, 24],
+        ["fillText", "0.75", 28, 287.5, 24],
+        ["fillText", "1.5", 28, 196, 24],
+        ["fillText", "2.25", 28, 104.5, 24],
+        ["fillText", "3", 28, 13, 24],
+        ["beginPath"],
+        ["moveTo", 34, 13],
+        ["lineTo", 34, 379],
+        ["stroke"],
+        ["beginPath"],
+        ["moveTo", 34, 379],
+        ["lineTo", 594, 379],
+        ["stroke"],
+        ["restore"]
+      ],
+      "paintResult": true
+    },
+    "bar3DChart": {
+      "input": {
+        "kind": "chart_display",
+        "pair": {
+          "chart_path": "Chart/test.xml",
+          "ole_path": "BinData/test.ole",
+          "wrapper_node": 0,
+          "section_ordinal": 0,
+          "section_sha256": [
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0
+          ],
+          "declared_external": false
+        },
+        "host": {
+          "wrapper_node": 0,
+          "chart_node": 2,
+          "geometry": {
+            "width": 600,
+            "height": 400,
+            "width_relative": null,
+            "height_relative": null,
+            "treat_as_character": false,
+            "horizontal_offset": 0,
+            "vertical_offset": 0
+          },
+          "position": {
+            "flags": [null, null, null, null],
+            "relations": [null, null, null, null]
+          }
+        },
+        "plots": [
+          {
+            "node": 3,
+            "area_node": 2,
+            "kind": "bar3DChart",
+            "series_nodes": [10]
+          }
+        ],
+        "plot_settings": [
+          {
+            "direction": {
+              "node": 5,
+              "value": "col"
+            },
+            "grouping": {
+              "node": 4,
+              "value": "clustered"
+            },
+            "vary_colors": null,
+            "gap_width": null,
+            "overlap": null,
+            "scatter_style": null,
+            "first_slice_angle": null,
+            "of_pie_type": null,
+            "second_pie_size": null,
+            "split_type": null,
+            "split_position": null,
+            "custom_split_node": null,
+            "stock": null,
+            "spatial": {
+              "gap_depth": {
+                "node": 6,
+                "value": 150
+              },
+              "shape": {
+                "node": 7,
+                "value": "box"
+              }
+            },
+            "axis_references": [
+              {
+                "node": 800,
+                "value": 1
+              },
+              {
+                "node": 801,
+                "value": 2
+              }
+            ]
+          }
+        ],
+        "series_text": [],
+        "rich_text": [],
+        "point_settings": [],
+        "series_settings": [
+          {
+            "plot_node": 3,
+            "series_node": 10,
+            "index": null,
+            "order": null,
+            "marker": null,
+            "smooth": null,
+            "explosion": null
+          }
+        ],
+        "axes": [
+          {
+            "node": 900,
+            "area_node": 2,
+            "kind": "valAx",
+            "id": {
+              "node": 901,
+              "value": 1
+            },
+            "cross_axis": null,
+            "position": {
+              "node": 902,
+              "value": "l"
+            },
+            "deleted": null,
+            "scaling": null
+          },
+          {
+            "node": 910,
+            "area_node": 2,
+            "kind": "catAx",
+            "id": {
+              "node": 911,
+              "value": 2
+            },
+            "cross_axis": null,
+            "position": {
+              "node": 912,
+              "value": "b"
+            },
+            "deleted": null,
+            "scaling": null
+          }
+        ],
+        "axis_links": [
+          {
+            "plot_node": 3,
+            "reference_node": 800,
+            "id": 1,
+            "target": {
+              "status": "resolved",
+              "node": 900
+            }
+          },
+          {
+            "plot_node": 3,
+            "reference_node": 801,
+            "id": 2,
+            "target": {
+              "status": "resolved",
+              "node": 910
+            }
+          }
+        ],
+        "points": [
+          {
+            "cache_node": 12,
+            "point_node": 32,
+            "value_node": 33,
+            "index": 0,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "1"
+          },
+          {
+            "cache_node": 12,
+            "point_node": 34,
+            "value_node": 35,
+            "index": 1,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "2"
+          },
+          {
+            "cache_node": 12,
+            "point_node": 36,
+            "value_node": 37,
+            "index": 2,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "3"
+          }
+        ],
+        "bindings": [
+          {
+            "point": 0,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 11,
+            "role": "value"
+          },
+          {
+            "point": 1,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 11,
+            "role": "value"
+          },
+          {
+            "point": 2,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 11,
+            "role": "value"
+          }
+        ],
+        "blank_policy": null,
+        "view_3d": {
+          "node": 950,
+          "rotation_x": {
+            "node": 951,
+            "value": 20
+          },
+          "rotation_y": {
+            "node": 952,
+            "value": 25
+          },
+          "height_percent": {
+            "node": 953,
+            "value": 100
+          },
+          "depth_percent": {
+            "node": 954,
+            "value": 100
+          },
+          "perspective": null,
+          "right_angle_axes": {
+            "node": 955,
+            "value": true
+          },
+          "unparsed_children": false
+        }
+      },
+      "geometry": {
+        "state": "ready",
+        "exact": false,
+        "direction": "col",
+        "grouping": "clustered",
+        "minimum": 0,
+        "maximum": 3,
+        "value_reversed": false,
+        "category_reversed": false,
+        "categories": [
+          {
+            "index": 0,
+            "text": null,
+            "ambiguous": false
+          },
+          {
+            "index": 1,
+            "text": null,
+            "ambiguous": false
+          },
+          {
+            "index": 2,
+            "text": null,
+            "ambiguous": false
+          }
+        ],
+        "axes_hidden": {
+          "value": true,
+          "category": true
+        },
+        "value_ticks": [
+          {
+            "value": 0,
+            "fraction": 0
+          },
+          {
+            "value": 0.75,
+            "fraction": 0.25
+          },
+          {
+            "value": 1.5,
+            "fraction": 0.5
+          },
+          {
+            "value": 2.25,
+            "fraction": 0.75
+          },
+          {
+            "value": 3,
+            "fraction": 1
+          }
+        ],
+        "legend": [
+          {
+            "series_node": 10,
+            "text": null
+          }
+        ],
+        "spacing": {
+          "gap_width": 150,
+          "overlap": 0,
+          "gap_width_defaulted": true,
+          "overlap_defaulted": true
+        },
+        "warnings": [
+          "DefaultGapWidth",
+          "PreviewDefaultOverlap",
+          "SourceStylesNotApplied",
+          "PreviewRightAngleShear",
+          "PreviewNormalized3DDepth",
+          "Preview3DFaceOrder",
+          "Preview3DAxesOmitted"
+        ],
+        "bar_3d": {
+          "faces": [
+            {
+              "kind": "side",
+              "series_node": 10,
+              "ordinal": 0,
+              "index": 0,
+              "points": [
+                {
+                  "x": 0.22819001245804754,
+                  "y": 0.6726380994216098
+                },
+                {
+                  "x": 0.22819001245804754,
+                  "y": 1
+                },
+                {
+                  "x": 0.25023281620927235,
+                  "y": 0.9820857017351704
+                },
+                {
+                  "x": 0.25023281620927235,
+                  "y": 0.6547238011567803
+                }
+              ],
+              "depth": 0.5099416457794789
+            },
+            {
+              "kind": "cap",
+              "series_node": 10,
+              "ordinal": 0,
+              "index": 0,
+              "points": [
+                {
+                  "x": 0.09779571962487751,
+                  "y": 0.6726380994216098
+                },
+                {
+                  "x": 0.11983852337610232,
+                  "y": 0.6547238011567803
+                },
+                {
+                  "x": 0.25023281620927235,
+                  "y": 0.6547238011567803
+                },
+                {
+                  "x": 0.22819001245804754,
+                  "y": 0.6726380994216098
+                }
+              ],
+              "depth": 0.5084041094361065
+            },
+            {
+              "kind": "side",
+              "series_node": 10,
+              "ordinal": 1,
+              "index": 1,
+              "points": [
+                {
+                  "x": 0.5541757445409726,
+                  "y": 0.34527619884321964
+                },
+                {
+                  "x": 0.5541757445409726,
+                  "y": 1
+                },
+                {
+                  "x": 0.5762185482921974,
+                  "y": 0.9820857017351704
+                },
+                {
+                  "x": 0.5762185482921974,
+                  "y": 0.32736190057839015
+                }
+              ],
+              "depth": 0.4993882531856383
+            },
+            {
+              "kind": "cap",
+              "series_node": 10,
+              "ordinal": 1,
+              "index": 1,
+              "points": [
+                {
+                  "x": 0.4237814517078025,
+                  "y": 0.34527619884321964
+                },
+                {
+                  "x": 0.4458242554590274,
+                  "y": 0.32736190057839015
+                },
+                {
+                  "x": 0.5762185482921974,
+                  "y": 0.32736190057839015
+                },
+                {
+                  "x": 0.5541757445409726,
+                  "y": 0.34527619884321964
+                }
+              ],
+              "depth": 0.4948105377904822
+            },
+            {
+              "kind": "side",
+              "series_node": 10,
+              "ordinal": 2,
+              "index": 2,
+              "points": [
+                {
+                  "x": 0.8801614766238975,
+                  "y": 0.01791429826482949
+                },
+                {
+                  "x": 0.8801614766238975,
+                  "y": 1
+                },
+                {
+                  "x": 0.9022042803751223,
+                  "y": 0.9820857017351704
+                },
+                {
+                  "x": 0.9022042803751223,
+                  "y": 0
+                }
+              ],
+              "depth": 0.4888348605917976
+            },
+            {
+              "kind": "cap",
+              "series_node": 10,
+              "ordinal": 2,
+              "index": 2,
+              "points": [
+                {
+                  "x": 0.7497671837907276,
+                  "y": 0.01791429826482949
+                },
+                {
+                  "x": 0.7718099875419524,
+                  "y": 0
+                },
+                {
+                  "x": 0.9022042803751223,
+                  "y": 0
+                },
+                {
+                  "x": 0.8801614766238975,
+                  "y": 0.01791429826482949
+                }
+              ],
+              "depth": 0.4812169661448578
+            },
+            {
+              "kind": "front",
+              "series_node": 10,
+              "ordinal": 0,
+              "index": 0,
+              "points": [
+                {
+                  "x": 0.09779571962487751,
+                  "y": 0.6726380994216098
+                },
+                {
+                  "x": 0.22819001245804754,
+                  "y": 0.6726380994216098
+                },
+                {
+                  "x": 0.22819001245804754,
+                  "y": 1
+                },
+                {
+                  "x": 0.09779571962487751,
+                  "y": 1
+                }
+              ],
+              "depth": 0.01144428848789017
+            },
+            {
+              "kind": "front",
+              "series_node": 10,
+              "ordinal": 1,
+              "index": 1,
+              "points": [
+                {
+                  "x": 0.4237814517078025,
+                  "y": 0.34527619884321964
+                },
+                {
+                  "x": 0.5541757445409726,
+                  "y": 0.34527619884321964
+                },
+                {
+                  "x": 0.5541757445409726,
+                  "y": 1
+                },
+                {
+                  "x": 0.4237814517078025,
+                  "y": 1
+                }
+              ],
+              "depth": 0.0008908958940495705
+            },
+            {
+              "kind": "front",
+              "series_node": 10,
+              "ordinal": 2,
+              "index": 2,
+              "points": [
+                {
+                  "x": 0.7497671837907276,
+                  "y": 0.01791429826482949
+                },
+                {
+                  "x": 0.8801614766238975,
+                  "y": 0.01791429826482949
+                },
+                {
+                  "x": 0.8801614766238975,
+                  "y": 1
+                },
+                {
+                  "x": 0.7497671837907276,
+                  "y": 1
+                }
+              ],
+              "depth": -0.00966249669979103
+            }
+          ],
+          "offset": {
+            "x": 0.022539640626170636,
+            "y": -0.01824107431070233
+          },
+          "depth": 0.05333333333333333,
+          "height": 1
+        }
+      },
+      "canvasCalls": [
+        ["save"],
+        ["beginPath"],
+        ["rect", 2, 3, 600, 400],
+        ["clip"],
+        ["save"],
+        ["beginPath"],
+        ["rect", 10, 13, 584, 366],
+        ["clip"],
+        ["beginPath"],
+        ["moveTo", 143.26296727549976, 259.18554438830915],
+        ["lineTo", 143.26296727549976, 379],
+        ["lineTo", 156.13596466621505, 372.44336683507237],
+        ["lineTo", 156.13596466621505, 252.62891122338158],
+        ["closePath"],
+        ["fill"],
+        ["fill"],
+        ["beginPath"],
+        ["moveTo", 67.11270026092848, 259.18554438830915],
+        ["lineTo", 79.98569765164375, 252.62891122338158],
+        ["lineTo", 156.13596466621505, 252.62891122338158],
+        ["lineTo", 143.26296727549976, 259.18554438830915],
+        ["closePath"],
+        ["fill"],
+        ["fill"],
+        ["beginPath"],
+        ["moveTo", 333.638634811928, 139.3710887766184],
+        ["lineTo", 333.638634811928, 379],
+        ["lineTo", 346.5116322026433, 372.44336683507237],
+        ["lineTo", 346.5116322026433, 132.8144556116908],
+        ["closePath"],
+        ["fill"],
+        ["fill"],
+        ["beginPath"],
+        ["moveTo", 257.48836779735666, 139.3710887766184],
+        ["lineTo", 270.361365188072, 132.8144556116908],
+        ["lineTo", 346.5116322026433, 132.8144556116908],
+        ["lineTo", 333.638634811928, 139.3710887766184],
+        ["closePath"],
+        ["fill"],
+        ["fill"],
+        ["beginPath"],
+        ["moveTo", 524.0143023483562, 19.556633164927593],
+        ["lineTo", 524.0143023483562, 379],
+        ["lineTo", 536.8872997390714, 372.44336683507237],
+        ["lineTo", 536.8872997390714, 13],
+        ["closePath"],
+        ["fill"],
+        ["fill"],
+        ["beginPath"],
+        ["moveTo", 447.8640353337849, 19.556633164927593],
+        ["lineTo", 460.7370327245002, 13],
+        ["lineTo", 536.8872997390714, 13],
+        ["lineTo", 524.0143023483562, 19.556633164927593],
+        ["closePath"],
+        ["fill"],
+        ["fill"],
+        ["beginPath"],
+        ["moveTo", 67.11270026092848, 259.18554438830915],
+        ["lineTo", 143.26296727549976, 259.18554438830915],
+        ["lineTo", 143.26296727549976, 379],
+        ["lineTo", 67.11270026092848, 379],
+        ["closePath"],
+        ["fill"],
+        ["beginPath"],
+        ["moveTo", 257.48836779735666, 139.3710887766184],
+        ["lineTo", 333.638634811928, 139.3710887766184],
+        ["lineTo", 333.638634811928, 379],
+        ["lineTo", 257.48836779735666, 379],
+        ["closePath"],
+        ["fill"],
+        ["beginPath"],
+        ["moveTo", 447.8640353337849, 19.556633164927593],
+        ["lineTo", 524.0143023483562, 19.556633164927593],
+        ["lineTo", 524.0143023483562, 379],
+        ["lineTo", 447.8640353337849, 379],
+        ["closePath"],
+        ["fill"],
+        ["restore"],
+        ["restore"]
+      ],
+      "paintResult": true
+    },
+    "lineChart": {
+      "input": {
+        "kind": "chart_display",
+        "pair": {
+          "chart_path": "Chart/test.xml",
+          "ole_path": "BinData/test.ole",
+          "wrapper_node": 0,
+          "section_ordinal": 0,
+          "section_sha256": [
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0
+          ],
+          "declared_external": false
+        },
+        "host": {
+          "wrapper_node": 0,
+          "chart_node": 2,
+          "geometry": {
+            "width": 600,
+            "height": 400,
+            "width_relative": null,
+            "height_relative": null,
+            "treat_as_character": false,
+            "horizontal_offset": 0,
+            "vertical_offset": 0
+          },
+          "position": {
+            "flags": [null, null, null, null],
+            "relations": [null, null, null, null]
+          }
+        },
+        "plots": [
+          {
+            "node": 3,
+            "area_node": 2,
+            "kind": "lineChart",
+            "series_nodes": [10]
+          }
+        ],
+        "plot_settings": [
+          {
+            "direction": null,
+            "grouping": {
+              "node": 4,
+              "value": "standard"
+            },
+            "vary_colors": null,
+            "gap_width": null,
+            "overlap": null,
+            "scatter_style": null,
+            "first_slice_angle": null,
+            "of_pie_type": null,
+            "second_pie_size": null,
+            "split_type": null,
+            "split_position": null,
+            "custom_split_node": null,
+            "stock": null,
+            "spatial": null,
+            "axis_references": [
+              {
+                "node": 800,
+                "value": 1
+              },
+              {
+                "node": 801,
+                "value": 2
+              }
+            ]
+          }
+        ],
+        "series_text": [],
+        "rich_text": [],
+        "point_settings": [],
+        "series_settings": [
+          {
+            "plot_node": 3,
+            "series_node": 10,
+            "index": null,
+            "order": null,
+            "marker": null,
+            "smooth": null,
+            "explosion": null
+          }
+        ],
+        "axes": [
+          {
+            "node": 900,
+            "area_node": 2,
+            "kind": "valAx",
+            "id": {
+              "node": 901,
+              "value": 1
+            },
+            "cross_axis": null,
+            "position": {
+              "node": 902,
+              "value": "l"
+            },
+            "deleted": null,
+            "scaling": null
+          },
+          {
+            "node": 910,
+            "area_node": 2,
+            "kind": "catAx",
+            "id": {
+              "node": 911,
+              "value": 2
+            },
+            "cross_axis": null,
+            "position": {
+              "node": 912,
+              "value": "b"
+            },
+            "deleted": null,
+            "scaling": null
+          }
+        ],
+        "axis_links": [
+          {
+            "plot_node": 3,
+            "reference_node": 800,
+            "id": 1,
+            "target": {
+              "status": "resolved",
+              "node": 900
+            }
+          },
+          {
+            "plot_node": 3,
+            "reference_node": 801,
+            "id": 2,
+            "target": {
+              "status": "resolved",
+              "node": 910
+            }
+          }
+        ],
+        "points": [
+          {
+            "cache_node": 12,
+            "point_node": 32,
+            "value_node": 33,
+            "index": 0,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "1"
+          },
+          {
+            "cache_node": 12,
+            "point_node": 34,
+            "value_node": 35,
+            "index": 1,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "2"
+          },
+          {
+            "cache_node": 12,
+            "point_node": 36,
+            "value_node": 37,
+            "index": 2,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "3"
+          }
+        ],
+        "bindings": [
+          {
+            "point": 0,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 11,
+            "role": "value"
+          },
+          {
+            "point": 1,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 11,
+            "role": "value"
+          },
+          {
+            "point": 2,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 11,
+            "role": "value"
+          }
+        ],
+        "blank_policy": null,
+        "view_3d": null
+      },
+      "geometry": {
+        "state": "ready",
+        "exact": false,
+        "direction": "col",
+        "grouping": "standard",
+        "minimum": 0,
+        "maximum": 3,
+        "value_reversed": false,
+        "category_reversed": false,
+        "axes_hidden": {
+          "value": false,
+          "category": false
+        },
+        "categories": [
+          {
+            "index": 0,
+            "text": null,
+            "ambiguous": false
+          },
+          {
+            "index": 1,
+            "text": null,
+            "ambiguous": false
+          },
+          {
+            "index": 2,
+            "text": null,
+            "ambiguous": false
+          }
+        ],
+        "value_ticks": [
+          {
+            "value": 0,
+            "fraction": 0
+          },
+          {
+            "value": 0.75,
+            "fraction": 0.25
+          },
+          {
+            "value": 1.5,
+            "fraction": 0.5
+          },
+          {
+            "value": 2.25,
+            "fraction": 0.75
+          },
+          {
+            "value": 3,
+            "fraction": 1
+          }
+        ],
+        "legend": [
+          {
+            "series_node": 10,
+            "text": null
+          }
+        ],
+        "lines": [
+          {
+            "series_node": 10,
+            "paths": [
+              [
+                {
+                  "index": 0,
+                  "ordinal": 0,
+                  "value": 1,
+                  "normalized_value": 1,
+                  "start_value": 0,
+                  "end_value": 1,
+                  "x": 0.16666666666666666,
+                  "y": 0.6666666666666667
+                },
+                {
+                  "index": 1,
+                  "ordinal": 1,
+                  "value": 2,
+                  "normalized_value": 2,
+                  "start_value": 0,
+                  "end_value": 2,
+                  "x": 0.5,
+                  "y": 0.33333333333333337
+                },
+                {
+                  "index": 2,
+                  "ordinal": 2,
+                  "value": 3,
+                  "normalized_value": 3,
+                  "start_value": 0,
+                  "end_value": 3,
+                  "x": 0.8333333333333334,
+                  "y": 0
+                }
+              ]
+            ],
+            "marker": {
+              "state": "ready",
+              "symbol": "none",
+              "radius": 0,
+              "source_size": false,
+              "automatic": false,
+              "warnings": ["SourceMarkersNotApplied"]
+            }
+          }
+        ],
+        "blank_policy": "gap",
+        "warnings": [
+          "PreviewStraightLines",
+          "PreviewDefaultBlankPolicy",
+          "PreviewGapBlanks",
+          "SourceMarkersNotApplied",
+          "SourceStylesNotApplied"
+        ]
+      },
+      "canvasCalls": [
+        ["save"],
+        ["measureText", "0"],
+        ["measureText", "0.75"],
+        ["measureText", "1.5"],
+        ["measureText", "2.25"],
+        ["measureText", "3"],
+        ["beginPath"],
+        ["rect", 2, 3, 600, 400],
+        ["clip"],
+        ["beginPath"],
+        ["moveTo", 34, 379],
+        ["lineTo", 594, 379],
+        ["stroke"],
+        ["beginPath"],
+        ["moveTo", 34, 287.5],
+        ["lineTo", 594, 287.5],
+        ["stroke"],
+        ["beginPath"],
+        ["moveTo", 34, 196],
+        ["lineTo", 594, 196],
+        ["stroke"],
+        ["beginPath"],
+        ["moveTo", 34, 104.5],
+        ["lineTo", 594, 104.5],
+        ["stroke"],
+        ["beginPath"],
+        ["moveTo", 34, 13],
+        ["lineTo", 594, 13],
+        ["stroke"],
+        ["save"],
+        ["beginPath"],
+        ["rect", 34, 13, 560, 366],
+        ["clip"],
+        ["beginPath"],
+        ["moveTo", 127.33333333333333, 257],
+        ["lineTo", 314, 135],
+        ["moveTo", 314, 135],
+        ["lineTo", 500.6666666666667, 13],
+        ["stroke"],
+        ["restore"],
+        ["fillText", "0", 28, 379, 24],
+        ["fillText", "0.75", 28, 287.5, 24],
+        ["fillText", "1.5", 28, 196, 24],
+        ["fillText", "2.25", 28, 104.5, 24],
+        ["fillText", "3", 28, 13, 24],
+        ["beginPath"],
+        ["moveTo", 34, 13],
+        ["lineTo", 34, 379],
+        ["stroke"],
+        ["beginPath"],
+        ["moveTo", 34, 379],
+        ["lineTo", 594, 379],
+        ["stroke"],
+        ["restore"]
+      ],
+      "paintResult": true
+    },
+    "scatterChart": {
+      "input": {
+        "kind": "chart_display",
+        "pair": {
+          "chart_path": "Chart/test.xml",
+          "ole_path": "BinData/test.ole",
+          "wrapper_node": 0,
+          "section_ordinal": 0,
+          "section_sha256": [
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0
+          ],
+          "declared_external": false
+        },
+        "host": {
+          "wrapper_node": 0,
+          "chart_node": 2,
+          "geometry": {
+            "width": 600,
+            "height": 400,
+            "width_relative": null,
+            "height_relative": null,
+            "treat_as_character": false,
+            "horizontal_offset": 0,
+            "vertical_offset": 0
+          },
+          "position": {
+            "flags": [null, null, null, null],
+            "relations": [null, null, null, null]
+          }
+        },
+        "plots": [
+          {
+            "node": 3,
+            "area_node": 2,
+            "kind": "scatterChart",
+            "series_nodes": [10]
+          }
+        ],
+        "plot_settings": [
+          {
+            "direction": null,
+            "grouping": null,
+            "vary_colors": null,
+            "gap_width": null,
+            "overlap": null,
+            "scatter_style": {
+              "node": 4,
+              "value": "marker"
+            },
+            "first_slice_angle": null,
+            "of_pie_type": null,
+            "second_pie_size": null,
+            "split_type": null,
+            "split_position": null,
+            "custom_split_node": null,
+            "stock": null,
+            "spatial": null,
+            "axis_references": [
+              {
+                "node": 800,
+                "value": 1
+              },
+              {
+                "node": 801,
+                "value": 2
+              }
+            ]
+          }
+        ],
+        "series_text": [],
+        "rich_text": [],
+        "point_settings": [],
+        "series_settings": [
+          {
+            "plot_node": 3,
+            "series_node": 10,
+            "index": null,
+            "order": null,
+            "marker": null,
+            "smooth": null,
+            "explosion": null
+          }
+        ],
+        "axes": [
+          {
+            "node": 900,
+            "area_node": 2,
+            "kind": "valAx",
+            "id": {
+              "node": 901,
+              "value": 1
+            },
+            "cross_axis": null,
+            "position": {
+              "node": 902,
+              "value": "l"
+            },
+            "deleted": null,
+            "scaling": null
+          },
+          {
+            "node": 910,
+            "area_node": 2,
+            "kind": "valAx",
+            "id": {
+              "node": 911,
+              "value": 2
+            },
+            "cross_axis": null,
+            "position": {
+              "node": 912,
+              "value": "b"
+            },
+            "deleted": null,
+            "scaling": null
+          }
+        ],
+        "axis_links": [
+          {
+            "plot_node": 3,
+            "reference_node": 800,
+            "id": 1,
+            "target": {
+              "status": "resolved",
+              "node": 900
+            }
+          },
+          {
+            "plot_node": 3,
+            "reference_node": 801,
+            "id": 2,
+            "target": {
+              "status": "resolved",
+              "node": 910
+            }
+          }
+        ],
+        "points": [
+          {
+            "cache_node": 12,
+            "point_node": 32,
+            "value_node": 33,
+            "index": 0,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "10"
+          },
+          {
+            "cache_node": 12,
+            "point_node": 34,
+            "value_node": 35,
+            "index": 1,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "20"
+          },
+          {
+            "cache_node": 12,
+            "point_node": 36,
+            "value_node": 37,
+            "index": 2,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "30"
+          },
+          {
+            "cache_node": 30,
+            "point_node": 50,
+            "value_node": 51,
+            "index": 0,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "1"
+          },
+          {
+            "cache_node": 30,
+            "point_node": 52,
+            "value_node": 53,
+            "index": 1,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "2"
+          },
+          {
+            "cache_node": 30,
+            "point_node": 54,
+            "value_node": 55,
+            "index": 2,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "3"
+          }
+        ],
+        "bindings": [
+          {
+            "point": 0,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 11,
+            "role": "x"
+          },
+          {
+            "point": 1,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 11,
+            "role": "x"
+          },
+          {
+            "point": 2,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 11,
+            "role": "x"
+          },
+          {
+            "point": 3,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 29,
+            "role": "y"
+          },
+          {
+            "point": 4,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 29,
+            "role": "y"
+          },
+          {
+            "point": 5,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 29,
+            "role": "y"
+          }
+        ],
+        "blank_policy": null,
+        "view_3d": null
+      },
+      "geometry": {
+        "state": "ready",
+        "exact": false,
+        "direction": "col",
+        "grouping": "standard",
+        "minimum": 0,
+        "maximum": 3,
+        "categories": [],
+        "category_ticks": [
+          {
+            "value": 0,
+            "fraction": 0
+          },
+          {
+            "value": 7.5,
+            "fraction": 0.25
+          },
+          {
+            "value": 15,
+            "fraction": 0.5
+          },
+          {
+            "value": 22.5,
+            "fraction": 0.75
+          },
+          {
+            "value": 30,
+            "fraction": 1
+          }
+        ],
+        "value_ticks": [
+          {
+            "value": 0,
+            "fraction": 0
+          },
+          {
+            "value": 0.75,
+            "fraction": 0.25
+          },
+          {
+            "value": 1.5,
+            "fraction": 0.5
+          },
+          {
+            "value": 2.25,
+            "fraction": 0.75
+          },
+          {
+            "value": 3,
+            "fraction": 1
+          }
+        ],
+        "legend": [
+          {
+            "series_node": 10,
+            "text": null
+          }
+        ],
+        "axes_hidden": {
+          "value": false,
+          "category": false
+        },
+        "scatter": {
+          "style": "marker",
+          "rows": [
+            {
+              "series_node": 10,
+              "points": [
+                {
+                  "index": 0,
+                  "x_ordinal": 0,
+                  "y_ordinal": 3,
+                  "x_value": 10,
+                  "y_value": 1,
+                  "break_before": true,
+                  "x": 0.3333333333333333,
+                  "y": 0.6666666666666667
+                },
+                {
+                  "index": 1,
+                  "x_ordinal": 1,
+                  "y_ordinal": 4,
+                  "x_value": 20,
+                  "y_value": 2,
+                  "break_before": false,
+                  "x": 0.6666666666666666,
+                  "y": 0.33333333333333337
+                },
+                {
+                  "index": 2,
+                  "x_ordinal": 2,
+                  "y_ordinal": 5,
+                  "x_value": 30,
+                  "y_value": 3,
+                  "break_before": false,
+                  "x": 1,
+                  "y": 0
+                }
+              ],
+              "smooth": false,
+              "curves": null,
+              "marker": {
+                "state": "ready",
+                "symbol": "circle",
+                "radius": 3,
+                "source_size": false,
+                "automatic": true,
+                "warnings": ["PreviewAutoMarkerSymbol", "PreviewDefaultMarkerSize"]
+              }
+            }
+          ]
+        },
+        "blank_policy": "gap",
+        "warnings": [
+          "SourceStylesNotApplied",
+          "PreviewDefaultBlankPolicy",
+          "PreviewGapBlanks",
+          "PreviewAutoMarkerSymbol",
+          "PreviewDefaultMarkerSize",
+          "PreviewScatterMarkerDots"
+        ]
+      },
+      "canvasCalls": [
+        ["save"],
+        ["measureText", "0"],
+        ["measureText", "0.75"],
+        ["measureText", "1.5"],
+        ["measureText", "2.25"],
+        ["measureText", "3"],
+        ["measureText", "0"],
+        ["measureText", "7.5"],
+        ["measureText", "15"],
+        ["measureText", "22.5"],
+        ["measureText", "30"],
+        ["beginPath"],
+        ["rect", 2, 3, 600, 400],
+        ["clip"],
+        ["beginPath"],
+        ["moveTo", 34, 379],
+        ["lineTo", 594, 379],
+        ["stroke"],
+        ["beginPath"],
+        ["moveTo", 34, 287.5],
+        ["lineTo", 594, 287.5],
+        ["stroke"],
+        ["beginPath"],
+        ["moveTo", 34, 196],
+        ["lineTo", 594, 196],
+        ["stroke"],
+        ["beginPath"],
+        ["moveTo", 34, 104.5],
+        ["lineTo", 594, 104.5],
+        ["stroke"],
+        ["beginPath"],
+        ["moveTo", 34, 13],
+        ["lineTo", 594, 13],
+        ["stroke"],
+        ["save"],
+        ["beginPath"],
+        ["rect", 34, 13, 560, 366],
+        ["clip"],
+        ["beginPath"],
+        ["arc", 220.66666666666666, 257, 3, 0, 6.283185307179586],
+        ["fill"],
+        ["beginPath"],
+        ["arc", 407.3333333333333, 135, 3, 0, 6.283185307179586],
+        ["fill"],
+        ["beginPath"],
+        ["arc", 594, 13, 3, 0, 6.283185307179586],
+        ["fill"],
+        ["restore"],
+        ["fillText", "0", 28, 379, 24],
+        ["fillText", "0.75", 28, 287.5, 24],
+        ["fillText", "1.5", 28, 196, 24],
+        ["fillText", "2.25", 28, 104.5, 24],
+        ["fillText", "3", 28, 13, 24],
+        ["fillText", "0", 34, 384, 112],
+        ["fillText", "7.5", 174, 384, 112],
+        ["fillText", "15", 314, 384, 112],
+        ["fillText", "22.5", 454, 384, 112],
+        ["fillText", "30", 594, 384, 112],
+        ["beginPath"],
+        ["moveTo", 34, 13],
+        ["lineTo", 34, 379],
+        ["stroke"],
+        ["beginPath"],
+        ["moveTo", 34, 379],
+        ["lineTo", 594, 379],
+        ["stroke"],
+        ["restore"]
+      ],
+      "paintResult": true
+    },
+    "pieChart": {
+      "input": {
+        "kind": "chart_display",
+        "pair": {
+          "chart_path": "Chart/test.xml",
+          "ole_path": "BinData/test.ole",
+          "wrapper_node": 0,
+          "section_ordinal": 0,
+          "section_sha256": [
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0
+          ],
+          "declared_external": false
+        },
+        "host": {
+          "wrapper_node": 0,
+          "chart_node": 2,
+          "geometry": {
+            "width": 600,
+            "height": 400,
+            "width_relative": null,
+            "height_relative": null,
+            "treat_as_character": false,
+            "horizontal_offset": 0,
+            "vertical_offset": 0
+          },
+          "position": {
+            "flags": [null, null, null, null],
+            "relations": [null, null, null, null]
+          }
+        },
+        "plots": [
+          {
+            "node": 3,
+            "area_node": 2,
+            "kind": "pieChart",
+            "series_nodes": [10]
+          }
+        ],
+        "plot_settings": [
+          {
+            "direction": null,
+            "grouping": {
+              "node": 4,
+              "value": "standard"
+            },
+            "vary_colors": null,
+            "gap_width": null,
+            "overlap": null,
+            "scatter_style": null,
+            "first_slice_angle": null,
+            "of_pie_type": null,
+            "second_pie_size": null,
+            "split_type": null,
+            "split_position": null,
+            "custom_split_node": null,
+            "stock": null,
+            "spatial": null,
+            "axis_references": []
+          }
+        ],
+        "series_text": [],
+        "rich_text": [],
+        "point_settings": [],
+        "series_settings": [
+          {
+            "plot_node": 3,
+            "series_node": 10,
+            "index": null,
+            "order": null,
+            "marker": null,
+            "smooth": null,
+            "explosion": null
+          }
+        ],
+        "axes": [],
+        "axis_links": [],
+        "points": [
+          {
+            "cache_node": 12,
+            "point_node": 32,
+            "value_node": 33,
+            "index": 0,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "1"
+          },
+          {
+            "cache_node": 12,
+            "point_node": 34,
+            "value_node": 35,
+            "index": 1,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "2"
+          },
+          {
+            "cache_node": 12,
+            "point_node": 36,
+            "value_node": 37,
+            "index": 2,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "3"
+          }
+        ],
+        "bindings": [
+          {
+            "point": 0,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 11,
+            "role": "value"
+          },
+          {
+            "point": 1,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 11,
+            "role": "value"
+          },
+          {
+            "point": 2,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 11,
+            "role": "value"
+          }
+        ],
+        "blank_policy": null,
+        "view_3d": null
+      },
+      "geometry": {
+        "state": "ready",
+        "exact": false,
+        "warnings": [
+          "PreviewPieFit",
+          "SourceStylesNotApplied",
+          "SourcePieDataLabelsNotApplied",
+          "PreviewDefaultPieAngle",
+          "PreviewDefaultPieExplosion"
+        ],
+        "pie": {
+          "series_node": 10,
+          "non_displayed_series_nodes": [],
+          "first_slice_angle": 0,
+          "explosion": 0,
+          "slices": [
+            {
+              "index": 0,
+              "ordinal": 0,
+              "value": 1,
+              "category": null,
+              "explosion": 0,
+              "color_index": 0,
+              "start_fraction": 0,
+              "end_fraction": 0.16666666666666666,
+              "start_angle": -1.5707963267948966,
+              "end_angle": -0.5235987755982989,
+              "center_x": 0.5,
+              "center_y": 0.5,
+              "radius": 0.42
+            },
+            {
+              "index": 1,
+              "ordinal": 1,
+              "value": 2,
+              "category": null,
+              "explosion": 0,
+              "color_index": 1,
+              "start_fraction": 0.16666666666666666,
+              "end_fraction": 0.5,
+              "start_angle": -0.5235987755982989,
+              "end_angle": 1.5707963267948966,
+              "center_x": 0.5,
+              "center_y": 0.5,
+              "radius": 0.42
+            },
+            {
+              "index": 2,
+              "ordinal": 2,
+              "value": 3,
+              "category": null,
+              "explosion": 0,
+              "color_index": 2,
+              "start_fraction": 0.5,
+              "end_fraction": 1,
+              "start_angle": 1.5707963267948966,
+              "end_angle": 4.71238898038469,
+              "center_x": 0.5,
+              "center_y": 0.5,
+              "radius": 0.42
+            }
+          ]
+        }
+      },
+      "canvasCalls": [
+        ["save"],
+        ["beginPath"],
+        ["rect", 2, 3, 600, 400],
+        ["clip"],
+        ["save"],
+        ["beginPath"],
+        ["rect", 10, 13, 584, 380],
+        ["clip"],
+        ["beginPath"],
+        ["moveTo", 302, 203],
+        ["arc", 302, 203, 159.6, -1.5707963267948966, -0.5235987755982989],
+        ["closePath"],
+        ["fill"],
+        ["beginPath"],
+        ["moveTo", 302, 203],
+        ["arc", 302, 203, 159.6, -0.5235987755982989, 1.5707963267948966],
+        ["closePath"],
+        ["fill"],
+        ["beginPath"],
+        ["moveTo", 302, 203],
+        ["arc", 302, 203, 159.6, 1.5707963267948966, 4.71238898038469],
+        ["closePath"],
+        ["fill"],
+        ["restore"],
+        ["restore"]
+      ],
+      "paintResult": true
+    },
+    "pie3DChart": {
+      "input": {
+        "kind": "chart_display",
+        "pair": {
+          "chart_path": "Chart/test.xml",
+          "ole_path": "BinData/test.ole",
+          "wrapper_node": 0,
+          "section_ordinal": 0,
+          "section_sha256": [
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0
+          ],
+          "declared_external": false
+        },
+        "host": {
+          "wrapper_node": 0,
+          "chart_node": 2,
+          "geometry": {
+            "width": 600,
+            "height": 400,
+            "width_relative": null,
+            "height_relative": null,
+            "treat_as_character": false,
+            "horizontal_offset": 0,
+            "vertical_offset": 0
+          },
+          "position": {
+            "flags": [null, null, null, null],
+            "relations": [null, null, null, null]
+          }
+        },
+        "plots": [
+          {
+            "node": 3,
+            "area_node": 2,
+            "kind": "pie3DChart",
+            "series_nodes": [10]
+          }
+        ],
+        "plot_settings": [
+          {
+            "direction": null,
+            "grouping": {
+              "node": 4,
+              "value": "standard"
+            },
+            "vary_colors": null,
+            "gap_width": null,
+            "overlap": null,
+            "scatter_style": null,
+            "first_slice_angle": null,
+            "of_pie_type": null,
+            "second_pie_size": null,
+            "split_type": null,
+            "split_position": null,
+            "custom_split_node": null,
+            "stock": null,
+            "spatial": null,
+            "axis_references": []
+          }
+        ],
+        "series_text": [],
+        "rich_text": [],
+        "point_settings": [],
+        "series_settings": [
+          {
+            "plot_node": 3,
+            "series_node": 10,
+            "index": null,
+            "order": null,
+            "marker": null,
+            "smooth": null,
+            "explosion": null
+          }
+        ],
+        "axes": [],
+        "axis_links": [],
+        "points": [
+          {
+            "cache_node": 12,
+            "point_node": 32,
+            "value_node": 33,
+            "index": 0,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "1"
+          },
+          {
+            "cache_node": 12,
+            "point_node": 34,
+            "value_node": 35,
+            "index": 1,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "2"
+          },
+          {
+            "cache_node": 12,
+            "point_node": 36,
+            "value_node": 37,
+            "index": 2,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "3"
+          }
+        ],
+        "bindings": [
+          {
+            "point": 0,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 11,
+            "role": "value"
+          },
+          {
+            "point": 1,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 11,
+            "role": "value"
+          },
+          {
+            "point": 2,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 11,
+            "role": "value"
+          }
+        ],
+        "blank_policy": null,
+        "view_3d": {
+          "node": 950,
+          "rotation_x": {
+            "node": 951,
+            "value": 20
+          },
+          "rotation_y": {
+            "node": 952,
+            "value": 25
+          },
+          "height_percent": {
+            "node": 953,
+            "value": 100
+          },
+          "depth_percent": {
+            "node": 954,
+            "value": 100
+          },
+          "perspective": {
+            "node": 956,
+            "value": 30
+          },
+          "right_angle_axes": {
+            "node": 955,
+            "value": false
+          },
+          "unparsed_children": false
+        }
+      },
+      "geometry": {
+        "state": "ready",
+        "exact": false,
+        "warnings": [
+          "PreviewPieFit",
+          "SourceStylesNotApplied",
+          "SourcePieDataLabelsNotApplied",
+          "PreviewDefaultPieAngle",
+          "PreviewDefaultPieExplosion",
+          "PreviewPie3DEllipse",
+          "PreviewPie3DThickness",
+          "PreviewPie3DWallOrder"
+        ],
+        "pie_3d": {
+          "pie": {
+            "series_node": 10,
+            "non_displayed_series_nodes": [],
+            "first_slice_angle": 0,
+            "explosion": 0,
+            "slices": [
+              {
+                "index": 0,
+                "ordinal": 0,
+                "value": 1,
+                "category": null,
+                "explosion": 0,
+                "color_index": 0,
+                "start_fraction": 0,
+                "end_fraction": 0.16666666666666666,
+                "start_angle": -1.5707963267948966,
+                "end_angle": -0.5235987755982989,
+                "center_x": 0.5,
+                "center_y": 0.5,
+                "radius": 0.42
+              },
+              {
+                "index": 1,
+                "ordinal": 1,
+                "value": 2,
+                "category": null,
+                "explosion": 0,
+                "color_index": 1,
+                "start_fraction": 0.16666666666666666,
+                "end_fraction": 0.5,
+                "start_angle": -0.5235987755982989,
+                "end_angle": 1.5707963267948966,
+                "center_x": 0.5,
+                "center_y": 0.5,
+                "radius": 0.42
+              },
+              {
+                "index": 2,
+                "ordinal": 2,
+                "value": 3,
+                "category": null,
+                "explosion": 0,
+                "color_index": 2,
+                "start_fraction": 0.5,
+                "end_fraction": 1,
+                "start_angle": 1.5707963267948966,
+                "end_angle": 4.71238898038469,
+                "center_x": 0.5,
+                "center_y": 0.5,
+                "radius": 0.42
+              }
+            ]
+          },
+          "ratio": 0.33036608954935215,
+          "wall_ratio": 0.2,
+          "rotation": 0.4363323129985824,
+          "walls": [
+            {
+              "slice_position": 1,
+              "start_angle": 0,
+              "end_angle": 2.007128639793479
+            },
+            {
+              "slice_position": 2,
+              "start_angle": 2.007128639793479,
+              "end_angle": 3.141592653589793
+            }
+          ]
+        }
+      },
+      "canvasCalls": [
+        ["save"],
+        ["beginPath"],
+        ["rect", 2, 3, 600, 400],
+        ["clip"],
+        ["save"],
+        ["beginPath"],
+        ["rect", 10, 13, 584, 380],
+        ["clip"],
+        ["beginPath"],
+        ["ellipse", 302, 187.04, 159.6, 52.7264278920766, 0, 0, 2.007128639793479],
+        ["lineTo", 234.5501254261844, 266.7463721812154],
+        [
+          "ellipse",
+          302,
+          218.95999999999998,
+          159.6,
+          52.7264278920766,
+          0,
+          2.007128639793479,
+          0,
+          true
+        ],
+        ["closePath"],
+        ["fill"],
+        ["fill"],
+        ["beginPath"],
+        ["ellipse", 302, 187.04, 159.6, 52.7264278920766, 0, 2.007128639793479, 3.141592653589793],
+        ["lineTo", 142.4, 218.95999999999998],
+        [
+          "ellipse",
+          302,
+          218.95999999999998,
+          159.6,
+          52.7264278920766,
+          0,
+          3.141592653589793,
+          2.007128639793479,
+          true
+        ],
+        ["closePath"],
+        ["fill"],
+        ["fill"],
+        ["beginPath"],
+        ["moveTo", 302, 187.04],
+        [
+          "ellipse",
+          302,
+          187.04,
+          159.6,
+          52.7264278920766,
+          0,
+          -1.1344640137963142,
+          -0.08726646259971654
+        ],
+        ["closePath"],
+        ["fill"],
+        ["beginPath"],
+        ["moveTo", 302, 187.04],
+        [
+          "ellipse",
+          302,
+          187.04,
+          159.6,
+          52.7264278920766,
+          0,
+          -0.08726646259971654,
+          2.007128639793479
+        ],
+        ["closePath"],
+        ["fill"],
+        ["beginPath"],
+        ["moveTo", 302, 187.04],
+        ["ellipse", 302, 187.04, 159.6, 52.7264278920766, 0, 2.007128639793479, 5.1487212933832724],
+        ["closePath"],
+        ["fill"],
+        ["restore"],
+        ["restore"]
+      ],
+      "paintResult": true
+    },
+    "ofPieChart": {
+      "input": {
+        "kind": "chart_display",
+        "pair": {
+          "chart_path": "Chart/test.xml",
+          "ole_path": "BinData/test.ole",
+          "wrapper_node": 0,
+          "section_ordinal": 0,
+          "section_sha256": [
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0
+          ],
+          "declared_external": false
+        },
+        "host": {
+          "wrapper_node": 0,
+          "chart_node": 2,
+          "geometry": {
+            "width": 600,
+            "height": 400,
+            "width_relative": null,
+            "height_relative": null,
+            "treat_as_character": false,
+            "horizontal_offset": 0,
+            "vertical_offset": 0
+          },
+          "position": {
+            "flags": [null, null, null, null],
+            "relations": [null, null, null, null]
+          }
+        },
+        "plots": [
+          {
+            "node": 3,
+            "area_node": 2,
+            "kind": "ofPieChart",
+            "series_nodes": [10]
+          }
+        ],
+        "plot_settings": [
+          {
+            "direction": null,
+            "grouping": {
+              "node": 4,
+              "value": "standard"
+            },
+            "vary_colors": null,
+            "gap_width": null,
+            "overlap": null,
+            "scatter_style": null,
+            "first_slice_angle": null,
+            "of_pie_type": null,
+            "second_pie_size": null,
+            "split_type": null,
+            "split_position": null,
+            "custom_split_node": null,
+            "stock": null,
+            "spatial": null,
+            "axis_references": []
+          }
+        ],
+        "series_text": [],
+        "rich_text": [],
+        "point_settings": [],
+        "series_settings": [
+          {
+            "plot_node": 3,
+            "series_node": 10,
+            "index": null,
+            "order": null,
+            "marker": null,
+            "smooth": null,
+            "explosion": null
+          }
+        ],
+        "axes": [],
+        "axis_links": [],
+        "points": [
+          {
+            "cache_node": 12,
+            "point_node": 32,
+            "value_node": 33,
+            "index": 0,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "1"
+          },
+          {
+            "cache_node": 12,
+            "point_node": 34,
+            "value_node": 35,
+            "index": 1,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "2"
+          },
+          {
+            "cache_node": 12,
+            "point_node": 36,
+            "value_node": 37,
+            "index": 2,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "3"
+          }
+        ],
+        "bindings": [
+          {
+            "point": 0,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 11,
+            "role": "value"
+          },
+          {
+            "point": 1,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 11,
+            "role": "value"
+          },
+          {
+            "point": 2,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 11,
+            "role": "value"
+          }
+        ],
+        "blank_policy": null,
+        "view_3d": null
+      },
+      "geometry": {
+        "state": "ready",
+        "exact": false,
+        "legend": [
+          {
+            "series_node": 10,
+            "color_key": 0,
+            "text": null
+          },
+          {
+            "series_node": 10,
+            "color_key": 1,
+            "text": null
+          },
+          {
+            "series_node": 10,
+            "color_key": 2,
+            "text": null
+          },
+          {
+            "series_node": 10,
+            "color_key": 3,
+            "text": "묶음",
+            "generated": true
+          }
+        ],
+        "warnings": [
+          "PreviewAutoSplitLastTwo",
+          "PreviewDefaultOfPieType",
+          "PreviewDefaultSecondPieSize",
+          "PreviewOfPieFit",
+          "PreviewCombinedCategory",
+          "SourceStylesNotApplied",
+          "SourcePieDataLabelsNotApplied",
+          "SourceChartConnectorsNotApplied",
+          "SourceChartGapNotApplied"
+        ],
+        "of_pie": {
+          "plot_type": "pie",
+          "groups": [
+            {
+              "kind": "primary",
+              "origin_angle": 2.617993877991494,
+              "slices": [
+                {
+                  "index": 0,
+                  "category": null,
+                  "category_ordinal": null,
+                  "value": 1,
+                  "value_ordinal": 0,
+                  "color_index": 0,
+                  "global_fraction": 0.16666666666666666,
+                  "ordinal": 0,
+                  "start_fraction": 0,
+                  "end_fraction": 0.16666666666666669,
+                  "start_angle": 2.617993877991494,
+                  "end_angle": 3.665191429188092,
+                  "center_x": 0.27999999999999997,
+                  "center_y": 0.5,
+                  "radius": 0.24
+                },
+                {
+                  "kind": "combined",
+                  "ordinal": null,
+                  "global_fraction": 0.8333333333333333,
+                  "member_indices": [1, 2],
+                  "category": "묶음",
+                  "color_index": 3,
+                  "start_fraction": 0.16666666666666669,
+                  "end_fraction": 1,
+                  "start_angle": 3.665191429188092,
+                  "end_angle": 8.901179185171081,
+                  "center_x": 0.27999999999999997,
+                  "center_y": 0.5,
+                  "radius": 0.24
+                }
+              ]
+            },
+            {
+              "kind": "secondary",
+              "origin_angle": 2.617993877991494,
+              "slices": [
+                {
+                  "index": 1,
+                  "category": null,
+                  "category_ordinal": null,
+                  "value": 2,
+                  "value_ordinal": 1,
+                  "color_index": 1,
+                  "global_fraction": 0.3333333333333333,
+                  "secondary_fraction": 0.4,
+                  "ordinal": 1,
+                  "start_fraction": 0,
+                  "end_fraction": 0.4,
+                  "start_angle": 2.617993877991494,
+                  "end_angle": 5.1312680008633285,
+                  "center_x": 0.78,
+                  "center_y": 0.5,
+                  "radius": 0.18
+                },
+                {
+                  "index": 2,
+                  "category": null,
+                  "category_ordinal": null,
+                  "value": 3,
+                  "value_ordinal": 2,
+                  "color_index": 2,
+                  "global_fraction": 0.5,
+                  "secondary_fraction": 0.6000000000000001,
+                  "ordinal": 2,
+                  "start_fraction": 0.4,
+                  "end_fraction": 1,
+                  "start_angle": 5.1312680008633285,
+                  "end_angle": 8.901179185171081,
+                  "center_x": 0.78,
+                  "center_y": 0.5,
+                  "radius": 0.18
+                }
+              ]
+            }
+          ],
+          "bars": [],
+          "membership": {
+            "state": "ready",
+            "exact": false,
+            "mode": "membership-preview",
+            "series_node": 10,
+            "plot_type": "pie",
+            "second_pie_size": 75,
+            "non_displayed_series_nodes": [],
+            "series_explosion": null,
+            "point_settings": [],
+            "source_split_type": null,
+            "split_mode": "auto",
+            "warnings": [
+              "PreviewAutoSplitLastTwo",
+              "PreviewDefaultOfPieType",
+              "PreviewDefaultSecondPieSize"
+            ],
+            "primary": [
+              {
+                "index": 0,
+                "category": null,
+                "category_ordinal": null,
+                "value": 1,
+                "value_ordinal": 0,
+                "color_index": 0,
+                "global_fraction": 0.16666666666666666
+              }
+            ],
+            "secondary": [
+              {
+                "index": 1,
+                "category": null,
+                "category_ordinal": null,
+                "value": 2,
+                "value_ordinal": 1,
+                "color_index": 1,
+                "global_fraction": 0.3333333333333333,
+                "secondary_fraction": 0.4
+              },
+              {
+                "index": 2,
+                "category": null,
+                "category_ordinal": null,
+                "value": 3,
+                "value_ordinal": 2,
+                "color_index": 2,
+                "global_fraction": 0.5,
+                "secondary_fraction": 0.6000000000000001
+              }
+            ],
+            "combined": {
+              "kind": "combined",
+              "ordinal": null,
+              "global_fraction": 0.8333333333333333,
+              "member_indices": [1, 2]
+            }
+          }
+        }
+      },
+      "canvasCalls": [
+        ["save"],
+        ["measureText", "묶음"],
+        ["beginPath"],
+        ["rect", 2, 3, 600, 400],
+        ["clip"],
+        ["save"],
+        ["beginPath"],
+        ["rect", 10, 13, 584, 362],
+        ["clip"],
+        ["save"],
+        ["beginPath"],
+        ["rect", 10, 13, 584, 362],
+        ["clip"],
+        ["beginPath"],
+        ["moveTo", 222.35999999999999, 194],
+        ["arc", 222.35999999999999, 194, 86.88, 2.617993877991494, 3.665191429188092],
+        ["closePath"],
+        ["fill"],
+        ["beginPath"],
+        ["moveTo", 222.35999999999999, 194],
+        ["arc", 222.35999999999999, 194, 86.88, 3.665191429188092, 8.901179185171081],
+        ["closePath"],
+        ["fill"],
+        ["restore"],
+        ["save"],
+        ["beginPath"],
+        ["rect", 10, 13, 584, 362],
+        ["clip"],
+        ["beginPath"],
+        ["moveTo", 403.36, 194],
+        ["arc", 403.36, 194, 65.16, 2.617993877991494, 5.1312680008633285],
+        ["closePath"],
+        ["fill"],
+        ["beginPath"],
+        ["moveTo", 403.36, 194],
+        ["arc", 403.36, 194, 65.16, 5.1312680008633285, 8.901179185171081],
+        ["closePath"],
+        ["fill"],
+        ["restore"],
+        ["restore"],
+        ["beginPath"],
+        ["rect", 10, 381, 8, 8],
+        ["fill"],
+        ["fillText", "묶음", 22, 379, 18],
+        ["restore"]
+      ],
+      "paintResult": true
+    },
+    "stockChart": {
+      "input": {
+        "kind": "chart_display",
+        "pair": {
+          "chart_path": "Chart/test.xml",
+          "ole_path": "BinData/test.ole",
+          "wrapper_node": 0,
+          "section_ordinal": 0,
+          "section_sha256": [
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0
+          ],
+          "declared_external": false
+        },
+        "host": {
+          "wrapper_node": 0,
+          "chart_node": 2,
+          "geometry": {
+            "width": 600,
+            "height": 400,
+            "width_relative": null,
+            "height_relative": null,
+            "treat_as_character": false,
+            "horizontal_offset": 0,
+            "vertical_offset": 0
+          },
+          "position": {
+            "flags": [null, null, null, null],
+            "relations": [null, null, null, null]
+          }
+        },
+        "plots": [
+          {
+            "node": 3,
+            "area_node": 2,
+            "kind": "stockChart",
+            "series_nodes": [10, 110, 210]
+          }
+        ],
+        "plot_settings": [
+          {
+            "direction": null,
+            "grouping": {
+              "node": 4,
+              "value": "standard"
+            },
+            "vary_colors": null,
+            "gap_width": null,
+            "overlap": null,
+            "scatter_style": null,
+            "first_slice_angle": null,
+            "of_pie_type": null,
+            "second_pie_size": null,
+            "split_type": null,
+            "split_position": null,
+            "custom_split_node": null,
+            "stock": {
+              "high_low_node": 600,
+              "up_down_node": null,
+              "up_node": null,
+              "down_node": null,
+              "gap_width": null
+            },
+            "spatial": null,
+            "axis_references": [
+              {
+                "node": 800,
+                "value": 1
+              },
+              {
+                "node": 801,
+                "value": 2
+              }
+            ]
+          }
+        ],
+        "series_text": [],
+        "rich_text": [],
+        "point_settings": [],
+        "series_settings": [
+          {
+            "plot_node": 3,
+            "series_node": 10,
+            "index": {
+              "value": 0
+            },
+            "order": {
+              "value": 0
+            },
+            "marker": null,
+            "smooth": null,
+            "explosion": null
+          },
+          {
+            "plot_node": 3,
+            "series_node": 110,
+            "index": {
+              "value": 1
+            },
+            "order": {
+              "value": 1
+            },
+            "marker": null,
+            "smooth": null,
+            "explosion": null
+          },
+          {
+            "plot_node": 3,
+            "series_node": 210,
+            "index": {
+              "value": 2
+            },
+            "order": {
+              "value": 2
+            },
+            "marker": null,
+            "smooth": null,
+            "explosion": null
+          }
+        ],
+        "axes": [
+          {
+            "node": 900,
+            "area_node": 2,
+            "kind": "valAx",
+            "id": {
+              "node": 901,
+              "value": 1
+            },
+            "cross_axis": null,
+            "position": {
+              "node": 902,
+              "value": "l"
+            },
+            "deleted": null,
+            "scaling": null
+          },
+          {
+            "node": 910,
+            "area_node": 2,
+            "kind": "catAx",
+            "id": {
+              "node": 911,
+              "value": 2
+            },
+            "cross_axis": null,
+            "position": {
+              "node": 912,
+              "value": "b"
+            },
+            "deleted": null,
+            "scaling": null
+          }
+        ],
+        "axis_links": [
+          {
+            "plot_node": 3,
+            "reference_node": 800,
+            "id": 1,
+            "target": {
+              "status": "resolved",
+              "node": 900
+            }
+          },
+          {
+            "plot_node": 3,
+            "reference_node": 801,
+            "id": 2,
+            "target": {
+              "status": "resolved",
+              "node": 910
+            }
+          }
+        ],
+        "points": [
+          {
+            "cache_node": 12,
+            "point_node": 32,
+            "value_node": 33,
+            "index": 0,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "7"
+          },
+          {
+            "cache_node": 12,
+            "point_node": 34,
+            "value_node": 35,
+            "index": 1,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "8"
+          },
+          {
+            "cache_node": 12,
+            "point_node": 36,
+            "value_node": 37,
+            "index": 2,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "9"
+          },
+          {
+            "cache_node": 112,
+            "point_node": 132,
+            "value_node": 133,
+            "index": 0,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "1"
+          },
+          {
+            "cache_node": 112,
+            "point_node": 134,
+            "value_node": 135,
+            "index": 1,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "2"
+          },
+          {
+            "cache_node": 112,
+            "point_node": 136,
+            "value_node": 137,
+            "index": 2,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "3"
+          },
+          {
+            "cache_node": 212,
+            "point_node": 232,
+            "value_node": 233,
+            "index": 0,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "4"
+          },
+          {
+            "cache_node": 212,
+            "point_node": 234,
+            "value_node": 235,
+            "index": 1,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "5"
+          },
+          {
+            "cache_node": 212,
+            "point_node": 236,
+            "value_node": 237,
+            "index": 2,
+            "kind": "numeric_literal",
+            "level_node": null,
+            "value": "6"
+          }
+        ],
+        "bindings": [
+          {
+            "point": 0,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 11,
+            "role": "value"
+          },
+          {
+            "point": 1,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 11,
+            "role": "value"
+          },
+          {
+            "point": 2,
+            "series_node": 10,
+            "plot_node": 3,
+            "role_node": 11,
+            "role": "value"
+          },
+          {
+            "point": 3,
+            "series_node": 110,
+            "plot_node": 3,
+            "role_node": 111,
+            "role": "value"
+          },
+          {
+            "point": 4,
+            "series_node": 110,
+            "plot_node": 3,
+            "role_node": 111,
+            "role": "value"
+          },
+          {
+            "point": 5,
+            "series_node": 110,
+            "plot_node": 3,
+            "role_node": 111,
+            "role": "value"
+          },
+          {
+            "point": 6,
+            "series_node": 210,
+            "plot_node": 3,
+            "role_node": 211,
+            "role": "value"
+          },
+          {
+            "point": 7,
+            "series_node": 210,
+            "plot_node": 3,
+            "role_node": 211,
+            "role": "value"
+          },
+          {
+            "point": 8,
+            "series_node": 210,
+            "plot_node": 3,
+            "role_node": 211,
+            "role": "value"
+          }
+        ],
+        "blank_policy": null,
+        "view_3d": null
+      },
+      "geometry": {
+        "state": "ready",
+        "exact": false,
+        "direction": "col",
+        "minimum": 1,
+        "maximum": 9,
+        "value_reversed": false,
+        "category_reversed": false,
+        "axes_hidden": {
+          "value": false,
+          "category": false
+        },
+        "categories": [
+          {
+            "index": 0,
+            "text": null,
+            "ambiguous": false
+          },
+          {
+            "index": 1,
+            "text": null,
+            "ambiguous": false
+          },
+          {
+            "index": 2,
+            "text": null,
+            "ambiguous": false
+          }
+        ],
+        "value_ticks": [
+          {
+            "value": 1,
+            "fraction": 0
+          },
+          {
+            "value": 3,
+            "fraction": 0.25
+          },
+          {
+            "value": 5,
+            "fraction": 0.5000000000000001
+          },
+          {
+            "value": 7,
+            "fraction": 0.7500000000000001
+          },
+          {
+            "value": 9,
+            "fraction": 1
+          }
+        ],
+        "legend": [
+          {
+            "series_node": 10,
+            "text": null
+          },
+          {
+            "series_node": 110,
+            "text": null
+          },
+          {
+            "series_node": 210,
+            "text": null
+          }
+        ],
+        "lines": [
+          {
+            "series_node": 10,
+            "marker": {
+              "state": "ready",
+              "symbol": "none",
+              "radius": 0,
+              "source_size": false,
+              "automatic": false,
+              "warnings": ["SourceMarkersNotApplied"]
+            },
+            "paths": [
+              [
+                {
+                  "series_node": 10,
+                  "value_ordinal": 0,
+                  "raw_value": "7",
+                  "value": 7,
+                  "x": 0.16666666666666666,
+                  "y": 0.2499999999999999,
+                  "index": 0
+                }
+              ],
+              [
+                {
+                  "series_node": 10,
+                  "value_ordinal": 1,
+                  "raw_value": "8",
+                  "value": 8,
+                  "x": 0.5,
+                  "y": 0.1250000000000001,
+                  "index": 1
+                }
+              ],
+              [
+                {
+                  "series_node": 10,
+                  "value_ordinal": 2,
+                  "raw_value": "9",
+                  "value": 9,
+                  "x": 0.8333333333333334,
+                  "y": 0,
+                  "index": 2
+                }
+              ]
+            ]
+          },
+          {
+            "series_node": 110,
+            "marker": {
+              "state": "ready",
+              "symbol": "none",
+              "radius": 0,
+              "source_size": false,
+              "automatic": false,
+              "warnings": ["SourceMarkersNotApplied"]
+            },
+            "paths": [
+              [
+                {
+                  "series_node": 110,
+                  "value_ordinal": 3,
+                  "raw_value": "1",
+                  "value": 1,
+                  "x": 0.16666666666666666,
+                  "y": 1,
+                  "index": 0
+                }
+              ],
+              [
+                {
+                  "series_node": 110,
+                  "value_ordinal": 4,
+                  "raw_value": "2",
+                  "value": 2,
+                  "x": 0.5,
+                  "y": 0.875,
+                  "index": 1
+                }
+              ],
+              [
+                {
+                  "series_node": 110,
+                  "value_ordinal": 5,
+                  "raw_value": "3",
+                  "value": 3,
+                  "x": 0.8333333333333334,
+                  "y": 0.75,
+                  "index": 2
+                }
+              ]
+            ]
+          },
+          {
+            "series_node": 210,
+            "marker": {
+              "state": "ready",
+              "symbol": "none",
+              "radius": 0,
+              "source_size": false,
+              "automatic": false,
+              "warnings": ["SourceMarkersNotApplied"]
+            },
+            "paths": [
+              [
+                {
+                  "series_node": 210,
+                  "value_ordinal": 6,
+                  "raw_value": "4",
+                  "value": 4,
+                  "x": 0.16666666666666666,
+                  "y": 0.625,
+                  "index": 0
+                }
+              ],
+              [
+                {
+                  "series_node": 210,
+                  "value_ordinal": 7,
+                  "raw_value": "5",
+                  "value": 5,
+                  "x": 0.5,
+                  "y": 0.4999999999999999,
+                  "index": 1
+                }
+              ],
+              [
+                {
+                  "series_node": 210,
+                  "value_ordinal": 8,
+                  "raw_value": "6",
+                  "value": 6,
+                  "x": 0.8333333333333334,
+                  "y": 0.3749999999999999,
+                  "index": 2
+                }
+              ]
+            ]
+          }
+        ],
+        "stock": {
+          "high_low": [
+            {
+              "index": 0,
+              "x": 0.16666666666666666,
+              "y1": 1,
+              "y2": 0.2499999999999999,
+              "minimum": 1,
+              "maximum": 7
+            },
+            {
+              "index": 1,
+              "x": 0.5,
+              "y1": 0.875,
+              "y2": 0.1250000000000001,
+              "minimum": 2,
+              "maximum": 8
+            },
+            {
+              "index": 2,
+              "x": 0.8333333333333334,
+              "y1": 0.75,
+              "y2": 0,
+              "minimum": 3,
+              "maximum": 9
+            }
+          ],
+          "bodies": [],
+          "gap_width": null
+        },
+        "warnings": [
+          "PreviewStockEndpoints",
+          "SourceStylesNotApplied",
+          "PreviewDefaultBlankPolicy",
+          "PreviewGapBlanks",
+          "SourceStockSeriesLinesNotApplied",
+          "SourceMarkersNotApplied"
+        ]
+      },
+      "canvasCalls": [
+        ["save"],
+        ["measureText", "1"],
+        ["measureText", "3"],
+        ["measureText", "5"],
+        ["measureText", "7"],
+        ["measureText", "9"],
+        ["beginPath"],
+        ["rect", 2, 3, 600, 400],
+        ["clip"],
+        ["beginPath"],
+        ["moveTo", 16, 379],
+        ["lineTo", 594, 379],
+        ["stroke"],
+        ["beginPath"],
+        ["moveTo", 16, 287.5],
+        ["lineTo", 594, 287.5],
+        ["stroke"],
+        ["beginPath"],
+        ["moveTo", 16, 195.99999999999997],
+        ["lineTo", 594, 195.99999999999997],
+        ["stroke"],
+        ["beginPath"],
+        ["moveTo", 16, 104.49999999999996],
+        ["lineTo", 594, 104.49999999999996],
+        ["stroke"],
+        ["beginPath"],
+        ["moveTo", 16, 13],
+        ["lineTo", 594, 13],
+        ["stroke"],
+        ["save"],
+        ["beginPath"],
+        ["rect", 16, 13, 578, 366],
+        ["clip"],
+        ["beginPath"],
+        ["moveTo", 112.33333333333333, 379],
+        ["lineTo", 112.33333333333333, 104.49999999999996],
+        ["stroke"],
+        ["beginPath"],
+        ["moveTo", 305, 333.25],
+        ["lineTo", 305, 58.75000000000004],
+        ["stroke"],
+        ["beginPath"],
+        ["moveTo", 497.6666666666667, 287.5],
+        ["lineTo", 497.6666666666667, 13],
+        ["stroke"],
+        ["restore"],
+        ["save"],
+        ["beginPath"],
+        ["rect", 16, 13, 578, 366],
+        ["clip"],
+        ["restore"],
+        ["fillText", "1", 10, 379, 6],
+        ["fillText", "3", 10, 287.5, 6],
+        ["fillText", "5", 10, 195.99999999999997, 6],
+        ["fillText", "7", 10, 104.49999999999996, 6],
+        ["fillText", "9", 10, 13, 6],
+        ["beginPath"],
+        ["moveTo", 16, 13],
+        ["lineTo", 16, 379],
+        ["stroke"],
+        ["beginPath"],
+        ["moveTo", 16, 379],
+        ["lineTo", 594, 379],
+        ["stroke"],
+        ["restore"]
+      ],
+      "paintResult": true
+    }
+  }
+}

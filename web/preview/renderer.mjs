@@ -1,3 +1,8 @@
+import {
+  objectSelectionRectangle,
+  paintObjectSelection,
+  sameObjectSelection,
+} from './object-selection-paint.mjs';
 import { objectActivationTarget } from './object-activation-target.mjs';
 import { createFormTextDraftMeasurements } from './form-text-draft-measurements.mjs';
 import { createFormAutoSizeFrames } from './form-autosize-frame.mjs';
@@ -134,7 +139,7 @@ import { paintPictureQuad } from './picture-quad-paint.mjs';
 import { previewLineLayers } from './line-layers.mjs';
 import { paintLine } from './line-paint.mjs';
 import { previewDrawingOutlineLayers } from './drawing-outline-layers.mjs';
-import { paintDrawingOutline } from './drawing-outline-paint.mjs';
+import { paintDrawingOutline as paintSourceDrawingOutline } from './drawing-outline-paint.mjs';
 import { layoutPageContent } from './page-content-layout.mjs';
 import { layoutHwp5PageContent } from './hwp5-page-layout.mjs';
 import { HWP5_WINDOW_LAYOUT_SCOPE, layoutHwp5WindowContent } from './hwp5-window-page-layout.mjs';
@@ -252,6 +257,11 @@ export function createRenderer(
   let viewScale = 1,
     closed = false;
   let selectedPicture = null;
+  let pictureSelectionReceipt = null,
+    objectSelectionReceipt = null;
+  let selectedObject = null,
+    selectedObjectSource = null,
+    selectedObjectEpoch = null;
   let pictureResizeSelection = null,
     pictureResizeGuide = null;
   let tableBackgroundReader = null;
@@ -414,12 +424,31 @@ export function createRenderer(
       bounds?.height,
     ];
   };
+  // Opaque presentation lineage is derived solely from the existing full stamp.
+  // Observation of any different/invalid scene retires its certificate, including ABA.
+  let observedPaintSceneStamp = null,
+    paintSceneCertificate = null;
+  const selectionPaintFrames = new WeakMap();
+  const samePaintStamp = (a, b) =>
+    a !== null &&
+    b !== null &&
+    a.length === b.length &&
+    a.every((value, index) => Object.is(value, b[index]));
+  const observePaintScene = (stamp) => {
+    if (!samePaintStamp(observedPaintSceneStamp, stamp)) {
+      observedPaintSceneStamp = stamp?.slice() ?? null;
+      paintSceneCertificate = stamp ? Object.freeze({}) : null;
+    }
+    return paintSceneCertificate;
+  };
   const isPaintedFrameCurrent = () => {
-    if (closed || projectionDeferred || holdingFrame || !paintedStamp) return false;
+    if (closed || projectionDeferred || holdingFrame || !paintedStamp) {
+      observePaintScene(null);
+      return false;
+    }
     const current = frameStamp();
-    return (
-      current !== null && paintedStamp.every((value, index) => Object.is(value, current[index]))
-    );
+    observePaintScene(current);
+    return samePaintStamp(paintedStamp, current);
   };
   const stopBlink = () => {
     clearInterval(blink);
@@ -502,6 +531,12 @@ export function createRenderer(
     return { pendingPictures, resourcesPending };
   };
   const paint = (output = null) => {
+    const paintedDrawingFrames = [];
+    const paintDrawingOutline = (ctx, source, origin, scrollTop) => {
+      const painted = paintSourceDrawingOutline(ctx, source, origin, scrollTop);
+      if (painted) paintedDrawingFrames.push({ source, rectangle: origin });
+      return painted;
+    };
     if (closed) return;
     const held = queuedTypingHold;
     if (held && projectionDeferred) {
@@ -958,6 +993,19 @@ export function createRenderer(
         rowTop(row, i) + rowVisualHeight(row) + shadowInsets.bottom <= viewport.scrollTop
       )
         return;
+      // A supported textbox with no stroke still has a current painted text frame.
+      if (row.drawingNode !== undefined) {
+        for (const drawing of layout.placedDrawings ?? [])
+          if (drawing.section === row.section && drawing.drawingNode === row.drawingNode)
+            paintedDrawingFrames.push({
+              source:
+                drawing.source ??
+                content.drawings?.find(
+                  (v) => v.section === drawing.section && v.drawingNode === drawing.drawingNode,
+                )?.source,
+              rectangle: drawing.rectangle,
+            });
+      }
       paintRowTransform(ctx, row, viewport.scrollTop, () => {
         paintTextSelectionBackground(
           ctx,
@@ -1420,16 +1468,55 @@ export function createRenderer(
           ctx.fillRect(r.x, r.y + r.height + 1 - viewport.scrollTop, r.width, 1),
         );
     }
+    let objectSelectionPaint = null,
+      paintedObjectReceipt = null,
+      paintedPictureProof = null;
+    if (
+      !output &&
+      !draft &&
+      !interaction.historyPending &&
+      !interaction.composition &&
+      selectedObjectSource === content &&
+      selectedObjectEpoch === resourceEpoch
+    ) {
+      const rectangle = objectSelectionRectangle(
+        selectedObject,
+        content,
+        paintedCharts,
+        paintedDrawingFrames,
+      );
+      if (
+        rectangle &&
+        paintRowTransform(ctx, rectangle, viewport.scrollTop, () =>
+          paintObjectSelection(ctx, rectangle, viewport.scrollTop),
+        )
+      ) {
+        objectSelectionPaint = { target: selectedObject, rectangle };
+        paintedObjectReceipt = objectSelectionReceipt;
+      }
+    }
     if (selectedPicture) {
       const item = [...paintedPictures.front, ...paintedPictures.behind].find(
         (value) =>
           value.picture.section === selectedPicture.section &&
           value.picture.pictureNode === selectedPicture.pictureNode,
       );
-      if (item)
-        paintRowTransform(ctx, item, viewport.scrollTop, () =>
-          paintPictureSelection(ctx, item, viewport.scrollTop),
-        );
+      if (item) {
+        let painted = false;
+        const target = { kind: 'picture', ...selectedPicture },
+          receipt = pictureSelectionReceipt;
+        if (
+          paintRowTransform(ctx, item, viewport.scrollTop, () => {
+            painted = paintPictureSelection(ctx, item, viewport.scrollTop);
+          }) &&
+          painted &&
+          !output &&
+          !draft &&
+          !interaction.historyPending &&
+          !interaction.composition
+        )
+          paintedPictureProof = { target, receipt };
+      }
     }
     const resize = pictureResizeSelection?.();
     if (resize) {
@@ -1471,13 +1558,37 @@ export function createRenderer(
     canvas.dataset.showTransparentTableLines = String(showTransparentTableLines);
     canvas.dataset.paragraphMarks = String(displayOptions.paragraphMarks);
     canvas.dataset.paragraphMarkCount = String(paintedParagraphMarks);
+    const intentSources = {
+      content: display,
+      layout,
+      charts: paintedCharts.slice(),
+      pictures: { front: paintedPictures.front.slice(), behind: paintedPictures.behind.slice() },
+      outlines: {
+        front: drawingOutlineLayers.front.slice(),
+        behind: drawingOutlineLayers.behind.slice(),
+      },
+      paintOrder: picturePaintOrder.slice(),
+      borderTolerance: 5 / viewScale,
+    };
     paintedFrame = {
+      objectIntentAtLogicalPoint: (x, y) =>
+        objectActivationTarget(
+          {
+            ...intentSources,
+            picture: hitPictureLayers(intentSources.pictures, x, y, () => true, {
+              paintOrder: intentSources.paintOrder,
+            }),
+          },
+          x,
+          y,
+        ),
       layout,
       content: display,
       resourceDocument,
       resourceEpoch,
       scrollTop: viewport.scrollTop,
       displayOptions,
+      objectSelection: objectSelectionPaint,
       paragraphMarkCount: paintedParagraphMarks,
       formattingMarkCount: paintedFormattingMarks,
       caret: paintedCaret,
@@ -1532,6 +1643,15 @@ export function createRenderer(
     // 알림·후처리까지 성공한 프레임만 다음 입력의 근거로 게시합니다.
     paintedInteractionStamp =
       interactionRevision === paintInteractionRevision ? paintInteractionStamp : null;
+    // Only a completed painter owns these receipts. Shapes/cross-renderer frames cannot forge them.
+    selectionPaintFrames.set(paintedFrame, {
+      certificate: observePaintScene(paintedStamp),
+      object:
+        objectSelectionPaint && paintedObjectReceipt
+          ? { target: objectSelectionPaint.target, receipt: paintedObjectReceipt }
+          : null,
+      picture: paintedPictureProof,
+    });
   };
   let frame = 0;
   let queuedTypingHold = null;
@@ -2052,7 +2172,64 @@ export function createRenderer(
       const value = chartResources.get(section, wrapper)?.value;
       return value ? chartBarPrimitives(value, plotNode) : null;
     },
+    selectObject(target) {
+      objectSelectionReceipt = target ? Object.freeze({}) : null;
+      selectedObject = target ? Object.freeze({ ...target }) : null;
+      selectedObjectSource = target ? content : null;
+      selectedObjectEpoch = target ? resourceEpoch : null;
+      schedule();
+    },
+    canAcknowledgeObjectSelectionPaint(previousFrame, nextFrame, target) {
+      if (
+        nextFrame !== paintedFrame ||
+        !isPaintedFrameCurrent() ||
+        draft ||
+        interaction.historyPending ||
+        interaction.composition
+      )
+        return false;
+      const previous = selectionPaintFrames.get(previousFrame),
+        next = selectionPaintFrames.get(nextFrame);
+      if (
+        !previous?.certificate ||
+        previous.certificate !== next?.certificate ||
+        next.certificate !== paintSceneCertificate
+      )
+        return false;
+      const picture = target.kind === 'picture';
+      const before = picture ? previous.picture : previous.object;
+      const after = picture ? next.picture : next.object;
+      const live = picture ? pictureSelectionReceipt : objectSelectionReceipt;
+      const same = (value) =>
+        picture
+          ? value?.kind === 'picture' &&
+            value.section === target.section &&
+            value.pictureNode === target.pictureNode
+          : sameObjectSelection(value, target);
+      return (
+        !!live &&
+        before?.receipt === live &&
+        after?.receipt === live &&
+        same(before.target) &&
+        same(after.target) &&
+        (picture
+          ? selectedPicture?.section === target.section &&
+            selectedPicture?.pictureNode === target.pictureNode
+          : this.isObjectSelectionPainted(target))
+      );
+    },
+    isObjectSelectionPainted(target) {
+      return (
+        isPaintedFrameCurrent() &&
+        !draft &&
+        sameObjectSelection(paintedFrame?.objectSelection?.target, target) &&
+        sameObjectSelection(selectedObject, target) &&
+        selectedObjectSource === content &&
+        selectedObjectEpoch === resourceEpoch
+      );
+    },
     selectPicture(picture) {
+      pictureSelectionReceipt = picture ? Object.freeze({}) : null;
       selectedPicture = picture
         ? { section: picture.section, pictureNode: picture.pictureNode }
         : null;
@@ -2177,6 +2354,8 @@ export function createRenderer(
       resourceEpoch = nextResourceEpoch;
       resourceDocument = nextResourceDocument;
       ownedBodyDraftProjection = null;
+      if (value !== content || nextResourceEpoch !== selectedObjectEpoch)
+        selectedObject = selectedObjectSource = selectedObjectEpoch = null;
       content = value;
       geometryEvidence = nextGeometryEvidence;
       // Source version continuity must survive skipped intermediate layouts.
@@ -2394,6 +2573,8 @@ export function createRenderer(
       return !closed && sourceObservationState === state && state?.content === content;
     },
     clear() {
+      pictureSelectionReceipt = objectSelectionReceipt = null;
+      selectedObject = selectedObjectSource = selectedObjectEpoch = null;
       cellHeightMeasurement = cellHeightCapture = null;
       queuedTypingHold = null;
       rendererGlyphMetrics.clear();
@@ -2746,6 +2927,8 @@ export function createRenderer(
       onGeometry = callback;
     },
     close() {
+      pictureSelectionReceipt = objectSelectionReceipt = null;
+      selectedObject = selectedObjectSource = selectedObjectEpoch = null;
       formAutoSizeFrames.dispose();
       formTextDraftMeasurements.dispose();
       currentFormDraftContexts = new WeakMap();

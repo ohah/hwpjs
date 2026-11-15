@@ -16,6 +16,7 @@ import { validChartPointSettings } from './chart-point-settings.mjs';
 import { validChartStockSettings } from './chart-stock-settings.mjs';
 import { validChartView3D } from './chart-view-3d.mjs';
 import { validChartSpatialSettings } from './chart-spatial-settings.mjs';
+import { hasChartFamilyFields, chartFamilyDisplayNodes } from './chart-family-display-settings.mjs';
 const plotKinds = new Set([
   'areaChart',
   'area3DChart',
@@ -87,8 +88,14 @@ export function decodeChartDisplay(bytes) {
     Array.isArray(value.series_settings) &&
     value.series_settings.some((row) => row?.stroke != null);
   const hasMajorTicks = value.axes.some((axis) => axis?.major_tick_mark != null);
+  const hasFamilies = value.plot_settings.some(hasChartFamilyFields);
+  const familyClaims = new Map();
   const occupied =
-    value.view_3d == null && value.blank_policy == null && !hasStrokes && !hasMajorTicks
+    value.view_3d == null &&
+    value.blank_policy == null &&
+    !hasStrokes &&
+    !hasMajorTicks &&
+    !hasFamilies
       ? null
       : new Set();
   let previousPlot = -1;
@@ -132,7 +139,7 @@ export function decodeChartDisplay(bytes) {
     require(
       field(
         settings.scatter_style,
-        oneOf(['line', 'lineMarker', 'marker', 'smooth', 'smoothMarker']),
+        oneOf(['none', 'line', 'lineMarker', 'marker', 'smooth', 'smoothMarker']),
         plot.node,
       ),
     );
@@ -188,7 +195,14 @@ export function decodeChartDisplay(bytes) {
       }
     require(validChartStockSettings(settings.stock, plot.kind, plot.node, leaves));
     require(validChartSpatialSettings(settings.spatial, plot.kind, plot.node, leaves));
-    for (const node of leaves) occupied?.add(node);
+    const familyNodes = chartFamilyDisplayNodes(settings, plot.kind, plot.node, leaves);
+    require(familyNodes !== null);
+    const localFamilyNodes = new Set(familyNodes);
+    for (const node of familyNodes) {
+      require(!familyClaims.has(node));
+      familyClaims.set(node, plot);
+    }
+    for (const node of leaves) if (!localFamilyNodes.has(node)) occupied?.add(node);
     for (const reference of settings.axis_references) {
       require(reference !== null && field(reference, uint, plot.node));
       const key = plot.node + ':' + reference.node;
@@ -357,5 +371,27 @@ export function decodeChartDisplay(bytes) {
     occupied.add(value.blank_policy.node);
   }
   require(validChartView3D(value.view_3d, occupied));
+  if (value.view_3d != null) {
+    occupied?.add(value.view_3d.node);
+    for (const key of [
+      'rotation_x',
+      'rotation_y',
+      'height_percent',
+      'depth_percent',
+      'right_angle_axes',
+      'perspective',
+    ])
+      if (value.view_3d[key] != null) occupied?.add(value.view_3d[key].node);
+  }
+  // Family leaves are added last so a claim cannot hide an alias to a later
+  // axis/point/text/stroke/camera identity. Section-tree IDs are unrelated.
+  for (const [node, owner] of familyClaims) {
+    require(!occupied.has(node));
+    for (const plot of value.plots)
+      if (plot.area_node === owner.area_node && plot.node > owner.node) require(node < plot.node);
+    for (const axis of value.axes)
+      if (axis.area_node === owner.area_node && axis.node > owner.node) require(node < axis.node);
+    occupied.add(node);
+  }
   return value;
 }

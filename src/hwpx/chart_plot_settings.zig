@@ -5,13 +5,21 @@ const Kind = @import("chart_plot_kind.zig").Kind;
 const uri = @import("chart_namespace.zig").uri;
 pub const Direction = enum { bar, col };
 pub const Grouping = enum { standard, clustered, stacked, percentStacked };
-pub const ScatterStyle = enum { line, lineMarker, marker, smooth, smoothMarker };
+pub const ScatterStyle = enum { none, line, lineMarker, marker, smooth, smoothMarker };
 pub const OfPieType = enum { pie, bar };
 // MS-OE376 2.1.1645 distinguishes standard auto from Office's narrower profile.
 pub const SplitType = enum { auto, cust, percent, pos, val };
 pub const Field = @import("chart_scalar_field.zig").Field;
 pub const Options = struct { max_axis_references: usize = 16, max_attribute_bytes: usize = @import("chart_scalar_field.zig").default_max_attribute_bytes };
 pub const Settings = struct {
+    hole_size: ?Field(u32) = null,
+    radar_style: ?Field(@import("chart_family_settings.zig").RadarStyle) = null,
+    bubble_scale: ?Field(u32) = null,
+    size_represents: ?Field(@import("chart_family_settings.zig").SizeRepresents) = null,
+    show_negative_bubbles: ?Field(bool) = null,
+    bubble_3d: ?Field(bool) = null,
+    wireframe: ?Field(bool) = null,
+    family_unparsed_children: ?bool = null,
     direction: ?Field(Direction) = null,
     grouping: ?Field(Grouping) = null,
     vary_colors: ?Field(bool) = null,
@@ -40,6 +48,7 @@ fn field(comptime T: type, a: std.mem.Allocator, tree: *const Tree, node: usize,
 pub fn read(a: std.mem.Allocator, tree: *const Tree, plot: usize, options: Options) !Settings {
     const plot_kind = @import("chart_plot_kind.zig").selected(tree, plot) orelse return error.InvalidChartPlot;
     var output: Settings = .{ .axis_references = &.{} };
+    try @import("chart_family_settings.zig").read(a, tree, plot, options.max_attribute_bytes, &output);
     output.spatial = try @import("chart_spatial_settings.zig").read(a, tree, plot, options.max_attribute_bytes);
     if (plot_kind == .stockChart) output.stock = try @import("chart_stock_settings.zig").read(a, tree, plot, options.max_attribute_bytes);
     var axes: std.ArrayList(Field(u32)) = .empty;

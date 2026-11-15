@@ -57,7 +57,7 @@ const options = {
 };
 ```
 
-크기·baseUnit은 HWPUNIT 원값이다. 수식 스크립트는 원문으로 저장하며 크기를 자동 계산하지 않는다. 빈 스크립트도 허용한다. 차트는 표준 2D 세로 막대형 한 종류이며 Core `values`는 유한한 number 배열이다. 범주·계열의 순서를 유지하고 모든 계열의 값 수가 범주 수와 같아야 한다. 범주 최대4096·계열 최대64·총 점 최대16384, 수식 스크립트 최대1MiB, 직렬화 요청 최대8MiB의 제한을 적용한다.
+크기·baseUnit은 HWPUNIT 원값이다. 수식 스크립트는 원문으로 저장하며 크기를 자동 계산하지 않는다. 빈 스크립트도 허용한다. `chart`를 생략하면 기존 2D 묶은 세로 막대형 요청을 유지한다. 명시한 `chart`는 아래 종류별 계약을 사용한다. Core `values`는 유한한 number 배열이다. 범주·계열의 순서를 유지한다. 범주형·주가·표면형은 각 계열의 값 수가 범주 수와 같아야 한다. 분산형·버블은 categories가 빈 배열이고, 각 계열의 X·Y 값 수와 버블 크기 값 수가 같아야 한다. 범주 최대4096·계열 최대64·총 점 최대16384, 수식 스크립트 최대1MiB, 직렬화 요청 최대8MiB의 제한을 적용한다.
 
 큐 진입 전에 배열·문자열·target을 소유 복사하고, 큐 및 Runtime admission에서 현재성을 다시 검사한다. 같은 캡처의 두 번째 요청이 첫 생성 뒤 stale이 되면 거부한다. 앞선 생성의 이력을 취소하거나 두 번 실행하지 않는다.
 
@@ -83,11 +83,13 @@ SDK의 차트 wire 값은 검증된 유한 숫자 문자열이며 Core의 number
 
 ## 현재 입력 메뉴
 
-데모 `입력 → 차트`와 `입력 → 수식`, 추가 도구의 차트·수식 버튼은 같은 생성 경로를 사용한다. 기존 `도구 → 기존 차트 데이터 편집`·`기존 수식 편집`과 구별한다. 차트 창은 범주·계열·숫자 grid와 표준 2D 세로 막대형만 제공한다. 수식 창은 script와 명시 크기, 고급 metadata를 받는다. UI 크기 입력은 mm, baseUnit 입력은 pt를 기존 단위 helper로 변환한다.
+데모 `입력 → 차트`와 `입력 → 수식`, 추가 도구의 차트·수식 버튼은 같은 생성 경로를 사용한다. 기존 `도구 → 기존 차트 데이터 편집`·`기존 수식 편집`과 구별한다. 차트 창은 종류·종류별 옵션과 범주·계열·숫자 grid를 제공한다. 분산형·버블은 X·Y를, 버블은 크기도 직접 입력한다. 주가형은 HLC/OHLC 역할 순서를 입력한다. 값을 다른 종류로 자동 추정하지 않는다. 수식 창은 script와 명시 크기, 고급 metadata를 받는다. UI 크기 입력은 mm, baseUnit 입력은 pt를 기존 단위 helper로 변환한다.
 
 창을 열 때 현재 selection/state를 캡처하고 실행 직전에 다시 검사한다. 미지원 엔진·이력·owner 또는 선택 변경은 이유와 함께 비활성화/거부한다. 기존 개체 편집 버튼이 활성이라는 이유로 생성 버튼을 활성화하지 않는다. 메뉴 항목이 존재한다는 사실은 권한이나 GUI 통과 증거가 아니다.
 
 ## 검증 계층
+
+다음 기본 생성 검증과 16종 확장 검증은 별도 분모다. 확장은 포맷을 적용한 소스의 Native 집중25개와 실제 Core 배포 산출물16종·소스 facade16종에서 생성·저장·undo/redo·재열기를 확인했다. 저장한32개의 ZIP/XML·내장 OLE/CFB·종류별 데이터·축 연결은 독립 비교기로 일반/최적화 모드에서 확인했다. 구형 엔진 거부·할당 전 입력 거부·기존 기본 요청 보존도 별도로 검사했다. 실제 공개 umbrella 패키지의 표준 exports 경로는 막대·버블·주가·표면형4개의 생성·저장·재열기·undo/redo로 별도 확인했다. 앞의32개를 umbrella32개로 합산하지 않는다. 이는 설치한 npm 패키지나 브라우저32개 검사라는 뜻이 아니며, 실제 Canvas·공개 배포는 각각 별도 확인한다.
 
 - 합성27: DTO·optional ABI·소유 복사·큐/현재성·결과 분류. 실제 WASM·GUI 검사가 아니다.
 - 실제 일반 SDK13: 소스 facade6/Core7의 단일 이력, 저장·재열기·undo/redo, 구879 부재 거부·Native 거절 후 redo 보존. 명시 WASM과 고정 합성 HWPX를 사용한 Node 검사다.
@@ -96,3 +98,38 @@ SDK의 차트 wire 값은 검증된 유한 숫자 문자열이며 Core의 number
 - GUI 생성·저장·편집·fresh reopen은 실제 브라우저/엔진/소스와 종료 기록을 별도로 갖는다. headless·합성·Native 통과는 모든 HWPX/한컴 상호운용·전체 편집 지원을 뜻하지 않는다.
 
 정규 명령과 CI 입력은 [개발·검증 명령](development-commands.md#hwpx-inline-object-creation)을 따른다. 최종 공개 채택 전에는 새 WASM의 기존 HWP5 profile/owner-window 회귀도 별도로 유지한다.
+
+## 차트 종류와 데이터
+
+명시적 종류는 Native `hwpx_edit_chart_create_profile_version()`의 값이 1인 엔진에서만 사용한다. 구 엔진에서 종류를 무시하고 기본 막대형으로 만드는 fallback은 없다. Core의 `getInlineObjectInsertAvailability(state, 'chart', profile)`에도 같은 profile을 전달할 수 있다.
+
+| 종류              | `chart.kind`                                           | 추가 필수 옵션·데이터                                                                       |
+| ----------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| 2D·3D 막대        | `barChart`, `bar3DChart`                               | `bar_direction: 'col' 또는 'bar'`, `grouping`                                               |
+| 2D·3D 꺾은선·영역 | `lineChart`, `line3DChart`, `areaChart`, `area3DChart` | `grouping`                                                                                  |
+| 2D·3D 원형        | `pieChart`, `pie3DChart`                               | 계열 1개, 음수 불가                                                                         |
+| 도넛              | `doughnutChart`                                        | 계열별 고리, 음수 불가                                                                      |
+| 보조 원형         | `ofPieChart`                                           | `of_pie_type: 'pie' 또는 'bar'`, 계열 1개, 음수 불가                                        |
+| 방사형            | `radarChart`                                           | `radar_style: 'standard', 'marker', 'filled'` 중 하나                                       |
+| 분산형            | `scatterChart`                                         | `scatter_style`, 빈 `categories`, 계열별 `x_values`                                         |
+| 버블              | `bubbleChart`                                          | 빈 `categories`, 계열별 `x_values`, 음수가 아닌 `bubble_sizes`                              |
+| 주가형            | `stockChart`                                           | `stock_layout: 'highLowClose' 또는 'openHighLowClose'`, 정확한 HLC/OHLC 순서의 `stock_role` |
+| 2D·3D 표면        | `surfaceChart`, `surface3DChart`                       | `wireframe: boolean`, 최소 2계열 × 2범주의 직사각형 행렬                                    |
+
+`grouping`은 `standard`, `stacked`, `percentStacked`이며 막대형만 `clustered`도 허용한다. `scatter_style`은 `none`, `line`, `lineMarker`, `marker`, `smooth`, `smoothMarker` 중 하나다. 주가형은 low≤open/close≤high 관계를 검사한다. 종류에 불필요한 필드나 자동 생성한 X·버블 크기·주가 역할은 허용하지 않는다.
+
+Core의 `values`·`x_values`·`bubble_sizes`는 number 배열이고 소스 facade wire는 검증된 십진 문자열 배열이다. 명시적 차트 종류를 선택한 UI는 빈 문자열·16진수·공백을 숫자로 바꾸지 않으며 number 변환으로 십진값이 달라지면 거부한다. chart를 생략한 기존 기본 입력 경로는 종전 number 변환을 유지하므로 이 정밀도 검사와 구분한다. 명시 종류의 전체 점 예산은 보조 캐시도 포함하므로 기존 기본 막대형과 허용 최대값이 항상 같지는 않다.
+
+예를 들어 기존 Core 명령의 `options`를 다음으로 바꾸면 명시적 X·Y 분산형을 생성한다.
+
+```ts
+const options = {
+  width: 20000,
+  height: 12000,
+  chart: { kind: 'scatterChart', scatter_style: 'marker' },
+  categories: [],
+  series: [{ name: '측정값', x_values: [1, 3, 8], values: [10, 20, 15] }],
+} as const;
+```
+
+종류별 생성·데이터 저장 지원은 모든 한컴 버전의 조판·시각 결과와 완전히 같다는 뜻이 아니다. HWP5 새 차트 생성, 셀 안 생성, 그룹·혼합 차트 및 임의 서식·레이아웃 편집은 별도 미지원 범위다.

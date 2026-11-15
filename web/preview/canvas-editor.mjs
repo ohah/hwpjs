@@ -1206,6 +1206,45 @@ export function createCanvasEditor({
       setSelection(anchor, next);
     }
   });
+  // Shared actual picture-selection transition; both pointer and object-mode
+  // admission use this existing SSOT rather than fabricating a selected picture.
+  const selectPaintedPicture = (picture) => {
+    if (
+      events.signal.aborted ||
+      historyPending ||
+      composing ||
+      pending ||
+      input.value !== committed ||
+      controls.busy()
+    ) {
+      report('입력 반영 중에는 그림 선택을 변경할 수 없습니다.');
+      return false;
+    }
+    if (drag !== null && canvas.hasPointerCapture(drag)) canvas.releasePointerCapture(drag);
+    rangePermission.invalidate();
+    splitPermission.invalidate();
+    changedTypingIntent();
+    typingFont = null;
+    richTyping = null;
+    changedTypingIntent();
+    typingProperties = null;
+    draftSelection = null;
+    selectionOrigin = 'canvas';
+    anchor = null;
+    focus = null;
+    target = null;
+    drag = null;
+    input.blur();
+    input.value = '';
+    committed = '';
+    input.disabled = true;
+    renderer.selectPicture?.(picture.picture);
+    paint();
+    report('그림을 선택했습니다. 지원되는 그림은 크기를 입력해 변경할 수 있습니다.');
+    if (!controls.ready() && !controls.busy())
+      controls.request({ kind: 'enable', origin: 'canvas' });
+    return true;
+  };
   listen(canvas, 'pointerdown', (event) => {
     if (event.button !== 0) return;
     if (historyPaintBarrier.pending) {
@@ -1234,33 +1273,7 @@ export function createCanvasEditor({
         : null;
     if (picture) {
       event.preventDefault();
-      if (historyPending || composing || pending || input.value !== committed || controls.busy()) {
-        report('입력 반영 중에는 그림 선택을 변경할 수 없습니다.');
-        return;
-      }
-      if (drag !== null && canvas.hasPointerCapture(drag)) canvas.releasePointerCapture(drag);
-      rangePermission.invalidate();
-      splitPermission.invalidate();
-      changedTypingIntent();
-      typingFont = null;
-      richTyping = null;
-      changedTypingIntent();
-      typingProperties = null;
-      draftSelection = null;
-      selectionOrigin = 'canvas';
-      anchor = null;
-      focus = null;
-      target = null;
-      drag = null;
-      input.blur();
-      input.value = '';
-      committed = '';
-      input.disabled = true;
-      renderer.selectPicture?.(picture.picture);
-      paint();
-      report('그림을 선택했습니다. 지원되는 그림은 크기를 입력해 변경할 수 있습니다.');
-      if (!controls.ready() && !controls.busy())
-        controls.request({ kind: 'enable', origin: 'canvas' });
+      selectPaintedPicture(picture);
       return;
     }
     const next = point(event);
@@ -4268,6 +4281,55 @@ export function createCanvasEditor({
       input.setAttribute('aria-busy', 'true');
       return true;
     },
+    // Internal UX transition only. This never returns a Native/edit target.
+    selectPaintedObject(identity, x, y, current) {
+      if (
+        events.signal.aborted ||
+        !this.settled() ||
+        drag !== null ||
+        historyPaintBarrier.pending ||
+        !controls.ready() ||
+        controls.busy() ||
+        renderer.readOnlyPreviewAtLogicalPoint?.(x, y) === true ||
+        typeof current !== 'function' ||
+        !current()
+      )
+        return false;
+      const actual = renderer.objectAtLogicalPoint?.(x, y);
+      const field =
+        identity?.kind === 'chart'
+          ? 'wrapper'
+          : identity?.kind === 'picture'
+            ? 'pictureNode'
+            : identity?.kind === 'drawing'
+              ? 'drawingNode'
+              : null;
+      if (
+        !field ||
+        actual?.kind !== identity.kind ||
+        actual.section !== identity.section ||
+        actual[field] !== identity[field] ||
+        !current()
+      )
+        return false;
+      if (identity.kind === 'picture') {
+        const picture = renderer.pictureAtLogicalPoint?.(x, y);
+        if (
+          !picture ||
+          picture.picture.section !== identity.section ||
+          picture.picture.pictureNode !== identity.pictureNode ||
+          !current() ||
+          !selectPaintedPicture(picture)
+        )
+          return false;
+      } else {
+        // objectAtLogicalPoint admits text-box borders, never their interior.
+        resetExternalSelection(this, 'core');
+      }
+      input.blur();
+      canvas.focus({ preventScroll: true });
+      return !events.signal.aborted && this.settled() && this.historyRoute() === 'none';
+    },
     selectedPicture() {
       if (
         !pictureResizeAvailable ||
@@ -4487,6 +4549,7 @@ export function createCanvasEditor({
     message(message) {
       if (events.signal.aborted) return;
       const ackSequence = ++ackProjectionSequence;
+      let retiredPlainDraft = false;
       deferredTypingCheck = null;
       const pendingFormattingReply =
         formattingPaint &&
@@ -5068,7 +5131,8 @@ export function createCanvasEditor({
           report('표 생성 · 첫 셀에서 입력할 수 있습니다.');
           return;
         }
-        const paragraph = renderer.paragraph(target);
+        const acknowledgedTarget = target,
+          paragraph = renderer.paragraph(acknowledgedTarget);
         if (!selectableText(paragraph)) {
           this.reset();
           report(
@@ -5145,6 +5209,48 @@ export function createCanvasEditor({
           // callback의 문서/선택 교체 뒤에는 이전 ACK의 preview/pump를 실행하지 않는다.
           if (!current()) return;
         }
+        // A plain ACK can leave an identical preview after Native has committed.
+        // Retire only this request's settled no-op draft; real local/preedit,
+        // queued history/input and formatting drafts keep their existing path.
+        const acknowledgedPlainDraftCurrent = () =>
+          previous.kind === 'splice' &&
+          message.applied === true &&
+          versioned &&
+          message.section === acknowledgedTarget.section &&
+          message.paragraph === acknowledgedTarget.paragraph &&
+          nativeHistoryReady() &&
+          renderer.paragraph(acknowledgedTarget) === paragraph &&
+          this.settled() &&
+          paragraph.text === previous.afterText &&
+          committed === previous.afterText &&
+          input.value === previous.afterText &&
+          !deferredComposition &&
+          !multiComposition &&
+          !formattingPaint &&
+          !draftSelection &&
+          !richTyping &&
+          !typingFont &&
+          !typingProperties &&
+          !historyIntents.nextKind &&
+          !historyPaintBarrier.pending &&
+          target === acknowledgedTarget &&
+          ackProjectionSequence === ackSequence;
+        if (acknowledgedPlainDraftCurrent()) {
+          // Publish the confirmed revision/bookmark before presentation callbacks:
+          // a nested input must not remember its pre-edit caret under the old revision.
+          retiredPlainDraft = true;
+          historyRevision = revision;
+          if (revisionChanged && !travelMessage)
+            historySelections.remember(revision, anchor && focus ? { anchor, focus } : null);
+          renderer.preview(null);
+          if (!acknowledgedPlainDraftCurrent()) return;
+          sync();
+          if (!acknowledgedPlainDraftCurrent()) return;
+          reveal();
+          if (!acknowledgedPlainDraftCurrent()) return;
+          pump();
+          return;
+        }
         if (previous.kind === 'splice-rich-character' && input.value === committed) {
           renderer.preview(null);
           sync();
@@ -5158,7 +5264,7 @@ export function createCanvasEditor({
         } else pump();
       } finally {
         reconcilePreviewPolicy?.();
-        if (versioned && !message.error) {
+        if (versioned && !message.error && !retiredPlainDraft) {
           historyRevision = revision;
           if (revisionChanged && !travelMessage)
             historySelections.remember(revision, anchor && focus ? { anchor, focus } : null);

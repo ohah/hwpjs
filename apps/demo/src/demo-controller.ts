@@ -1,7 +1,7 @@
 import { createChartPropertiesTool } from './chart-properties-tool.ts';
 import { connectObjectActivation } from './object-activation-bridge.ts';
 import { createDrawingPropertiesTool } from './drawing-properties-tool.ts';
-import type { CanvasObjectActivation } from '@hwpjs/vanilla';
+import type { CanvasObjectActivation, CanvasObjectPropertiesRequest } from '@hwpjs/vanilla';
 import { createInlineObjectInsertTool } from './inline-object-insert-tool.ts';
 import { createShapeCopyTool } from './shape-copy-tool.ts';
 import { createPageSettingsTool } from './page-settings-tool.ts';
@@ -93,6 +93,9 @@ export interface DemoHost
   extends SurfaceFormattingHost, SurfaceClipboardPort, DemoPageStatusHost, TableGridHost {
   /** undefined는 관측 미연결/불확실, null은 현재 그림 선택 없음입니다. */
   getContextPicture?(): ContextPicture | null | undefined;
+  registerObjectPropertiesRequest?(
+    listener: (event: CanvasObjectPropertiesRequest) => void,
+  ): () => void;
   registerObjectActivation?(listener: (event: CanvasObjectActivation) => void): () => void;
   canRequestHistory?(kind: 'undo' | 'redo'): boolean;
   canEditCellProperties?(section: number, listNode: number): boolean;

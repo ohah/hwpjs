@@ -21,3 +21,4 @@ export type { KeyboardShortcutsOptions } from './shortcuts.ts';
 export type { CanvasPageGeometry, CanvasPageStatus } from './page-geometry.ts';
 
 export type { CanvasObjectActivation, CanvasObjectTarget } from './object-activation.ts';
+export type { CanvasSelectedObject, CanvasObjectPropertiesRequest } from './object-selection.ts';

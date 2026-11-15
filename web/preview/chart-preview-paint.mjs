@@ -1,3 +1,4 @@
+import { validChartFamily, paintChartFamily } from './chart-family-paint.mjs';
 import { chartMajorTickSegments } from './chart-major-ticks.mjs';
 import { chartPreviewTextLayout } from './chart-preview-text-layout.mjs';
 import {
@@ -33,9 +34,17 @@ export function paintChartPreview(ctx, item, scrollTop, report = () => {}) {
     (!validEmptyCircularPreview(empty) ||
       bars.length ||
       lines.length ||
-      ['pie', 'pie_3d', 'of_pie', 'scatter', 'stock', 'bar_3d', 'categories', 'legend'].some(
-        (key) => item.primitives[key] !== undefined,
-      ))
+      [
+        'pie',
+        'pie_3d',
+        'of_pie',
+        'scatter',
+        'stock',
+        'bar_3d',
+        'family_geometry',
+        'categories',
+        'legend',
+      ].some((key) => item.primitives[key] !== undefined))
   )
     return false;
   if (!Array.isArray(bars) || !Array.isArray(lines)) return false;
@@ -64,7 +73,7 @@ export function paintChartPreview(ctx, item, scrollTop, report = () => {}) {
   const scatter = item.primitives.scatter;
   if (
     scatter &&
-    (!['line', 'lineMarker', 'marker', 'smooth', 'smoothMarker'].includes(scatter.style) ||
+    (!['none', 'line', 'lineMarker', 'marker', 'smooth', 'smoothMarker'].includes(scatter.style) ||
       !Array.isArray(scatter.rows) ||
       !scatter.rows.every(
         (row) =>
@@ -92,10 +101,20 @@ export function paintChartPreview(ctx, item, scrollTop, report = () => {}) {
   if (stock && !validChartStock(stock)) return false;
   const bar3d = item.primitives.bar_3d;
   if (bar3d && !validChartBar3D(bar3d)) return false;
+  const family = item.primitives.family_geometry;
+  if (family !== undefined && !validChartFamily(family)) return false;
   const series = new Map();
   for (const row of item.primitives.legend ?? [])
     if (!series.has(row.series_node)) series.set(row.series_node, series.size);
-  for (const row of [...bars, ...lines, ...(scatter?.rows ?? []), ...(bar3d?.faces ?? [])])
+  for (const row of [
+    ...bars,
+    ...lines,
+    ...(scatter?.rows ?? []),
+    ...(bar3d?.faces ?? []),
+    ...(family?.polygons ?? []),
+    ...(family?.strokes ?? []),
+    ...(family?.circles ?? []),
+  ])
     if (!series.has(row.series_node)) series.set(row.series_node, series.size);
   ctx.save();
   try {
@@ -128,6 +147,19 @@ export function paintChartPreview(ctx, item, scrollTop, report = () => {}) {
       }
     }
     if (presentation.ticks.length) paintChartPreviewGrid(ctx, presentation, item, scrollTop);
+    if (
+      family &&
+      !paintChartFamily(
+        ctx,
+        family,
+        plot,
+        item.x + plot.x,
+        item.y - scrollTop + plot.y,
+        (node) => palette[series.get(node) % palette.length],
+        (index) => palette[index % palette.length],
+      )
+    )
+      return false;
     for (const bar of bars) {
       const r = bar.rectangle;
       ctx.fillStyle = palette[series.get(bar.series_node) % palette.length];

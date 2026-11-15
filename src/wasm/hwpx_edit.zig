@@ -2502,6 +2502,11 @@ export fn hwpx_edit_insert_equation(ptr: [*]const u8, size: u32) u32 {
     apply(.{ .kind = .equation_insert, .section = target.section, .paragraph = target.paragraph, .start = target.unit, .deleted = 0, .inserted = "", .equation_insert = &parsed.request }) catch |err| return fail(err);
     return 1;
 }
+// Optional pure version query. No session/history/output allocation or mutation.
+// This is candidate source, not a claim about the currently deployed engine.
+export fn hwpx_edit_chart_create_profile_version() u32 {
+    return @import("../hwpx/chart_create_profile.zig").wire_version;
+}
 export fn hwpx_edit_create_chart(ptr: [*]const u8, size: u32) u32 {
     hwpx_edit_output_free();
     if (size == 0 or size > 8 * 1024 * 1024) return fail(error.LimitExceeded);

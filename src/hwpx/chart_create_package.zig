@@ -28,7 +28,7 @@ pub fn prepare(a: std.mem.Allocator, input: []const u8, request: api.Request) !a
     if (request.target.section != 0) return error.UnsupportedInsertSections;
     if (request.target.expected_text.len > @import("../image/image_insertion.zig").max_text_bytes) return error.LimitExceeded;
     _ = try @import("../image/image_insertion.zig").byteOffset(request.target.expected_text, request.target.unit);
-    try @import("chart_create_data.zig").validate(request.data);
+    try @import("chart_create_data.zig").validateFor(request.data, request.chart);
     try @import("chart_create_host.zig").validateSize(request.size);
     var doc = try package.inspectDocument(a, input, .{});
     defer doc.deinit(a);
@@ -91,7 +91,7 @@ pub fn prepare(a: std.mem.Allocator, input: []const u8, request: api.Request) !a
     defer a.free(ole_path);
     defer a.free(chart_id);
     defer a.free(ole_id);
-    const chart = try @import("chart_create_xml.zig").create(a, request.data);
+    const chart = try @import("chart_create_xml.zig").createFor(a, request.data, request.chart);
     defer a.free(chart);
     const ole = try @import("chart_create_ole.zig").create(a, chart);
     defer a.free(ole);

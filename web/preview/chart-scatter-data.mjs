@@ -14,7 +14,7 @@ export function chartScatterData(display, plotNode) {
   if (blanks.state !== 'selected') return blanks;
   if (blanks.value === 'zero') return unavailable('UnsupportedScatterZeroBlanks');
   const style = display.plot_settings[input.index].scatter_style?.value;
-  if (!['line', 'lineMarker', 'marker', 'smooth', 'smoothMarker'].includes(style))
+  if (!['none', 'line', 'lineMarker', 'marker', 'smooth', 'smoothMarker'].includes(style))
     return unavailable('MissingScatterStyle');
   if (input.axes.length !== 2 || input.axes.some((axis) => axis.kind !== 'valAx'))
     return unavailable('AmbiguousScatterAxes');

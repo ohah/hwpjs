@@ -60,7 +60,8 @@
   font-family: ui-monospace, monospace;
 }
 .inline-object-insert-dialog input,
-.inline-object-insert-dialog textarea {
+.inline-object-insert-dialog textarea,
+.inline-object-insert-dialog select {
   box-sizing: border-box;
   width: 100%;
   font-size: 1rem;
@@ -185,4 +186,16 @@
 }
 .inline-object-insert-size small {
   grid-column: 1 / -1;
+}
+
+.inline-object-insert-chart-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.6rem;
+}
+.inline-object-insert-grid-scroll [hidden] {
+  display: none;
+}
+.inline-object-insert-grid-scroll td label + label {
+  margin-top: 0.5rem;
 }

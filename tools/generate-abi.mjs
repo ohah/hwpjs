@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import {
   ABI_VERSION,
+  HWPX_CHART_CREATE_PROFILE_FUNCTIONS,
   FIELD,
   VALUE,
   DOCUMENT,
@@ -50,6 +51,9 @@ const generated =
   '};\n' +
   'pub const hwp5_source_table_cell_split_exports = [_][]const u8{\n' +
   HWP5_SOURCE_TABLE_CELL_SPLIT_FUNCTIONS.map((name) => `    ${JSON.stringify(name)},\n`).join('') +
+  '};\n' +
+  'pub const hwpx_chart_create_profile_exports = [_][]const u8{\n' +
+  HWPX_CHART_CREATE_PROFILE_FUNCTIONS.map((name) => `    ${JSON.stringify(name)},\n`).join('') +
   '};\n' +
   'pub const document = struct {\n' +
   Object.entries(DOCUMENT)

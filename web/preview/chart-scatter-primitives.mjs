@@ -11,7 +11,9 @@ export function chartScatterPrimitives(display, plotNode) {
       smooth = setting?.smooth;
     if (smooth && smooth.value !== null && typeof smooth.value !== 'boolean')
       return { state: 'unavailable', reason: 'InvalidChartSeriesCurve' };
-    row.smooth = smooth ? smooth.value !== false : ['smooth', 'smoothMarker'].includes(data.style);
+    row.smooth =
+      data.style !== 'none' &&
+      (smooth ? smooth.value !== false : ['smooth', 'smoothMarker'].includes(data.style));
     row.curves = null;
     if (row.smooth && data.style !== 'marker') {
       const curves = chartCurvePaths(row.points);

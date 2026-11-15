@@ -8,6 +8,8 @@ pub fn encode(a: std.mem.Allocator, snapshot: *const @import("chart_display_snap
         .view_3d = snapshot.view_3d,
         .blank_policy = snapshot.blank_policy,
         .plots = snapshot.plots.plots,
+        // Settings contains the additive family Fields + audited coverage.
+        // Serialize the typed owner atomically, retaining null/raw node identity.
         .plot_settings = snapshot.plot_settings,
         .series_settings = snapshot.series_settings.items,
         .point_settings = snapshot.point_settings.items,

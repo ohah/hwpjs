@@ -7,10 +7,17 @@ const drawing = {
   drawingNode: 9,
   hostParagraph: 2,
   anchorUnit: 0,
-  source: { rendering: { angle: 0 }, transform_identity: true, group_context: null },
+  source: {
+    drawing_node: 9,
+    paragraph: 3,
+    anchor_unit: 0,
+    rendering: { angle: 0 },
+    transform_identity: true,
+    group_context: null,
+  },
 };
 const scene = () => ({
-  content: { drawings: [drawing] },
+  content: { format: 'hwpx', drawings: [drawing] },
   layout: { placedDrawings: [{ ...drawing, rectangle: box }] },
   charts: [],
   picture: null,
@@ -61,7 +68,7 @@ test('conflicting painted charts or drawing owners do not choose an arbitrary di
   s.charts = [3, 4].map((wrapper) => ({ ...box, target: { section: 0, wrapper } }));
   assert.equal(hit(s, 30, 30), null);
   s.charts = [];
-  const d = { ...drawing, drawingNode: 10 };
+  const d = { ...drawing, drawingNode: 10, source: { ...drawing.source, drawing_node: 10 } };
   s.content.drawings.push(d);
   s.layout.placedDrawings.push({ ...d, rectangle: box });
   assert.equal(hit(s, 11, 30), null);

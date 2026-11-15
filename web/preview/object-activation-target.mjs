@@ -1,3 +1,4 @@
+import { createDrawingObservationQuery } from './drawing-observation.mjs';
 const uint = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 0xffffffff;
 const contains = (r, x, y) =>
   r &&
@@ -39,11 +40,7 @@ export function objectActivationTarget(
     if (contains(item, x, y))
       add({ kind: 'chart', section: item.target.section, wrapper: item.target.wrapper });
   if (hits.size) return hits.size === 1 ? hits.values().next().value : null;
-  const owners = new Map();
-  for (const drawing of content.drawings ?? []) {
-    const id = `${drawing.section}:${drawing.drawingNode}`;
-    owners.set(id, owners.has(id) ? null : drawing);
-  }
+  const query = createDrawingObservationQuery(content);
   const border = (rectangle) =>
     contains(rectangle, x, y) &&
     Number.isFinite(borderTolerance) &&
@@ -55,14 +52,13 @@ export function objectActivationTarget(
       rectangle.y + rectangle.height - y,
     ) <= borderTolerance;
   const drawing = (item, rectangle) => {
-    const owner = owners.get(`${item.section}:${item.drawingNode}`);
+    const observed = query.get(item.section, item.drawingNode);
+    const owner = observed?.row;
     if (
       !owner ||
       owner.hostParagraph !== item.hostParagraph ||
       owner.anchorUnit !== item.anchorUnit ||
-      owner.source?.transform_identity !== true ||
-      owner.source?.rendering?.angle !== 0 ||
-      owner.source?.group_context != null ||
+      !observed.activationSafe ||
       !border(rectangle)
     )
       return;

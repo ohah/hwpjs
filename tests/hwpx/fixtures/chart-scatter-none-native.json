@@ -1,0 +1,307 @@
+{
+  "kind": "chart_display",
+  "pair": {
+    "chart_path": "Chart/hwpjs-created-0.xml",
+    "ole_path": "BinData/hwpjs-created-chart-0.ole",
+    "wrapper_node": 12,
+    "section_ordinal": 0,
+    "section_sha256": [
+      240, 139, 142, 130, 14, 76, 129, 45, 221, 78, 188, 122, 186, 158, 5, 76, 8, 45, 253, 228, 60,
+      198, 152, 209, 108, 51, 188, 240, 201, 198, 3, 80
+    ],
+    "declared_external": false
+  },
+  "host": {
+    "wrapper_node": 12,
+    "chart_node": 14,
+    "geometry": {
+      "width": 21600,
+      "height": 14400,
+      "width_relative": 4,
+      "height_relative": 2,
+      "treat_as_character": true,
+      "horizontal_offset": 0,
+      "vertical_offset": 0
+    },
+    "position": {
+      "flags": [true, true, false, false],
+      "relations": [2, 3, 0, 0]
+    }
+  },
+  "view_3d": null,
+  "blank_policy": {
+    "node": 61,
+    "value": "gap"
+  },
+  "plots": [
+    {
+      "node": 4,
+      "area_node": 2,
+      "kind": "scatterChart",
+      "series_nodes": [7]
+    }
+  ],
+  "plot_settings": [
+    {
+      "hole_size": null,
+      "radar_style": null,
+      "bubble_scale": null,
+      "size_represents": null,
+      "show_negative_bubbles": null,
+      "bubble_3d": null,
+      "wireframe": null,
+      "family_unparsed_children": null,
+      "direction": null,
+      "grouping": null,
+      "vary_colors": {
+        "node": 6,
+        "value": false
+      },
+      "gap_width": null,
+      "overlap": null,
+      "scatter_style": {
+        "node": 5,
+        "value": "none"
+      },
+      "first_slice_angle": null,
+      "of_pie_type": null,
+      "second_pie_size": null,
+      "split_type": null,
+      "split_position": null,
+      "custom_split_node": null,
+      "stock": null,
+      "spatial": null,
+      "axis_references": [
+        {
+          "node": 38,
+          "value": 1
+        },
+        {
+          "node": 39,
+          "value": 2
+        }
+      ]
+    }
+  ],
+  "series_settings": [
+    {
+      "series_node": 7,
+      "plot_node": 4,
+      "index": {
+        "node": 8,
+        "value": 0
+      },
+      "order": {
+        "node": 9,
+        "value": 0
+      },
+      "marker": {
+        "node": 15,
+        "symbol": {
+          "node": 16,
+          "value": "none"
+        },
+        "size": null
+      },
+      "smooth": {
+        "node": 37,
+        "value": false
+      },
+      "explosion": null,
+      "stroke": {
+        "node": 13,
+        "no_fill_node": 14
+      }
+    }
+  ],
+  "point_settings": [],
+  "axes": [
+    {
+      "node": 40,
+      "area_node": 2,
+      "kind": "valAx",
+      "id": {
+        "node": 41,
+        "value": 1
+      },
+      "cross_axis": {
+        "node": 46,
+        "value": 2
+      },
+      "position": {
+        "node": 44,
+        "value": "b"
+      },
+      "deleted": null,
+      "major_tick_mark": null,
+      "scaling": {
+        "node": 42,
+        "orientation": {
+          "node": 43,
+          "value": "minMax"
+        },
+        "minimum": null,
+        "maximum": null,
+        "log_base": null
+      }
+    },
+    {
+      "node": 48,
+      "area_node": 2,
+      "kind": "valAx",
+      "id": {
+        "node": 49,
+        "value": 2
+      },
+      "cross_axis": {
+        "node": 54,
+        "value": 1
+      },
+      "position": {
+        "node": 52,
+        "value": "l"
+      },
+      "deleted": null,
+      "major_tick_mark": null,
+      "scaling": {
+        "node": 50,
+        "orientation": {
+          "node": 51,
+          "value": "minMax"
+        },
+        "minimum": null,
+        "maximum": null,
+        "log_base": null
+      }
+    }
+  ],
+  "axis_links": [
+    {
+      "plot_node": 4,
+      "reference_node": 38,
+      "id": 1,
+      "target": {
+        "status": "resolved",
+        "node": 40
+      }
+    },
+    {
+      "plot_node": 4,
+      "reference_node": 39,
+      "id": 2,
+      "target": {
+        "status": "resolved",
+        "node": 48
+      }
+    }
+  ],
+  "points": [
+    {
+      "cache_node": 18,
+      "level_node": null,
+      "point_node": 21,
+      "value_node": 22,
+      "index": 0,
+      "kind": "numeric_literal",
+      "value": "-3.0"
+    },
+    {
+      "cache_node": 18,
+      "level_node": null,
+      "point_node": 23,
+      "value_node": 24,
+      "index": 1,
+      "kind": "numeric_literal",
+      "value": "7e1"
+    },
+    {
+      "cache_node": 18,
+      "level_node": null,
+      "point_node": 25,
+      "value_node": 26,
+      "index": 2,
+      "kind": "numeric_literal",
+      "value": "2.25"
+    },
+    {
+      "cache_node": 28,
+      "level_node": null,
+      "point_node": 31,
+      "value_node": 32,
+      "index": 0,
+      "kind": "numeric_literal",
+      "value": "1.50"
+    },
+    {
+      "cache_node": 28,
+      "level_node": null,
+      "point_node": 33,
+      "value_node": 34,
+      "index": 1,
+      "kind": "numeric_literal",
+      "value": "-2e1"
+    },
+    {
+      "cache_node": 28,
+      "level_node": null,
+      "point_node": 35,
+      "value_node": 36,
+      "index": 2,
+      "kind": "numeric_literal",
+      "value": "0"
+    }
+  ],
+  "bindings": [
+    {
+      "point": 0,
+      "series_node": 7,
+      "plot_node": 4,
+      "role_node": 17,
+      "role": "x"
+    },
+    {
+      "point": 1,
+      "series_node": 7,
+      "plot_node": 4,
+      "role_node": 17,
+      "role": "x"
+    },
+    {
+      "point": 2,
+      "series_node": 7,
+      "plot_node": 4,
+      "role_node": 17,
+      "role": "x"
+    },
+    {
+      "point": 3,
+      "series_node": 7,
+      "plot_node": 4,
+      "role_node": 27,
+      "role": "y"
+    },
+    {
+      "point": 4,
+      "series_node": 7,
+      "plot_node": 4,
+      "role_node": 27,
+      "role": "y"
+    },
+    {
+      "point": 5,
+      "series_node": 7,
+      "plot_node": 4,
+      "role_node": 27,
+      "role": "y"
+    }
+  ],
+  "series_text": [
+    {
+      "series_node": 7,
+      "text_node": 10,
+      "value_node": 11,
+      "text": "XY😀"
+    }
+  ],
+  "rich_text": []
+}

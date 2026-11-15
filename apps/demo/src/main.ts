@@ -109,6 +109,7 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       hasCellBlock: () => ref.current?.surface?.hasCellBlock() ?? false,
       registerCellBlockMenu: cellBlockMenus.register,
       registerObjectActivation: objectActivations.register,
+      registerObjectPropertiesRequest: objectActivations.registerProperties,
       captureSourceTableCellSplit: () =>
         ref.current?.surface?.captureSourceTableCellSplit() ?? null,
       captureSourceTableCellMerge: () =>
@@ -194,6 +195,7 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       hasCellBlock: () => surface?.hasCellBlock() ?? false,
       registerCellBlockMenu: cellBlockMenus.register,
       registerObjectActivation: objectActivations.register,
+      registerObjectPropertiesRequest: objectActivations.registerProperties,
       captureSourceTableCellSplit: () => surface?.captureSourceTableCellSplit() ?? null,
       captureSourceTableCellMerge: () => surface?.captureSourceTableCellMerge() ?? null,
       captureSourceTableCellWidth: () => surface?.captureSourceTableCellWidth() ?? null,

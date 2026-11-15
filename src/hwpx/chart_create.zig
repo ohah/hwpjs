@@ -4,6 +4,7 @@ const inline_insert = @import("inline_object_insert.zig");
 const host = @import("chart_create_host.zig");
 pub const Data = @import("chart_create_data.zig").Data;
 pub const Series = @import("chart_create_data.zig").Series;
+pub const Profile = @import("chart_create_profile.zig").Profile;
 pub const ParsedRequest = @import("chart_create_request.zig").ParsedRequest;
 pub const parseRequest = @import("chart_create_request.zig").parseRequest;
 pub const Request = struct {
@@ -11,6 +12,7 @@ pub const Request = struct {
     target: inline_insert.Target,
     size: host.Size,
     data: Data,
+    chart: ?Profile = null,
 };
 pub const Result = struct {
     bytes: []u8,
@@ -27,4 +29,8 @@ pub const Result = struct {
 /// Immutable input in, independently owned ZIP candidate out. No Session writes.
 pub fn prepare(a: std.mem.Allocator, input: []const u8, request: Request) !Result {
     return @import("chart_create_package.zig").prepare(a, input, request);
+}
+
+test {
+    _ = @import("chart_create_kinds_tests.zig");
 }

@@ -2259,6 +2259,7 @@ var init_abi_schema = __esmMin((() => {
 		"hwp5_text_len",
 		"hwp5_text_free"
 	]);
+	Object.freeze(["hwpx_edit_chart_create_profile_version"]);
 }));
 // ../../js/source-table-cell-split-capability.mjs
 function sourceTableCellSplitProfile(format) {
@@ -7904,6 +7905,41 @@ var init_hwpx_document_insert = __esmMin((() => {
 		return value;
 	};
 }));
+// ../../js/chart-create-decimal.mjs
+function parseChartDecimal(text) {
+	if (typeof text !== "string" || text.length === 0 || text.length > 128) throw Error("InvalidChartNumber");
+	const match = /^([+-]?)(?:(\d+)(?:\.(\d*))?|\.(\d+))(?:[eE]([+-]?)(\d+))?$/.exec(text);
+	if (!match) throw Error("InvalidChartNumber");
+	let exponent = 0;
+	for (const digit of match[6] ?? "") {
+		exponent = exponent * 10 + digit.charCodeAt(0) - 48;
+		if (exponent > 1e4) throw Error("InvalidChartNumber");
+	}
+	if (match[5] === "-") exponent = -exponent;
+	const fraction = match[3] ?? match[4] ?? "";
+	const digits = ((match[2] ?? "") + fraction).replace(/^0+/, "");
+	return {
+		negative: match[1] === "-" && digits.length !== 0,
+		digits,
+		scale: digits.length === 0 ? 0 : exponent - fraction.length + digits.length
+	};
+}
+function compareChartDecimals(left, right) {
+	const x = parseChartDecimal(left), y = parseChartDecimal(right);
+	if (x.negative !== y.negative) return x.negative ? -1 : 1;
+	let order = 0;
+	if (x.digits.length === 0 || y.digits.length === 0) order = Math.sign(x.digits.length - y.digits.length);
+	else if (x.scale !== y.scale) order = Math.sign(x.scale - y.scale);
+	else for (let i = 0; i < Math.max(x.digits.length, y.digits.length); ++i) {
+		const xd = x.digits[i] ?? "0", yd = y.digits[i] ?? "0";
+		if (xd !== yd) {
+			order = xd < yd ? -1 : 1;
+			break;
+		}
+	}
+	return order === 0 ? 0 : x.negative ? -order : order;
+}
+var init_chart_create_decimal = __esmMin((() => {}));
 // ../../js/hwpx-inline-object-insert.mjs
 function inlineInsertRecord(input, keys) {
 	if (!input || typeof input !== "object" || ![Object.prototype, null].includes(Object.getPrototypeOf(input))) throw Error("InvalidInlineObjectRequest");
@@ -7925,8 +7961,8 @@ function text$2(value, max, empty = false) {
 	if (typeof value !== "string" || !empty && !value.length || /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF\uD800-\uDFFF]/u.test(value) || new TextEncoder().encode(value).length > max) throw Error("InvalidInlineObjectText");
 	return value;
 }
-function list$1(input, limit, convert) {
-	if (!Array.isArray(input) || input.length < 1 || input.length > limit) throw Error("InvalidInlineObjectArray");
+function list$1(input, limit, convert, empty = false) {
+	if (!Array.isArray(input) || input.length < (empty ? 0 : 1) || input.length > limit) throw Error("InvalidInlineObjectArray");
 	const entries = inlineInsertRecord(inputRecord(input), Array.from({ length: input.length }, (_, i) => String(i)));
 	return Array.from({ length: input.length }, (_, i) => convert(entries[String(i)]));
 }
@@ -7955,7 +7991,7 @@ function checkedEquationInsertOptions(input) {
 		font: text$2(p.font, 128)
 	};
 }
-function checkedChartCreateOptions(input) {
+function legacyChartCreateOptions(input) {
 	const p = inlineInsertRecord(input, [
 		"width",
 		"height",
@@ -8013,7 +8049,7 @@ function checkedEquationInsertRequest(input) {
 		].map((k) => [k, p[k]])))
 	};
 }
-function checkedChartCreateRequest(input) {
+function legacyChartCreateRequest(input) {
 	const p = inlineInsertRecord(input, [
 		"target",
 		"size",
@@ -8065,7 +8101,151 @@ function checkedChartCreateRequest(input) {
 		}
 	};
 }
+function checkedChartCreateProfile(input) {
+	const kind = input && typeof input === "object" ? Object.getOwnPropertyDescriptor(input, "kind")?.value : void 0;
+	if (typeof kind !== "string" || !Object.hasOwn(chartProfileKeys, kind)) throw Error("InvalidChartCreateProfile");
+	const p = inlineInsertRecord(input, ["kind", ...chartProfileKeys[kind]]);
+	for (const key of chartProfileKeys[kind]) if (key === "wireframe" ? typeof p[key] !== "boolean" : !chartOptionValues[key].includes(p[key])) throw Error("InvalidChartCreateProfile");
+	if (p.grouping === "clustered" && !["barChart", "bar3DChart"].includes(kind)) throw Error("InvalidChartCreateProfile");
+	return p;
+}
+function profileData(input, chart, strings) {
+	const p = inlineInsertRecord(input, ["categories", "series"]);
+	const kind = chart.kind, xy = ["scatterChart", "bubbleChart"].includes(kind);
+	const pie = [
+		"pieChart",
+		"pie3DChart",
+		"ofPieChart",
+		"doughnutChart"
+	].includes(kind);
+	const stock = kind === "stockChart";
+	const roles = chart.stock_layout === "openHighLowClose" ? [
+		"open",
+		"high",
+		"low",
+		"close"
+	] : [
+		"high",
+		"low",
+		"close"
+	];
+	const categories = list$1(p.categories, 4096, (v) => text$2(v, 4096), xy);
+	if (xy && categories.length !== 0) throw Error("InvalidChartCreateShape");
+	let points = 0, bytes = categories.reduce((n, s) => n + new TextEncoder().encode(s).length, 0);
+	const numeric = (value, nonnegative = false) => {
+		if (!(strings ? typeof value === "string" && value.length <= 128 && /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(value) && Number.isFinite(Number(value)) : typeof value === "number" && Number.isFinite(value))) throw Error("InvalidChartNumber");
+		const parsed = parseChartDecimal(String(value));
+		if (nonnegative && parsed.negative) throw Error("InvalidChartNumber");
+		bytes += String(value).length;
+		return value;
+	};
+	const series = list$1(p.series, 64, (item) => {
+		const row = inlineInsertRecord(item, [
+			"name",
+			"values",
+			...xy ? ["x_values"] : [],
+			...kind === "bubbleChart" ? ["bubble_sizes"] : [],
+			...stock ? ["stock_role"] : []
+		]);
+		const name = text$2(row.name, 4096);
+		bytes += new TextEncoder().encode(name).length;
+		const values = list$1(row.values, 4096, (n) => numeric(n, pie));
+		points += values.length * (kind === "bubbleChart" ? 3 : 2);
+		if (points > 16384) throw Error("ChartPointLimitExceeded");
+		if (!xy && values.length !== categories.length) throw Error("ChartCategoryCountMismatch");
+		const result = {
+			name,
+			values
+		};
+		if (xy) {
+			result.x_values = list$1(row.x_values, 4096, (n) => numeric(n));
+			if (result.x_values.length !== values.length) throw Error("InvalidChartCreateShape");
+		}
+		if (kind === "bubbleChart") {
+			result.bubble_sizes = list$1(row.bubble_sizes, 4096, (n) => numeric(n, true));
+			if (result.bubble_sizes.length !== values.length) throw Error("InvalidChartCreateShape");
+		}
+		if (stock) result.stock_role = row.stock_role;
+		return result;
+	});
+	if (pie && kind !== "doughnutChart" && series.length !== 1) throw Error("InvalidChartCreateShape");
+	if (["surfaceChart", "surface3DChart"].includes(kind) && (categories.length < 2 || series.length < 2)) throw Error("InvalidChartCreateShape");
+	if (stock) {
+		if (series.length !== roles.length || series.some((s, i) => s.stock_role !== roles[i])) throw Error("InvalidChartCreateShape");
+		const offset = roles.length === 4 ? 1 : 0;
+		for (let i = 0; i < categories.length; ++i) {
+			const high = String(series[offset].values[i]), low = String(series[offset + 1].values[i]);
+			const close = String(series[offset + 2].values[i]);
+			const open = offset ? String(series[0].values[i]) : close;
+			if (compareChartDecimals(low, high) > 0 || compareChartDecimals(close, low) < 0 || compareChartDecimals(close, high) > 0 || compareChartDecimals(open, low) < 0 || compareChartDecimals(open, high) > 0) throw Error("InvalidChartStockValues");
+		}
+	}
+	if (bytes > 4194304) throw Error("ChartInputLimitExceeded");
+	return {
+		categories,
+		series
+	};
+}
+function checkedChartCreateOptions(input) {
+	if (!hasChart(input)) return legacyChartCreateOptions(input);
+	const p = inlineInsertRecord(input, [
+		"width",
+		"height",
+		"categories",
+		"series",
+		"chart"
+	]);
+	const chart = checkedChartCreateProfile(p.chart);
+	return {
+		width: integer(p.width, 1, maxInt),
+		height: integer(p.height, 1, maxInt),
+		...profileData({
+			categories: p.categories,
+			series: p.series
+		}, chart, false),
+		chart
+	};
+}
+function checkedChartCreateRequest(input) {
+	if (!hasChart(input)) return legacyChartCreateRequest(input);
+	const p = inlineInsertRecord(input, [
+		"target",
+		"size",
+		"data",
+		"chart"
+	]);
+	const target = inlineInsertRecord(p.target, [
+		"section",
+		"paragraph",
+		"unit",
+		"expected_text"
+	]);
+	const size = inlineInsertRecord(p.size, ["width", "height"]);
+	const chart = checkedChartCreateProfile(p.chart);
+	return {
+		target: {
+			section: integer(target.section, 0, 0),
+			paragraph: integer(target.paragraph, 1),
+			unit: integer(target.unit),
+			expected_text: text$2(target.expected_text, 8388608, true)
+		},
+		size: {
+			width: integer(size.width, 1, maxInt),
+			height: integer(size.height, 1, maxInt)
+		},
+		data: profileData(p.data, chart, true),
+		chart
+	};
+}
 function createHwpxInlineObjectInsertApi({ wasm, memory, check }) {
+	const profileVersion = () => {
+		check();
+		try {
+			return typeof wasm.hwpx_edit_create_chart === "function" && typeof wasm.hwpx_edit_chart_create_profile_version === "function" && wasm.hwpx_edit_chart_create_profile_version() === 1 ? 1 : 0;
+		} catch {
+			return 0;
+		}
+	};
 	const insert = (name, request) => {
 		check();
 		if (typeof wasm[name] !== "function") throw Error("InlineObjectInsertionUnavailable");
@@ -8077,13 +8257,65 @@ function createHwpxInlineObjectInsertApi({ wasm, memory, check }) {
 		supportsEquationInsertionAbi: () => typeof wasm.hwpx_edit_insert_equation === "function",
 		supportsChartCreationAbi: () => typeof wasm.hwpx_edit_create_chart === "function",
 		insertEquation: (input) => insert("hwpx_edit_insert_equation", checkedEquationInsertRequest(input)),
-		createChart: (input) => insert("hwpx_edit_create_chart", checkedChartCreateRequest(input))
+		chartCreateProfileVersion: () => profileVersion(),
+		supportsChartCreateProfileAbi: () => profileVersion() === 1,
+		createChart: (input) => {
+			const request = checkedChartCreateRequest(input);
+			if (request.chart) {
+				if (profileVersion() !== 1) throw Error("ChartCreateProfileUnavailable");
+			}
+			return insert("hwpx_edit_create_chart", request);
+		}
 	};
 }
-var maxInt;
+var maxInt, chartProfileKeys, chartOptionValues, hasChart;
 var init_hwpx_inline_object_insert = __esmMin((() => {
+	init_chart_create_decimal();
 	init_native_edit_outcome();
 	maxInt = 2147483647;
+	chartProfileKeys = {
+		barChart: ["bar_direction", "grouping"],
+		bar3DChart: ["bar_direction", "grouping"],
+		lineChart: ["grouping"],
+		line3DChart: ["grouping"],
+		areaChart: ["grouping"],
+		area3DChart: ["grouping"],
+		radarChart: ["radar_style"],
+		scatterChart: ["scatter_style"],
+		bubbleChart: [],
+		pieChart: [],
+		pie3DChart: [],
+		doughnutChart: [],
+		ofPieChart: ["of_pie_type"],
+		stockChart: ["stock_layout"],
+		surfaceChart: ["wireframe"],
+		surface3DChart: ["wireframe"]
+	};
+	chartOptionValues = {
+		bar_direction: ["col", "bar"],
+		grouping: [
+			"standard",
+			"clustered",
+			"stacked",
+			"percentStacked"
+		],
+		radar_style: [
+			"standard",
+			"marker",
+			"filled"
+		],
+		scatter_style: [
+			"none",
+			"line",
+			"lineMarker",
+			"marker",
+			"smooth",
+			"smoothMarker"
+		],
+		of_pie_type: ["pie", "bar"],
+		stock_layout: ["highLowClose", "openHighLowClose"]
+	};
+	hasChart = (input) => !!input && typeof input === "object" && Object.hasOwn(input, "chart");
 }));
 // ../../js/hwpx-page-number-display-wire.mjs
 function decodeHwpxPageNumberDisplaySource(bytes) {
@@ -9345,6 +9577,73 @@ function validChartSpatialSettings(value, kind, owner, leaves) {
 var init_chart_spatial_settings = __esmMin((() => {
 	init_chart_display_fields();
 }));
+// ../../js/chart-family-display-settings.mjs
+/** Undefined group = old DTO; null Field = source absence, never a value. */
+function chartFamilyDisplayNodes(settings, kind, owner, leaves) {
+	if (!hasChartFamilyFields(settings)) return [];
+	if (!chartFamilyFieldNames.every((key) => Object.hasOwn(settings, key))) return null;
+	if (Object.values(definitions).some((item) => item.kinds.includes(kind)) ? typeof settings.family_unparsed_children !== "boolean" : settings.family_unparsed_children !== null) return null;
+	const nodes = [];
+	for (const [key, definition] of Object.entries(definitions)) {
+		const value = settings[key];
+		if (!field$3(value, definition.accepts, owner)) return null;
+		if (value !== null) {
+			if (!definition.kinds.includes(kind) || leaves.has(value.node)) return null;
+			leaves.add(value.node);
+			nodes.push(value.node);
+		}
+	}
+	return nodes;
+}
+var chartFamilyFieldNames, definitions, hasChartFamilyFields;
+var init_chart_family_display_settings = __esmMin((() => {
+	init_chart_display_fields();
+	chartFamilyFieldNames = [
+		"hole_size",
+		"radar_style",
+		"bubble_scale",
+		"size_represents",
+		"show_negative_bubbles",
+		"bubble_3d",
+		"wireframe",
+		"family_unparsed_children"
+	];
+	definitions = {
+		hole_size: {
+			kinds: ["doughnutChart"],
+			accepts: (v) => uint$21(v) && v >= 10 && v <= 90
+		},
+		radar_style: {
+			kinds: ["radarChart"],
+			accepts: oneOf([
+				"standard",
+				"marker",
+				"filled"
+			])
+		},
+		bubble_scale: {
+			kinds: ["bubbleChart"],
+			accepts: (v) => uint$21(v) && v <= 300
+		},
+		size_represents: {
+			kinds: ["bubbleChart"],
+			accepts: oneOf(["area", "w"])
+		},
+		show_negative_bubbles: {
+			kinds: ["bubbleChart"],
+			accepts: (v) => typeof v === "boolean"
+		},
+		bubble_3d: {
+			kinds: ["bubbleChart"],
+			accepts: (v) => typeof v === "boolean"
+		},
+		wireframe: {
+			kinds: ["surfaceChart", "surface3DChart"],
+			accepts: (v) => typeof v === "boolean"
+		}
+	};
+	hasChartFamilyFields = (settings) => settings && chartFamilyFieldNames.some((key) => Object.hasOwn(settings, key));
+}));
 // ../../js/hwpx-chart-display.mjs
 function decodeChartDisplay(bytes) {
 	const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
@@ -9366,7 +9665,9 @@ function decodeChartDisplay(bytes) {
 	const plots = /* @__PURE__ */ new Map(), series = /* @__PURE__ */ new Map(), references = /* @__PURE__ */ new Map();
 	const hasStrokes = Array.isArray(value.series_settings) && value.series_settings.some((row) => row?.stroke != null);
 	const hasMajorTicks = value.axes.some((axis) => axis?.major_tick_mark != null);
-	const occupied = value.view_3d == null && value.blank_policy == null && !hasStrokes && !hasMajorTicks ? null : /* @__PURE__ */ new Set();
+	const hasFamilies = value.plot_settings.some(hasChartFamilyFields);
+	const familyClaims = /* @__PURE__ */ new Map();
+	const occupied = value.view_3d == null && value.blank_policy == null && !hasStrokes && !hasMajorTicks && !hasFamilies ? null : /* @__PURE__ */ new Set();
 	let previousPlot = -1;
 	for (const [index, plot] of value.plots.entries()) {
 		require(object$5(plot) && uint$21(plot.node) && plot.node > previousPlot && uint$21(plot.area_node) && plot.area_node < plot.node && plotKinds.has(plot.kind) && Array.isArray(plot.series_nodes));
@@ -9390,6 +9691,7 @@ function decodeChartDisplay(bytes) {
 		]), plot.node) && field$3(settings.vary_colors, (v) => typeof v === "boolean", plot.node) && Array.isArray(settings.axis_references));
 		require(field$3(settings.gap_width, (v) => uint$21(v) && v <= 500, plot.node) && field$3(settings.overlap, (v) => Number.isInteger(v) && v >= -100 && v <= 100, plot.node));
 		require(field$3(settings.scatter_style, oneOf([
+			"none",
 			"line",
 			"lineMarker",
 			"marker",
@@ -9449,7 +9751,14 @@ function decodeChartDisplay(bytes) {
 		}
 		require(validChartStockSettings(settings.stock, plot.kind, plot.node, leaves));
 		require(validChartSpatialSettings(settings.spatial, plot.kind, plot.node, leaves));
-		for (const node of leaves) occupied?.add(node);
+		const familyNodes = chartFamilyDisplayNodes(settings, plot.kind, plot.node, leaves);
+		require(familyNodes !== null);
+		const localFamilyNodes = new Set(familyNodes);
+		for (const node of familyNodes) {
+			require(!familyClaims.has(node));
+			familyClaims.set(node, plot);
+		}
+		for (const node of leaves) if (!localFamilyNodes.has(node)) occupied?.add(node);
 		for (const reference of settings.axis_references) {
 			require(reference !== null && field$3(reference, uint$21, plot.node));
 			const key = plot.node + ":" + reference.node;
@@ -9590,6 +9899,23 @@ function decodeChartDisplay(bytes) {
 		occupied.add(value.blank_policy.node);
 	}
 	require(validChartView3D(value.view_3d, occupied));
+	if (value.view_3d != null) {
+		occupied?.add(value.view_3d.node);
+		for (const key of [
+			"rotation_x",
+			"rotation_y",
+			"height_percent",
+			"depth_percent",
+			"right_angle_axes",
+			"perspective"
+		]) if (value.view_3d[key] != null) occupied?.add(value.view_3d[key].node);
+	}
+	for (const [node, owner] of familyClaims) {
+		require(!occupied.has(node));
+		for (const plot of value.plots) if (plot.area_node === owner.area_node && plot.node > owner.node) require(node < plot.node);
+		for (const axis of value.axes) if (axis.area_node === owner.area_node && axis.node > owner.node) require(node < axis.node);
+		occupied.add(node);
+	}
 	return value;
 }
 var plotKinds, pointKinds, roles, fail$1, require;
@@ -9603,6 +9929,7 @@ var init_hwpx_chart_display = __esmMin((() => {
 	init_chart_stock_settings();
 	init_chart_view_3d();
 	init_chart_spatial_settings();
+	init_chart_family_display_settings();
 	plotKinds = /* @__PURE__ */ new Set([
 		"areaChart",
 		"area3DChart",

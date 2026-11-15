@@ -79,6 +79,7 @@ export function createInlineObjectInsertTool(options: {
     }
   }
   const unsubscribe = port.subscribe(() => {
+    view?.setChartProfileVersion(port.chartCreateProfileVersion());
     if (capture && !pending && !port.current(capture))
       view?.setUnavailable('선택이 바뀌었습니다. 창을 다시 열어주세요.');
     options.onPresentationChange?.();
@@ -106,6 +107,7 @@ export function createInlineObjectInsertTool(options: {
         capture = port.capture(kind);
         ++epoch;
         view = createInlineObjectInsertDialog(options.root, kind, {
+          chartCreateProfileVersion: port.chartCreateProfileVersion(),
           onInsert: (draft) => {
             void submit(draft);
           },

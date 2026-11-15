@@ -41,6 +41,7 @@ export function createInlineObjectInsertPort(
     const result = core.getInlineObjectInsertAvailability(editor.getEditorState(), kind);
     if (result.enabled) return result;
     const reasons: Record<string, string> = {
+      ChartCreateProfileUnavailable: '현재 엔진은 선택한 차트 종류 생성을 지원하지 않습니다.',
       InlineObjectInsertionUnavailable:
         '현재 엔진에서 새 개체 생성 지원이 확인되지 않았습니다. 구형 엔진에서는 사용할 수 없습니다.',
       HistoryNotEnabled: '편집 이력 지원이 확인되지 않아 새 개체를 생성할 수 없습니다.',
@@ -59,6 +60,13 @@ export function createInlineObjectInsertPort(
   return {
     subscribe: (listener: () => void) => editor.registerStateListener(listener),
     presentation: inspect,
+    chartCreateProfileVersion() {
+      const state = editor.getEditorState();
+      return inspect('chart').enabled &&
+        (state.content as Record<string, unknown> | undefined)?.chartCreateProfileVersion === 1
+        ? 1
+        : 0;
+    },
     capture(kind: InlineObjectKind): InlineObjectInsertCapture {
       const initial = editor.getEditorState();
       const availability = inspect(kind);

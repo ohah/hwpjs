@@ -1,3 +1,4 @@
+import { createDrawingObservationQuery } from '../../../web/preview/drawing-observation.mjs';
 import type { HeadlessEditor } from '@hwpjs/core';
 import { pictureMillimeters } from './object-properties-input.ts';
 
@@ -114,25 +115,10 @@ export function createDrawingPropertiesPort(
         !Array.isArray(content.drawings)
       )
         return refuse('현재 문서에서 이 개체의 정보를 불러올 수 없습니다.');
-      const matches = content.drawings.filter(
-        (d: any) => d?.section === section && d?.drawingNode === drawingNode,
-      );
-      if (matches.length !== 1)
-        return refuse('선택한 개체를 확인할 수 없습니다. 다시 선택해 주세요.');
-      const row = matches[0],
-        source = object(row.source);
-      // HWPX Native snapshots carry this exact source address. Do not lend a group/root's data to a child.
-      if (
-        !source ||
-        source.drawing_node !== drawingNode ||
-        !uint(row.hostParagraph) ||
-        source.paragraph !== row.hostParagraph + 1 ||
-        !uint(row.anchorUnit) ||
-        source.anchor_unit !== row.anchorUnit
-      )
-        return refuse('선택한 개체를 확인할 수 없습니다. 다시 선택해 주세요.');
+      const observed = createDrawingObservationQuery(content).get(section, drawingNode);
+      if (!observed) return refuse('선택한 개체를 확인할 수 없습니다. 다시 선택해 주세요.');
       const fields: { label: string; value: string }[] = [];
-      const geometry = object(source.geometry);
+      const geometry = object(observed.geometry);
       // Native absolute size bases are width=4 and height=2. Other bases cannot
       // establish a physical size from these source values alone.
       for (const [key, basis, absolute, label] of [
@@ -150,35 +136,14 @@ export function createDrawingPropertiesPort(
         });
       // Alignment/wrap code-to-label mappings are not owned by this UI. Do not
       // surface unproven enum translations or diagnostic numbers to the user.
-      const textOwner = object(source.text);
-      const paragraphs = Array.isArray(content.paragraphs)
-        ? content.paragraphs.filter(
-            (p: any) => p?.section === section && p?.drawingText?.drawingNode === drawingNode,
-          )
-        : [];
+      const textObservation = observed.readText();
+      if (textObservation.state !== 'available')
+        return refuse('이 개체의 내용을 불러올 수 없습니다.');
+      const paragraphs = textObservation.paragraphs;
       let text: string | null = null,
         textTruncated = false;
       if (paragraphs.length) {
-        if (!textOwner || !uint(textOwner.list_node) || !uint(textOwner.node))
-          return refuse('이 개체의 내용을 불러올 수 없습니다.');
-        let previousParagraph = -1;
-        // Native publishes paragraphs in document order. Prove that order for
-        // this owner without sorting, densifying or walking its numeric gaps.
-        for (const paragraph of paragraphs) {
-          if (
-            !uint(paragraph.paragraph) ||
-            paragraph.paragraph <= previousParagraph ||
-            typeof paragraph.text !== 'string' ||
-            paragraph.clipped === true ||
-            paragraph.tableCell ||
-            paragraph.tableCaption ||
-            paragraph.drawingCaption ||
-            paragraph.drawingText.listNode !== textOwner.list_node ||
-            paragraph.drawingText.textNode !== textOwner.node
-          )
-            return refuse('이 개체의 내용을 불러올 수 없습니다.');
-          previousParagraph = paragraph.paragraph;
-        }
+        // Shared query has validated exact format ownership and Native paragraph order.
         text = '';
         for (const [index, p] of paragraphs.entries()) {
           const separator = index ? '\n' : '';

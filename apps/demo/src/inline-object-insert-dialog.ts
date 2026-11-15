@@ -1,3 +1,4 @@
+import { createChartTypeOptions } from './inline-object-insert-chart-type-options.ts';
 import { createInlineObjectInsertDataGrid } from './inline-object-insert-data-grid.ts';
 import { createCellSizeUnitDraft, parseCellSize } from './table-cell-size-units.ts';
 import type {
@@ -17,6 +18,7 @@ export function createInlineObjectInsertDialog(
   callbacks: {
     onInsert(options: EquationInsertOptions | ChartCreateOptions): void;
     onDismiss(): void;
+    chartCreateProfileVersion?: unknown;
   },
 ) {
   const doc = root.ownerDocument,
@@ -84,11 +86,13 @@ export function createInlineObjectInsertDialog(
   }
   const data = section(chart ? '차트 데이터' : '수식 내용');
   let grid: ReturnType<typeof createInlineObjectInsertDataGrid> | undefined;
+  let chartTypes: ReturnType<typeof createChartTypeOptions> | undefined;
   if (chart) {
-    const type = doc.createElement('p');
-    type.className = 'inline-object-insert-type';
-    type.textContent = '표준 2D 세로 막대형 (현재 지원하는 유일한 종류)';
-    data.append(type);
+    chartTypes = createChartTypeOptions(data, (profile) => {
+      grid?.setProfile(profile);
+      if (!busy && !unavailable) status.textContent = '';
+    });
+    chartTypes.setProfileVersion(callbacks.chartCreateProfileVersion);
     grid = createInlineObjectInsertDataGrid(data, () => {
       if (!busy && !unavailable) status.textContent = '';
     });
@@ -186,13 +190,23 @@ export function createInlineObjectInsertDialog(
       const size = { width: dimension('width'), height: dimension('height') };
       let options: EquationInsertOptions | ChartCreateOptions;
       if (chart) {
+        const profile = chartTypes!.read();
         const data = grid!.collect();
         try {
-          options = checkedChartCreateOptions({ ...size, ...data });
-        } catch {
+          options = checkedChartCreateOptions({
+            ...size,
+            ...data,
+            ...(profile ? { chart: profile } : {}),
+          });
+        } catch (error) {
           grid!.focus();
+          const message = (error as Error).message;
           throw Error(
-            '범주와 계열 이름의 문자를 확인하세요. 이름은 각각 UTF-8 4,096바이트 이하로 입력하세요.',
+            message === 'InvalidChartStockValues'
+              ? '주가 값은 저가 ≤ 시가·종가 ≤ 고가 순서를 지켜야 합니다.'
+              : message === 'InvalidChartNumber'
+                ? '숫자를 확인하세요. 원형 값과 버블 크기는 0 이상이어야 합니다.'
+                : '범주·계열 이름과 데이터 크기를 확인하세요. 이름은 UTF-8 4,096바이트 이하이며 차트별 배열 크기와 역할이 일치해야 합니다.',
           );
         }
       } else {
@@ -215,7 +229,11 @@ export function createInlineObjectInsertDialog(
       }
       callbacks.onInsert(options!);
     } catch (error) {
-      status.textContent = (error as Error).message;
+      const message = (error as Error).message;
+      status.textContent =
+        message === 'ChartCreateProfileUnavailable'
+          ? '현재 엔진은 선택한 차트 종류 생성을 지원하지 않습니다. 기본 막대 차트를 선택하거나 엔진 연결을 확인하세요.'
+          : message;
     }
   });
   actions.append(cancel, submit);
@@ -234,6 +252,7 @@ export function createInlineObjectInsertDialog(
       submit.textContent = busy ? (chart ? '차트 만드는 중…' : '수식 삽입 중…') : actionText;
       for (const input of fields.values()) input.disabled = busy || unavailable;
       grid?.setDisabled(busy || unavailable);
+      chartTypes?.setDisabled(busy || unavailable);
       status.textContent = busy ? '처리 중입니다. 결과를 확인할 때까지 기다려주세요.' : '';
       if (busy) dialog.focus();
     },
@@ -243,6 +262,10 @@ export function createInlineObjectInsertDialog(
       status.textContent = reason;
       for (const input of fields.values()) input.disabled = true;
       grid?.setDisabled(true);
+      chartTypes?.setDisabled(true);
+    },
+    setChartProfileVersion(version: unknown) {
+      chartTypes?.setProfileVersion(version);
     },
     destroy() {
       dialog.close();

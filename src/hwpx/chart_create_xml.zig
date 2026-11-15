@@ -3,6 +3,11 @@
 const std = @import("std");
 const model = @import("chart_create_data.zig");
 
+pub fn createFor(a: std.mem.Allocator, data: model.Data, chart: ?@import("chart_create_profile.zig").Profile) ![]u8 {
+    try model.validateFor(data, chart);
+    return if (chart) |profile| @import("chart_create_serialize.zig").create(a, data, profile) else create(a, data);
+}
+
 pub fn create(a: std.mem.Allocator, data: model.Data) ![]u8 {
     try model.validate(data);
     var out: std.ArrayList(u8) = .empty;

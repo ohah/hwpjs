@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "catalogSHA256": "4cf4340b3a00e2879e6939598abb8a2a8ac75c7182308267fd559b235f339fd0",
+  "catalogSHA256": "2bf1df66130640729e338f19c323fe65a03db55990e53057a2d4b35aee891ff8",
   "files": [
     {
       "id": "chart-data-edit.hwpx",
@@ -825,6 +825,134 @@
       "path": "fixtures/575815ede337626f-noori.hwp",
       "bytes": 257536,
       "sha256": "b18be0217a5d9f81e587705edc0c514cdd11e6314bbe434f17d256aa21b75a7f"
+    },
+    {
+      "id": "chart-create-barChart.hwpx",
+      "name": "chart-create-barChart.hwpx",
+      "label": "[기능 예제] 가로 막대 · 100% 누적",
+      "path": "fixtures/chart-create-barChart.hwpx",
+      "bytes": 14080,
+      "sha256": "99fe14cdef403cb8d6a0c45e40ce44213ca4c50ce786a886746436269c1101ef"
+    },
+    {
+      "id": "chart-create-bar3DChart.hwpx",
+      "name": "chart-create-bar3DChart.hwpx",
+      "label": "[기능 예제] 3차원 세로 막대 · 누적",
+      "path": "fixtures/chart-create-bar3DChart.hwpx",
+      "bytes": 14934,
+      "sha256": "86233d104fdf51f65346e2f748df4d0240d7f2c57e4e3831466f1ed77b5fa7b6"
+    },
+    {
+      "id": "chart-create-lineChart.hwpx",
+      "name": "chart-create-lineChart.hwpx",
+      "label": "[기능 예제] 누적 꺾은선",
+      "path": "fixtures/chart-create-lineChart.hwpx",
+      "bytes": 14009,
+      "sha256": "d11f648efc906d6b057e059132f8d569cecdd7f9bc304f4ab326726711f82812"
+    },
+    {
+      "id": "chart-create-line3DChart.hwpx",
+      "name": "chart-create-line3DChart.hwpx",
+      "label": "[기능 예제] 3차원 꺾은선",
+      "path": "fixtures/chart-create-line3DChart.hwpx",
+      "bytes": 14873,
+      "sha256": "7df23afa1f9afe9d62e3043d03e3d341e482b576ef6877c0ed4be3f31d88283f"
+    },
+    {
+      "id": "chart-create-areaChart.hwpx",
+      "name": "chart-create-areaChart.hwpx",
+      "label": "[기능 예제] 100% 누적 영역",
+      "path": "fixtures/chart-create-areaChart.hwpx",
+      "bytes": 14016,
+      "sha256": "7b0fffd0286cca4f3e1189b7ef66c5c718a855df835cd235eab806f46eb58813"
+    },
+    {
+      "id": "chart-create-area3DChart.hwpx",
+      "name": "chart-create-area3DChart.hwpx",
+      "label": "[기능 예제] 3차원 영역",
+      "path": "fixtures/chart-create-area3DChart.hwpx",
+      "bytes": 14873,
+      "sha256": "0d5236e088c52a4474906e5076bb4221a9dcdb9883928ff08350bb85059ddc1e"
+    },
+    {
+      "id": "chart-create-pieChart.hwpx",
+      "name": "chart-create-pieChart.hwpx",
+      "label": "[기능 예제] 원형",
+      "path": "fixtures/chart-create-pieChart.hwpx",
+      "bytes": 13004,
+      "sha256": "9132109c3d26ab4c5dd5f0585af72932c7e1e7730ef44a21b43db70eee36dc8d"
+    },
+    {
+      "id": "chart-create-pie3DChart.hwpx",
+      "name": "chart-create-pie3DChart.hwpx",
+      "label": "[기능 예제] 3차원 원형",
+      "path": "fixtures/chart-create-pie3DChart.hwpx",
+      "bytes": 13132,
+      "sha256": "c45c18511b964705d8fa1430f91288239319cea0b0dac12ce3aaf4f206614200"
+    },
+    {
+      "id": "chart-create-doughnutChart.hwpx",
+      "name": "chart-create-doughnutChart.hwpx",
+      "label": "[기능 예제] 도넛형",
+      "path": "fixtures/chart-create-doughnutChart.hwpx",
+      "bytes": 14003,
+      "sha256": "83ebb8b6392a4ea6cef310a43d0d57ddfbffd50239c5d38a40c2c1f5b914182b"
+    },
+    {
+      "id": "chart-create-ofPieChart.hwpx",
+      "name": "chart-create-ofPieChart.hwpx",
+      "label": "[기능 예제] 원형 대 가로 막대",
+      "path": "fixtures/chart-create-ofPieChart.hwpx",
+      "bytes": 13031,
+      "sha256": "3104e9217c3cd2b2b6dfbed4f1ce04b0baceb72289462c27ec71db0af576ee1d"
+    },
+    {
+      "id": "chart-create-radarChart.hwpx",
+      "name": "chart-create-radarChart.hwpx",
+      "label": "[기능 예제] 표식 있는 방사형",
+      "path": "fixtures/chart-create-radarChart.hwpx",
+      "bytes": 14057,
+      "sha256": "1151dceb333e9defdf8f5cff95f2d67cea75b93e79bdda6e8fbb44576b0d100f"
+    },
+    {
+      "id": "chart-create-scatterChart.hwpx",
+      "name": "chart-create-scatterChart.hwpx",
+      "label": "[기능 예제] 분산형 · 선·표식 없음",
+      "path": "fixtures/chart-create-scatterChart.hwpx",
+      "bytes": 14122,
+      "sha256": "f45775968ba5425c648f640c2670b54775d703612f9d82e854dcfee8e0fc3e91"
+    },
+    {
+      "id": "chart-create-bubbleChart.hwpx",
+      "name": "chart-create-bubbleChart.hwpx",
+      "label": "[기능 예제] 거품형",
+      "path": "fixtures/chart-create-bubbleChart.hwpx",
+      "bytes": 14751,
+      "sha256": "58d9072fcabc639dfbce10f4d0f5d96a20355957c42af8dd28f158410d1a8c00"
+    },
+    {
+      "id": "chart-create-stockChart.hwpx",
+      "name": "chart-create-stockChart.hwpx",
+      "label": "[기능 예제] 주식형 · 시가·고가·저가·종가",
+      "path": "fixtures/chart-create-stockChart.hwpx",
+      "bytes": 17081,
+      "sha256": "b4bd217964c493a71e709eed73cabef8ac47d17aa74229e8e5f99dd327d8c59b"
+    },
+    {
+      "id": "chart-create-surfaceChart.hwpx",
+      "name": "chart-create-surfaceChart.hwpx",
+      "label": "[기능 예제] 표면형",
+      "path": "fixtures/chart-create-surfaceChart.hwpx",
+      "bytes": 15152,
+      "sha256": "0ed2d18f63fce74a5d7358bfbd6f9cd2f211d53561edeea13a5502a9b1d59f6b"
+    },
+    {
+      "id": "chart-create-surface3DChart.hwpx",
+      "name": "chart-create-surface3DChart.hwpx",
+      "label": "[기능 예제] 3차원 표면형 · 와이어프레임",
+      "path": "fixtures/chart-create-surface3DChart.hwpx",
+      "bytes": 15794,
+      "sha256": "8b4523b4b057c3e9ed7f59088a689af58a46e9e6b29d36162896d8fab9126f0b"
     }
   ]
 }

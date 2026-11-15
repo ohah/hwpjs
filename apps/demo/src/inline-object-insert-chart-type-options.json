@@ -1,0 +1,361 @@
+[
+  {
+    "kind": "legacy",
+    "label": "기존 기본: 2D 세로 묶은 막대",
+    "fields": []
+  },
+  {
+    "kind": "barChart",
+    "label": "2D 막대/열",
+    "fields": [
+      {
+        "key": "bar_direction",
+        "label": "막대 방향",
+        "default": "col",
+        "choices": [
+          {
+            "value": "col",
+            "label": "세로 (column)"
+          },
+          {
+            "value": "bar",
+            "label": "가로 (bar)"
+          }
+        ]
+      },
+      {
+        "key": "grouping",
+        "label": "계열 묶음",
+        "default": "clustered",
+        "choices": [
+          {
+            "value": "standard",
+            "label": "표준"
+          },
+          {
+            "value": "clustered",
+            "label": "묶은 막대"
+          },
+          {
+            "value": "stacked",
+            "label": "누적"
+          },
+          {
+            "value": "percentStacked",
+            "label": "100% 누적"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "bar3DChart",
+    "label": "3D 막대/열",
+    "fields": [
+      {
+        "key": "bar_direction",
+        "label": "막대 방향",
+        "default": "col",
+        "choices": [
+          {
+            "value": "col",
+            "label": "세로 (column)"
+          },
+          {
+            "value": "bar",
+            "label": "가로 (bar)"
+          }
+        ]
+      },
+      {
+        "key": "grouping",
+        "label": "계열 묶음",
+        "default": "clustered",
+        "choices": [
+          {
+            "value": "standard",
+            "label": "표준"
+          },
+          {
+            "value": "clustered",
+            "label": "묶은 막대"
+          },
+          {
+            "value": "stacked",
+            "label": "누적"
+          },
+          {
+            "value": "percentStacked",
+            "label": "100% 누적"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "lineChart",
+    "label": "2D 꺾은선",
+    "fields": [
+      {
+        "key": "grouping",
+        "label": "계열 묶음",
+        "default": "standard",
+        "choices": [
+          {
+            "value": "standard",
+            "label": "표준"
+          },
+          {
+            "value": "stacked",
+            "label": "누적"
+          },
+          {
+            "value": "percentStacked",
+            "label": "100% 누적"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "line3DChart",
+    "label": "3D 꺾은선",
+    "fields": [
+      {
+        "key": "grouping",
+        "label": "계열 묶음",
+        "default": "standard",
+        "choices": [
+          {
+            "value": "standard",
+            "label": "표준"
+          },
+          {
+            "value": "stacked",
+            "label": "누적"
+          },
+          {
+            "value": "percentStacked",
+            "label": "100% 누적"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "areaChart",
+    "label": "2D 영역",
+    "fields": [
+      {
+        "key": "grouping",
+        "label": "계열 묶음",
+        "default": "standard",
+        "choices": [
+          {
+            "value": "standard",
+            "label": "표준"
+          },
+          {
+            "value": "stacked",
+            "label": "누적"
+          },
+          {
+            "value": "percentStacked",
+            "label": "100% 누적"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "area3DChart",
+    "label": "3D 영역",
+    "fields": [
+      {
+        "key": "grouping",
+        "label": "계열 묶음",
+        "default": "standard",
+        "choices": [
+          {
+            "value": "standard",
+            "label": "표준"
+          },
+          {
+            "value": "stacked",
+            "label": "누적"
+          },
+          {
+            "value": "percentStacked",
+            "label": "100% 누적"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "pieChart",
+    "label": "2D 원형",
+    "fields": []
+  },
+  {
+    "kind": "pie3DChart",
+    "label": "3D 원형",
+    "fields": []
+  },
+  {
+    "kind": "doughnutChart",
+    "label": "도넛 (계열별 고리)",
+    "fields": []
+  },
+  {
+    "kind": "ofPieChart",
+    "label": "보조 원형/막대",
+    "fields": [
+      {
+        "key": "of_pie_type",
+        "label": "보조 도표",
+        "default": "pie",
+        "choices": [
+          {
+            "value": "pie",
+            "label": "원형"
+          },
+          {
+            "value": "bar",
+            "label": "막대"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "radarChart",
+    "label": "방사형",
+    "fields": [
+      {
+        "key": "radar_style",
+        "label": "방사형 스타일",
+        "default": "marker",
+        "choices": [
+          {
+            "value": "standard",
+            "label": "선"
+          },
+          {
+            "value": "marker",
+            "label": "선과 표식"
+          },
+          {
+            "value": "filled",
+            "label": "채움"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "scatterChart",
+    "label": "분산형 (명시적 X·Y)",
+    "fields": [
+      {
+        "key": "scatter_style",
+        "label": "분산형 스타일",
+        "default": "marker",
+        "choices": [
+          {
+            "value": "none",
+            "label": "선·표식 없음"
+          },
+          {
+            "value": "line",
+            "label": "직선"
+          },
+          {
+            "value": "lineMarker",
+            "label": "직선과 표식"
+          },
+          {
+            "value": "marker",
+            "label": "표식"
+          },
+          {
+            "value": "smooth",
+            "label": "곡선"
+          },
+          {
+            "value": "smoothMarker",
+            "label": "곡선과 표식"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "bubbleChart",
+    "label": "버블 (명시적 X·Y·크기)",
+    "fields": []
+  },
+  {
+    "kind": "stockChart",
+    "label": "주가 (역할별 HLC/OHLC)",
+    "fields": [
+      {
+        "key": "stock_layout",
+        "label": "주가 데이터 역할",
+        "default": "highLowClose",
+        "choices": [
+          {
+            "value": "highLowClose",
+            "label": "고가·저가·종가 (HLC)"
+          },
+          {
+            "value": "openHighLowClose",
+            "label": "시가·고가·저가·종가 (OHLC)"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "surfaceChart",
+    "label": "2D 표면 (행렬)",
+    "fields": [
+      {
+        "key": "wireframe",
+        "label": "표면 표현",
+        "default": "false",
+        "choices": [
+          {
+            "value": "false",
+            "label": "채운 표면"
+          },
+          {
+            "value": "true",
+            "label": "와이어프레임"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "surface3DChart",
+    "label": "3D 표면 (행렬)",
+    "fields": [
+      {
+        "key": "wireframe",
+        "label": "표면 표현",
+        "default": "false",
+        "choices": [
+          {
+            "value": "false",
+            "label": "채운 표면"
+          },
+          {
+            "value": "true",
+            "label": "와이어프레임"
+          }
+        ]
+      }
+    ]
+  }
+]

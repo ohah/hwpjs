@@ -31,7 +31,7 @@ export function paintChartScatter(ctx, scatter, plot, x, y, color) {
     for (const row of scatter.rows) {
       ctx.strokeStyle = color(row.series_node);
       ctx.fillStyle = color(row.series_node);
-      if (scatter.style !== 'marker') {
+      if (scatter.style !== 'marker' && scatter.style !== 'none') {
         ctx.beginPath();
         if (row.curves)
           for (const path of row.curves) {
@@ -53,7 +53,7 @@ export function paintChartScatter(ctx, scatter, plot, x, y, color) {
         ctx.stroke();
       }
       const marker = row.marker ?? {
-        symbol: ['line', 'smooth'].includes(scatter.style) ? 'none' : 'circle',
+        symbol: ['none', 'line', 'smooth'].includes(scatter.style) ? 'none' : 'circle',
         radius: 3,
       };
       for (const point of row.points) {
