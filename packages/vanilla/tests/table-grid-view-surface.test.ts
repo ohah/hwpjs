@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createCanvasSurface } from '../src/surface.ts';
 import { EditorState } from '@hwpjs/core';
+import { DomEventTarget } from './dom-event-target-fixture.mjs';
 function fixture(ready = false) {
   const observers = new Set<any>(),
     frames = new Set<number>();
@@ -14,9 +15,9 @@ function fixture(ready = false) {
     { measureText: () => ({ width: 8, actualBoundingBoxAscent: 8, actualBoundingBoxDescent: 2 }) },
     { get: (o: any, k) => o[k] ?? (() => {}) },
   );
-  const doc: any = {
+  const doc: any = Object.assign(new DomEventTarget(), {
     activeElement: null,
-    defaultView: {
+    defaultView: Object.assign(new DomEventTarget(), {
       AbortController,
       navigator: { platform: 'test' },
       setInterval,
@@ -37,9 +38,9 @@ function fixture(ready = false) {
           observers.delete(this);
         }
       },
-    },
-  };
-  class Element extends EventTarget {
+    }),
+  });
+  class Element extends DomEventTarget {
     ownerDocument = doc;
     children: any[] = [];
     parent: any = null;

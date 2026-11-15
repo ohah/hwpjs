@@ -53,6 +53,21 @@ jobs:
           test -f ./apps/docs/docs/public/editor/hwpjs/hwpjs.wasm || exit 1
           bun ./tools/build-packages.mjs --package=core --web --wasm="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
           bun ./tools/build-packages.mjs --package=vanilla --web --wasm="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
+      - name: Verify committed Native known owner-window profile
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tools/known-native-profile-inputs.mjs packages/core/dist apps/docs/docs/public/editor/hwpjs/hwpjs.wasm > "$RUNNER_TEMP/known-native-inputs.json"
+          export HWPJS_TEST_WASM="$(node -e 'console.log(require(process.argv[1]).wasm)' "$RUNNER_TEMP/known-native-inputs.json")"
+          export HWPJS_TEST_WASM_SHA256="$(node -e 'console.log(require(process.argv[1]).sha256)' "$RUNNER_TEMP/known-native-inputs.json")"
+          node --test --test-concurrency=1 --test-reporter=tap tools/tests/forms-known-profile.test.mjs | tee "$RUNNER_TEMP/forms-known-profile.tap"
+          grep -Eq '^# tests 2$' "$RUNNER_TEMP/forms-known-profile.tap"
+          grep -Eq '^# pass 2$' "$RUNNER_TEMP/forms-known-profile.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/forms-known-profile.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/forms-known-profile.tap"
+      - name: Test Native input provenance checks
+        run: node --test tools/tests/known-native-profile-inputs.test.mjs
       - name: Test shortcut defaults, presentation and input boundaries
         timeout-minutes: 2
         shell: bash

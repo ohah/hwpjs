@@ -1,4 +1,5 @@
 // 실제 Canvas/Surface를 사용하며 renderer·Core 응답만 통제한다. Native·픽셀 증거가 아니다.
+import { DomEventTarget } from './dom-event-target-fixture.mjs';
 import {
   DEFAULT_CANVAS_DISPLAY_OPTIONS,
   canvasDisplayOptions,
@@ -13,14 +14,15 @@ export function fixture() {
     reports = [];
   let picture = null,
     pictureSelections = 0;
-  const doc = {
+  let objectSelectionClears = 0;
+  const doc = Object.assign(new DomEventTarget(), {
     visibilityState: 'visible',
     activeElement: null,
     fonts: new EventTarget(),
     modal: false,
     querySelector: () => (doc.modal ? {} : null),
-  };
-  doc.defaultView = {
+  });
+  doc.defaultView = Object.assign(new DomEventTarget(), {
     AbortController,
     navigator: { platform: 'test' },
     setTimeout,
@@ -33,8 +35,8 @@ export function fixture() {
       observe() {}
       disconnect() {}
     },
-  };
-  class Element extends EventTarget {
+  });
+  class Element extends DomEventTarget {
     ownerDocument = doc;
     children = [];
     style = {};
@@ -207,6 +209,11 @@ export function fixture() {
     tableBackgroundReader() {},
     chartReader() {},
     select() {},
+    // This fixture has no selectable chart/drawing scene; only clearing is supported.
+    selectObject(value) {
+      if (value !== null) throw Error('UnexpectedObjectSelection');
+      objectSelectionClears++;
+    },
     preview() {},
     onGeometry() {},
     flushProjection() {},
@@ -229,6 +236,7 @@ export function fixture() {
     waits,
     doc,
     pictureSelections: () => pictureSelections,
+    objectSelectionClears: () => objectSelectionClears,
     install,
     state: () => state,
     revoke: () => (active = false),

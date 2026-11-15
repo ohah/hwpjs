@@ -427,6 +427,31 @@ for (const format of ['hwp5', 'hwpx'])
       await surfaceTick();
     };
     try {
+      for (const target of [f.doc, f.doc.defaultView]) {
+        const order: number[] = [];
+        const first = () => order.push(1);
+        const second = () => order.push(2);
+        target.addEventListener('fixture-contract', first, true);
+        target.addEventListener('fixture-contract', second, true);
+        target.addEventListener('fixture-contract', first, true);
+        target.dispatchEvent(new Event('fixture-contract'));
+        expect(order).toEqual([1, 2]);
+        target.removeEventListener('fixture-contract', first, true);
+        target.dispatchEvent(new Event('fixture-contract'));
+        expect(order).toEqual([1, 2, 2]);
+        target.removeEventListener('fixture-contract', second, true);
+        target.dispatchEvent(new Event('fixture-contract'));
+        expect(order).toEqual([1, 2, 2]);
+      }
+      // The real Surface binds both document and window, including capture listeners.
+      expect(() => f.renderer.selectObject({ kind: 'drawing' })).toThrow(
+        'UnexpectedObjectSelection',
+      );
+      const clears = f.objectSelectionClears();
+      f.doc.dispatchEvent(new Event('pointerdown'));
+      expect(f.objectSelectionClears()).toBe(clears + 1);
+      f.doc.defaultView.dispatchEvent(new Event('blur'));
+      expect(f.objectSelectionClears()).toBe(clears + 2);
       await select();
       h.key();
       await tick();
@@ -478,5 +503,9 @@ for (const format of ['hwp5', 'hwpx'])
     } finally {
       h.dispose();
       await surface.dispose();
+      const clears = f.objectSelectionClears();
+      f.doc.dispatchEvent(new Event('pointerdown'));
+      f.doc.defaultView.dispatchEvent(new Event('blur'));
+      expect(f.objectSelectionClears()).toBe(clears);
     }
   });

@@ -38,14 +38,24 @@ async function run(format, body, change = () => {}) {
     point?.createdCell
       ? content.paragraphs.find((p) => p.createdCell?.identity === point.createdCell.identity)
       : sourceParagraph(point);
-  let dialogListener, observer;
-  f.doc.addEventListener = (type, listener) => {
-    if (type === 'beforetoggle') dialogListener = listener;
+  let observer;
+  const dialogListeners = new Set();
+  const addEventListener = f.doc.addEventListener.bind(f.doc);
+  const removeEventListener = f.doc.removeEventListener.bind(f.doc);
+  f.doc.addEventListener = (type, listener, options) => {
+    if (type === 'beforetoggle') dialogListeners.add(listener);
+    addEventListener(type, listener, options);
   };
-  f.doc.removeEventListener = (type) => {
-    if (type === 'beforetoggle') dialogListener = undefined;
+  f.doc.removeEventListener = (type, listener, options) => {
+    if (type === 'beforetoggle') dialogListeners.delete(listener);
+    removeEventListener(type, listener, options);
   };
-  f.dialogEvent = () => dialogListener?.({ target: { tagName: 'DIALOG' } });
+  f.dialogEvent = () => {
+    const event = new Event('beforetoggle');
+    // This fake DOM has no bubbling tree; dispatch the captured dialog event on Document.
+    Object.defineProperty(event, 'target', { value: { tagName: 'DIALOG' } });
+    f.doc.dispatchEvent(event);
+  };
   const records = [];
   f.doc.documentElement = {};
   f.doc.defaultView.MutationObserver = class {
@@ -83,7 +93,10 @@ async function run(format, body, change = () => {}) {
     while (f.waits.length) f.reject();
     await s.dispose();
     assert.equal(observer.disconnected, true);
-    assert.equal(dialogListener, undefined);
+    assert.equal(dialogListeners.size, 0);
+    const clears = f.objectSelectionClears();
+    f.dialogEvent();
+    assert.equal(f.objectSelectionClears(), clears);
   }
 }
 for (const format of ['hwp5', 'hwpx']) {

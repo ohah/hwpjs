@@ -18,6 +18,7 @@ test('verified profile preserves known-only and owner-window tiers', () => {
   }
   for (const sha of [
     current,
+    'a3a363615683bffcace0212df625c8351f8546bab9aa23a824c91863db95a6e3',
     'afd903edc5658543b768491efb6ee6fbdbe185a8f393334a363acbd2eb5510ae',
     '8ab4d335f7fba4aa764ed3e1191c390f17ee80f053b9ada89748a490547d1980',
     '50f1038dd81d87ea848cb160cf3d3759a788fe00235c99a04a95260f25199fb7',
@@ -61,6 +62,10 @@ test('unknown profiles and metadata never register a caller-compiled module', as
     assert.equal(verifiedNativeContract(sha), undefined);
     assert.equal(verifiedOwnerWindowProfile(sha), false);
   }
+  assert.equal(
+    verifiedNativeContract('5572c4f3bdbe08a6e3abb7c265d3a30661e11d4e224ca7500d7ee1a25ce62613'),
+    undefined,
+  );
   assert.equal(allowsOwnerWindowProjection(undefined), false);
   assert.equal(allowsOwnerWindowProjection({ contract: 'other', sha256: current } as any), false);
   verifiedNativeContract(current);

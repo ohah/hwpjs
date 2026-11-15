@@ -17,3 +17,11 @@
 여러 문단이 있는 원본 표 셀의 격자 편집 엔진 `202fc55283b670ea7c695ef3a326a0e6b8c86af3def7232c8e5bfab003699389`를 추가했습니다. 기존 `28d2` 프로필을 유지하며 실제 SDK 33개, Reader/Worker 6개, 모듈 소유권·COW·이력 회귀 49개를 통과했습니다. primitive·독립 파일 오라클·실제 브라우저·공개 배포의 근거는 [셀 문단 계약](source-table-grid-cell-paragraphs.md)에서 구분합니다. 새 지문 등록은 전체 문서의 조판 동치를 보증하지 않습니다.
 
 새 이력 포인터 예약 엔진 `438044e0060fb0f40ab8a4a76eee2027e387f68579d547487fcd74ca88129088`도 등록했습니다. 202fc를 포함한 기존 프로필을 유지하며 실제 SDK 33개, Reader/Worker 6개, 소유권·COW·모듈 등록 회귀 26개가 통과했습니다. 예약 하한과 플랫폼별 실측은 [HWPX 이력](hwpx-edit-history.md), 표의 정밀 실패는 [인라인 표 판정](inline-table-fit-rejection.md)이 소유합니다. 현재 Native 전체 통과를 뜻하지 않습니다.
+
+## 차트 확장 엔진의 기존 편집 계약
+
+공개 Small 엔진 `a3a363615683bffcace0212df625c8351f8546bab9aa23a824c91863db95a6e3`은 기존 owner-window 프로필에 추가합니다. HWP5·공통 owner-window 소스와 기존 함수 서명을 유지하며 차트 capability만 확장한 빌드입니다. 공식 로더가 실제 바이트로 컴파일한 모듈의 등록과 기존 원본 폼의 편집·저장·재열기·undo/redo를 확인했고, 등록 후 HWP5 글상자에서도 현재 본문과 조회 값의 일치 및 undo 복귀를 확인했습니다. 이 결과는 모든 문서에서 부분 투영이 선택된다는 뜻이 아닙니다. HWP5 폼 저장의 기본 `LayoutReflowRequired` 거부는 유지하며, 위 저장·재열기 관측은 `allowStaleLayout: true`를 명시한 경우입니다.
+
+이 엔진의 지문 등록 누락은 배포 전 CI에서 재현했습니다. 로더를 거치지 않고 직접 컴파일한 같은 바이트와 미지의 지문은 계속 등록되지 않으며, 별도의 Safe 빌드는 이 추가 등록 대상이 아닙니다. `tools/tests/forms-known-profile.test.mjs`는 실제 로더의 등록과 이 음성을 함께 검사합니다. 프로필 추가 전의 SDK·브라우저 결과를 새 프로필의 실행 검증으로 대신하지 않습니다.
+
+문서 배포의 reusable quality도 공식 Core 빌드 후 커밋된 WASM·패키지 바이트와 메타데이터를 대조하고 이 두 제품 검사를 통과해야 합니다. `tools/known-native-profile-inputs.mjs`는 검사 입력만 검증하며 모듈 프로필을 발급하지 않습니다. 허용 여부와 투영 선호의 단일 출처는 위 Core Map과 private WeakMap으로 유지합니다.

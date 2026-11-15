@@ -1,4 +1,5 @@
 import { EditorState, createParagraphSelection } from '@hwpjs/core';
+import { DomEventTarget } from './dom-event-target-fixture.mjs';
 
 export function fixture(ready = true) {
   const observers = new Set<any>(),
@@ -17,10 +18,10 @@ export function fixture(ready = true) {
     },
     { get: (o: any, k) => o[k] ?? (() => {}) },
   );
-  const doc: any = {
+  const doc: any = Object.assign(new DomEventTarget(), {
     fonts: new EventTarget(),
     activeElement: null,
-    defaultView: {
+    defaultView: Object.assign(new DomEventTarget(), {
       AbortController,
       navigator: { platform: 'test' },
       setInterval,
@@ -42,9 +43,9 @@ export function fixture(ready = true) {
           observers.delete(this);
         }
       },
-    },
-  };
-  class Element extends EventTarget {
+    }),
+  });
+  class Element extends DomEventTarget {
     ownerDocument = doc;
     children: any[] = [];
     parent: any = null;
