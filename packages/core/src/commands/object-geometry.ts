@@ -8,7 +8,7 @@ import type {
   ObjectGeometryPatch,
   ObjectGeometrySelector,
   ObjectGeometryFrame,
-} from '../../../../js/object-geometry-edit.mjs';
+} from './object-geometry-dto.ts';
 export type {
   ObjectGeometryObservation,
   ObjectGeometryPatch,

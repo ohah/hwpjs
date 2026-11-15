@@ -2,6 +2,8 @@
 
 이 문서는 차트·글상자 크기와 위치 편집의 소유권 계약과 측정한 범위를 구분합니다. 아래 집중 Native·정상 Core·실제 GUI 증거는 각각 명시한 입력과 경로에 해당하며, 모든 개체·변환의 지원 완료를 뜻하지 않습니다.
 
+공개 DTO의 단일 출처와 패키지 선언 검증은 [공개 타입 경계](object-geometry-public-types.md)를 따릅니다.
+
 개체 속성의 읽기 정보와 변경 권한은 분리합니다. 기존 차트 표시 자원과 글상자 observation은 제목·내용 조회에 사용합니다. 크기·위치 입력은 `getObjectGeometry`가 같은 현재 상태에서 새로 받은 Native frame만 사용합니다. Canvas 사각형이나 이전 preview는 수정 기준이 아닙니다.
 
 Core는 Native selector, 실제 control/component owner, 현재 문단·anchor, source SHA256, package link, frame, Native history revision과 session/serial을 캡처하고 불투명 target을 발행합니다. 다른 editor, 문서 교체, 선택만 바뀐 상태, undo/redo를 포함한 상태 변경 뒤의 target은 거부합니다. 공개 experimental 요청은 typed geometry 경로를 우회하지 못합니다. Native도 write 직전에 session/serial/revision과 owner/source/frame을 재검증합니다.
