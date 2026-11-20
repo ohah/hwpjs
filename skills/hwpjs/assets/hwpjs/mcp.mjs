@@ -500,7 +500,7 @@ function members(proto, table) {
 	}
 }
 /** Shadows a prototype member with an own value, so a getter that builds from the instance runs once. */
-function own$2(inst, key, value, enumerable = true) {
+function own$3(inst, key, value, enumerable = true) {
 	Object.defineProperty(inst, key, {
 		configurable: true,
 		writable: true,
@@ -511,7 +511,7 @@ function own$2(inst, key, value, enumerable = true) {
 }
 /** Like {@link own}, for a member that was never an own data property and has to stay out of `Object.keys`. */
 function hide(inst, key, value) {
-	return own$2(inst, key, value, false);
+	return own$3(inst, key, value, false);
 }
 /** Adds members a table derives from the instance: each builds on first read and shadows as own data, and assignment shadows the same way, as when these were own properties. */
 /* @__NO_SIDE_EFFECTS__ */
@@ -522,10 +522,10 @@ function derived(computes, table) {
 			configurable: true,
 			enumerable: true,
 			get() {
-				return own$2(this, key, compute(this));
+				return own$3(this, key, compute(this));
 			},
 			set(value) {
-				own$2(this, key, value);
+				own$3(this, key, value);
 			}
 		});
 	}
@@ -535,10 +535,10 @@ function defineBound(proto, key, fn) {
 	Object.defineProperty(proto, key, {
 		configurable: true,
 		get() {
-			return this == null ? fn : own$2(this, key, fn.bind(this));
+			return this == null ? fn : own$3(this, key, fn.bind(this));
 		},
 		set(value) {
-			own$2(this, key, value);
+			own$3(this, key, value);
 		}
 	});
 }
@@ -1128,9 +1128,9 @@ function datetime$1(args) {
 	return new RegExp(`^${dateSource}T(?:${timeRegex})$`);
 }
 const anyString = /^[\s\S]{0,}$/;
-const integer$2 = /^-?\d+$/;
+const integer$4 = /^-?\d+$/;
 const number$4 = /^-?\d+(?:\.\d+)?$/;
-const boolean$2 = /^(?:true|false)$/i;
+const boolean$3 = /^(?:true|false)$/i;
 const _null$2 = /^null$/i;
 const lowercase = /^[^A-Z]*$/;
 const uppercase = /^[^a-z]*$/;
@@ -1553,7 +1553,7 @@ const $ZodType = /*@__PURE__*/ $constructor("$ZodType", (inst, def) => {
 		return hide(this, "~standard", standardProps(this));
 	},
 	set "~standard"(value) {
-		own$2(this, "~standard", value);
+		own$3(this, "~standard", value);
 	}
 });
 /** The Standard Schema surface for `inst`. Shared so wrappers can extend it without forcing it. */
@@ -1933,7 +1933,7 @@ const $ZodNumberFormat = /*@__PURE__*/ $constructor("$ZodNumberFormat", (inst, d
 });
 const $ZodBoolean = /*@__PURE__*/ $constructor("$ZodBoolean", (inst, def) => {
 	$ZodType.init(inst, def);
-	inst._zod.pattern = boolean$2;
+	inst._zod.pattern = boolean$3;
 	inst._zod.parse = (payload, _ctx) => {
 		if (def.coerce) try {
 			payload.value = Boolean(payload.value);
@@ -4747,7 +4747,7 @@ function stringifyKeyNames(bySchema, json, visited) {
 	else if (typeof rest.const === "number") rest.const = String(rest.const);
 	if (!numericType) return rest;
 	rest.type = "string";
-	if (!values) rest.pattern = (types.includes("number") ? number$4 : integer$2).source;
+	if (!values) rest.pattern = (types.includes("number") ? number$4 : integer$4).source;
 	return rest;
 }
 /** Every record of one conversion, so the carriers are found in a single pass rather than once per record. */
@@ -5159,7 +5159,7 @@ const ZodType = /*@__PURE__*/ $constructor("ZodType", (inst, def) => {
 		});
 	},
 	set "~standard"(value) {
-		own$2(this, "~standard", value);
+		own$3(this, "~standard", value);
 	},
 	parse: function _parse(data, params) {
 		return parse$5(this, data, params, { callee: _parse });
@@ -5177,7 +5177,7 @@ const ZodType = /*@__PURE__*/ $constructor("ZodType", (inst, def) => {
 		return this?.safeParseAsync;
 	},
 	set spa(value) {
-		own$2(this, "spa", value);
+		own$3(this, "spa", value);
 	},
 	validate(data, params) {
 		return validate$4(this, data, params);
@@ -5549,7 +5549,7 @@ const ZodBoolean = /*@__PURE__*/ $constructor("ZodBoolean", (inst, def) => {
 	ZodType.init(inst, def);
 	inst._zod.processJSONSchema = (ctx, json, params) => booleanProcessor(inst, ctx, json, params);
 });
-function boolean$1(params) {
+function boolean$2(params) {
 	return /* @__PURE__ */ _boolean(ZodBoolean, params);
 }
 const ZodNull = /*@__PURE__*/ $constructor("ZodNull", (inst, def) => {
@@ -5660,7 +5660,7 @@ const ZodObject = /*@__PURE__*/ $constructor("ZodObject", (inst, def) => {
 		return required$2(ZodNonOptional, this, args[0]);
 	}
 });
-function object$12(shape, params) {
+function object$13(shape, params) {
 	const def = {
 		type: "object",
 		shape: shape ?? {},
@@ -5729,7 +5729,7 @@ const ZodRecord = /*@__PURE__*/ $constructor("ZodRecord", (inst, def) => {
 	inst.keyType = def.keyType;
 	inst.valueType = def.valueType;
 });
-function record$17(keyType, valueType, params) {
+function record$19(keyType, valueType, params) {
 	if (!valueType || !valueType._zod) return new ZodRecord({
 		type: "record",
 		keyType: string$3(),
@@ -6081,12 +6081,12 @@ const LOG_LEVEL_META_KEY = "io.modelcontextprotocol/logLevel";
 const JSONValueSchema = lazy(() => union([
 	string$3(),
 	number$3(),
-	boolean$1(),
+	boolean$2(),
 	_null(),
-	record$17(string$3(), JSONValueSchema),
+	record$19(string$3(), JSONValueSchema),
 	array$2(JSONValueSchema)
 ]));
-const JSONObjectSchema = record$17(string$3(), JSONValueSchema);
+const JSONObjectSchema = record$19(string$3(), JSONValueSchema);
 const JSONArraySchema = array$2(JSONValueSchema);
 /**
 * A progress token, used to associate progress notifications with the original request.
@@ -6097,14 +6097,14 @@ const ProgressTokenSchema = union([string$3(), number$3().int()]);
 */
 const CursorSchema = string$3();
 /** @deprecated 2025-11-25 wire vocabulary with no SDK runtime; kept importable for interoperability only. */
-const TaskMetadataSchema = object$12({ ttl: number$3().optional() });
+const TaskMetadataSchema = object$13({ ttl: number$3().optional() });
 /**
 * Metadata for associating messages with a task.
 * Include this in the `_meta` field under the key `io.modelcontextprotocol/related-task`.
 *
 * @deprecated 2025-11-25 wire vocabulary with no SDK runtime; kept importable for interoperability only.
 */
-const RelatedTaskMetadataSchema = object$12({ taskId: string$3() });
+const RelatedTaskMetadataSchema = object$13({ taskId: string$3() });
 const RequestMetaSchema = looseObject({
 	progressToken: ProgressTokenSchema.optional(),
 	[RELATED_TASK_META_KEY]: RelatedTaskMetadataSchema.optional()
@@ -6112,19 +6112,19 @@ const RequestMetaSchema = looseObject({
 /**
 * Common params for any request.
 */
-const BaseRequestParamsSchema = object$12({ _meta: RequestMetaSchema.optional() });
+const BaseRequestParamsSchema = object$13({ _meta: RequestMetaSchema.optional() });
 /**
 * Common params for any task-augmented request.
 *
 * @deprecated 2025-11-25 wire vocabulary with no SDK runtime; kept importable for interoperability only.
 */
 const TaskAugmentedRequestParamsSchema = BaseRequestParamsSchema.extend({ task: TaskMetadataSchema.optional() });
-const RequestSchema = object$12({
+const RequestSchema = object$13({
 	method: string$3(),
 	params: BaseRequestParamsSchema.loose().optional()
 });
-const NotificationsParamsSchema = object$12({ _meta: RequestMetaSchema.optional() });
-const NotificationSchema = object$12({
+const NotificationsParamsSchema = object$13({ _meta: RequestMetaSchema.optional() });
+const NotificationSchema = object$13({
 	method: string$3(),
 	params: NotificationsParamsSchema.loose().optional()
 });
@@ -6148,7 +6148,7 @@ const RequestIdSchema = union([string$3(), number$3().int()]);
 /**
 * A request that expects a response.
 */
-const JSONRPCRequestSchema = object$12({
+const JSONRPCRequestSchema = object$13({
 	jsonrpc: literal("2.0"),
 	id: RequestIdSchema,
 	...RequestSchema.shape
@@ -6156,14 +6156,14 @@ const JSONRPCRequestSchema = object$12({
 /**
 * A notification which does not expect a response.
 */
-const JSONRPCNotificationSchema = object$12({
+const JSONRPCNotificationSchema = object$13({
 	jsonrpc: literal("2.0"),
 	...NotificationSchema.shape
 }).strict();
 /**
 * A successful (non-error) response to a request.
 */
-const JSONRPCResultResponseSchema = object$12({
+const JSONRPCResultResponseSchema = object$13({
 	jsonrpc: literal("2.0"),
 	id: RequestIdSchema,
 	result: ResultSchema
@@ -6171,10 +6171,10 @@ const JSONRPCResultResponseSchema = object$12({
 /**
 * A response to a request that indicates an error occurred.
 */
-const JSONRPCErrorResponseSchema = object$12({
+const JSONRPCErrorResponseSchema = object$13({
 	jsonrpc: literal("2.0"),
 	id: RequestIdSchema.optional(),
-	error: object$12({
+	error: object$13({
 		code: number$3().int(),
 		message: string$3(),
 		data: unknown$2().optional()
@@ -6211,7 +6211,7 @@ const CancelledNotificationSchema = NotificationSchema.extend({
 /**
 * Icon schema for use in {@link Tool | tools}, {@link Prompt | prompts}, {@link Resource | resources}, and {@link Implementation | implementations}.
 */
-const IconSchema = object$12({
+const IconSchema = object$13({
 	src: string$3(),
 	mimeType: string$3().optional(),
 	sizes: array$2(string$3()).optional(),
@@ -6221,11 +6221,11 @@ const IconSchema = object$12({
 * Base schema to add `icons` property.
 *
 */
-const IconsSchema = object$12({ icons: array$2(IconSchema).optional() });
+const IconsSchema = object$13({ icons: array$2(IconSchema).optional() });
 /**
 * Base metadata interface for common properties across {@link Resource | resources}, {@link Tool | tools}, {@link Prompt | prompts}, and {@link Implementation | implementations}.
 */
-const BaseMetadataSchema = object$12({
+const BaseMetadataSchema = object$13({
 	name: string$3(),
 	title: string$3().optional()
 });
@@ -6242,8 +6242,8 @@ const ImplementationSchema = BaseMetadataSchema.extend({
 const ElicitationCapabilitySchema = preprocess((value) => {
 	if (value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === 0) return { form: {} };
 	return value;
-}, intersection(object$12({
-	form: intersection(object$12({ applyDefaults: boolean$1().optional() }), JSONObjectSchema).optional(),
+}, intersection(object$13({
+	form: intersection(object$13({ applyDefaults: boolean$2().optional() }), JSONObjectSchema).optional(),
 	url: JSONObjectSchema.optional()
 }), JSONObjectSchema.optional()));
 /**
@@ -6272,16 +6272,16 @@ const ServerTasksCapabilitySchema = looseObject({
 /**
 * Capabilities a client may support. Known capabilities are defined here, in this schema, but this is not a closed set: any client can define its own, additional capabilities.
 */
-const ClientCapabilitiesSchema = object$12({
-	experimental: record$17(string$3(), JSONObjectSchema).optional(),
-	sampling: object$12({
+const ClientCapabilitiesSchema = object$13({
+	experimental: record$19(string$3(), JSONObjectSchema).optional(),
+	sampling: object$13({
 		context: JSONObjectSchema.optional(),
 		tools: JSONObjectSchema.optional()
 	}).optional(),
 	elicitation: ElicitationCapabilitySchema.optional(),
-	roots: object$12({ listChanged: boolean$1().optional() }).optional(),
+	roots: object$13({ listChanged: boolean$2().optional() }).optional(),
 	tasks: ClientTasksCapabilitySchema.optional(),
-	extensions: record$17(string$3(), JSONObjectSchema).optional()
+	extensions: record$19(string$3(), JSONObjectSchema).optional()
 });
 const InitializeRequestParamsSchema = BaseRequestParamsSchema.extend({
 	protocolVersion: string$3(),
@@ -6298,18 +6298,18 @@ const InitializeRequestSchema = RequestSchema.extend({
 /**
 * Capabilities that a server may support. Known capabilities are defined here, in this schema, but this is not a closed set: any server can define its own, additional capabilities.
 */
-const ServerCapabilitiesSchema = object$12({
-	experimental: record$17(string$3(), JSONObjectSchema).optional(),
+const ServerCapabilitiesSchema = object$13({
+	experimental: record$19(string$3(), JSONObjectSchema).optional(),
 	logging: JSONObjectSchema.optional(),
 	completions: JSONObjectSchema.optional(),
-	prompts: object$12({ listChanged: boolean$1().optional() }).optional(),
-	resources: object$12({
-		subscribe: boolean$1().optional(),
-		listChanged: boolean$1().optional()
+	prompts: object$13({ listChanged: boolean$2().optional() }).optional(),
+	resources: object$13({
+		subscribe: boolean$2().optional(),
+		listChanged: boolean$2().optional()
 	}).optional(),
-	tools: object$12({ listChanged: boolean$1().optional() }).optional(),
+	tools: object$13({ listChanged: boolean$2().optional() }).optional(),
 	tasks: ServerTasksCapabilitySchema.optional(),
-	extensions: record$17(string$3(), JSONObjectSchema).optional()
+	extensions: record$19(string$3(), JSONObjectSchema).optional()
 });
 /**
 * After receiving an initialize request from the client, the server sends this response.
@@ -6352,12 +6352,12 @@ const PingRequestSchema = RequestSchema.extend({
 	method: literal("ping"),
 	params: BaseRequestParamsSchema.optional()
 });
-const ProgressSchema = object$12({
+const ProgressSchema = object$13({
 	progress: number$3(),
 	total: optional$3(number$3()),
 	message: optional$3(string$3())
 });
-const ProgressNotificationParamsSchema = object$12({
+const ProgressNotificationParamsSchema = object$13({
 	...NotificationsParamsSchema.shape,
 	...ProgressSchema.shape,
 	progressToken: ProgressTokenSchema
@@ -6377,10 +6377,10 @@ const PaginatedResultSchema = ResultSchema.extend({ nextCursor: CursorSchema.opt
 /**
 * The contents of a specific resource or sub-resource.
 */
-const ResourceContentsSchema = object$12({
+const ResourceContentsSchema = object$13({
 	uri: string$3(),
 	mimeType: optional$3(string$3()),
-	_meta: record$17(string$3(), unknown$2()).optional()
+	_meta: record$19(string$3(), unknown$2()).optional()
 });
 const TextResourceContentsSchema = ResourceContentsSchema.extend({ text: string$3() });
 /**
@@ -6404,7 +6404,7 @@ const RoleSchema = _enum(["user", "assistant"]);
 /**
 * Optional annotations providing clients additional context about a resource.
 */
-const AnnotationsSchema = object$12({
+const AnnotationsSchema = object$13({
 	audience: array$2(RoleSchema).optional(),
 	priority: number$3().min(0).max(1).optional(),
 	lastModified: datetime({ offset: true }).optional()
@@ -6412,7 +6412,7 @@ const AnnotationsSchema = object$12({
 /**
 * A known resource that the server is capable of reading.
 */
-const ResourceSchema = object$12({
+const ResourceSchema = object$13({
 	...BaseMetadataSchema.shape,
 	...IconsSchema.shape,
 	uri: string$3(),
@@ -6425,7 +6425,7 @@ const ResourceSchema = object$12({
 /**
 * A template description for resources available on the server.
 */
-const ResourceTemplateSchema = object$12({
+const ResourceTemplateSchema = object$13({
 	...BaseMetadataSchema.shape,
 	...IconsSchema.shape,
 	uriTemplate: string$3(),
@@ -6494,10 +6494,10 @@ const UnsubscribeRequestSchema = RequestSchema.extend({
 * request. Each type is opt-in; the server MUST NOT send a notification type
 * the client has not explicitly requested here.
 */
-const SubscriptionFilterSchema = object$12({
-	toolsListChanged: boolean$1().optional(),
-	promptsListChanged: boolean$1().optional(),
-	resourcesListChanged: boolean$1().optional(),
+const SubscriptionFilterSchema = object$13({
+	toolsListChanged: boolean$2().optional(),
+	promptsListChanged: boolean$2().optional(),
+	resourcesListChanged: boolean$2().optional(),
 	resourceSubscriptions: array$2(string$3()).optional()
 });
 const SubscriptionsListenRequestParamsSchema = BaseRequestParamsSchema.extend({ notifications: SubscriptionFilterSchema });
@@ -6550,15 +6550,15 @@ const ResourceUpdatedNotificationSchema = NotificationSchema.extend({
 /**
 * Describes an argument that a prompt can accept.
 */
-const PromptArgumentSchema = object$12({
+const PromptArgumentSchema = object$13({
 	name: string$3(),
 	description: optional$3(string$3()),
-	required: optional$3(boolean$1())
+	required: optional$3(boolean$2())
 });
 /**
 * A prompt or prompt template that the server offers.
 */
-const PromptSchema = object$12({
+const PromptSchema = object$13({
 	...BaseMetadataSchema.shape,
 	...IconsSchema.shape,
 	description: optional$3(string$3()),
@@ -6578,7 +6578,7 @@ const ListPromptsResultSchema = PaginatedResultSchema.extend({ prompts: array$2(
 */
 const GetPromptRequestParamsSchema = BaseRequestParamsSchema.extend({
 	name: string$3(),
-	arguments: record$17(string$3(), string$3()).optional()
+	arguments: record$19(string$3(), string$3()).optional()
 });
 /**
 * Used by the client to get a prompt provided by the server.
@@ -6590,31 +6590,31 @@ const GetPromptRequestSchema = RequestSchema.extend({
 /**
 * Text provided to or from an LLM.
 */
-const TextContentSchema = object$12({
+const TextContentSchema = object$13({
 	type: literal("text"),
 	text: string$3(),
 	annotations: AnnotationsSchema.optional(),
-	_meta: record$17(string$3(), unknown$2()).optional()
+	_meta: record$19(string$3(), unknown$2()).optional()
 });
 /**
 * An image provided to or from an LLM.
 */
-const ImageContentSchema = object$12({
+const ImageContentSchema = object$13({
 	type: literal("image"),
 	data: Base64Schema,
 	mimeType: string$3(),
 	annotations: AnnotationsSchema.optional(),
-	_meta: record$17(string$3(), unknown$2()).optional()
+	_meta: record$19(string$3(), unknown$2()).optional()
 });
 /**
 * Audio content provided to or from an LLM.
 */
-const AudioContentSchema = object$12({
+const AudioContentSchema = object$13({
 	type: literal("audio"),
 	data: Base64Schema,
 	mimeType: string$3(),
 	annotations: AnnotationsSchema.optional(),
-	_meta: record$17(string$3(), unknown$2()).optional()
+	_meta: record$19(string$3(), unknown$2()).optional()
 });
 /**
 * A tool call request from an assistant (LLM).
@@ -6624,21 +6624,21 @@ const AudioContentSchema = object$12({
 * in the specification for at least twelve months. Migrate to calling LLM
 * provider APIs directly.
 */
-const ToolUseContentSchema = object$12({
+const ToolUseContentSchema = object$13({
 	type: literal("tool_use"),
 	name: string$3(),
 	id: string$3(),
-	input: record$17(string$3(), unknown$2()),
-	_meta: record$17(string$3(), unknown$2()).optional()
+	input: record$19(string$3(), unknown$2()),
+	_meta: record$19(string$3(), unknown$2()).optional()
 });
 /**
 * The contents of a resource, embedded into a prompt or tool call result.
 */
-const EmbeddedResourceSchema = object$12({
+const EmbeddedResourceSchema = object$13({
 	type: literal("resource"),
 	resource: union([TextResourceContentsSchema, BlobResourceContentsSchema]),
 	annotations: AnnotationsSchema.optional(),
-	_meta: record$17(string$3(), unknown$2()).optional()
+	_meta: record$19(string$3(), unknown$2()).optional()
 });
 /**
 * A resource that the server is capable of reading, included in a prompt or tool call result.
@@ -6659,7 +6659,7 @@ const ContentBlockSchema = union([
 /**
 * Describes a message returned as part of a prompt.
 */
-const PromptMessageSchema = object$12({
+const PromptMessageSchema = object$13({
 	role: RoleSchema,
 	content: ContentBlockSchema
 });
@@ -6687,17 +6687,17 @@ const PromptListChangedNotificationSchema = NotificationSchema.extend({
 * Clients should never make tool use decisions based on `ToolAnnotations`
 * received from untrusted servers.
 */
-const ToolAnnotationsSchema = object$12({
+const ToolAnnotationsSchema = object$13({
 	title: string$3().optional(),
-	readOnlyHint: boolean$1().optional(),
-	destructiveHint: boolean$1().optional(),
-	idempotentHint: boolean$1().optional(),
-	openWorldHint: boolean$1().optional()
+	readOnlyHint: boolean$2().optional(),
+	destructiveHint: boolean$2().optional(),
+	idempotentHint: boolean$2().optional(),
+	openWorldHint: boolean$2().optional()
 });
 /**
 * Execution-related properties for a tool.
 */
-const ToolExecutionSchema = object$12({ taskSupport: _enum([
+const ToolExecutionSchema = object$13({ taskSupport: _enum([
 	"required",
 	"optional",
 	"forbidden"
@@ -6705,19 +6705,19 @@ const ToolExecutionSchema = object$12({ taskSupport: _enum([
 /**
 * Definition for a tool the client can call.
 */
-const ToolSchema = object$12({
+const ToolSchema = object$13({
 	...BaseMetadataSchema.shape,
 	...IconsSchema.shape,
 	description: string$3().optional(),
-	inputSchema: object$12({
+	inputSchema: object$13({
 		type: literal("object"),
-		properties: record$17(string$3(), JSONValueSchema).optional(),
+		properties: record$19(string$3(), JSONValueSchema).optional(),
 		required: array$2(string$3()).optional()
 	}).catchall(unknown$2()),
 	outputSchema: looseObject({ $schema: string$3().optional() }).optional(),
 	annotations: ToolAnnotationsSchema.optional(),
 	execution: ToolExecutionSchema.optional(),
-	_meta: record$17(string$3(), unknown$2()).optional()
+	_meta: record$19(string$3(), unknown$2()).optional()
 });
 /**
 * Sent from the client to request a list of tools the server has.
@@ -6733,7 +6733,7 @@ const ListToolsResultSchema = PaginatedResultSchema.extend({ tools: array$2(Tool
 const CallToolResultSchema = ResultSchema.extend({
 	content: array$2(ContentBlockSchema).default([]),
 	structuredContent: unknown$2().optional(),
-	isError: boolean$1().optional()
+	isError: boolean$2().optional()
 });
 /**
 * {@linkcode CallToolResultSchema} extended with backwards compatibility to protocol version 2024-10-07.
@@ -6744,7 +6744,7 @@ const CompatibilityCallToolResultSchema = CallToolResultSchema.or(ResultSchema.e
 */
 const CallToolRequestParamsSchema = TaskAugmentedRequestParamsSchema.extend({
 	name: string$3(),
-	arguments: record$17(string$3(), unknown$2()).optional()
+	arguments: record$19(string$3(), unknown$2()).optional()
 });
 /**
 * Used by the client to invoke a tool provided by the server.
@@ -6764,8 +6764,8 @@ const ToolListChangedNotificationSchema = NotificationSchema.extend({
 * Base schema for list changed subscription options (without callback).
 * Used internally for Zod validation of `autoRefresh` and `debounceMs`.
 */
-const ListChangedOptionsBaseSchema = object$12({
-	autoRefresh: boolean$1().default(true),
+const ListChangedOptionsBaseSchema = object$13({
+	autoRefresh: boolean$2().default(true),
 	debounceMs: number$3().int().nonnegative().default(300)
 });
 /**
@@ -6834,7 +6834,7 @@ const LoggingMessageNotificationSchema = NotificationSchema.extend({
 * in the specification for at least twelve months. Migrate to calling LLM
 * provider APIs directly.
 */
-const ModelHintSchema = object$12({ name: string$3().optional() });
+const ModelHintSchema = object$13({ name: string$3().optional() });
 /**
 * The server's preferences for model selection, requested of the client during sampling.
 *
@@ -6842,7 +6842,7 @@ const ModelHintSchema = object$12({ name: string$3().optional() });
 * in the specification for at least twelve months. Migrate to calling LLM
 * provider APIs directly.
 */
-const ModelPreferencesSchema = object$12({
+const ModelPreferencesSchema = object$13({
 	hints: array$2(ModelHintSchema).optional(),
 	costPriority: number$3().min(0).max(1).optional(),
 	speedPriority: number$3().min(0).max(1).optional(),
@@ -6855,7 +6855,7 @@ const ModelPreferencesSchema = object$12({
 * in the specification for at least twelve months. Migrate to calling LLM
 * provider APIs directly.
 */
-const ToolChoiceSchema = object$12({ mode: _enum([
+const ToolChoiceSchema = object$13({ mode: _enum([
 	"auto",
 	"required",
 	"none"
@@ -6868,13 +6868,13 @@ const ToolChoiceSchema = object$12({ mode: _enum([
 * in the specification for at least twelve months. Migrate to calling LLM
 * provider APIs directly.
 */
-const ToolResultContentSchema = object$12({
+const ToolResultContentSchema = object$13({
 	type: literal("tool_result"),
 	toolUseId: string$3().describe("The unique identifier for the corresponding tool call."),
 	content: array$2(ContentBlockSchema),
 	structuredContent: unknown$2().optional(),
-	isError: boolean$1().optional(),
-	_meta: record$17(string$3(), unknown$2()).optional()
+	isError: boolean$2().optional(),
+	_meta: record$19(string$3(), unknown$2()).optional()
 });
 /**
 * Basic content types for sampling responses (without tool use).
@@ -6911,10 +6911,10 @@ const SamplingMessageContentBlockSchema = discriminatedUnion("type", [
 * in the specification for at least twelve months. Migrate to calling LLM
 * provider APIs directly.
 */
-const SamplingMessageSchema = object$12({
+const SamplingMessageSchema = object$13({
 	role: RoleSchema,
 	content: union([SamplingMessageContentBlockSchema, array$2(SamplingMessageContentBlockSchema)]),
-	_meta: record$17(string$3(), unknown$2()).optional()
+	_meta: record$19(string$3(), unknown$2()).optional()
 });
 /**
 * Parameters for a `sampling/createMessage` request.
@@ -6991,16 +6991,16 @@ const CreateMessageResultWithToolsSchema = ResultSchema.extend({
 /**
 * Primitive schema definition for boolean fields.
 */
-const BooleanSchemaSchema = object$12({
+const BooleanSchemaSchema = object$13({
 	type: literal("boolean"),
 	title: string$3().optional(),
 	description: string$3().optional(),
-	default: boolean$1().optional()
+	default: boolean$2().optional()
 });
 /**
 * Primitive schema definition for string fields.
 */
-const StringSchemaSchema = object$12({
+const StringSchemaSchema = object$13({
 	type: literal("string"),
 	title: string$3().optional(),
 	description: string$3().optional(),
@@ -7017,7 +7017,7 @@ const StringSchemaSchema = object$12({
 /**
 * Primitive schema definition for number fields.
 */
-const NumberSchemaSchema = object$12({
+const NumberSchemaSchema = object$13({
 	type: _enum(["number", "integer"]),
 	title: string$3().optional(),
 	description: string$3().optional(),
@@ -7028,7 +7028,7 @@ const NumberSchemaSchema = object$12({
 /**
 * Schema for single-selection enumeration without display titles for options.
 */
-const UntitledSingleSelectEnumSchemaSchema = object$12({
+const UntitledSingleSelectEnumSchemaSchema = object$13({
 	type: literal("string"),
 	title: string$3().optional(),
 	description: string$3().optional(),
@@ -7038,11 +7038,11 @@ const UntitledSingleSelectEnumSchemaSchema = object$12({
 /**
 * Schema for single-selection enumeration with display titles for each option.
 */
-const TitledSingleSelectEnumSchemaSchema = object$12({
+const TitledSingleSelectEnumSchemaSchema = object$13({
 	type: literal("string"),
 	title: string$3().optional(),
 	description: string$3().optional(),
-	oneOf: array$2(object$12({
+	oneOf: array$2(object$13({
 		const: string$3(),
 		title: string$3()
 	})),
@@ -7052,7 +7052,7 @@ const TitledSingleSelectEnumSchemaSchema = object$12({
 * Use {@linkcode TitledSingleSelectEnumSchema} instead.
 * This interface will be removed in a future version.
 */
-const LegacyTitledEnumSchemaSchema = object$12({
+const LegacyTitledEnumSchemaSchema = object$13({
 	type: literal("string"),
 	title: string$3().optional(),
 	description: string$3().optional(),
@@ -7064,13 +7064,13 @@ const SingleSelectEnumSchemaSchema = union([UntitledSingleSelectEnumSchemaSchema
 /**
 * Schema for multiple-selection enumeration without display titles for options.
 */
-const UntitledMultiSelectEnumSchemaSchema = object$12({
+const UntitledMultiSelectEnumSchemaSchema = object$13({
 	type: literal("array"),
 	title: string$3().optional(),
 	description: string$3().optional(),
 	minItems: number$3().optional(),
 	maxItems: number$3().optional(),
-	items: object$12({
+	items: object$13({
 		type: literal("string"),
 		enum: array$2(string$3())
 	}),
@@ -7079,13 +7079,13 @@ const UntitledMultiSelectEnumSchemaSchema = object$12({
 /**
 * Schema for multiple-selection enumeration with display titles for each option.
 */
-const TitledMultiSelectEnumSchemaSchema = object$12({
+const TitledMultiSelectEnumSchemaSchema = object$13({
 	type: literal("array"),
 	title: string$3().optional(),
 	description: string$3().optional(),
 	minItems: number$3().optional(),
 	maxItems: number$3().optional(),
-	items: object$12({ anyOf: array$2(object$12({
+	items: object$13({ anyOf: array$2(object$13({
 		const: string$3(),
 		title: string$3()
 	})) }),
@@ -7118,9 +7118,9 @@ const PrimitiveSchemaDefinitionSchema = union([
 const ElicitRequestFormParamsSchema = TaskAugmentedRequestParamsSchema.extend({
 	mode: literal("form").optional(),
 	message: string$3(),
-	requestedSchema: object$12({
+	requestedSchema: object$13({
 		type: literal("object"),
-		properties: record$17(string$3(), PrimitiveSchemaDefinitionSchema),
+		properties: record$19(string$3(), PrimitiveSchemaDefinitionSchema),
 		required: array$2(string$3()).optional()
 	}).catchall(unknown$2())
 });
@@ -7178,24 +7178,24 @@ const ElicitResultSchema = ResultSchema.extend({
 		"decline",
 		"cancel"
 	]),
-	content: preprocess((val) => val === null ? void 0 : val, record$17(string$3(), union([
+	content: preprocess((val) => val === null ? void 0 : val, record$19(string$3(), union([
 		string$3(),
 		number$3(),
-		boolean$1(),
+		boolean$2(),
 		array$2(string$3())
 	])).optional())
 });
 /**
 * A reference to a resource or resource template definition.
 */
-const ResourceTemplateReferenceSchema = object$12({
+const ResourceTemplateReferenceSchema = object$13({
 	type: literal("ref/resource"),
 	uri: string$3()
 });
 /**
 * Identifies a prompt.
 */
-const PromptReferenceSchema = object$12({
+const PromptReferenceSchema = object$13({
 	type: literal("ref/prompt"),
 	name: string$3()
 });
@@ -7204,11 +7204,11 @@ const PromptReferenceSchema = object$12({
 */
 const CompleteRequestParamsSchema = BaseRequestParamsSchema.extend({
 	ref: union([PromptReferenceSchema, ResourceTemplateReferenceSchema]),
-	argument: object$12({
+	argument: object$13({
 		name: string$3(),
 		value: string$3()
 	}),
-	context: object$12({ arguments: record$17(string$3(), string$3()).optional() }).optional()
+	context: object$13({ arguments: record$19(string$3(), string$3()).optional() }).optional()
 });
 /**
 * A request from the client to the server, to ask for completion options.
@@ -7223,7 +7223,7 @@ const CompleteRequestSchema = RequestSchema.extend({
 const CompleteResultSchema = ResultSchema.extend({ completion: looseObject({
 	values: array$2(string$3()).max(100),
 	total: optional$3(number$3().int()),
-	hasMore: optional$3(boolean$1())
+	hasMore: optional$3(boolean$2())
 }) });
 /**
 * Represents a root directory or file that the server can operate on.
@@ -7232,10 +7232,10 @@ const CompleteResultSchema = ResultSchema.extend({ completion: looseObject({
 * in the specification for at least twelve months. Migrate to passing paths via
 * tool parameters, resource URIs, or configuration.
 */
-const RootSchema = object$12({
+const RootSchema = object$13({
 	uri: string$3().startsWith("file://"),
 	name: string$3().optional(),
-	_meta: record$17(string$3(), unknown$2()).optional()
+	_meta: record$19(string$3(), unknown$2()).optional()
 });
 /**
 * Sent from the server to request a list of root URIs from the client.
@@ -7293,7 +7293,7 @@ const TaskStatusSchema = _enum([
 *
 * @deprecated 2025-11-25 wire vocabulary with no SDK runtime; kept importable for interoperability only.
 */
-const TaskSchema = object$12({
+const TaskSchema = object$13({
 	taskId: string$3(),
 	status: TaskStatusSchema,
 	ttl: union([number$3(), _null()]),
@@ -7475,10 +7475,10 @@ const OAuthProtectedResourceMetadataSchema = looseObject({
 	resource_documentation: string$3().optional(),
 	resource_policy_uri: string$3().url().optional(),
 	resource_tos_uri: string$3().url().optional(),
-	tls_client_certificate_bound_access_tokens: boolean$1().optional(),
+	tls_client_certificate_bound_access_tokens: boolean$2().optional(),
 	authorization_details_types_supported: array$2(string$3()).optional(),
 	dpop_signing_alg_values_supported: array$2(string$3()).optional(),
-	dpop_bound_access_tokens_required: boolean$1().optional()
+	dpop_bound_access_tokens_required: boolean$2().optional()
 });
 /**
 * RFC 8414 OAuth 2.0 Authorization Server Metadata
@@ -7502,8 +7502,8 @@ const OAuthMetadataSchema = looseObject({
 	introspection_endpoint_auth_methods_supported: array$2(string$3()).optional(),
 	introspection_endpoint_auth_signing_alg_values_supported: array$2(string$3()).optional(),
 	code_challenge_methods_supported: array$2(string$3()).optional(),
-	client_id_metadata_document_supported: boolean$1().optional(),
-	authorization_response_iss_parameter_supported: boolean$1().optional().catch(void 0),
+	client_id_metadata_document_supported: boolean$2().optional(),
+	authorization_response_iss_parameter_supported: boolean$2().optional().catch(void 0),
 	dpop_signing_alg_values_supported: array$2(string$3()).optional()
 });
 /**
@@ -7541,28 +7541,28 @@ const OpenIdProviderMetadataSchema = looseObject({
 	service_documentation: string$3().optional(),
 	claims_locales_supported: array$2(string$3()).optional(),
 	ui_locales_supported: array$2(string$3()).optional(),
-	claims_parameter_supported: boolean$1().optional(),
-	request_parameter_supported: boolean$1().optional(),
-	request_uri_parameter_supported: boolean$1().optional(),
-	require_request_uri_registration: boolean$1().optional(),
+	claims_parameter_supported: boolean$2().optional(),
+	request_parameter_supported: boolean$2().optional(),
+	request_uri_parameter_supported: boolean$2().optional(),
+	require_request_uri_registration: boolean$2().optional(),
 	op_policy_uri: SafeUrlSchema.optional(),
 	op_tos_uri: SafeUrlSchema.optional(),
-	client_id_metadata_document_supported: boolean$1().optional(),
-	authorization_response_iss_parameter_supported: boolean$1().optional().catch(void 0)
+	client_id_metadata_document_supported: boolean$2().optional(),
+	authorization_response_iss_parameter_supported: boolean$2().optional().catch(void 0)
 });
 /**
 * OpenID Connect Discovery metadata that may include OAuth 2.0 fields
 * This schema represents the real-world scenario where OIDC providers
 * return a mix of OpenID Connect and OAuth 2.0 metadata fields
 */
-const OpenIdProviderDiscoveryMetadataSchema = object$12({
+const OpenIdProviderDiscoveryMetadataSchema = object$13({
 	...OpenIdProviderMetadataSchema.shape,
 	...OAuthMetadataSchema.pick({ code_challenge_methods_supported: true }).shape
 });
 /**
 * OAuth 2.1 token response
 */
-const OAuthTokensSchema = object$12({
+const OAuthTokensSchema = object$13({
 	access_token: string$3(),
 	id_token: string$3().optional(),
 	token_type: string$3(),
@@ -7578,7 +7578,7 @@ const OAuthTokensSchema = object$12({
 * the issued token is not an access token, and per RFC 6749 §5.1 it is case-insensitive,
 * so strict checking rejects conformant IdPs.
 */
-const IdJagTokenExchangeResponseSchema = object$12({
+const IdJagTokenExchangeResponseSchema = object$13({
 	issued_token_type: literal("urn:ietf:params:oauth:token-type:id-jag"),
 	access_token: string$3(),
 	token_type: string$3().optional(),
@@ -7588,7 +7588,7 @@ const IdJagTokenExchangeResponseSchema = object$12({
 /**
 * OAuth 2.1 error response
 */
-const OAuthErrorResponseSchema = object$12({
+const OAuthErrorResponseSchema = object$13({
 	error: string$3(),
 	error_description: string$3().optional(),
 	error_uri: string$3().optional()
@@ -7600,7 +7600,7 @@ const OptionalSafeUrlSchema = SafeUrlSchema.optional().or(literal("").transform(
 /**
 * RFC 7591 OAuth 2.0 Dynamic Client Registration metadata
 */
-const OAuthClientMetadataSchema = object$12({
+const OAuthClientMetadataSchema = object$13({
 	redirect_uris: array$2(SafeUrlSchema),
 	token_endpoint_auth_method: string$3().optional(),
 	grant_types: array$2(string$3()).optional(),
@@ -7622,7 +7622,7 @@ const OAuthClientMetadataSchema = object$12({
 /**
 * RFC 7591 OAuth 2.0 Dynamic Client Registration client information
 */
-const OAuthClientInformationSchema = object$12({
+const OAuthClientInformationSchema = object$13({
 	client_id: string$3(),
 	client_secret: string$3().optional(),
 	client_id_issued_at: number$3().optional(),
@@ -7636,14 +7636,14 @@ const OAuthClientInformationFullSchema = OAuthClientMetadataSchema.merge(OAuthCl
 /**
 * RFC 7591 OAuth 2.0 Dynamic Client Registration error response
 */
-const OAuthClientRegistrationErrorSchema = object$12({
+const OAuthClientRegistrationErrorSchema = object$13({
 	error: string$3(),
 	error_description: string$3().optional()
 }).strip();
 /**
 * RFC 7009 OAuth 2.0 Token Revocation request
 */
-const OAuthTokenRevocationRequestSchema = object$12({
+const OAuthTokenRevocationRequestSchema = object$13({
 	token: string$3(),
 	token_type_hint: string$3().optional()
 }).strip();
@@ -8143,12 +8143,12 @@ function build$1() {
 	const JSONValueSchema$1 = lazy(() => union([
 		string$3(),
 		number$3(),
-		boolean$1(),
+		boolean$2(),
 		_null(),
-		record$17(string$3(), JSONValueSchema$1),
+		record$19(string$3(), JSONValueSchema$1),
 		array$2(JSONValueSchema$1)
 	]));
-	const JSONObjectSchema$1 = record$17(string$3(), JSONValueSchema$1);
+	const JSONObjectSchema$1 = record$19(string$3(), JSONValueSchema$1);
 	/**
 	* A progress token, used to associate progress notifications with the original request.
 	*/
@@ -8158,14 +8158,14 @@ function build$1() {
 	*/
 	const CursorSchema$1 = string$3();
 	/** @deprecated 2025-11-25 wire vocabulary with no SDK runtime; kept importable for interoperability only. */
-	const TaskMetadataSchema$1 = object$12({ ttl: number$3().optional() });
+	const TaskMetadataSchema$1 = object$13({ ttl: number$3().optional() });
 	/**
 	* Metadata for associating messages with a task.
 	* Include this in the `_meta` field under the key `io.modelcontextprotocol/related-task`.
 	*
 	* @deprecated 2025-11-25 wire vocabulary with no SDK runtime; kept importable for interoperability only.
 	*/
-	const RelatedTaskMetadataSchema$1 = object$12({ taskId: string$3() });
+	const RelatedTaskMetadataSchema$1 = object$13({ taskId: string$3() });
 	const RequestMetaSchema$1 = looseObject({
 		progressToken: ProgressTokenSchema$1.optional(),
 		"io.modelcontextprotocol/related-task": RelatedTaskMetadataSchema$1.optional()
@@ -8173,19 +8173,19 @@ function build$1() {
 	/**
 	* Common params for any request.
 	*/
-	const BaseRequestParamsSchema$1 = object$12({ _meta: RequestMetaSchema$1.optional() });
+	const BaseRequestParamsSchema$1 = object$13({ _meta: RequestMetaSchema$1.optional() });
 	/**
 	* Common params for any task-augmented request.
 	*
 	* @deprecated 2025-11-25 wire vocabulary with no SDK runtime; kept importable for interoperability only.
 	*/
 	const TaskAugmentedRequestParamsSchema$1 = BaseRequestParamsSchema$1.extend({ task: TaskMetadataSchema$1.optional() });
-	const RequestSchema$1 = object$12({
+	const RequestSchema$1 = object$13({
 		method: string$3(),
 		params: BaseRequestParamsSchema$1.loose().optional()
 	});
-	const NotificationsParamsSchema$1 = object$12({ _meta: RequestMetaSchema$1.optional() });
-	const NotificationSchema$1 = object$12({
+	const NotificationsParamsSchema$1 = object$13({ _meta: RequestMetaSchema$1.optional() });
+	const NotificationSchema$1 = object$13({
 		method: string$3(),
 		params: NotificationsParamsSchema$1.loose().optional()
 	});
@@ -8218,7 +8218,7 @@ function build$1() {
 	/**
 	* Icon schema for use in {@link Tool | tools}, {@link Prompt | prompts}, {@link Resource | resources}, and {@link Implementation | implementations}.
 	*/
-	const IconSchema$1 = object$12({
+	const IconSchema$1 = object$13({
 		src: string$3(),
 		mimeType: string$3().optional(),
 		sizes: array$2(string$3()).optional(),
@@ -8228,11 +8228,11 @@ function build$1() {
 	* Base schema to add `icons` property.
 	*
 	*/
-	const IconsSchema$1 = object$12({ icons: array$2(IconSchema$1).optional() });
+	const IconsSchema$1 = object$13({ icons: array$2(IconSchema$1).optional() });
 	/**
 	* Base metadata interface for common properties across {@link Resource | resources}, {@link Tool | tools}, {@link Prompt | prompts}, and {@link Implementation | implementations}.
 	*/
-	const BaseMetadataSchema$1 = object$12({
+	const BaseMetadataSchema$1 = object$13({
 		name: string$3(),
 		title: string$3().optional()
 	});
@@ -8249,8 +8249,8 @@ function build$1() {
 	const ElicitationCapabilitySchema = preprocess((value) => {
 		if (value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === 0) return { form: {} };
 		return value;
-	}, intersection(object$12({
-		form: intersection(object$12({ applyDefaults: boolean$1().optional() }), JSONObjectSchema$1).optional(),
+	}, intersection(object$13({
+		form: intersection(object$13({ applyDefaults: boolean$2().optional() }), JSONObjectSchema$1).optional(),
 		url: JSONObjectSchema$1.optional()
 	}), JSONObjectSchema$1.optional()));
 	/**
@@ -8279,16 +8279,16 @@ function build$1() {
 	/**
 	* Capabilities a client may support. Known capabilities are defined here, in this schema, but this is not a closed set: any client can define its own, additional capabilities.
 	*/
-	const ClientCapabilitiesSchema$1 = object$12({
-		experimental: record$17(string$3(), JSONObjectSchema$1).optional(),
-		sampling: object$12({
+	const ClientCapabilitiesSchema$1 = object$13({
+		experimental: record$19(string$3(), JSONObjectSchema$1).optional(),
+		sampling: object$13({
 			context: JSONObjectSchema$1.optional(),
 			tools: JSONObjectSchema$1.optional()
 		}).optional(),
 		elicitation: ElicitationCapabilitySchema.optional(),
-		roots: object$12({ listChanged: boolean$1().optional() }).optional(),
+		roots: object$13({ listChanged: boolean$2().optional() }).optional(),
 		tasks: ClientTasksCapabilitySchema$1.optional(),
-		extensions: record$17(string$3(), JSONObjectSchema$1).optional()
+		extensions: record$19(string$3(), JSONObjectSchema$1).optional()
 	});
 	const InitializeRequestParamsSchema$1 = BaseRequestParamsSchema$1.extend({
 		protocolVersion: string$3(),
@@ -8305,18 +8305,18 @@ function build$1() {
 	/**
 	* Capabilities that a server may support. Known capabilities are defined here, in this schema, but this is not a closed set: any server can define its own, additional capabilities.
 	*/
-	const ServerCapabilitiesSchema$1 = object$12({
-		experimental: record$17(string$3(), JSONObjectSchema$1).optional(),
+	const ServerCapabilitiesSchema$1 = object$13({
+		experimental: record$19(string$3(), JSONObjectSchema$1).optional(),
 		logging: JSONObjectSchema$1.optional(),
 		completions: JSONObjectSchema$1.optional(),
-		prompts: object$12({ listChanged: boolean$1().optional() }).optional(),
-		resources: object$12({
-			subscribe: boolean$1().optional(),
-			listChanged: boolean$1().optional()
+		prompts: object$13({ listChanged: boolean$2().optional() }).optional(),
+		resources: object$13({
+			subscribe: boolean$2().optional(),
+			listChanged: boolean$2().optional()
 		}).optional(),
-		tools: object$12({ listChanged: boolean$1().optional() }).optional(),
+		tools: object$13({ listChanged: boolean$2().optional() }).optional(),
 		tasks: ServerTasksCapabilitySchema$1.optional(),
-		extensions: record$17(string$3(), JSONObjectSchema$1).optional()
+		extensions: record$19(string$3(), JSONObjectSchema$1).optional()
 	});
 	/**
 	* After receiving an initialize request from the client, the server sends this response.
@@ -8341,12 +8341,12 @@ function build$1() {
 		method: literal("ping"),
 		params: BaseRequestParamsSchema$1.optional()
 	});
-	const ProgressSchema$1 = object$12({
+	const ProgressSchema$1 = object$13({
 		progress: number$3(),
 		total: optional$3(number$3()),
 		message: optional$3(string$3())
 	});
-	const ProgressNotificationParamsSchema$1 = object$12({
+	const ProgressNotificationParamsSchema$1 = object$13({
 		...NotificationsParamsSchema$1.shape,
 		...ProgressSchema$1.shape,
 		progressToken: ProgressTokenSchema$1
@@ -8366,10 +8366,10 @@ function build$1() {
 	/**
 	* The contents of a specific resource or sub-resource.
 	*/
-	const ResourceContentsSchema$1 = object$12({
+	const ResourceContentsSchema$1 = object$13({
 		uri: string$3(),
 		mimeType: optional$3(string$3()),
-		_meta: record$17(string$3(), unknown$2()).optional()
+		_meta: record$19(string$3(), unknown$2()).optional()
 	});
 	const TextResourceContentsSchema$1 = ResourceContentsSchema$1.extend({ text: string$3() });
 	/**
@@ -8393,7 +8393,7 @@ function build$1() {
 	/**
 	* Optional annotations providing clients additional context about a resource.
 	*/
-	const AnnotationsSchema$1 = object$12({
+	const AnnotationsSchema$1 = object$13({
 		audience: array$2(RoleSchema$1).optional(),
 		priority: number$3().min(0).max(1).optional(),
 		lastModified: datetime({ offset: true }).optional()
@@ -8401,7 +8401,7 @@ function build$1() {
 	/**
 	* A known resource that the server is capable of reading.
 	*/
-	const ResourceSchema$1 = object$12({
+	const ResourceSchema$1 = object$13({
 		...BaseMetadataSchema$1.shape,
 		...IconsSchema$1.shape,
 		uri: string$3(),
@@ -8414,7 +8414,7 @@ function build$1() {
 	/**
 	* A template description for resources available on the server.
 	*/
-	const ResourceTemplateSchema$1 = object$12({
+	const ResourceTemplateSchema$1 = object$13({
 		...BaseMetadataSchema$1.shape,
 		...IconsSchema$1.shape,
 		uriTemplate: string$3(),
@@ -8492,15 +8492,15 @@ function build$1() {
 	/**
 	* Describes an argument that a prompt can accept.
 	*/
-	const PromptArgumentSchema$1 = object$12({
+	const PromptArgumentSchema$1 = object$13({
 		name: string$3(),
 		description: optional$3(string$3()),
-		required: optional$3(boolean$1())
+		required: optional$3(boolean$2())
 	});
 	/**
 	* A prompt or prompt template that the server offers.
 	*/
-	const PromptSchema$1 = object$12({
+	const PromptSchema$1 = object$13({
 		...BaseMetadataSchema$1.shape,
 		...IconsSchema$1.shape,
 		description: optional$3(string$3()),
@@ -8520,7 +8520,7 @@ function build$1() {
 	*/
 	const GetPromptRequestParamsSchema$1 = BaseRequestParamsSchema$1.extend({
 		name: string$3(),
-		arguments: record$17(string$3(), string$3()).optional()
+		arguments: record$19(string$3(), string$3()).optional()
 	});
 	/**
 	* Used by the client to get a prompt provided by the server.
@@ -8532,31 +8532,31 @@ function build$1() {
 	/**
 	* Text provided to or from an LLM.
 	*/
-	const TextContentSchema$1 = object$12({
+	const TextContentSchema$1 = object$13({
 		type: literal("text"),
 		text: string$3(),
 		annotations: AnnotationsSchema$1.optional(),
-		_meta: record$17(string$3(), unknown$2()).optional()
+		_meta: record$19(string$3(), unknown$2()).optional()
 	});
 	/**
 	* An image provided to or from an LLM.
 	*/
-	const ImageContentSchema$1 = object$12({
+	const ImageContentSchema$1 = object$13({
 		type: literal("image"),
 		data: Base64Schema,
 		mimeType: string$3(),
 		annotations: AnnotationsSchema$1.optional(),
-		_meta: record$17(string$3(), unknown$2()).optional()
+		_meta: record$19(string$3(), unknown$2()).optional()
 	});
 	/**
 	* Audio content provided to or from an LLM.
 	*/
-	const AudioContentSchema$1 = object$12({
+	const AudioContentSchema$1 = object$13({
 		type: literal("audio"),
 		data: Base64Schema,
 		mimeType: string$3(),
 		annotations: AnnotationsSchema$1.optional(),
-		_meta: record$17(string$3(), unknown$2()).optional()
+		_meta: record$19(string$3(), unknown$2()).optional()
 	});
 	/**
 	* A tool call request from an assistant (LLM).
@@ -8566,21 +8566,21 @@ function build$1() {
 	* in the specification for at least twelve months. Migrate to calling LLM
 	* provider APIs directly.
 	*/
-	const ToolUseContentSchema$1 = object$12({
+	const ToolUseContentSchema$1 = object$13({
 		type: literal("tool_use"),
 		name: string$3(),
 		id: string$3(),
-		input: record$17(string$3(), unknown$2()),
-		_meta: record$17(string$3(), unknown$2()).optional()
+		input: record$19(string$3(), unknown$2()),
+		_meta: record$19(string$3(), unknown$2()).optional()
 	});
 	/**
 	* The contents of a resource, embedded into a prompt or tool call result.
 	*/
-	const EmbeddedResourceSchema$1 = object$12({
+	const EmbeddedResourceSchema$1 = object$13({
 		type: literal("resource"),
 		resource: union([TextResourceContentsSchema$1, BlobResourceContentsSchema$1]),
 		annotations: AnnotationsSchema$1.optional(),
-		_meta: record$17(string$3(), unknown$2()).optional()
+		_meta: record$19(string$3(), unknown$2()).optional()
 	});
 	/**
 	* A resource that the server is capable of reading, included in a prompt or tool call result.
@@ -8601,7 +8601,7 @@ function build$1() {
 	/**
 	* Describes a message returned as part of a prompt.
 	*/
-	const PromptMessageSchema$1 = object$12({
+	const PromptMessageSchema$1 = object$13({
 		role: RoleSchema$1,
 		content: ContentBlockSchema$1
 	});
@@ -8629,17 +8629,17 @@ function build$1() {
 	* Clients should never make tool use decisions based on `ToolAnnotations`
 	* received from untrusted servers.
 	*/
-	const ToolAnnotationsSchema$1 = object$12({
+	const ToolAnnotationsSchema$1 = object$13({
 		title: string$3().optional(),
-		readOnlyHint: boolean$1().optional(),
-		destructiveHint: boolean$1().optional(),
-		idempotentHint: boolean$1().optional(),
-		openWorldHint: boolean$1().optional()
+		readOnlyHint: boolean$2().optional(),
+		destructiveHint: boolean$2().optional(),
+		idempotentHint: boolean$2().optional(),
+		openWorldHint: boolean$2().optional()
 	});
 	/**
 	* Execution-related properties for a tool.
 	*/
-	const ToolExecutionSchema$1 = object$12({ taskSupport: _enum([
+	const ToolExecutionSchema$1 = object$13({ taskSupport: _enum([
 		"required",
 		"optional",
 		"forbidden"
@@ -8647,23 +8647,23 @@ function build$1() {
 	/**
 	* Definition for a tool the client can call.
 	*/
-	const ToolSchema$1 = object$12({
+	const ToolSchema$1 = object$13({
 		...BaseMetadataSchema$1.shape,
 		...IconsSchema$1.shape,
 		description: string$3().optional(),
-		inputSchema: object$12({
+		inputSchema: object$13({
 			type: literal("object"),
-			properties: record$17(string$3(), JSONValueSchema$1).optional(),
+			properties: record$19(string$3(), JSONValueSchema$1).optional(),
 			required: array$2(string$3()).optional()
 		}).catchall(unknown$2()),
-		outputSchema: object$12({
+		outputSchema: object$13({
 			type: literal("object"),
-			properties: record$17(string$3(), JSONValueSchema$1).optional(),
+			properties: record$19(string$3(), JSONValueSchema$1).optional(),
 			required: array$2(string$3()).optional()
 		}).catchall(unknown$2()).optional(),
 		annotations: ToolAnnotationsSchema$1.optional(),
 		execution: ToolExecutionSchema$1.optional(),
-		_meta: record$17(string$3(), unknown$2()).optional()
+		_meta: record$19(string$3(), unknown$2()).optional()
 	});
 	/**
 	* Sent from the client to request a list of tools the server has.
@@ -8678,15 +8678,15 @@ function build$1() {
 	*/
 	const CallToolResultSchema$1 = ResultSchema$1.extend({
 		content: array$2(ContentBlockSchema$1),
-		structuredContent: record$17(string$3(), unknown$2()).optional(),
-		isError: boolean$1().optional()
+		structuredContent: record$19(string$3(), unknown$2()).optional(),
+		isError: boolean$2().optional()
 	});
 	/**
 	* Parameters for a `tools/call` request.
 	*/
 	const CallToolRequestParamsSchema$1 = TaskAugmentedRequestParamsSchema$1.extend({
 		name: string$3(),
-		arguments: record$17(string$3(), unknown$2()).optional()
+		arguments: record$19(string$3(), unknown$2()).optional()
 	});
 	/**
 	* Used by the client to invoke a tool provided by the server.
@@ -8768,7 +8768,7 @@ function build$1() {
 	* in the specification for at least twelve months. Migrate to calling LLM
 	* provider APIs directly.
 	*/
-	const ModelHintSchema$1 = object$12({ name: string$3().optional() });
+	const ModelHintSchema$1 = object$13({ name: string$3().optional() });
 	/**
 	* The server's preferences for model selection, requested of the client during sampling.
 	*
@@ -8776,7 +8776,7 @@ function build$1() {
 	* in the specification for at least twelve months. Migrate to calling LLM
 	* provider APIs directly.
 	*/
-	const ModelPreferencesSchema$1 = object$12({
+	const ModelPreferencesSchema$1 = object$13({
 		hints: array$2(ModelHintSchema$1).optional(),
 		costPriority: number$3().min(0).max(1).optional(),
 		speedPriority: number$3().min(0).max(1).optional(),
@@ -8789,7 +8789,7 @@ function build$1() {
 	* in the specification for at least twelve months. Migrate to calling LLM
 	* provider APIs directly.
 	*/
-	const ToolChoiceSchema$1 = object$12({ mode: _enum([
+	const ToolChoiceSchema$1 = object$13({ mode: _enum([
 		"auto",
 		"required",
 		"none"
@@ -8802,13 +8802,13 @@ function build$1() {
 	* in the specification for at least twelve months. Migrate to calling LLM
 	* provider APIs directly.
 	*/
-	const ToolResultContentSchema$1 = object$12({
+	const ToolResultContentSchema$1 = object$13({
 		type: literal("tool_result"),
 		toolUseId: string$3().describe("The unique identifier for the corresponding tool call."),
 		content: array$2(ContentBlockSchema$1),
-		structuredContent: object$12({}).loose().optional(),
-		isError: boolean$1().optional(),
-		_meta: record$17(string$3(), unknown$2()).optional()
+		structuredContent: object$13({}).loose().optional(),
+		isError: boolean$2().optional(),
+		_meta: record$19(string$3(), unknown$2()).optional()
 	});
 	/**
 	* Basic content types for sampling responses (without tool use).
@@ -8845,10 +8845,10 @@ function build$1() {
 	* in the specification for at least twelve months. Migrate to calling LLM
 	* provider APIs directly.
 	*/
-	const SamplingMessageSchema$1 = object$12({
+	const SamplingMessageSchema$1 = object$13({
 		role: RoleSchema$1,
 		content: union([SamplingMessageContentBlockSchema$1, array$2(SamplingMessageContentBlockSchema$1)]),
-		_meta: record$17(string$3(), unknown$2()).optional()
+		_meta: record$19(string$3(), unknown$2()).optional()
 	});
 	/**
 	* Parameters for a `sampling/createMessage` request.
@@ -8925,16 +8925,16 @@ function build$1() {
 	/**
 	* Primitive schema definition for boolean fields.
 	*/
-	const BooleanSchemaSchema$1 = object$12({
+	const BooleanSchemaSchema$1 = object$13({
 		type: literal("boolean"),
 		title: string$3().optional(),
 		description: string$3().optional(),
-		default: boolean$1().optional()
+		default: boolean$2().optional()
 	});
 	/**
 	* Primitive schema definition for string fields.
 	*/
-	const StringSchemaSchema$1 = object$12({
+	const StringSchemaSchema$1 = object$13({
 		type: literal("string"),
 		title: string$3().optional(),
 		description: string$3().optional(),
@@ -8951,7 +8951,7 @@ function build$1() {
 	/**
 	* Primitive schema definition for number fields.
 	*/
-	const NumberSchemaSchema$1 = object$12({
+	const NumberSchemaSchema$1 = object$13({
 		type: _enum(["number", "integer"]),
 		title: string$3().optional(),
 		description: string$3().optional(),
@@ -8962,7 +8962,7 @@ function build$1() {
 	/**
 	* Schema for single-selection enumeration without display titles for options.
 	*/
-	const UntitledSingleSelectEnumSchemaSchema$1 = object$12({
+	const UntitledSingleSelectEnumSchemaSchema$1 = object$13({
 		type: literal("string"),
 		title: string$3().optional(),
 		description: string$3().optional(),
@@ -8972,11 +8972,11 @@ function build$1() {
 	/**
 	* Schema for single-selection enumeration with display titles for each option.
 	*/
-	const TitledSingleSelectEnumSchemaSchema$1 = object$12({
+	const TitledSingleSelectEnumSchemaSchema$1 = object$13({
 		type: literal("string"),
 		title: string$3().optional(),
 		description: string$3().optional(),
-		oneOf: array$2(object$12({
+		oneOf: array$2(object$13({
 			const: string$3(),
 			title: string$3()
 		})),
@@ -8986,7 +8986,7 @@ function build$1() {
 	* Use {@linkcode TitledSingleSelectEnumSchema} instead.
 	* This interface will be removed in a future version.
 	*/
-	const LegacyTitledEnumSchemaSchema$1 = object$12({
+	const LegacyTitledEnumSchemaSchema$1 = object$13({
 		type: literal("string"),
 		title: string$3().optional(),
 		description: string$3().optional(),
@@ -8998,13 +8998,13 @@ function build$1() {
 	/**
 	* Schema for multiple-selection enumeration without display titles for options.
 	*/
-	const UntitledMultiSelectEnumSchemaSchema$1 = object$12({
+	const UntitledMultiSelectEnumSchemaSchema$1 = object$13({
 		type: literal("array"),
 		title: string$3().optional(),
 		description: string$3().optional(),
 		minItems: number$3().optional(),
 		maxItems: number$3().optional(),
-		items: object$12({
+		items: object$13({
 			type: literal("string"),
 			enum: array$2(string$3())
 		}),
@@ -9013,13 +9013,13 @@ function build$1() {
 	/**
 	* Schema for multiple-selection enumeration with display titles for each option.
 	*/
-	const TitledMultiSelectEnumSchemaSchema$1 = object$12({
+	const TitledMultiSelectEnumSchemaSchema$1 = object$13({
 		type: literal("array"),
 		title: string$3().optional(),
 		description: string$3().optional(),
 		minItems: number$3().optional(),
 		maxItems: number$3().optional(),
-		items: object$12({ anyOf: array$2(object$12({
+		items: object$13({ anyOf: array$2(object$13({
 			const: string$3(),
 			title: string$3()
 		})) }),
@@ -9052,9 +9052,9 @@ function build$1() {
 	const ElicitRequestFormParamsSchema$1 = TaskAugmentedRequestParamsSchema$1.extend({
 		mode: literal("form").optional(),
 		message: string$3(),
-		requestedSchema: object$12({
+		requestedSchema: object$13({
 			type: literal("object"),
-			properties: record$17(string$3(), PrimitiveSchemaDefinitionSchema$1),
+			properties: record$19(string$3(), PrimitiveSchemaDefinitionSchema$1),
 			required: array$2(string$3()).optional()
 		}).catchall(unknown$2())
 	});
@@ -9104,24 +9104,24 @@ function build$1() {
 			"decline",
 			"cancel"
 		]),
-		content: preprocess((val) => val === null ? void 0 : val, record$17(string$3(), union([
+		content: preprocess((val) => val === null ? void 0 : val, record$19(string$3(), union([
 			string$3(),
 			number$3(),
-			boolean$1(),
+			boolean$2(),
 			array$2(string$3())
 		])).optional())
 	});
 	/**
 	* A reference to a resource or resource template definition.
 	*/
-	const ResourceTemplateReferenceSchema$1 = object$12({
+	const ResourceTemplateReferenceSchema$1 = object$13({
 		type: literal("ref/resource"),
 		uri: string$3()
 	});
 	/**
 	* Identifies a prompt.
 	*/
-	const PromptReferenceSchema$1 = object$12({
+	const PromptReferenceSchema$1 = object$13({
 		type: literal("ref/prompt"),
 		name: string$3()
 	});
@@ -9130,11 +9130,11 @@ function build$1() {
 	*/
 	const CompleteRequestParamsSchema$1 = BaseRequestParamsSchema$1.extend({
 		ref: union([PromptReferenceSchema$1, ResourceTemplateReferenceSchema$1]),
-		argument: object$12({
+		argument: object$13({
 			name: string$3(),
 			value: string$3()
 		}),
-		context: object$12({ arguments: record$17(string$3(), string$3()).optional() }).optional()
+		context: object$13({ arguments: record$19(string$3(), string$3()).optional() }).optional()
 	});
 	/**
 	* A request from the client to the server, to ask for completion options.
@@ -9149,7 +9149,7 @@ function build$1() {
 	const CompleteResultSchema$1 = ResultSchema$1.extend({ completion: looseObject({
 		values: array$2(string$3()).max(100),
 		total: optional$3(number$3().int()),
-		hasMore: optional$3(boolean$1())
+		hasMore: optional$3(boolean$2())
 	}) });
 	/**
 	* Represents a root directory or file that the server can operate on.
@@ -9158,10 +9158,10 @@ function build$1() {
 	* in the specification for at least twelve months. Migrate to passing paths via
 	* tool parameters, resource URIs, or configuration.
 	*/
-	const RootSchema$1 = object$12({
+	const RootSchema$1 = object$13({
 		uri: string$3().startsWith("file://"),
 		name: string$3().optional(),
-		_meta: record$17(string$3(), unknown$2()).optional()
+		_meta: record$19(string$3(), unknown$2()).optional()
 	});
 	/**
 	* Sent from the server to request a list of root URIs from the client.
@@ -9219,7 +9219,7 @@ function build$1() {
 	*
 	* @deprecated 2025-11-25 wire vocabulary with no SDK runtime; kept importable for interoperability only.
 	*/
-	const TaskSchema$1 = object$12({
+	const TaskSchema$1 = object$13({
 		taskId: string$3(),
 		status: TaskStatusSchema$1,
 		ttl: union([number$3(), _null()]),
@@ -9916,12 +9916,12 @@ function build() {
 	const JSONValueSchema$1 = lazy(() => union([
 		string$3(),
 		number$3(),
-		boolean$1(),
+		boolean$2(),
 		_null(),
-		record$17(string$3(), JSONValueSchema$1),
+		record$19(string$3(), JSONValueSchema$1),
 		array$2(JSONValueSchema$1)
 	]));
-	const JSONObjectSchema$1 = record$17(string$3(), JSONValueSchema$1);
+	const JSONObjectSchema$1 = record$19(string$3(), JSONValueSchema$1);
 	/**
 	* A progress token, used to associate progress notifications with the original request.
 	*/
@@ -9965,29 +9965,29 @@ function build() {
 		}
 	}, { message: "Invalid Base64 string" });
 	/** @deprecated 2025-11-25 wire vocabulary with no SDK runtime; kept importable for interoperability only. */
-	const TaskMetadataSchema$1 = object$12({ ttl: number$3().optional() });
+	const TaskMetadataSchema$1 = object$13({ ttl: number$3().optional() });
 	/** @deprecated 2025-11-25 wire vocabulary with no SDK runtime; kept importable for interoperability only. */
-	const RelatedTaskMetadataSchema$1 = object$12({ taskId: string$3() });
+	const RelatedTaskMetadataSchema$1 = object$13({ taskId: string$3() });
 	const RequestMetaSchema$1 = looseObject({
 		progressToken: ProgressTokenSchema$1.optional(),
 		"io.modelcontextprotocol/related-task": RelatedTaskMetadataSchema$1.optional()
 	});
-	const BaseRequestParamsSchema$1 = object$12({ _meta: RequestMetaSchema$1.optional() });
+	const BaseRequestParamsSchema$1 = object$13({ _meta: RequestMetaSchema$1.optional() });
 	/** @deprecated 2025-11-25 wire vocabulary with no SDK runtime; kept importable for interoperability only. */
 	const TaskAugmentedRequestParamsSchema$1 = BaseRequestParamsSchema$1.extend({ task: TaskMetadataSchema$1.optional() });
-	const NotificationsParamsSchema$1 = object$12({ _meta: RequestMetaSchema$1.optional() });
-	const NotificationSchema$1 = object$12({
+	const NotificationsParamsSchema$1 = object$13({ _meta: RequestMetaSchema$1.optional() });
+	const NotificationSchema$1 = object$13({
 		method: string$3(),
 		params: NotificationsParamsSchema$1.loose().optional()
 	});
-	const IconSchema$1 = object$12({
+	const IconSchema$1 = object$13({
 		src: string$3(),
 		mimeType: string$3().optional(),
 		sizes: array$2(string$3()).optional(),
 		theme: _enum(["light", "dark"]).optional()
 	});
-	const IconsSchema$1 = object$12({ icons: array$2(IconSchema$1).optional() });
-	const BaseMetadataSchema$1 = object$12({
+	const IconsSchema$1 = object$13({ icons: array$2(IconSchema$1).optional() });
+	const BaseMetadataSchema$1 = object$13({
 		name: string$3(),
 		title: string$3().optional()
 	});
@@ -10001,8 +10001,8 @@ function build() {
 	const ElicitationCapabilitySchema = preprocess((value) => {
 		if (value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === 0) return { form: {} };
 		return value;
-	}, intersection(object$12({
-		form: intersection(object$12({ applyDefaults: boolean$1().optional() }), JSONObjectSchema$1).optional(),
+	}, intersection(object$13({
+		form: intersection(object$13({ applyDefaults: boolean$2().optional() }), JSONObjectSchema$1).optional(),
 		url: JSONObjectSchema$1.optional()
 	}), JSONObjectSchema$1.optional()));
 	/** @deprecated 2025-11-25 wire vocabulary with no SDK runtime; kept importable for interoperability only. */
@@ -10020,36 +10020,36 @@ function build() {
 		cancel: JSONObjectSchema$1.optional(),
 		requests: looseObject({ tools: looseObject({ call: JSONObjectSchema$1.optional() }).optional() }).optional()
 	});
-	const ClientCapabilitiesSchema$1 = object$12({
-		experimental: record$17(string$3(), JSONObjectSchema$1).optional(),
-		sampling: object$12({
+	const ClientCapabilitiesSchema$1 = object$13({
+		experimental: record$19(string$3(), JSONObjectSchema$1).optional(),
+		sampling: object$13({
 			context: JSONObjectSchema$1.optional(),
 			tools: JSONObjectSchema$1.optional()
 		}).optional(),
 		elicitation: ElicitationCapabilitySchema.optional(),
-		roots: object$12({ listChanged: boolean$1().optional() }).optional(),
+		roots: object$13({ listChanged: boolean$2().optional() }).optional(),
 		tasks: ClientTasksCapabilitySchema$1.optional(),
-		extensions: record$17(string$3(), JSONObjectSchema$1).optional()
+		extensions: record$19(string$3(), JSONObjectSchema$1).optional()
 	});
-	const ServerCapabilitiesSchema$1 = object$12({
-		experimental: record$17(string$3(), JSONObjectSchema$1).optional(),
+	const ServerCapabilitiesSchema$1 = object$13({
+		experimental: record$19(string$3(), JSONObjectSchema$1).optional(),
 		logging: JSONObjectSchema$1.optional(),
 		completions: JSONObjectSchema$1.optional(),
-		prompts: object$12({ listChanged: boolean$1().optional() }).optional(),
-		resources: object$12({
-			subscribe: boolean$1().optional(),
-			listChanged: boolean$1().optional()
+		prompts: object$13({ listChanged: boolean$2().optional() }).optional(),
+		resources: object$13({
+			subscribe: boolean$2().optional(),
+			listChanged: boolean$2().optional()
 		}).optional(),
-		tools: object$12({ listChanged: boolean$1().optional() }).optional(),
+		tools: object$13({ listChanged: boolean$2().optional() }).optional(),
 		tasks: ServerTasksCapabilitySchema$1.optional(),
-		extensions: record$17(string$3(), JSONObjectSchema$1).optional()
+		extensions: record$19(string$3(), JSONObjectSchema$1).optional()
 	});
-	const ProgressSchema$1 = object$12({
+	const ProgressSchema$1 = object$13({
 		progress: number$3(),
 		total: optional$3(number$3()),
 		message: optional$3(string$3())
 	});
-	const ProgressNotificationParamsSchema$1 = object$12({
+	const ProgressNotificationParamsSchema$1 = object$13({
 		...NotificationsParamsSchema$1.shape,
 		...ProgressSchema$1.shape,
 		progressToken: ProgressTokenSchema$1
@@ -10067,19 +10067,19 @@ function build() {
 		method: literal("notifications/message"),
 		params: LoggingMessageNotificationParamsSchema$1
 	});
-	const ResourceContentsSchema$1 = object$12({
+	const ResourceContentsSchema$1 = object$13({
 		uri: string$3(),
 		mimeType: optional$3(string$3()),
-		_meta: record$17(string$3(), unknown$2()).optional()
+		_meta: record$19(string$3(), unknown$2()).optional()
 	});
 	const TextResourceContentsSchema$1 = ResourceContentsSchema$1.extend({ text: string$3() });
 	const BlobResourceContentsSchema$1 = ResourceContentsSchema$1.extend({ blob: Base64Schema });
-	const AnnotationsSchema$1 = object$12({
+	const AnnotationsSchema$1 = object$13({
 		audience: array$2(RoleSchema$1).optional(),
 		priority: number$3().min(0).max(1).optional(),
 		lastModified: datetime({ offset: true }).optional()
 	});
-	const ResourceSchema$1 = object$12({
+	const ResourceSchema$1 = object$13({
 		...BaseMetadataSchema$1.shape,
 		...IconsSchema$1.shape,
 		uri: string$3(),
@@ -10089,7 +10089,7 @@ function build() {
 		annotations: AnnotationsSchema$1.optional(),
 		_meta: optional$3(looseObject({}))
 	});
-	const ResourceTemplateSchema$1 = object$12({
+	const ResourceTemplateSchema$1 = object$13({
 		...BaseMetadataSchema$1.shape,
 		...IconsSchema$1.shape,
 		uriTemplate: string$3(),
@@ -10107,12 +10107,12 @@ function build() {
 		method: literal("notifications/resources/updated"),
 		params: ResourceUpdatedNotificationParamsSchema$1
 	});
-	const PromptArgumentSchema$1 = object$12({
+	const PromptArgumentSchema$1 = object$13({
 		name: string$3(),
 		description: optional$3(string$3()),
-		required: optional$3(boolean$1())
+		required: optional$3(boolean$2())
 	});
-	const PromptSchema$1 = object$12({
+	const PromptSchema$1 = object$13({
 		...BaseMetadataSchema$1.shape,
 		...IconsSchema$1.shape,
 		description: optional$3(string$3()),
@@ -10123,38 +10123,38 @@ function build() {
 		method: literal("notifications/prompts/list_changed"),
 		params: NotificationsParamsSchema$1.optional()
 	});
-	const TextContentSchema$1 = object$12({
+	const TextContentSchema$1 = object$13({
 		type: literal("text"),
 		text: string$3(),
 		annotations: AnnotationsSchema$1.optional(),
-		_meta: record$17(string$3(), unknown$2()).optional()
+		_meta: record$19(string$3(), unknown$2()).optional()
 	});
-	const ImageContentSchema$1 = object$12({
+	const ImageContentSchema$1 = object$13({
 		type: literal("image"),
 		data: Base64Schema,
 		mimeType: string$3(),
 		annotations: AnnotationsSchema$1.optional(),
-		_meta: record$17(string$3(), unknown$2()).optional()
+		_meta: record$19(string$3(), unknown$2()).optional()
 	});
-	const AudioContentSchema$1 = object$12({
+	const AudioContentSchema$1 = object$13({
 		type: literal("audio"),
 		data: Base64Schema,
 		mimeType: string$3(),
 		annotations: AnnotationsSchema$1.optional(),
-		_meta: record$17(string$3(), unknown$2()).optional()
+		_meta: record$19(string$3(), unknown$2()).optional()
 	});
-	const ToolUseContentSchema$1 = object$12({
+	const ToolUseContentSchema$1 = object$13({
 		type: literal("tool_use"),
 		name: string$3(),
 		id: string$3(),
-		input: record$17(string$3(), unknown$2()),
-		_meta: record$17(string$3(), unknown$2()).optional()
+		input: record$19(string$3(), unknown$2()),
+		_meta: record$19(string$3(), unknown$2()).optional()
 	});
-	const EmbeddedResourceSchema$1 = object$12({
+	const EmbeddedResourceSchema$1 = object$13({
 		type: literal("resource"),
 		resource: union([TextResourceContentsSchema$1, BlobResourceContentsSchema$1]),
 		annotations: AnnotationsSchema$1.optional(),
-		_meta: record$17(string$3(), unknown$2()).optional()
+		_meta: record$19(string$3(), unknown$2()).optional()
 	});
 	const ResourceLinkSchema$1 = ResourceSchema$1.extend({ type: literal("resource_link") });
 	const ContentBlockSchema$1 = union([
@@ -10164,40 +10164,40 @@ function build() {
 		ResourceLinkSchema$1,
 		EmbeddedResourceSchema$1
 	]);
-	const PromptMessageSchema$1 = object$12({
+	const PromptMessageSchema$1 = object$13({
 		role: RoleSchema$1,
 		content: ContentBlockSchema$1
 	});
-	const ToolAnnotationsSchema$1 = object$12({
+	const ToolAnnotationsSchema$1 = object$13({
 		title: string$3().optional(),
-		readOnlyHint: boolean$1().optional(),
-		destructiveHint: boolean$1().optional(),
-		idempotentHint: boolean$1().optional(),
-		openWorldHint: boolean$1().optional()
+		readOnlyHint: boolean$2().optional(),
+		destructiveHint: boolean$2().optional(),
+		idempotentHint: boolean$2().optional(),
+		openWorldHint: boolean$2().optional()
 	});
 	const ToolListChangedNotificationSchema$1 = NotificationSchema$1.extend({
 		method: literal("notifications/tools/list_changed"),
 		params: NotificationsParamsSchema$1.optional()
 	});
-	const ModelHintSchema$1 = object$12({ name: string$3().optional() });
-	const ModelPreferencesSchema$1 = object$12({
+	const ModelHintSchema$1 = object$13({ name: string$3().optional() });
+	const ModelPreferencesSchema$1 = object$13({
 		hints: array$2(ModelHintSchema$1).optional(),
 		costPriority: number$3().min(0).max(1).optional(),
 		speedPriority: number$3().min(0).max(1).optional(),
 		intelligencePriority: number$3().min(0).max(1).optional()
 	});
-	const ToolChoiceSchema$1 = object$12({ mode: _enum([
+	const ToolChoiceSchema$1 = object$13({ mode: _enum([
 		"auto",
 		"required",
 		"none"
 	]).optional() });
-	const BooleanSchemaSchema$1 = object$12({
+	const BooleanSchemaSchema$1 = object$13({
 		type: literal("boolean"),
 		title: string$3().optional(),
 		description: string$3().optional(),
-		default: boolean$1().optional()
+		default: boolean$2().optional()
 	});
-	const StringSchemaSchema$1 = object$12({
+	const StringSchemaSchema$1 = object$13({
 		type: literal("string"),
 		title: string$3().optional(),
 		description: string$3().optional(),
@@ -10211,7 +10211,7 @@ function build() {
 		]).optional(),
 		default: string$3().optional()
 	});
-	const NumberSchemaSchema$1 = object$12({
+	const NumberSchemaSchema$1 = object$13({
 		type: _enum(["number", "integer"]),
 		title: string$3().optional(),
 		description: string$3().optional(),
@@ -10219,24 +10219,24 @@ function build() {
 		maximum: number$3().optional(),
 		default: number$3().optional()
 	});
-	const UntitledSingleSelectEnumSchemaSchema$1 = object$12({
+	const UntitledSingleSelectEnumSchemaSchema$1 = object$13({
 		type: literal("string"),
 		title: string$3().optional(),
 		description: string$3().optional(),
 		enum: array$2(string$3()),
 		default: string$3().optional()
 	});
-	const TitledSingleSelectEnumSchemaSchema$1 = object$12({
+	const TitledSingleSelectEnumSchemaSchema$1 = object$13({
 		type: literal("string"),
 		title: string$3().optional(),
 		description: string$3().optional(),
-		oneOf: array$2(object$12({
+		oneOf: array$2(object$13({
 			const: string$3(),
 			title: string$3()
 		})),
 		default: string$3().optional()
 	});
-	const LegacyTitledEnumSchemaSchema$1 = object$12({
+	const LegacyTitledEnumSchemaSchema$1 = object$13({
 		type: literal("string"),
 		title: string$3().optional(),
 		description: string$3().optional(),
@@ -10245,25 +10245,25 @@ function build() {
 		default: string$3().optional()
 	});
 	const SingleSelectEnumSchemaSchema$1 = union([UntitledSingleSelectEnumSchemaSchema$1, TitledSingleSelectEnumSchemaSchema$1]);
-	const UntitledMultiSelectEnumSchemaSchema$1 = object$12({
+	const UntitledMultiSelectEnumSchemaSchema$1 = object$13({
 		type: literal("array"),
 		title: string$3().optional(),
 		description: string$3().optional(),
 		minItems: number$3().optional(),
 		maxItems: number$3().optional(),
-		items: object$12({
+		items: object$13({
 			type: literal("string"),
 			enum: array$2(string$3())
 		}),
 		default: array$2(string$3()).optional()
 	});
-	const TitledMultiSelectEnumSchemaSchema$1 = object$12({
+	const TitledMultiSelectEnumSchemaSchema$1 = object$13({
 		type: literal("array"),
 		title: string$3().optional(),
 		description: string$3().optional(),
 		minItems: number$3().optional(),
 		maxItems: number$3().optional(),
-		items: object$12({ anyOf: array$2(object$12({
+		items: object$13({ anyOf: array$2(object$13({
 			const: string$3(),
 			title: string$3()
 		})) }),
@@ -10284,27 +10284,27 @@ function build() {
 	const ElicitRequestFormParamsSchema$1 = TaskAugmentedRequestParamsSchema$1.extend({
 		mode: literal("form").optional(),
 		message: string$3(),
-		requestedSchema: object$12({
+		requestedSchema: object$13({
 			type: literal("object"),
-			properties: record$17(string$3(), PrimitiveSchemaDefinitionSchema$1),
+			properties: record$19(string$3(), PrimitiveSchemaDefinitionSchema$1),
 			required: array$2(string$3()).optional()
 		}).catchall(unknown$2())
 	});
-	const ResourceTemplateReferenceSchema$1 = object$12({
+	const ResourceTemplateReferenceSchema$1 = object$13({
 		type: literal("ref/resource"),
 		uri: string$3()
 	});
-	const PromptReferenceSchema$1 = object$12({
+	const PromptReferenceSchema$1 = object$13({
 		type: literal("ref/prompt"),
 		name: string$3()
 	});
-	const RootSchema$1 = object$12({
+	const RootSchema$1 = object$13({
 		uri: string$3().startsWith("file://"),
 		name: string$3().optional(),
-		_meta: record$17(string$3(), unknown$2()).optional()
+		_meta: record$19(string$3(), unknown$2()).optional()
 	});
 	const sharedClientCapabilityShape = ClientCapabilitiesSchema$1.shape;
-	const ClientCapabilities2026Schema = object$12({
+	const ClientCapabilities2026Schema = object$13({
 		experimental: sharedClientCapabilityShape.experimental,
 		sampling: sharedClientCapabilityShape.sampling,
 		elicitation: sharedClientCapabilityShape.elicitation,
@@ -10312,7 +10312,7 @@ function build() {
 		extensions: sharedClientCapabilityShape.extensions
 	});
 	const sharedServerCapabilityShape = ServerCapabilitiesSchema$1.shape;
-	const ServerCapabilities2026Schema = object$12({
+	const ServerCapabilities2026Schema = object$13({
 		experimental: sharedServerCapabilityShape.experimental,
 		logging: sharedServerCapabilityShape.logging,
 		completions: sharedServerCapabilityShape.completions,
@@ -10340,7 +10340,7 @@ function build() {
 		[LOG_LEVEL_META_KEY]: LoggingLevelSchema$1.optional()
 	});
 	/** 2026-era Tool: anchor-exact — no `execution` (deleted vocabulary). */
-	const ToolSchema$1 = object$12({
+	const ToolSchema$1 = object$13({
 		...BaseMetadataSchema$1.shape,
 		...IconsSchema$1.shape,
 		description: string$3().optional(),
@@ -10350,16 +10350,16 @@ function build() {
 		}),
 		outputSchema: looseObject({ $schema: string$3().optional() }).optional(),
 		annotations: ToolAnnotationsSchema$1.optional(),
-		_meta: record$17(string$3(), unknown$2()).optional()
+		_meta: record$19(string$3(), unknown$2()).optional()
 	});
 	/** 2026-era ToolResultContent (anchor-exact: `structuredContent?: unknown`). */
-	const ToolResultContentSchema$1 = object$12({
+	const ToolResultContentSchema$1 = object$13({
 		type: literal("tool_result"),
 		toolUseId: string$3(),
 		content: array$2(ContentBlockSchema$1),
 		structuredContent: unknown$2().optional(),
-		isError: boolean$1().optional(),
-		_meta: record$17(string$3(), unknown$2()).optional()
+		isError: boolean$2().optional(),
+		_meta: record$19(string$3(), unknown$2()).optional()
 	});
 	/** 2026-era sampling content union (composes the forked tool-result shape). */
 	const SamplingMessageContentBlockSchema$1 = union([
@@ -10370,10 +10370,10 @@ function build() {
 		ToolResultContentSchema$1
 	]);
 	/** 2026-era SamplingMessage (anchor-exact: single block or array). */
-	const SamplingMessageSchema$1 = object$12({
+	const SamplingMessageSchema$1 = object$13({
 		role: RoleSchema$1,
 		content: union([SamplingMessageContentBlockSchema$1, array$2(SamplingMessageContentBlockSchema$1)]),
-		_meta: record$17(string$3(), unknown$2()).optional()
+		_meta: record$19(string$3(), unknown$2()).optional()
 	});
 	/** Open union per the anchor: 'complete' | 'input_required' | string. */
 	const ResultTypeSchema = string$3();
@@ -10396,7 +10396,7 @@ function build() {
 	const CallToolResultSchema$1 = wireResult({
 		content: array$2(ContentBlockSchema$1),
 		structuredContent: unknown$2().optional(),
-		isError: boolean$1().optional()
+		isError: boolean$2().optional()
 	});
 	const ListToolsResultSchema$1 = wireResult({
 		ttlMs: number$3().int().min(0),
@@ -10431,10 +10431,10 @@ function build() {
 		cacheScope: _enum(["public", "private"]),
 		contents: array$2(union([TextResourceContentsSchema$1, BlobResourceContentsSchema$1]))
 	});
-	const CompleteResultSchema$1 = wireResult({ completion: object$12({
+	const CompleteResultSchema$1 = wireResult({ completion: object$13({
 		values: array$2(string$3()).max(100),
 		total: number$3().int().optional(),
-		hasMore: boolean$1().optional()
+		hasMore: boolean$2().optional()
 	}).loose() });
 	/** CacheableResult (SEP-2549): ttlMs and cacheScope REQUIRED per the anchor. */
 	const CacheableResultSchema = wireResult({
@@ -10449,7 +10449,7 @@ function build() {
 		instructions: string$3().optional()
 	});
 	/** 2026-era CreateMessageRequestParams (anchor-exact: forked SamplingMessage/Tool, no task augmentation). */
-	const CreateMessageRequestParamsSchema$1 = object$12({
+	const CreateMessageRequestParamsSchema$1 = object$13({
 		messages: array$2(SamplingMessageSchema$1),
 		modelPreferences: ModelPreferencesSchema$1.optional(),
 		systemPrompt: string$3().optional(),
@@ -10466,7 +10466,7 @@ function build() {
 		toolChoice: ToolChoiceSchema$1.optional()
 	});
 	/** 2026-era embedded sampling request (de-JSON-RPC'd). */
-	const CreateMessageRequestSchema$1 = object$12({
+	const CreateMessageRequestSchema$1 = object$13({
 		method: literal("sampling/createMessage"),
 		params: CreateMessageRequestParamsSchema$1
 	});
@@ -10475,29 +10475,29 @@ function build() {
 	* requests do NOT carry the per-request `_meta` envelope on this revision —
 	* the anchor declares a bare optional `_meta` on `params`.
 	*/
-	const ListRootsRequestSchema$1 = object$12({
+	const ListRootsRequestSchema$1 = object$13({
 		method: literal("roots/list"),
-		params: object$12({ _meta: record$17(string$3(), unknown$2()).optional() }).optional()
+		params: object$13({ _meta: record$19(string$3(), unknown$2()).optional() }).optional()
 	});
 	/** 2026-era embedded sampling response (anchor-exact: extends the forked SamplingMessage). */
-	const CreateMessageResultSchema$1 = object$12({
+	const CreateMessageResultSchema$1 = object$13({
 		...SamplingMessageSchema$1.shape,
 		model: string$3(),
 		stopReason: string$3().optional()
 	});
 	/** 2026-era embedded roots listing response (anchor-exact: bare `roots` array). */
-	const ListRootsResultSchema$1 = object$12({ roots: array$2(RootSchema$1) });
+	const ListRootsResultSchema$1 = object$13({ roots: array$2(RootSchema$1) });
 	/** 2026-era embedded elicitation response (anchor-exact: bare result, restricted content value types). */
-	const ElicitResultSchema$1 = object$12({
+	const ElicitResultSchema$1 = object$13({
 		action: _enum([
 			"accept",
 			"decline",
 			"cancel"
 		]),
-		content: record$17(string$3(), union([
+		content: record$19(string$3(), union([
 			string$3(),
 			number$3(),
-			boolean$1(),
+			boolean$2(),
 			array$2(string$3())
 		])).optional()
 	});
@@ -10507,7 +10507,7 @@ function build() {
 	* keyed) — the shared schema keeps the field because it is required on the
 	* frozen 2025-11-25 revision.
 	*/
-	const ElicitRequestURLParamsSchema$1 = object$12({
+	const ElicitRequestURLParamsSchema$1 = object$13({
 		mode: literal("url"),
 		message: string$3(),
 		url: string$3().url()
@@ -10515,7 +10515,7 @@ function build() {
 	/** 2026-era elicitation params (form mode is revision-identical; URL mode is the fork above). */
 	const ElicitRequestParamsSchema$1 = union([ElicitRequestFormParamsSchema$1, ElicitRequestURLParamsSchema$1]);
 	/** 2026-era embedded elicitation request (de-JSON-RPC'd; see the URL-mode fork above). */
-	const ElicitRequestSchema$1 = object$12({
+	const ElicitRequestSchema$1 = object$13({
 		method: literal("elicitation/create"),
 		params: ElicitRequestParamsSchema$1
 	});
@@ -10532,9 +10532,9 @@ function build() {
 		ElicitResultSchema$1
 	]);
 	/** Map of embedded input requests, keyed by server-assigned identifiers. */
-	const InputRequestsSchema = record$17(string$3(), InputRequestSchema);
+	const InputRequestsSchema = record$19(string$3(), InputRequestSchema);
 	/** Map of embedded input responses, keyed by the corresponding request identifiers. */
-	const InputResponsesSchema = record$17(string$3(), InputResponseSchema);
+	const InputResponsesSchema = record$19(string$3(), InputResponseSchema);
 	/**
 	* The wire InputRequiredResult: `resultType: 'input_required'` plus at least
 	* one of `inputRequests` / `requestState` (the at-least-one rule is enforced
@@ -10550,25 +10550,25 @@ function build() {
 		requestState: string$3().optional()
 	};
 	/** Anchor InputResponseRequestParams: the retry channel on top of the required request `_meta` envelope. */
-	const InputResponseRequestParamsSchema = object$12({
+	const InputResponseRequestParamsSchema = object$13({
 		_meta: RequestMetaEnvelopeSchema,
 		...retryParamsShape
 	});
 	/** Post-lift request `_meta` (progressToken + extension keys; loose). */
 	const DispatchRequestMetaSchema = looseObject({ progressToken: ProgressTokenSchema$1.optional() });
 	function wireRequest(method, paramsShape) {
-		return object$12({
+		return object$13({
 			method: literal(method),
-			params: object$12({
+			params: object$13({
 				_meta: RequestMetaEnvelopeSchema,
 				...paramsShape
 			})
 		});
 	}
 	function dispatchRequest(method, paramsShape) {
-		return object$12({
+		return object$13({
 			method: literal(method),
-			params: object$12({
+			params: object$13({
 				_meta: DispatchRequestMetaSchema.optional(),
 				...paramsShape
 			}).optional()
@@ -10576,7 +10576,7 @@ function build() {
 	}
 	const callToolParamsShape = {
 		name: string$3(),
-		arguments: record$17(string$3(), unknown$2()).optional(),
+		arguments: record$19(string$3(), unknown$2()).optional(),
 		...retryParamsShape
 	};
 	const paginatedParamsShape = { cursor: CursorSchema$1.optional() };
@@ -10585,7 +10585,7 @@ function build() {
 	const ListPromptsRequestSchema$1 = wireRequest("prompts/list", paginatedParamsShape);
 	const GetPromptRequestSchema$1 = wireRequest("prompts/get", {
 		name: string$3(),
-		arguments: record$17(string$3(), string$3()).optional(),
+		arguments: record$19(string$3(), string$3()).optional(),
 		...retryParamsShape
 	});
 	const ListResourcesRequestSchema$1 = wireRequest("resources/list", paginatedParamsShape);
@@ -10596,19 +10596,19 @@ function build() {
 	});
 	const completeParamsShape = {
 		ref: union([PromptReferenceSchema$1, ResourceTemplateReferenceSchema$1]),
-		argument: object$12({
+		argument: object$13({
 			name: string$3(),
 			value: string$3()
 		}),
-		context: object$12({ arguments: record$17(string$3(), string$3()).optional() }).optional()
+		context: object$13({ arguments: record$19(string$3(), string$3()).optional() }).optional()
 	};
 	const CompleteRequestSchema$1 = wireRequest("completion/complete", completeParamsShape);
 	const DiscoverRequestSchema$1 = wireRequest("server/discover", {});
 	/** Anchor SubscriptionFilter (2026-only). */
-	const SubscriptionFilterSchema$1 = object$12({
-		toolsListChanged: boolean$1().optional(),
-		promptsListChanged: boolean$1().optional(),
-		resourcesListChanged: boolean$1().optional(),
+	const SubscriptionFilterSchema$1 = object$13({
+		toolsListChanged: boolean$2().optional(),
+		promptsListChanged: boolean$2().optional(),
+		resourcesListChanged: boolean$2().optional(),
 		resourceSubscriptions: array$2(string$3()).optional()
 	});
 	const subscriptionsListenParamsShape = { notifications: SubscriptionFilterSchema$1 };
@@ -10635,7 +10635,7 @@ function build() {
 		"tools/list": dispatchRequest("tools/list", paginatedParamsShape),
 		"prompts/get": dispatchRequest("prompts/get", {
 			name: string$3(),
-			arguments: record$17(string$3(), string$3()).optional()
+			arguments: record$19(string$3(), string$3()).optional()
 		}),
 		"prompts/list": dispatchRequest("prompts/list", paginatedParamsShape),
 		"resources/list": dispatchRequest("resources/list", paginatedParamsShape),
@@ -10657,7 +10657,7 @@ function build() {
 		"tools/call": liftedResult({
 			content: array$2(ContentBlockSchema$1),
 			structuredContent: unknown$2().optional(),
-			isError: boolean$1().optional()
+			isError: boolean$2().optional()
 		}),
 		"tools/list": liftedResult({
 			ttlMs: number$3().int().min(0),
@@ -10692,10 +10692,10 @@ function build() {
 			cacheScope: _enum(["public", "private"]),
 			contents: array$2(union([TextResourceContentsSchema$1, BlobResourceContentsSchema$1]))
 		}),
-		"completion/complete": liftedResult({ completion: object$12({
+		"completion/complete": liftedResult({ completion: object$13({
 			values: array$2(string$3()).max(100),
 			total: number$3().int().optional(),
-			hasMore: boolean$1().optional()
+			hasMore: boolean$2().optional()
 		}).loose() }),
 		"server/discover": liftedResult({
 			ttlMs: number$3().int().min(0).catch(0),
@@ -10714,9 +10714,9 @@ function build() {
 	*/
 	const NotificationMetaSchema = looseObject({ "io.modelcontextprotocol/subscriptionId": RequestIdSchema$1.optional() });
 	/** Anchor SubscriptionsAcknowledgedNotification (2026-only). */
-	const SubscriptionsAcknowledgedNotificationSchema$1 = object$12({
+	const SubscriptionsAcknowledgedNotificationSchema$1 = object$13({
 		method: literal("notifications/subscriptions/acknowledged"),
-		params: object$12({
+		params: object$13({
 			_meta: NotificationMetaSchema.optional(),
 			notifications: SubscriptionFilterSchema$1
 		})
@@ -10728,13 +10728,13 @@ function build() {
 	* through `tasks/cancel` there). Requiredness is bare because no 2025-era
 	* traffic touches this module.
 	*/
-	const CancelledNotificationParamsSchema$1 = object$12({
+	const CancelledNotificationParamsSchema$1 = object$13({
 		_meta: NotificationMetaSchema.optional(),
 		requestId: RequestIdSchema$1,
 		reason: string$3().optional()
 	});
 	/** 2026-era `notifications/cancelled` (see the params fork above). */
-	const CancelledNotificationSchema$1 = object$12({
+	const CancelledNotificationSchema$1 = object$13({
 		method: literal("notifications/cancelled"),
 		params: CancelledNotificationParamsSchema$1
 	});
@@ -10748,7 +10748,7 @@ function build() {
 		"notifications/prompts/list_changed": PromptListChangedNotificationSchema$1,
 		"notifications/subscriptions/acknowledged": SubscriptionsAcknowledgedNotificationSchema$1
 	};
-	const wireResultResponse = (result) => object$12({
+	const wireResultResponse = (result) => object$13({
 		jsonrpc: literal("2.0"),
 		id: union([string$3(), number$3().int()]),
 		result
@@ -11327,15 +11327,15 @@ function inputSchemaMaps() {
 	const s = buildSchemas2026();
 	maps = {
 		request: {
-			"elicitation/create": object$12({
+			"elicitation/create": object$13({
 				method: literal("elicitation/create"),
 				params: s.ElicitRequestParamsSchema
 			}),
-			"sampling/createMessage": object$12({
+			"sampling/createMessage": object$13({
 				method: literal("sampling/createMessage"),
 				params: s.CreateMessageRequestParamsSchema
 			}),
-			"roots/list": object$12({
+			"roots/list": object$13({
 				method: literal("roots/list"),
 				params: looseObject({}).optional()
 			})
@@ -13953,7 +13953,7 @@ function isZodRawShape(obj) {
 */
 function normalizeRawShapeSchema(schema) {
 	if (schema === void 0) return void 0;
-	if (isZodRawShape(schema)) return object$12(schema);
+	if (isZodRawShape(schema)) return object$13(schema);
 	if (typeof schema === "object" && schema !== null && !isStandardSchema(schema) && Object.values(schema).some((v) => looksLikeZodV3(v))) throw new TypeError("Raw-shape inputSchema/outputSchema/argsSchema fields must be Zod v4 schemas. Got a Zod v3 field schema. Import from `zod/v4` (or upgrade your zod import), or wrap with `z.object({...})` yourself.");
 	if (!isStandardSchema(schema)) throw new TypeError("inputSchema/outputSchema/argsSchema must be a Standard Schema (e.g. z.object({...})) or a raw Zod shape ({ field: z.string() }).");
 	return schema;
@@ -24381,9 +24381,9 @@ async function readDocuments(options = {}) {
 }
 // ../document/src/object-reference.ts
 function buildObjectReference(value) {
-	if (!object$11(value)) throw new TypeError("InvalidObjectReferenceFields");
+	if (!object$12(value)) throw new TypeError("InvalidObjectReferenceFields");
 	const { sourceSha256, format: documentFormat, section, kind, node } = value;
-	if (!identity({
+	if (!identity$1({
 		format: documentFormat,
 		section,
 		node
@@ -24391,9 +24391,9 @@ function buildObjectReference(value) {
 	return `hwpjs-object:${sourceSha256}/${documentFormat}/s${section}/${kind}/${node}`;
 }
 function parseObjectReference(reference, expected = {}) {
-	if (typeof reference !== "string" || reference.length > 128 || !object$11(expected)) throw new TypeError("InvalidObjectReference");
+	if (typeof reference !== "string" || reference.length > 128 || !object$12(expected)) throw new TypeError("InvalidObjectReference");
 	const { sourceSha256: expectedSha256, format: expectedFormat } = expected;
-	if (expectedSha256 !== void 0 && (typeof expectedSha256 !== "string" || expectedSha256.length !== 64 || !SHA.test(expectedSha256)) || expectedFormat !== void 0 && !format(expectedFormat)) throw new TypeError("InvalidObjectReferenceExpectation");
+	if (expectedSha256 !== void 0 && (typeof expectedSha256 !== "string" || expectedSha256.length !== 64 || !SHA.test(expectedSha256)) || expectedFormat !== void 0 && !format$1(expectedFormat)) throw new TypeError("InvalidObjectReferenceExpectation");
 	const match = REFERENCE.exec(reference);
 	if (!match || match[0] !== reference) throw new TypeError("InvalidObjectReference");
 	const result = {
@@ -24403,22 +24403,22 @@ function parseObjectReference(reference, expected = {}) {
 		kind: match[4],
 		node: Number(match[5])
 	};
-	if (!uint$44(result.section) || !uint$44(result.node)) throw new TypeError("InvalidObjectReference");
+	if (!uint$55(result.section) || !uint$55(result.node)) throw new TypeError("InvalidObjectReference");
 	if (expectedSha256 !== void 0 && expectedSha256 !== result.sourceSha256) throw new Error("StaleObjectReference");
 	if (expectedFormat !== void 0 && expectedFormat !== result.format) throw new Error("ObjectReferenceFormatMismatch");
 	return result;
 }
 function canonicalImageId(value) {
-	if (!object$11(value)) throw new TypeError("InvalidImageIdentity");
+	if (!object$12(value)) throw new TypeError("InvalidImageIdentity");
 	const { format: documentFormat, section, node } = value;
-	if (!identity({
+	if (!identity$1({
 		format: documentFormat,
 		section,
 		node
 	})) throw new TypeError("InvalidImageIdentity");
 	return `${documentFormat}:s${section}:i${node}`;
 }
-var KINDS, SHA, REFERENCE, object$11, uint$44, format, identity;
+var KINDS, SHA, REFERENCE, object$12, uint$55, format$1, identity$1;
 var init_object_reference$1 = __esmMin((() => {
 	KINDS = /* @__PURE__ */ new Set([
 		"image",
@@ -24432,10 +24432,10 @@ var init_object_reference$1 = __esmMin((() => {
 	]);
 	SHA = /^[a-f0-9]{64}$/u;
 	REFERENCE = /^hwpjs-object:([a-f0-9]{64})\/(hwp5|hwpx)\/s(0|[1-9]\d*)\/(image|table|chart|equation|drawing|ole|form|unknown)\/(0|[1-9]\d*)$/u;
-	object$11 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	uint$44 = (value) => typeof value === "number" && Number.isSafeInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
-	format = (value) => value === "hwp5" || value === "hwpx";
-	identity = (value) => object$11(value) && format(value.format) && uint$44(value.section) && uint$44(value.node);
+	object$12 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	uint$55 = (value) => typeof value === "number" && Number.isSafeInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
+	format$1 = (value) => value === "hwp5" || value === "hwpx";
+	identity$1 = (value) => object$12(value) && format$1(value.format) && uint$55(value.section) && uint$55(value.node);
 }));
 // src/object-reference.ts
 var init_object_reference = __esmMin((() => {
@@ -24795,7 +24795,7 @@ var ArgumentsError = class extends Error {
 		this.code = code;
 	}
 };
-const fail$2 = (code) => {
+const fail$3 = (code) => {
 	throw new ArgumentsError(code);
 };
 const string$2 = (value) => typeof value === "string" && value.isWellFormed();
@@ -24803,17 +24803,17 @@ const reference = (value) => {
 	try {
 		return parseObjectReference(value);
 	} catch {
-		return fail$2("InvalidObjectReference");
+		return fail$3("InvalidObjectReference");
 	}
 };
 function parseArguments(argv) {
-	if (!Array.isArray(argv)) return fail$2("InvalidArguments");
+	if (!Array.isArray(argv)) return fail$3("InvalidArguments");
 	const argc = Array.isArray(argv) ? argv.length : -1;
-	if (!Number.isInteger(argc) || argc < 0 || argc > 256) fail$2("InvalidArguments");
+	if (!Number.isInteger(argc) || argc < 0 || argc > 256) fail$3("InvalidArguments");
 	const captured = [];
 	for (let index = 0; index < argc; index++) {
 		const value = argv[index];
-		if (!string$2(value)) fail$2("InvalidArguments");
+		if (!string$2(value)) fail$3("InvalidArguments");
 		captured.push(value);
 	}
 	if (captured.length === 1 && captured[0] === "--help") return Object.freeze({ command: "help" });
@@ -24826,7 +24826,7 @@ function parseArguments(argv) {
 		"images",
 		"extract-images",
 		"object"
-	].includes(command) && !Object.hasOwn(EXTENDED_OPTIONS, command)) fail$2("UnknownCommand");
+	].includes(command) && !Object.hasOwn(EXTENDED_OPTIONS, command)) fail$3("UnknownCommand");
 	if (captured.length === 2 && captured[1] === "--help") return Object.freeze({ command: "help" });
 	const definitions = {
 		read: [
@@ -24877,39 +24877,39 @@ function parseArguments(argv) {
 		}
 		if (!literal && arg.startsWith("-")) {
 			const match = /^--([a-z][a-z0-9-]*)(?:=(.*))?$/s.exec(arg);
-			if (!match || !allowed.has(match[1])) return fail$2("UnknownOption");
+			if (!match || !allowed.has(match[1])) return fail$3("UnknownOption");
 			const name = match[1];
-			if (options.has(name)) fail$2("DuplicateOption");
+			if (options.has(name)) fail$3("DuplicateOption");
 			if (name === "allow-stale-layout") {
-				if (match[2] !== void 0) fail$2("UnexpectedOptionValue");
+				if (match[2] !== void 0) fail$3("UnexpectedOptionValue");
 				options.set(name, "true");
 				continue;
 			}
 			const value = match[2] ?? captured[++i];
-			if (value === void 0 || match[2] === void 0 && value.startsWith("--")) fail$2("MissingOptionValue");
+			if (value === void 0 || match[2] === void 0 && value.startsWith("--")) fail$3("MissingOptionValue");
 			options.set(name, value);
 		} else positional.push(arg);
 	}
 	const wasm = options.get("wasm");
-	if (wasm !== void 0 && !wasm) fail$2("InvalidWasmPath");
-	if (Object.hasOwn(EXTENDED_OPTIONS, command)) return interpretExtendedArguments(command, options, positional, fail$2);
+	if (wasm !== void 0 && !wasm) fail$3("InvalidWasmPath");
+	if (Object.hasOwn(EXTENDED_OPTIONS, command)) return interpretExtendedArguments(command, options, positional, fail$3);
 	if (command === "read-many") {
-		if (positional.length < 1 || positional.length > BATCH_READ_LIMITS.maxInputs) fail$2("InvalidInputPaths");
+		if (positional.length < 1 || positional.length > BATCH_READ_LIMITS.maxInputs) fail$3("InvalidInputPaths");
 		const paths = /* @__PURE__ */ new Map();
 		for (const path of positional) {
-			if (!path || path === "-" || path.length > BATCH_READ_LIMITS.maxInputPathUnits) fail$2("InvalidInputPath");
-			for (let at = 0; at < path.length; at++) if (path.charCodeAt(at) < 32 || path.charCodeAt(at) === 127) fail$2("InvalidInputPath");
-			if (paths.has(path)) fail$2("DuplicateInputPath");
+			if (!path || path === "-" || path.length > BATCH_READ_LIMITS.maxInputPathUnits) fail$3("InvalidInputPath");
+			for (let at = 0; at < path.length; at++) if (path.charCodeAt(at) < 32 || path.charCodeAt(at) === 127) fail$3("InvalidInputPath");
+			if (paths.has(path)) fail$3("DuplicateInputPath");
 			paths.set(path, true);
 		}
 		const view = options.get("view") ?? "content";
-		if (view !== "content" && view !== "structure") return fail$2("InvalidReadView");
+		if (view !== "content" && view !== "structure") return fail$3("InvalidReadView");
 		const format = options.get("format") ?? "text";
-		if (format !== "text" && format !== "markdown") return fail$2("InvalidReadFormat");
+		if (format !== "text" && format !== "markdown") return fail$3("InvalidReadFormat");
 		const concurrency = options.get("concurrency") ?? "1";
-		if (!/^[12]$/.test(concurrency)) fail$2("InvalidConcurrency");
+		if (!/^[12]$/.test(concurrency)) fail$3("InvalidConcurrency");
 		const budget = options.get("max-output-bytes") ?? String(BATCH_READ_LIMITS.defaultOutputBytes);
-		if (!/^[1-9]\d*$/.test(budget) || !Number.isSafeInteger(Number(budget)) || Number(budget) > BATCH_READ_LIMITS.maxOutputBytes) fail$2("InvalidOutputBudget");
+		if (!/^[1-9]\d*$/.test(budget) || !Number.isSafeInteger(Number(budget)) || Number(budget) > BATCH_READ_LIMITS.maxOutputBytes) fail$3("InvalidOutputBudget");
 		return Object.freeze({
 			command,
 			inputPaths: Object.freeze([...positional]),
@@ -24920,14 +24920,14 @@ function parseArguments(argv) {
 			...wasm === void 0 ? {} : { wasm }
 		});
 	}
-	if (positional.length !== 1 || !positional[0] || positional[0] === "-") fail$2("ExpectedInputFile");
+	if (positional.length !== 1 || !positional[0] || positional[0] === "-") fail$3("ExpectedInputFile");
 	const input = positional[0];
 	if (command === "object") {
 		const ref = options.get("ref");
-		if (ref === void 0) return fail$2("InvalidObjectReference");
+		if (ref === void 0) return fail$3("InvalidObjectReference");
 		const parsed = reference(ref);
 		const format = options.get("format") ?? "text";
-		if (format !== "text" && format !== "markdown") return fail$2("InvalidReadFormat");
+		if (format !== "text" && format !== "markdown") return fail$3("InvalidReadFormat");
 		return Object.freeze({
 			command,
 			input,
@@ -24939,15 +24939,15 @@ function parseArguments(argv) {
 	}
 	if (command === "info" || command === "images" || command === "extract-images") {
 		let expected = options.get("expect-sha256");
-		if (expected !== void 0 && !/^[0-9a-f]{64}$/i.test(expected)) fail$2("InvalidExpectedSHA256");
+		if (expected !== void 0 && !/^[0-9a-f]{64}$/i.test(expected)) fail$3("InvalidExpectedSHA256");
 		let id = options.get("id");
-		if (id !== void 0 && (!id || id.length > 128)) fail$2("InvalidImageID");
-		if (id !== void 0 && expected === void 0) fail$2("ImageIDRequiresSHA256");
+		if (id !== void 0 && (!id || id.length > 128)) fail$3("InvalidImageID");
+		if (id !== void 0 && expected === void 0) fail$3("ImageIDRequiresSHA256");
 		const ref = options.get("ref");
 		if (ref !== void 0) {
-			if (options.has("id") || options.has("expect-sha256")) fail$2("ConflictingImageReference");
+			if (options.has("id") || options.has("expect-sha256")) fail$3("ConflictingImageReference");
 			const parsed = reference(ref);
-			if (parsed.kind !== "image") fail$2("ExpectedImageReference");
+			if (parsed.kind !== "image") fail$3("ExpectedImageReference");
 			expected = parsed.sourceSha256;
 			id = canonicalImageId(parsed);
 		}
@@ -24961,7 +24961,7 @@ function parseArguments(argv) {
 			...ref === void 0 ? {} : { reference: ref }
 		};
 		if (command === "extract-images") {
-			if (!output || output === "-") return fail$2("ExpectedOutputDirectory");
+			if (!output || output === "-") return fail$3("ExpectedOutputDirectory");
 			return Object.freeze({
 				...base,
 				command,
@@ -24975,9 +24975,9 @@ function parseArguments(argv) {
 	}
 	if (command === "read") {
 		const view = options.get("view") ?? "content";
-		if (view !== "content" && view !== "structure") return fail$2("InvalidReadView");
+		if (view !== "content" && view !== "structure") return fail$3("InvalidReadView");
 		const format = options.get("format") ?? "text";
-		if (format !== "text" && format !== "markdown") return fail$2("InvalidReadFormat");
+		if (format !== "text" && format !== "markdown") return fail$3("InvalidReadFormat");
 		return Object.freeze({
 			command,
 			input,
@@ -24986,28 +24986,28 @@ function parseArguments(argv) {
 			...wasm === void 0 ? {} : { wasm }
 		});
 	}
-	if (command !== "edit") return fail$2("UnknownCommand");
+	if (command !== "edit") return fail$3("UnknownCommand");
 	for (const key of [
 		"target",
 		"replace",
 		"with",
 		"expect-sha256",
 		"output"
-	]) if (!options.has(key)) fail$2("MissingRequiredOption:" + key);
+	]) if (!options.has(key)) fail$3("MissingRequiredOption:" + key);
 	let target;
 	try {
 		target = parseNativeTarget(options.get("target"));
 	} catch {
-		return fail$2("InvalidTarget");
+		return fail$3("InvalidTarget");
 	}
 	const replacement = options.get("replace");
-	if (!replacement) return fail$2("EmptySearch");
+	if (!replacement) return fail$3("EmptySearch");
 	const withText = options.get("with");
-	if (withText === void 0) return fail$2("MissingRequiredOption:with");
+	if (withText === void 0) return fail$3("MissingRequiredOption:with");
 	const expected = options.get("expect-sha256");
-	if (expected === void 0 || !/^[0-9a-f]{64}$/i.test(expected)) return fail$2("InvalidExpectedSHA256");
+	if (expected === void 0 || !/^[0-9a-f]{64}$/i.test(expected)) return fail$3("InvalidExpectedSHA256");
 	const output = options.get("output");
-	if (!output || output === "-") return fail$2("ExpectedOutputFile");
+	if (!output || output === "-") return fail$3("ExpectedOutputFile");
 	return Object.freeze({
 		command,
 		input,
@@ -25101,7 +25101,7 @@ function createFiles({ fs = nodeFS, cwd = () => process.cwd(), random = () => ra
 			if (errorCode$2(cause) === "ENOENT") return;
 			throw cause;
 		}
-		throw error(sameIdentity(stat, input?.identity) ? "SourceOutputCollision" : "OutputExists");
+		throw error(sameIdentity$1(stat, input?.identity) ? "SourceOutputCollision" : "OutputExists");
 	}
 	const imageExtensions = /* @__PURE__ */ new Set([
 		".bin",
@@ -25134,7 +25134,7 @@ function createFiles({ fs = nodeFS, cwd = () => process.cwd(), random = () => ra
 	}
 	async function verifyImageParent(record) {
 		const current = await imageParent(record.path);
-		if (!sameIdentity(await fs.lstat(current.parent, { bigint: true }), record.parentIdentity)) throw error("OutputParentChanged");
+		if (!sameIdentity$1(await fs.lstat(current.parent, { bigint: true }), record.parentIdentity)) throw error("OutputParentChanged");
 	}
 	async function createImageDirectory({ input, outputPath }) {
 		validPath(outputPath);
@@ -25168,7 +25168,7 @@ function createFiles({ fs = nodeFS, cwd = () => process.cwd(), random = () => ra
 		const image = kind !== "document" ? await imageParent(absolute) : null;
 		if (directory !== void 0) {
 			const identity = directories.get(directory);
-			if (kind !== "image" || !identity || dirname(absolute) !== directory.path || !sameIdentity(await fs.lstat(directory.path, { bigint: true }), identity)) throw error("OutputParentChanged");
+			if (kind !== "image" || !identity || dirname(absolute) !== directory.path || !sameIdentity$1(await fs.lstat(directory.path, { bigint: true }), identity)) throw error("OutputParentChanged");
 		}
 		const parent = image?.parent ?? await fs.realpath(dirname(absolute));
 		if (!(await fs.stat(parent)).isDirectory()) throw error("OutputParentNotDirectory");
@@ -25308,7 +25308,7 @@ function createFiles({ fs = nodeFS, cwd = () => process.cwd(), random = () => ra
 		publishNewOutput
 	});
 }
-var errorCode$2, MAX_DOCUMENT_BYTES$1, MAX_WASM_BYTES$1, sha$1, error, validPath, sameIdentity, readInputSnapshot, resolveWasmPath, assertNewOutput, assertNewDocumentOutput, assertOutputFormat, assertImageFormat, assertHTMLFormat, createImageDirectory, publishNewOutput;
+var errorCode$2, MAX_DOCUMENT_BYTES$1, MAX_WASM_BYTES$1, sha$1, error, validPath, sameIdentity$1, readInputSnapshot, resolveWasmPath, assertNewOutput, assertNewDocumentOutput, assertOutputFormat, assertImageFormat, assertHTMLFormat, createImageDirectory, publishNewOutput;
 var init_files = __esmMin((() => {
 	errorCode$2 = (cause) => {
 		if (cause !== null && typeof cause === "object") {
@@ -25324,7 +25324,7 @@ var init_files = __esmMin((() => {
 	validPath = (value) => {
 		if (typeof value !== "string" || !value || value.includes("\0")) throw error("InvalidFilePath");
 	};
-	sameIdentity = (stat, identity) => identity !== void 0 && String(stat.dev) === identity.dev && String(stat.ino) === identity.ino;
+	sameIdentity$1 = (stat, identity) => identity !== void 0 && String(stat.dev) === identity.dev && String(stat.ino) === identity.ino;
 	({readInputSnapshot, resolveWasmPath, assertNewOutput, assertNewDocumentOutput, assertOutputFormat, assertImageFormat, assertHTMLFormat, createImageDirectory, publishNewOutput} = createFiles());
 }));
 // src/host-output.ts
@@ -25433,7 +25433,7 @@ function field$4(properties, name, kind) {
 	};
 	return known$1(raw, "current", raw);
 }
-function choice(raw, radio) {
+function choice$1(raw, radio) {
 	if (raw.state !== "known") return raw;
 	if (typeof raw.value !== "string" || !/^[0-9]{1,10}$/.test(raw.value) || Number(raw.value) > (radio ? 1 : 2)) return {
 		state: "unknown",
@@ -25526,7 +25526,7 @@ function readFormInventory(document) {
 						anchorUnit: anchor.current_unit
 					},
 					current: {
-						state: choice(field$4(property, "value", "integer"), source.kind === "radio_button"),
+						state: choice$1(field$4(property, "value", "integer"), source.kind === "radio_button"),
 						text: field$4(property, "text", "wstring"),
 						groupName: field$4(property, "radio_group_name", "wstring"),
 						name: field$4(property, "name", "wstring")
@@ -25704,13 +25704,13 @@ init_files();
 init_host_output();
 init_document_forms();
 init_render_escape();
-const record$16 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+const record$18 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 const MAX_INPUT_BYTES$2 = 67108864;
 /** 단일·배치 읽기가 공유하는 스냅샷 → 기존 엔진 → 기존 표시 경로입니다.
 * 파일 호스트만 주입하며 새 파서·편집 모델·Native 수명 관리자를 만들지 않습니다.
 */
 async function readDocumentOperation(options, { files, engine, renderDocument, loadWasm }) {
-	if (!record$16(options)) throw Error("InvalidReadFormat");
+	if (!record$18(options)) throw Error("InvalidReadFormat");
 	const { inputPath, inputSnapshot, wasm, format = "text", view = "content" } = options;
 	if (format !== "text" && format !== "markdown") throw Error("InvalidReadFormat");
 	if (view !== "content" && view !== "structure") throw Error("InvalidReadView");
@@ -25719,7 +25719,7 @@ async function readDocumentOperation(options, { files, engine, renderDocument, l
 		return files.readInputSnapshot(inputPath, { maxBytes: MAX_INPUT_BYTES$2 });
 	};
 	const input = inputSnapshot ?? await loadSnapshot();
-	if (!record$16(input) || !(input.bytes instanceof Uint8Array) || input.bytes.length < 1 || input.bytes.length > MAX_INPUT_BYTES$2 || typeof input.sha256 !== "string" || !/^[a-f0-9]{64}$/.test(input.sha256 ?? "")) throw Error("InvalidInputSnapshot");
+	if (!record$18(input) || !(input.bytes instanceof Uint8Array) || input.bytes.length < 1 || input.bytes.length > MAX_INPUT_BYTES$2 || typeof input.sha256 !== "string" || !/^[a-f0-9]{64}$/.test(input.sha256 ?? "")) throw Error("InvalidInputSnapshot");
 	const binary = wasm ?? await loadWasm();
 	if (!(binary instanceof Uint8Array)) throw Error("InvalidWasmBytes");
 	const result = await engine.read({
@@ -25727,8 +25727,8 @@ async function readDocumentOperation(options, { files, engine, renderDocument, l
 		wasm: binary,
 		...view === "structure" ? { includeFormControls: true } : {}
 	});
-	if (!record$16(result) || result.format !== "hwp5" && result.format !== "hwpx") throw Error("InvalidEngineFormat");
-	if (!record$16(result.model) || result.model.version !== 1 || result.model.format !== result.format || result.model.sourceSha256 !== input.sha256) throw Error("InvalidEngineModel");
+	if (!record$18(result) || result.format !== "hwp5" && result.format !== "hwpx") throw Error("InvalidEngineFormat");
+	if (!record$18(result.model) || result.model.version !== 1 || result.model.format !== result.format || result.model.sourceSha256 !== input.sha256) throw Error("InvalidEngineModel");
 	const text = await renderDocument(result.model, {
 		format,
 		view
@@ -25742,9 +25742,9 @@ async function readDocumentOperation(options, { files, engine, renderDocument, l
 }
 /** CLI와 웹 실습이 공유하는 단일 읽기 응답입니다. 원문으로 대체하지 않습니다. */
 function renderReadResponse(result, options = {}) {
-	if (!record$16(options)) throw Error("InvalidReadView");
+	if (!record$18(options)) throw Error("InvalidReadView");
 	const { view = "content" } = options;
-	if (!record$16(result)) throw Error("InvalidReadResult");
+	if (!record$18(result)) throw Error("InvalidReadResult");
 	const { format, sourceSha256, text } = result;
 	if (format !== "hwp5" && format !== "hwpx") throw Error("InvalidEngineFormat");
 	if (typeof sourceSha256 !== "string" || !/^[a-f0-9]{64}$/.test(sourceSha256)) throw Error("InvalidReadSourceSHA256");
@@ -25814,13 +25814,971 @@ var init_document_format = __esmMin((() => {
 	cfbSignature = Uint8Array.of(208, 207, 17, 224, 161, 177, 26, 225);
 	hwp3Signature = new TextEncoder().encode("HWP Document File V3");
 	startsWith = (bytes, signature) => bytes.length >= signature.length && signature.every((value, index) => bytes[index] === value);
+})), CREATED_TABLE_GRID_ACTION, EXPERIMENTAL_EDITOR_FUNCTIONS, HWP5_CHART_READ_ABI, HWP5_CHART_READ_FUNCTIONS, HWPX_DOCUMENT_INSERT_FUNCTIONS, HWPX_SOURCE_TABLE_CELL_MERGE_FUNCTIONS, HWP5_SOURCE_TABLE_CELL_SPLIT_FUNCTIONS, HWPX_SOURCE_TABLE_CELL_SPLIT_FUNCTIONS, REQUIRED_FUNCTIONS;
+var init_abi_schema = __esmMin((() => {
+	Object.freeze([
+		"hwp5_read_open",
+		"hwp5_read_close",
+		"hwp5_read_document_text_snapshot",
+		"hwp5_read_document_text_anchor",
+		"hwp5_read_document_text_selection",
+		"hwp5_read_document_text_read_binding",
+		"hwp5_read_output_ptr",
+		"hwp5_read_output_len",
+		"hwp5_read_output_free",
+		"hwp5_read_error_ptr",
+		"hwp5_read_error_len"
+	]);
+	CREATED_TABLE_GRID_ACTION = Object.freeze({
+		insert_row: 0,
+		delete_row: 1,
+		insert_column: 2,
+		delete_column: 3
+	});
+	EXPERIMENTAL_EDITOR_FUNCTIONS = Object.freeze([
+		"hwp5_edit_open",
+		"hwp5_edit_close",
+		"hwp5_edit_section_count",
+		"hwp5_edit_paragraph_count",
+		"hwp5_edit_char_shape_count",
+		"hwp5_edit_copy_text",
+		"hwp5_edit_splice",
+		"hwp5_edit_format",
+		"hwp5_edit_save",
+		"hwp5_edit_output_ptr",
+		"hwp5_edit_output_len",
+		"hwp5_edit_output_free",
+		"hwp5_edit_reflow"
+	]);
+	Object.freeze([
+		"hwpx_edit_paragraph_control_text_snapshot",
+		"hwpx_edit_paragraph_control_text_snapshot_current",
+		"hwpx_edit_control_text_read_identity"
+	]);
+	HWP5_CHART_READ_ABI = Object.freeze({
+		hwp5_edit_chart_display_profile_version: Object.freeze({
+			params: Object.freeze([]),
+			results: Object.freeze(["i32"])
+		}),
+		hwp5_edit_chart_candidates: Object.freeze({
+			params: Object.freeze([]),
+			results: Object.freeze(["i32"])
+		}),
+		hwp5_edit_chart_display: Object.freeze({
+			params: Object.freeze(["i32", "i32"]),
+			results: Object.freeze(["i32"])
+		})
+	});
+	HWP5_CHART_READ_FUNCTIONS = Object.freeze(Object.keys(HWP5_CHART_READ_ABI));
+	Object.freeze([
+		"hwp5_edit_text_transaction_capabilities",
+		"hwp5_edit_query_text_transaction",
+		"hwp5_edit_apply_text_transaction"
+	]);
+	Object.freeze([
+		"hwpx_edit_text_transaction_capabilities",
+		"hwpx_edit_query_text_transaction",
+		"hwpx_edit_apply_text_transaction"
+	]);
+	Object.freeze(["hwp5_edit_named_fields"]);
+	Object.freeze(["hwpx_edit_named_fields"]);
+	Object.freeze(["hwpx_edit_named_field_parameters", "hwpx_edit_set_named_field_parameters"]);
+	Object.freeze(["hwpx_edit_create_named_field"]);
+	Object.freeze(["hwpx_edit_rename_named_field"]);
+	HWPX_DOCUMENT_INSERT_FUNCTIONS = Object.freeze(["hwpx_edit_document_insert_capabilities", "hwpx_edit_insert_document"]);
+	HWPX_SOURCE_TABLE_CELL_MERGE_FUNCTIONS = Object.freeze(["hwpx_edit_document_insert_capabilities", "hwpx_edit_merge_source_table_cells"]);
+	HWP5_SOURCE_TABLE_CELL_SPLIT_FUNCTIONS = Object.freeze(["hwp5_edit_source_table_cell_split_capabilities", "hwp5_edit_split_source_table_cells"]);
+	HWPX_SOURCE_TABLE_CELL_SPLIT_FUNCTIONS = Object.freeze(["hwpx_edit_document_insert_capabilities", "hwpx_edit_split_source_table_cells"]);
+	Object.freeze(["hwpx_edit_document_provenance"]);
+	Object.freeze({
+		header_bytes: 8,
+		node_bytes: 56,
+		parent: 0,
+		kind: 4,
+		name_len: 8,
+		content_len: 12,
+		state: 16,
+		reserved: 20,
+		created: 24,
+		modified: 32,
+		clsid: 40
+	});
+	Object.freeze({
+		name: 0,
+		path: 1,
+		content: 2,
+		clsid: 3
+	});
+	Object.freeze({
+		kind: 0,
+		color: 1,
+		left: 2,
+		right: 3,
+		child: 4,
+		state: 5,
+		created: 6,
+		modified: 7,
+		start: 8,
+		size: 9,
+		uses_fat: 10,
+		has_content: 11
+	});
+	REQUIRED_FUNCTIONS = Object.freeze([
+		"hwpjs_abi_version",
+		"cfb_alloc",
+		"cfb_free",
+		"cfb_open",
+		"cfb_open_strict",
+		"cfb_find_exact",
+		"cfb_write",
+		"cfb_document",
+		"cfb_output_ptr",
+		"cfb_output_len",
+		"cfb_output_free",
+		"cfb_close",
+		"cfb_error_ptr",
+		"cfb_error_len",
+		"cfb_error_code_ptr",
+		"cfb_error_code_len",
+		"cfb_count",
+		"cfb_find",
+		"cfb_find_snapshot",
+		"cfb_field_ptr",
+		"cfb_field_len",
+		"cfb_value",
+		"cfb_sector_count",
+		"cfb_raw_ptr",
+		"cfb_raw_len",
+		"hwp5_text_read",
+		"hwp5_text_ptr",
+		"hwp5_text_len",
+		"hwp5_text_free"
+	]);
+	Object.freeze([
+		"hwpx_edit_chart_create_profile_version",
+		"hwpx_edit_inline_object_placement_version",
+		"hwpx_edit_inline_object_owner"
+	]);
+}));
+// ../../js/hwp5-drawing-sources.mjs
+function validateHwp5DrawingSources(rows) {
+	const integer = (value, min, max) => Number.isInteger(value) && value >= min && value <= max;
+	if (!Array.isArray(rows)) throw new Error("InvalidHwp5DrawingSources");
+	const controls = /* @__PURE__ */ new Set(), components = /* @__PURE__ */ new Set();
+	for (const row of rows) {
+		if (!row || ![
+			"control_node",
+			"component_node",
+			"paragraph_node",
+			"kind_id",
+			"flags",
+			"width",
+			"height",
+			"instance_id",
+			"original_width",
+			"original_height",
+			"current_width",
+			"current_height",
+			"component_attributes",
+			"matrix_pairs",
+			"component_extra_bytes"
+		].every((key) => integer(row[key], 0, 4294967295)) || ![
+			"offset_x",
+			"offset_y",
+			"component_offset_x",
+			"component_offset_y"
+		].every((key) => integer(row[key], -2147483648, 2147483647)) || !integer(row.rotation_angle, -32768, 32767) || row.matrix_pairs > 65535 || !(row.paragraph_node < row.control_node && row.control_node < row.component_node) || controls.has(row.control_node) || components.has(row.component_node)) throw new Error("InvalidHwp5DrawingSources");
+		controls.add(row.control_node);
+		components.add(row.component_node);
+		if ([
+			"z_order",
+			"outer_margins",
+			"prevent_page_break",
+			"description_bytes",
+			"object_extra_bytes"
+		].some((key) => Object.hasOwn(row, key))) {
+			if (!integer(row.z_order, -2147483648, 2147483647) || !integer(row.prevent_page_break, -2147483648, 2147483647) || !Array.isArray(row.outer_margins) || row.outer_margins.length !== 4 || !Array.from(row.outer_margins).every((value) => integer(value, -32768, 32767)) || row.description_bytes !== null && (!integer(row.description_bytes, 0, 131070) || row.description_bytes % 2 !== 0) || !integer(row.object_extra_bytes, 0, 4294967295)) throw new Error("InvalidHwp5DrawingSources");
+		}
+	}
+	return rows;
+}
+function decodeHwp5DrawingSources(bytes) {
+	return validateHwp5DrawingSources(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
+}
+var init_hwp5_drawing_sources = __esmMin((() => {}));
+// ../../js/chart-display-owner-limits.mjs
+function chartDisplayOwnerLimits(plots, axes) {
+	let source = [...plots.map((value) => ({
+		node: value.node,
+		area: value.area_node,
+		plot: true
+	})), ...axes.map((value) => ({
+		node: value.node,
+		area: value.area_node,
+		plot: false
+	}))];
+	let target = Array.from({ length: source.length });
+	const counts = /* @__PURE__ */ new Uint32Array(256);
+	for (let shift = 0; shift < 32; shift += 8) {
+		counts.fill(0);
+		for (const value of source) counts[value.node >>> shift & 255]++;
+		let at = 0;
+		for (let byte = 0; byte < 256; byte++) {
+			const count = counts[byte];
+			counts[byte] = at;
+			at += count;
+		}
+		for (const value of source) target[counts[value.node >>> shift & 255]++] = value;
+		[source, target] = [target, source];
+	}
+	const next = /* @__PURE__ */ new Map(), limits = /* @__PURE__ */ new Map();
+	let end = source.length;
+	while (end > 0) {
+		const node = source[end - 1].node;
+		let begin = end - 1;
+		while (begin > 0 && source[begin - 1].node === node) begin--;
+		for (let i = begin; i < end; i++) {
+			const value = source[i];
+			if (value.plot) limits.set(value.node, next.get(value.area) ?? Infinity);
+		}
+		for (let i = begin; i < end; i++) next.set(source[i].area, node);
+		end = begin;
+	}
+	return limits;
+}
+var init_chart_display_owner_limits = __esmMin((() => {}));
+// ../../js/chart-display-fields.mjs
+function field$3(value, accepts, owner) {
+	return value === null || object$11(value) && uint$54(value.node) && value.node > owner && (value.value === null || accepts(value.value));
+}
+function number$1(value) {
+	return object$11(value) && (value.kind === "finite" ? typeof value.value === "number" && Number.isFinite(value.value) : [
+		"positive_infinity",
+		"negative_infinity",
+		"not_a_number"
+	].includes(value.kind) && value.value === null);
+}
+function scaling(value, owner) {
+	return value === null || object$11(value) && uint$54(value.node) && value.node > owner && field$3(value.orientation, oneOf(["minMax", "maxMin"]), value.node) && [
+		value.minimum,
+		value.maximum,
+		value.log_base
+	].every((item) => field$3(item, number$1, value.node));
+}
+var object$11, uint$54, text$4, nullableUint, oneOf;
+var init_chart_display_fields = __esmMin((() => {
+	object$11 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	uint$54 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	text$4 = (value) => typeof value === "string" && value.isWellFormed();
+	nullableUint = (value) => value === null || uint$54(value);
+	oneOf = (values) => (value) => values.includes(value);
+}));
+// ../../js/hwpx-chart-series-text.mjs
+function decodeChartSeriesText(bytes) {
+	return validateChartSeriesText(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
+}
+function validateChartSeriesText(value) {
+	if (value?.kind !== "direct_series" || !Array.isArray(value.values)) throw new Error("InvalidChartSeriesText");
+	const seen = /* @__PURE__ */ new Set();
+	for (const row of value.values) {
+		if (!row || ![
+			row.series_node,
+			row.text_node,
+			row.value_node
+		].every((n) => Number.isInteger(n) && n >= 0 && n <= 4294967295) || !(row.series_node < row.text_node && row.text_node < row.value_node) || typeof row.text !== "string" || !row.text.isWellFormed() || seen.has(row.value_node)) throw new Error("InvalidChartSeriesText");
+		seen.add(row.value_node);
+	}
+	return value;
+}
+var init_hwpx_chart_series_text = __esmMin((() => {}));
+// ../../js/hwpx-chart-rich-text.mjs
+function decodeChartRichText(bytes) {
+	return validateChartRichText(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
+}
+function validateChartRichText(value) {
+	if (value?.kind !== "rich_text" || !Array.isArray(value.values)) throw new Error("InvalidChartRichText");
+	let previousLeaf = -1;
+	const runs = /* @__PURE__ */ new Set();
+	for (const row of value.values) {
+		if (row?.owner_role !== void 0 && ![
+			"chart_title",
+			"axis_title",
+			"data_label",
+			"unclassified"
+		].includes(row.owner_role)) throw new Error("InvalidChartRichText");
+		if (row?.plain_text_complete !== void 0 && (typeof row.plain_text_complete !== "boolean" || row.owner_role === void 0)) throw new Error("InvalidChartRichText");
+		const nodes = row && [
+			row.owner_node,
+			row.text_node,
+			row.rich_node,
+			row.paragraph_node,
+			row.run_node,
+			row.value_node
+		];
+		if (!nodes || !nodes.every((n) => Number.isInteger(n) && n >= 0 && n <= 4294967295) || !nodes.every((n, i) => i === 0 || nodes[i - 1] < n) || row.value_node <= previousLeaf || runs.has(row.run_node) || typeof row.text !== "string" || !row.text.isWellFormed()) throw new Error("InvalidChartRichText");
+		previousLeaf = row.value_node;
+		runs.add(row.run_node);
+	}
+	return value;
+}
+var init_hwpx_chart_rich_text = __esmMin((() => {}));
+// ../../js/chart-series-settings.mjs
+/** Wire ownership validation only; native code owns XML and absent defaults. */
+function validChartSeriesSettings(values, plots, series, occupied = null) {
+	if (!Array.isArray(values) || values.length !== series.size) return false;
+	let index = 0;
+	for (const [node, plotNode] of series) {
+		const row = values[index++], kind = plots.get(plotNode)?.kind;
+		if (!object$11(row) || row.series_node !== node || row.plot_node !== plotNode || !field$3(row.smooth, (v) => typeof v === "boolean", node)) return false;
+		if (!field$3(row.index, uint$54, node) || !field$3(row.order, uint$54, node)) return false;
+		const line = [
+			"lineChart",
+			"line3DChart",
+			"stockChart",
+			"scatterChart"
+		].includes(kind);
+		if (row.smooth !== null && !line) return false;
+		if (!field$3(row.explosion, uint$54, node)) return false;
+		if (row.explosion !== null && ![
+			"pieChart",
+			"pie3DChart",
+			"ofPieChart",
+			"doughnutChart"
+		].includes(kind)) return false;
+		const marker = row.marker;
+		if (marker !== null && (!line && kind !== "radarChart" || !object$11(marker) || !uint$54(marker.node) || marker.node <= node || !field$3(marker.symbol, oneOf(symbols), marker.node) || !field$3(marker.size, (v) => uint$54(v) && v >= 2 && v <= 72, marker.node))) return false;
+		const leaves = [
+			row.index,
+			row.order,
+			row.smooth,
+			row.explosion,
+			...marker ? [
+				marker,
+				marker.symbol,
+				marker.size
+			] : []
+		].filter((value) => value !== null);
+		const stroke = row.stroke, strokeNodes = [];
+		if (stroke !== void 0 && stroke !== null) {
+			if (!object$11(stroke) || !uint$54(stroke.node) || stroke.node <= node || !(stroke.no_fill_node === null || uint$54(stroke.no_fill_node) && stroke.no_fill_node > stroke.node)) return false;
+			strokeNodes.push(stroke.node);
+			if (stroke.no_fill_node !== null) strokeNodes.push(stroke.no_fill_node);
+		}
+		const identities = [...leaves.map((value) => value.node), ...strokeNodes];
+		if (new Set(identities).size !== identities.length) return false;
+		for (const leaf of leaves) occupied?.add(leaf.node);
+	}
+	return true;
+}
+var symbols;
+var init_chart_series_settings = __esmMin((() => {
+	init_chart_display_fields();
+	symbols = [
+		"auto",
+		"circle",
+		"dash",
+		"diamond",
+		"dot",
+		"none",
+		"picture",
+		"plus",
+		"square",
+		"star",
+		"triangle",
+		"x"
+	];
+}));
+// ../../js/chart-point-settings.mjs
+/** Typed dPt ownership only; explicit idx is not an array offset. */
+function validChartPointSettings(values, series, occupied = null) {
+	if (!Array.isArray(values)) return false;
+	let previous = -1;
+	for (const row of values) {
+		if (!object$11(row) || !uint$54(row.node) || row.node <= previous || !series.has(row.series_node) || series.get(row.series_node) !== row.plot_node || row.node <= row.series_node || typeof row.unparsed_children !== "boolean" || !field$3(row.index, uint$54, row.node) || !field$3(row.explosion, uint$54, row.node)) return false;
+		if (row.index !== null && row.explosion !== null && row.index.node === row.explosion.node) return false;
+		occupied?.add(row.node);
+		if (row.index !== null) occupied?.add(row.index.node);
+		if (row.explosion !== null) occupied?.add(row.explosion.node);
+		previous = row.node;
+	}
+	return true;
+}
+var init_chart_point_settings = __esmMin((() => {
+	init_chart_display_fields();
+}));
+// ../../js/chart-stock-settings.mjs
+function validChartStockSettings(stock, kind, plotNode, usedNodes) {
+	if (kind !== "stockChart") return stock === null;
+	if (!object$11(stock)) return false;
+	for (const key of [
+		"high_low_node",
+		"up_down_node",
+		"up_node",
+		"down_node"
+	]) if (!nullableUint(stock[key])) return false;
+	if (stock.up_down_node === null && (stock.up_node !== null || stock.down_node !== null || stock.gap_width !== null)) return false;
+	const parent = stock.up_down_node ?? plotNode;
+	if (!field$3(stock.gap_width, (value) => uint$54(value) && value <= 500, parent)) return false;
+	for (const key of ["up_node", "down_node"]) if (stock[key] !== null && stock[key] <= parent) return false;
+	for (const node of [
+		stock.high_low_node,
+		stock.up_down_node,
+		stock.up_node,
+		stock.down_node,
+		stock.gap_width?.node ?? null
+	]) {
+		if (node === null) continue;
+		if (node <= plotNode || usedNodes.has(node)) return false;
+		usedNodes.add(node);
+	}
+	return true;
+}
+var init_chart_stock_settings = __esmMin((() => {
+	init_chart_display_fields();
+}));
+// ../../js/chart-view-3d.mjs
+function validChartView3D(value, occupied = null) {
+	if (value === void 0 || value === null) return true;
+	if (!object$11(value) || !uint$54(value.node) || value.node === 0 || occupied?.has(value.node) || typeof value.unparsed_children !== "boolean") return false;
+	const ranges = {
+		rotation_x: [-90, 90],
+		rotation_y: [0, 360],
+		height_percent: [5, 500],
+		depth_percent: [20, 2e3],
+		perspective: [0, 240]
+	};
+	const nodes = /* @__PURE__ */ new Set([value.node]);
+	for (const key of [...Object.keys(ranges), "right_angle_axes"]) {
+		const accepts = key === "right_angle_axes" ? (v) => typeof v === "boolean" : (v) => Number.isInteger(v) && v >= ranges[key][0] && v <= ranges[key][1];
+		const leaf = value[key];
+		if (!field$3(leaf, accepts, value.node)) return false;
+		if (leaf !== null) {
+			if (nodes.has(leaf.node) || occupied?.has(leaf.node)) return false;
+			nodes.add(leaf.node);
+		}
+	}
+	return true;
+}
+var init_chart_view_3d = __esmMin((() => {
+	init_chart_display_fields();
+}));
+// ../../js/chart-spatial-settings.mjs
+function validChartSpatialSettings(value, kind, owner, leaves) {
+	if (value === void 0) return true;
+	if (![
+		"bar3DChart",
+		"line3DChart",
+		"area3DChart"
+	].includes(kind)) return value === null;
+	if (!object$11(value) || !field$3(value.gap_depth, (v) => uint$54(v) && v <= 500, owner) || !field$3(value.shape, oneOf([
+		"box",
+		"cone",
+		"coneToMax",
+		"cylinder",
+		"pyramid",
+		"pyramidToMax"
+	]), owner)) return false;
+	if (kind !== "bar3DChart" && value.shape !== null) return false;
+	for (const leaf of [value.gap_depth, value.shape]) if (leaf !== null) {
+		if (leaves.has(leaf.node)) return false;
+		leaves.add(leaf.node);
+	}
+	return true;
+}
+var init_chart_spatial_settings = __esmMin((() => {
+	init_chart_display_fields();
+}));
+// ../../js/chart-family-display-settings.mjs
+/** Undefined group = old DTO; null Field = source absence, never a value. */
+function chartFamilyDisplayNodes(settings, kind, owner, leaves) {
+	if (!hasChartFamilyFields(settings)) return [];
+	if (!chartFamilyFieldNames.every((key) => Object.hasOwn(settings, key))) return null;
+	if (Object.values(definitions).some((item) => item.kinds.includes(kind)) ? typeof settings.family_unparsed_children !== "boolean" : settings.family_unparsed_children !== null) return null;
+	const nodes = [];
+	for (const [key, definition] of Object.entries(definitions)) {
+		const value = settings[key];
+		if (!field$3(value, definition.accepts, owner)) return null;
+		if (value !== null) {
+			if (!definition.kinds.includes(kind) || leaves.has(value.node)) return null;
+			leaves.add(value.node);
+			nodes.push(value.node);
+		}
+	}
+	return nodes;
+}
+var chartFamilyFieldNames, definitions, hasChartFamilyFields;
+var init_chart_family_display_settings = __esmMin((() => {
+	init_chart_display_fields();
+	chartFamilyFieldNames = [
+		"hole_size",
+		"radar_style",
+		"bubble_scale",
+		"size_represents",
+		"show_negative_bubbles",
+		"bubble_3d",
+		"wireframe",
+		"family_unparsed_children"
+	];
+	definitions = {
+		hole_size: {
+			kinds: ["doughnutChart"],
+			accepts: (v) => uint$54(v) && v >= 10 && v <= 90
+		},
+		radar_style: {
+			kinds: ["radarChart"],
+			accepts: oneOf([
+				"standard",
+				"marker",
+				"filled"
+			])
+		},
+		bubble_scale: {
+			kinds: ["bubbleChart"],
+			accepts: (v) => uint$54(v) && v <= 300
+		},
+		size_represents: {
+			kinds: ["bubbleChart"],
+			accepts: oneOf(["area", "w"])
+		},
+		show_negative_bubbles: {
+			kinds: ["bubbleChart"],
+			accepts: (v) => typeof v === "boolean"
+		},
+		bubble_3d: {
+			kinds: ["bubbleChart"],
+			accepts: (v) => typeof v === "boolean"
+		},
+		wireframe: {
+			kinds: ["surfaceChart", "surface3DChart"],
+			accepts: (v) => typeof v === "boolean"
+		}
+	};
+	hasChartFamilyFields = (settings) => settings && chartFamilyFieldNames.some((key) => Object.hasOwn(settings, key));
+}));
+// ../../js/chart-display-data.mjs
+function validateChartDisplayData(value) {
+	require$1(object$11(value));
+	for (const name of [
+		"plots",
+		"plot_settings",
+		"axes",
+		"axis_links",
+		"points",
+		"bindings",
+		"series_text",
+		"rich_text"
+	]) require$1(Array.isArray(value[name]));
+	require$1(value.plots.length === value.plot_settings.length);
+	const plots = /* @__PURE__ */ new Map(), series = /* @__PURE__ */ new Map(), references = /* @__PURE__ */ new Map();
+	const hasStrokes = Array.isArray(value.series_settings) && value.series_settings.some((row) => row?.stroke != null);
+	const hasMajorTicks = value.axes.some((axis) => axis?.major_tick_mark != null);
+	const hasFamilies = value.plot_settings.some(hasChartFamilyFields);
+	const familyClaims = /* @__PURE__ */ new Map();
+	const occupied = value.view_3d == null && value.blank_policy == null && !hasStrokes && !hasMajorTicks && !hasFamilies ? null : /* @__PURE__ */ new Set();
+	let previousPlot = -1;
+	for (const [index, plot] of value.plots.entries()) {
+		require$1(object$11(plot) && uint$54(plot.node) && plot.node > previousPlot && uint$54(plot.area_node) && plot.area_node < plot.node && plotKinds$1.has(plot.kind) && Array.isArray(plot.series_nodes));
+		plots.set(plot.node, plot);
+		previousPlot = plot.node;
+		occupied?.add(plot.node);
+		occupied?.add(plot.area_node);
+		let previousSeries = plot.node;
+		for (const node of plot.series_nodes) {
+			require$1(uint$54(node) && node > previousSeries && !series.has(node));
+			series.set(node, plot.node);
+			previousSeries = node;
+			occupied?.add(node);
+		}
+		const settings = value.plot_settings[index];
+		require$1(object$11(settings) && field$3(settings.direction, oneOf(["bar", "col"]), plot.node) && field$3(settings.grouping, oneOf([
+			"standard",
+			"clustered",
+			"stacked",
+			"percentStacked"
+		]), plot.node) && field$3(settings.vary_colors, (v) => typeof v === "boolean", plot.node) && Array.isArray(settings.axis_references));
+		require$1(field$3(settings.gap_width, (v) => uint$54(v) && v <= 500, plot.node) && field$3(settings.overlap, (v) => Number.isInteger(v) && v >= -100 && v <= 100, plot.node));
+		require$1(field$3(settings.scatter_style, oneOf([
+			"none",
+			"line",
+			"lineMarker",
+			"marker",
+			"smooth",
+			"smoothMarker"
+		]), plot.node));
+		if (settings.scatter_style !== null) require$1(plot.kind === "scatterChart");
+		require$1(field$3(settings.first_slice_angle, (v) => uint$54(v) && v <= 360, plot.node));
+		if (settings.first_slice_angle !== null) require$1(["pieChart", "doughnutChart"].includes(plot.kind));
+		require$1(field$3(settings.of_pie_type, oneOf(["pie", "bar"]), plot.node) && field$3(settings.second_pie_size, (v) => uint$54(v) && v >= 5 && v <= 200, plot.node) && field$3(settings.split_type, oneOf([
+			"auto",
+			"cust",
+			"percent",
+			"pos",
+			"val"
+		]), plot.node) && field$3(settings.split_position, number$1, plot.node) && nullableUint(settings.custom_split_node) && (settings.custom_split_node === null || settings.custom_split_node > plot.node));
+		if ([
+			settings.of_pie_type,
+			settings.second_pie_size,
+			settings.split_type,
+			settings.split_position,
+			settings.custom_split_node
+		].some((value) => value !== null)) require$1(plot.kind === "ofPieChart");
+		const bar = ["barChart", "bar3DChart"].includes(plot.kind);
+		if (settings.direction !== null) require$1(bar);
+		if (settings.grouping !== null) require$1(bar || [
+			"lineChart",
+			"line3DChart",
+			"areaChart",
+			"area3DChart"
+		].includes(plot.kind));
+		if (!bar && settings.grouping?.value === "clustered") fail$2();
+		if (settings.gap_width !== null) require$1([
+			"barChart",
+			"bar3DChart",
+			"ofPieChart"
+		].includes(plot.kind));
+		if (settings.overlap !== null) require$1(plot.kind === "barChart");
+		const leaves = /* @__PURE__ */ new Set();
+		for (const leaf of [
+			settings.direction,
+			settings.grouping,
+			settings.vary_colors,
+			settings.gap_width,
+			settings.overlap,
+			settings.scatter_style,
+			settings.first_slice_angle,
+			settings.of_pie_type,
+			settings.second_pie_size,
+			settings.split_type,
+			settings.split_position,
+			...settings.custom_split_node === null ? [] : [{ node: settings.custom_split_node }],
+			...settings.axis_references
+		]) if (leaf !== null) {
+			require$1(object$11(leaf) && uint$54(leaf.node) && !leaves.has(leaf.node));
+			leaves.add(leaf.node);
+		}
+		require$1(validChartStockSettings(settings.stock, plot.kind, plot.node, leaves));
+		require$1(validChartSpatialSettings(settings.spatial, plot.kind, plot.node, leaves));
+		const familyNodes = chartFamilyDisplayNodes(settings, plot.kind, plot.node, leaves);
+		require$1(familyNodes !== null);
+		const localFamilyNodes = new Set(familyNodes);
+		for (const node of familyNodes) {
+			require$1(!familyClaims.has(node));
+			familyClaims.set(node, plot);
+		}
+		for (const node of leaves) if (!localFamilyNodes.has(node)) occupied?.add(node);
+		for (const reference of settings.axis_references) {
+			require$1(reference !== null && field$3(reference, uint$54, plot.node));
+			const key = plot.node + ":" + reference.node;
+			require$1(!references.has(key));
+			references.set(key, reference.value);
+		}
+	}
+	const axes = /* @__PURE__ */ new Map(), definitions = /* @__PURE__ */ new Map();
+	require$1(validChartSeriesSettings(value.series_settings, plots, series, occupied));
+	require$1(validChartPointSettings(value.point_settings, series, occupied));
+	for (const axis of value.axes) {
+		require$1(object$11(axis) && uint$54(axis.node) && !axes.has(axis.node) && uint$54(axis.area_node) && axis.area_node < axis.node && [
+			"catAx",
+			"valAx",
+			"dateAx",
+			"serAx"
+		].includes(axis.kind) && field$3(axis.id, uint$54, axis.node) && field$3(axis.cross_axis, uint$54, axis.node) && field$3(axis.position, oneOf([
+			"b",
+			"l",
+			"r",
+			"t"
+		]), axis.node) && field$3(axis.deleted, (v) => typeof v === "boolean", axis.node) && scaling(axis.scaling, axis.node) && (axis.major_tick_mark === void 0 || field$3(axis.major_tick_mark, oneOf([
+			"cross",
+			"in",
+			"none",
+			"out"
+		]), axis.node)));
+		axes.set(axis.node, axis);
+		occupied?.add(axis.node);
+		occupied?.add(axis.area_node);
+		for (const leaf of [
+			axis.id,
+			axis.cross_axis,
+			axis.position,
+			axis.deleted,
+			axis.scaling,
+			...axis.scaling ? [
+				axis.scaling.orientation,
+				axis.scaling.minimum,
+				axis.scaling.maximum,
+				axis.scaling.log_base
+			] : []
+		]) if (leaf !== null) occupied?.add(leaf.node);
+		if (axis.id?.value !== null && axis.id?.value !== void 0) {
+			const key = axis.area_node + ":" + axis.id.value;
+			const rows = definitions.get(key) ?? [];
+			rows.push(axis.node);
+			definitions.set(key, rows);
+		}
+	}
+	require$1(value.axis_links.length === references.size);
+	const seenLinks = /* @__PURE__ */ new Set();
+	for (const link of value.axis_links) {
+		require$1(object$11(link) && uint$54(link.plot_node) && plots.has(link.plot_node) && uint$54(link.reference_node) && nullableUint(link.id) && object$11(link.target));
+		const key = link.plot_node + ":" + link.reference_node;
+		require$1(references.has(key) && !seenLinks.has(key) && references.get(key) === link.id);
+		seenLinks.add(key);
+		const matches = link.id === null ? [] : definitions.get(plots.get(link.plot_node).area_node + ":" + link.id) ?? [];
+		const status = link.id === null ? "missing_value" : matches.length === 0 ? "missing_definition" : matches.length > 1 ? "ambiguous" : "resolved";
+		require$1(link.target.status === status && link.target.node === (status === "resolved" ? matches[0] : null));
+	}
+	require$1(value.bindings.length === value.points.length);
+	let previousLeaf = -1;
+	const pointNodes = /* @__PURE__ */ new Set();
+	for (const [index, point] of value.points.entries()) {
+		require$1(object$11(point) && [
+			point.cache_node,
+			point.point_node,
+			point.value_node,
+			point.index
+		].every(uint$54) && point.cache_node < point.point_node && point.point_node < point.value_node && point.value_node > previousLeaf && !pointNodes.has(point.point_node) && pointKinds$1.has(point.kind) && text$4(point.value) && nullableUint(point.level_node) && (point.level_node === null || point.cache_node < point.level_node && point.level_node < point.point_node) && point.kind === "multilevel_cache" === (point.level_node !== null));
+		previousLeaf = point.value_node;
+		pointNodes.add(point.point_node);
+		for (const node of [
+			point.cache_node,
+			point.point_node,
+			point.value_node,
+			point.level_node
+		]) if (node !== null) occupied?.add(node);
+		const binding = value.bindings[index];
+		require$1(object$11(binding) && binding.point === index && [
+			binding.series_node,
+			binding.plot_node,
+			binding.role_node
+		].every(nullableUint) && roles$1.has(binding.role));
+		for (const node of [
+			binding.series_node,
+			binding.plot_node,
+			binding.role_node
+		]) if (node !== null) occupied?.add(node);
+		if (binding.series_node === null) require$1(binding.plot_node === null && binding.role_node === null && binding.role === "unclassified");
+		else {
+			require$1(binding.plot_node !== null);
+			if (series.has(binding.series_node)) require$1(series.get(binding.series_node) === binding.plot_node);
+			if (binding.role_node === null) require$1(binding.role === "unclassified");
+			else require$1(binding.role_node > binding.series_node && binding.role_node < point.cache_node);
+		}
+	}
+	try {
+		validateChartSeriesText({
+			kind: "direct_series",
+			values: value.series_text
+		});
+		validateChartRichText({
+			kind: "rich_text",
+			values: value.rich_text
+		});
+	} catch {
+		fail$2();
+	}
+	for (const row of value.series_text) for (const node of [
+		row.series_node,
+		row.text_node,
+		row.value_node
+	]) occupied?.add(node);
+	for (const row of value.rich_text) for (const node of [
+		row.owner_node,
+		row.text_node,
+		row.rich_node,
+		row.paragraph_node,
+		row.run_node,
+		row.value_node
+	]) occupied?.add(node);
+	for (const row of value.series_settings) if (row.stroke != null) for (const node of [row.stroke.node, row.stroke.no_fill_node].filter((node) => node !== null)) {
+		require$1(!occupied.has(node));
+		occupied.add(node);
+	}
+	for (const axis of value.axes) if (axis.major_tick_mark != null) {
+		require$1(!occupied.has(axis.major_tick_mark.node));
+		occupied.add(axis.major_tick_mark.node);
+	}
+	if (value.blank_policy !== void 0 && value.blank_policy !== null) {
+		require$1(field$3(value.blank_policy, oneOf([
+			"gap",
+			"zero",
+			"span"
+		]), 0) && !occupied.has(value.blank_policy.node));
+		occupied.add(value.blank_policy.node);
+	}
+	require$1(validChartView3D(value.view_3d, occupied));
+	if (value.view_3d != null) {
+		occupied?.add(value.view_3d.node);
+		for (const key of [
+			"rotation_x",
+			"rotation_y",
+			"height_percent",
+			"depth_percent",
+			"right_angle_axes",
+			"perspective"
+		]) if (value.view_3d[key] != null) occupied?.add(value.view_3d[key].node);
+	}
+	const ownerLimits = familyClaims.size ? chartDisplayOwnerLimits(value.plots, value.axes) : null;
+	for (const [node, owner] of familyClaims) {
+		require$1(!occupied.has(node));
+		require$1(node < ownerLimits.get(owner.node));
+		occupied.add(node);
+	}
+	return value;
+}
+var plotKinds$1, pointKinds$1, roles$1, fail$2, require$1;
+var init_chart_display_data = __esmMin((() => {
+	init_chart_display_owner_limits();
+	init_chart_display_fields();
+	init_hwpx_chart_series_text();
+	init_hwpx_chart_rich_text();
+	init_chart_series_settings();
+	init_chart_point_settings();
+	init_chart_stock_settings();
+	init_chart_view_3d();
+	init_chart_spatial_settings();
+	init_chart_family_display_settings();
+	plotKinds$1 = /* @__PURE__ */ new Set([
+		"areaChart",
+		"area3DChart",
+		"lineChart",
+		"line3DChart",
+		"stockChart",
+		"radarChart",
+		"scatterChart",
+		"pieChart",
+		"pie3DChart",
+		"doughnutChart",
+		"barChart",
+		"bar3DChart",
+		"ofPieChart",
+		"surfaceChart",
+		"surface3DChart",
+		"bubbleChart"
+	]);
+	pointKinds$1 = /* @__PURE__ */ new Set([
+		"numeric_cache",
+		"numeric_literal",
+		"string_cache",
+		"string_literal",
+		"multilevel_cache"
+	]);
+	roles$1 = /* @__PURE__ */ new Set([
+		"name",
+		"category",
+		"value",
+		"x",
+		"y",
+		"bubble_size",
+		"unclassified"
+	]);
+	fail$2 = () => {
+		throw new Error("InvalidChartDisplay");
+	};
+	require$1 = (condition) => {
+		if (!condition) fail$2();
+	};
+}));
+// ../../js/hwp5-chart-display-api.mjs
+function envelope(bytes, kind) {
+	if (!(bytes instanceof Uint8Array) || bytes.length > 16777216) invalid$4();
+	const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+	if (!value || value.format !== "hwp5" || value.version !== 1 || value.kind !== kind || typeof value.source_epoch !== "string" || !/^[1-9][0-9]{0,19}$/.test(value.source_epoch) || BigInt(value.source_epoch) > 18446744073709551615n || value.history_revision !== null && !uint$53(value.history_revision)) invalid$4();
+	return value;
+}
+function owner$2(value, allowUnresolved = false) {
+	if (!value || ![
+		"control_node",
+		"component_node",
+		"ole_node",
+		"paragraph_node",
+		"paragraph",
+		"source_unit",
+		"current_unit",
+		"attributes",
+		"opaque_tail_bytes"
+	].every((key) => uint$53(value[key])) || !uint$53(value.ordinal, 65535) || !allowUnresolved && value.ordinal === 0 || !["spec24", "observed26"].includes(value.ole_layout) || ![value.extent_x, value.extent_y].every((number) => Number.isInteger(number) && number >= -2147483648 && number <= 2147483647) || !(value.paragraph_node < value.control_node && value.control_node < value.component_node && value.component_node < value.ole_node)) invalid$4();
+	if (!digest$3(value.section_source_sha256)) invalid$4();
+	validateHwp5DrawingSources([value.geometry]);
+	if (value.geometry.kind_id !== 611282021 || [
+		"control_node",
+		"component_node",
+		"paragraph_node"
+	].some((key) => value[key] !== value.geometry[key])) invalid$4();
+	return value;
+}
+function decodeHwp5ChartCandidates(bytes) {
+	const value = envelope(bytes, "hwp5_chart_candidates");
+	if (!Array.isArray(value.candidates) || value.candidates.length > 4096) invalid$4();
+	const seen = /* @__PURE__ */ new Map();
+	for (const row of value.candidates) {
+		if (!row || !uint$53(row.section)) invalid$4();
+		owner$2(row.owner, true);
+		const key = row.section + ":" + row.owner.control_node;
+		if (seen.has(key)) invalid$4();
+		seen.set(key, row);
+		const r = row.resource;
+		if (!r || ![
+			"modern_chart",
+			"unresolved_ole",
+			"unavailable"
+		].includes(r.state)) invalid$4();
+		if (r.state === "modern_chart") {
+			if (row.owner.ordinal === 0 || !uint$53(r.physical_id, 65535) || !digest$3(r.resource_sha256) || !uint$53(r.stream_entry) || typeof r.legacy_backup_present !== "boolean" || !uint$53(r.presentation_streams) || r.error_name !== null) invalid$4();
+		} else if (typeof r.error_name !== "string" || !r.error_name.length || r.physical_id !== null || r.resource_sha256 !== null || r.stream_entry !== null || r.legacy_backup_present !== null || r.presentation_streams !== null) invalid$4();
+	}
+	return value;
+}
+function decodeHwp5ChartDisplay(bytes) {
+	const value = envelope(bytes, "hwp5_chart_display");
+	owner$2(value.owner);
+	if (!uint$53(value.section) || !uint$53(value.physical_id, 65535) || !digest$3(value.resource_sha256) || !uint$53(value.stream_entry) || typeof value.legacy_backup_present !== "boolean" || !uint$53(value.presentation_streams) || Object.hasOwn(value, "pair") || Object.hasOwn(value, "host")) invalid$4();
+	validateChartDisplayData(value.data);
+	return value;
+}
+function createHwp5ChartDisplayApi({ wasm, check, output, u32 }) {
+	const supported = () => {
+		check();
+		try {
+			return HWP5_CHART_READ_FUNCTIONS.every((name) => typeof wasm[name] === "function") && wasm.hwp5_edit_chart_display_profile_version() === 1;
+		} catch {
+			return false;
+		}
+	};
+	const ready = () => {
+		if (!supported()) throw Error("Hwp5ChartDisplayAbiUnavailable");
+	};
+	return {
+		supportsHwp5ChartDisplayAbi: supported,
+		hwp5ChartCandidates() {
+			ready();
+			return decodeHwp5ChartCandidates(output(() => wasm.hwp5_edit_chart_candidates()).bytes);
+		},
+		hwp5ChartDisplay(section, control) {
+			ready();
+			const s = u32(section, "section"), c = u32(control, "control");
+			const value = decodeHwp5ChartDisplay(output(() => wasm.hwp5_edit_chart_display(s, c)).bytes);
+			if (value.section !== s || value.owner.control_node !== c) invalid$4();
+			return value;
+		}
+	};
+}
+var invalid$4, uint$53, digest$3;
+var init_hwp5_chart_display_api = __esmMin((() => {
+	init_abi_schema();
+	init_hwp5_drawing_sources();
+	init_chart_display_data();
+	invalid$4 = () => {
+		throw Error("InvalidHwp5ChartReply");
+	};
+	uint$53 = (value, maximum = 4294967295) => Number.isInteger(value) && value >= 0 && value <= maximum;
+	digest$3 = (value) => Array.isArray(value) && value.length === 32 && value.every((byte) => uint$53(byte, 255));
 }));
 // ../../js/hwp5-equation-sources.mjs
-function keys$3(value, required) {
-	if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).length !== required.length || required.some((key) => !Object.hasOwn(value, key))) invalid$2();
+function keys$6(value, required) {
+	if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).length !== required.length || required.some((key) => !Object.hasOwn(value, key))) invalid$3();
 }
 function parse$4(bytes) {
-	if (!(bytes instanceof Uint8Array) || bytes.length > 16777216) invalid$2();
+	if (!(bytes instanceof Uint8Array) || bytes.length > 16777216) invalid$3();
 	return JSON.parse(utf8$4.decode(bytes));
 }
 function site(value) {
@@ -25832,8 +26790,8 @@ function site(value) {
 		"source_unit",
 		"current_unit"
 	];
-	keys$3(value, fields);
-	if (fields.some((key) => !uint$43(value[key])) || value.control_node <= value.paragraph_node || value.equation_node <= value.control_node) invalid$2();
+	keys$6(value, fields);
+	if (fields.some((key) => !uint$52(value[key])) || value.control_node <= value.paragraph_node || value.equation_node <= value.control_node) invalid$3();
 	return Object.freeze({
 		controlNode: value.control_node,
 		equationNode: value.equation_node,
@@ -25845,12 +26803,12 @@ function site(value) {
 }
 function decodeHwp5EquationSites(bytes) {
 	const value = parse$4(bytes);
-	keys$3(value, ["schemaVersion", "sites"]);
-	if (value.schemaVersion !== 1 || !Array.isArray(value.sites) || value.sites.length > 1e4) invalid$2();
+	keys$6(value, ["schemaVersion", "sites"]);
+	if (value.schemaVersion !== 1 || !Array.isArray(value.sites) || value.sites.length > 1e4) invalid$3();
 	const controls = /* @__PURE__ */ new Set(), equations = /* @__PURE__ */ new Set();
 	return Object.freeze(value.sites.map((row) => {
 		const result = site(row);
-		if (controls.has(result.controlNode) || equations.has(result.equationNode)) invalid$2();
+		if (controls.has(result.controlNode) || equations.has(result.equationNode)) invalid$3();
 		controls.add(result.controlNode);
 		equations.add(result.equationNode);
 		return result;
@@ -25858,10 +26816,10 @@ function decodeHwp5EquationSites(bytes) {
 }
 function rawArray(value, max, budget, byteWidth) {
 	const maxLength = byteWidth === 2 ? 65535 : MAX_DETAIL;
-	if (!Array.isArray(value) || value.length > maxLength) invalid$2();
+	if (!Array.isArray(value) || value.length > maxLength) invalid$3();
 	budget.bytes += value.length * byteWidth;
-	if (budget.bytes > MAX_DETAIL) invalid$2();
-	if (value.some((item) => !uint$43(item, max))) invalid$2();
+	if (budget.bytes > MAX_DETAIL) invalid$3();
+	if (value.some((item) => !uint$52(item, max))) invalid$3();
 	return Object.freeze(value);
 }
 function text$3(words) {
@@ -25880,7 +26838,7 @@ function text$3(words) {
 	}
 }
 function decodeSource(value) {
-	keys$3(value, [
+	keys$6(value, [
 		"schemaVersion",
 		"layout",
 		"site",
@@ -25894,7 +26852,7 @@ function decodeSource(value) {
 		"fontUtf16LE",
 		"extraBytes"
 	]);
-	if (value.schemaVersion !== 1 || !["version-only", "with-font"].includes(value.layout) || !uint$43(value.attributes) || !uint$43(value.fontSize) || !uint$43(value.color) || !uint$43(value.unknown, 65535) || !Number.isInteger(value.baseline) || Object.is(value.baseline, -0) || value.baseline < -32768 || value.baseline > 32767 || (value.layout === "version-only" ? value.fontUtf16LE !== null : value.fontUtf16LE === null)) invalid$2();
+	if (value.schemaVersion !== 1 || !["version-only", "with-font"].includes(value.layout) || !uint$52(value.attributes) || !uint$52(value.fontSize) || !uint$52(value.color) || !uint$52(value.unknown, 65535) || !Number.isInteger(value.baseline) || Object.is(value.baseline, -0) || value.baseline < -32768 || value.baseline > 32767 || (value.layout === "version-only" ? value.fontUtf16LE !== null : value.fontUtf16LE === null)) invalid$3();
 	const metadata = site(value.site), budget = { bytes: 0 };
 	const scriptRaw = rawArray(value.scriptUtf16LE, 65535, budget, 2), versionRaw = rawArray(value.versionUtf16LE, 65535, budget, 2), fontRaw = value.fontUtf16LE === null ? null : rawArray(value.fontUtf16LE, 65535, budget, 2), extraRaw = rawArray(value.extraBytes, 255, budget, 1);
 	const script = text$3(scriptRaw), version = text$3(versionRaw), font = fontRaw === null ? {
@@ -25930,12 +26888,12 @@ function decodeHwp5EquationSource(bytes) {
 /** A section snapshot owns every raw string and anchor in its JS result. */
 function decodeHwp5EquationSnapshot(bytes) {
 	const value = parse$4(bytes);
-	keys$3(value, ["schemaVersion", "sources"]);
-	if (value.schemaVersion !== 1 || !Array.isArray(value.sources) || value.sources.length > 1e4) invalid$2();
+	keys$6(value, ["schemaVersion", "sources"]);
+	if (value.schemaVersion !== 1 || !Array.isArray(value.sources) || value.sources.length > 1e4) invalid$3();
 	const controls = /* @__PURE__ */ new Set(), equations = /* @__PURE__ */ new Set();
 	return Object.freeze(value.sources.map((source) => {
 		const row = decodeSource(source);
-		if (controls.has(row.site.controlNode) || equations.has(row.site.equationNode)) invalid$2();
+		if (controls.has(row.site.controlNode) || equations.has(row.site.equationNode)) invalid$3();
 		controls.add(row.site.controlNode);
 		equations.add(row.site.equationNode);
 		return row;
@@ -25978,7 +26936,7 @@ function createHwp5EquationApi({ wasm, check, output, u32 }) {
 		}
 	};
 }
-var utf8$4, utf16$1, MAX_DETAIL, uint$43, invalid$2;
+var utf8$4, utf16$1, MAX_DETAIL, uint$52, invalid$3;
 var init_hwp5_equation_sources = __esmMin((() => {
 	utf8$4 = new TextDecoder("utf-8", { fatal: true });
 	utf16$1 = new TextDecoder("utf-16le", {
@@ -25986,8 +26944,8 @@ var init_hwp5_equation_sources = __esmMin((() => {
 		ignoreBOM: true
 	});
 	MAX_DETAIL = 2097152;
-	uint$43 = (value, max = 4294967295) => Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= max;
-	invalid$2 = () => {
+	uint$52 = (value, max = 4294967295) => Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= max;
+	invalid$3 = () => {
 		throw Error("InvalidHwp5EquationSources");
 	};
 }));
@@ -26135,13 +27093,13 @@ function checkedObjectGeometrySelector(value) {
 		"section",
 		"node"
 	]);
-	if (!["chart", "drawing"].includes(p.kind) || !uint$42(p.section) || !uint$42(p.node)) throw Error("InvalidObjectGeometryTarget");
+	if (!["chart", "drawing"].includes(p.kind) || !uint$51(p.section) || !uint$51(p.node)) throw Error("InvalidObjectGeometryTarget");
 	return Object.freeze(p);
 }
 function checkedObjectGeometryPatch(value) {
 	const p = ownObjectGeometryRecord(value, fields$8, []);
 	for (const key of Object.keys(p)) if (key === "width" || key === "height") {
-		if (!uint$42(p[key]) || p[key] === 0) throw Error("InvalidObjectGeometrySize");
+		if (!uint$51(p[key]) || p[key] === 0) throw Error("InvalidObjectGeometrySize");
 	} else if (key === "treatAsCharacter") {
 		if (typeof p[key] !== "boolean") throw Error("InvalidObjectGeometryPlacement");
 	} else if (!signed$1(p[key])) throw Error("InvalidObjectGeometryOffset");
@@ -26163,14 +27121,14 @@ function checkedObjectGeometryOwner(value) {
 		p.ownerNode,
 		p.paragraph,
 		p.anchorUnit
-	].every(uint$42) || p.componentNode !== null && !uint$42(p.componentNode) || typeof p.link !== "string" || p.link.length === 0 || p.link.length > 8192) throw Error("InvalidObjectGeometryOwner");
+	].every(uint$51) || p.componentNode !== null && !uint$51(p.componentNode) || typeof p.link !== "string" || p.link.length === 0 || p.link.length > 8192) throw Error("InvalidObjectGeometryOwner");
 	if (!Array.isArray(p.sourceSha256) || Object.getPrototypeOf(p.sourceSha256) !== Array.prototype || p.sourceSha256.length !== 32) throw Error("InvalidObjectGeometryOwner");
 	const bytes = [];
 	const descriptors = Object.getOwnPropertyDescriptors(p.sourceSha256);
 	if (Reflect.ownKeys(descriptors).length !== 33) throw Error("InvalidObjectGeometryOwner");
 	for (let index = 0; index < 32; index++) {
 		const d = descriptors[index];
-		if (!d || !("value" in d) || !uint$42(d.value) || d.value > 255) throw Error("InvalidObjectGeometryOwner");
+		if (!d || !("value" in d) || !uint$51(d.value) || d.value > 255) throw Error("InvalidObjectGeometryOwner");
 		bytes.push(d.value);
 	}
 	return Object.freeze({
@@ -26204,7 +27162,7 @@ function checkedObjectGeometryObservation(value) {
 		binding: Object.freeze(binding)
 	});
 }
-var fields$8, uint$42, signed$1;
+var fields$8, uint$51, signed$1;
 var init_object_geometry_edit = __esmMin((() => {
 	fields$8 = [
 		"width",
@@ -26213,7 +27171,7 @@ var init_object_geometry_edit = __esmMin((() => {
 		"verticalOffset",
 		"treatAsCharacter"
 	];
-	uint$42 = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 4294967295 && !Object.is(value, -0);
+	uint$51 = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 4294967295 && !Object.is(value, -0);
 	signed$1 = (value) => Number.isSafeInteger(value) && value >= -2147483648 && value <= 2147483647 && !Object.is(value, -0);
 }));
 // ../../js/object-geometry-api.mjs
@@ -26520,7 +27478,7 @@ function checkedPageSettingsValues(input) {
 		v.width,
 		v.height,
 		...Object.values(m)
-	].every(uint$41)) throw Error("InvalidPageSettingsGeometry");
+	].every(uint$50)) throw Error("InvalidPageSettingsGeometry");
 	const [w, h] = v.orientation === "narrowly" ? [v.height, v.width] : [v.width, v.height];
 	if (w <= m.left + m.right + (v.gutter_type === "top_bottom" ? 0 : m.gutter) || h <= m.top + m.bottom + m.header + m.footer + (v.gutter_type === "top_bottom" ? m.gutter : 0)) throw Error("InvalidPageSettingsGeometry");
 	return Object.freeze({
@@ -26529,10 +27487,10 @@ function checkedPageSettingsValues(input) {
 	});
 }
 function checkedPageSettingsCapabilities(cap) {
-	if (!cap || cap.schemaVersion !== 1 || !["hwpx", "hwp5"].includes(cap.format) || !Array.isArray(cap.sections) || cap.sections.length > 512 || !cap.binding || !uint$41(cap.binding.revision) || typeof cap.binding.session !== "string" || !decimal$1(cap.binding.serial)) throw Error("InvalidPageSettingsCapabilities");
+	if (!cap || cap.schemaVersion !== 1 || !["hwpx", "hwp5"].includes(cap.format) || !Array.isArray(cap.sections) || cap.sections.length > 512 || !cap.binding || !uint$50(cap.binding.revision) || typeof cap.binding.session !== "string" || !decimal$3(cap.binding.serial)) throw Error("InvalidPageSettingsCapabilities");
 	const seen = /* @__PURE__ */ new Set();
 	for (const row of cap.sections) {
-		if (!row || !uint$41(row.section) || seen.has(row.section) || row.section >= cap.sections.length) throw Error("InvalidPageSettingsCapabilities");
+		if (!row || !uint$50(row.section) || seen.has(row.section) || row.section >= cap.sections.length) throw Error("InvalidPageSettingsCapabilities");
 		seen.add(row.section);
 		if (row.target === null) {
 			if (!(cap.format === "hwpx" ? [
@@ -26559,7 +27517,7 @@ function checkedPageSettingsCapabilities(cap) {
 			validateHwp5PageSettings(t.expected);
 			continue;
 		}
-		if (row.reason !== null || !t || t.section !== row.section || ![t.owner_node, t.page_node].every(uint$41) || t.margin_node !== null && !uint$41(t.margin_node) || !t.expected || t.expected.section_ordinal !== row.section || t.expected.element_index !== t.page_node || t.expected.duplicate_margins !== 0) throw Error("InvalidPageSettingsCapabilities");
+		if (row.reason !== null || !t || t.section !== row.section || ![t.owner_node, t.page_node].every(uint$50) || t.margin_node !== null && !uint$50(t.margin_node) || !t.expected || t.expected.section_ordinal !== row.section || t.expected.element_index !== t.page_node || t.expected.duplicate_margins !== 0) throw Error("InvalidPageSettingsCapabilities");
 	}
 	return cap;
 }
@@ -26582,7 +27540,7 @@ function copyPageTarget(input, format) {
 			"binding",
 			"extra_bytes"
 		]);
-		if (!uint$41(t.section)) throw Error("InvalidPageSettingsTargets");
+		if (!uint$50(t.section)) throw Error("InvalidPageSettingsTargets");
 		validateHwp5PageSettings(expected);
 		return {
 			section: t.section,
@@ -26622,7 +27580,7 @@ function copyPageTarget(input, format) {
 		t.section,
 		t.owner_node,
 		t.page_node
-	].every(uint$41) || t.margin_node !== null && !uint$41(t.margin_node)) throw Error("InvalidPageSettingsTargets");
+	].every(uint$50) || t.margin_node !== null && !uint$50(t.margin_node)) throw Error("InvalidPageSettingsTargets");
 	return {
 		...t,
 		expected: e
@@ -26704,122 +27662,14 @@ function createPageSettingsEditApi({ wasm, memory, check, format = "hwpx" }) {
 		}
 	};
 }
-var scopes, uint$41, decimal$1;
+var scopes, uint$50, decimal$3;
 var init_page_settings_edit = __esmMin((() => {
 	init_hwp5_page_settings();
 	init_hwpx_page_settings();
 	init_native_edit_outcome();
 	scopes = 0n;
-	uint$41 = (n) => Number.isInteger(n) && n >= 0 && n <= 4294967295 && !Object.is(n, -0);
-	decimal$1 = (s) => typeof s === "string" && /^(0|[1-9][0-9]{0,19})$/.test(s) && BigInt(s) <= 18446744073709551615n;
-})), CREATED_TABLE_GRID_ACTION, EXPERIMENTAL_EDITOR_FUNCTIONS, HWPX_DOCUMENT_INSERT_FUNCTIONS, HWPX_SOURCE_TABLE_CELL_MERGE_FUNCTIONS, HWP5_SOURCE_TABLE_CELL_SPLIT_FUNCTIONS, HWPX_SOURCE_TABLE_CELL_SPLIT_FUNCTIONS, REQUIRED_FUNCTIONS;
-var init_abi_schema = __esmMin((() => {
-	CREATED_TABLE_GRID_ACTION = Object.freeze({
-		insert_row: 0,
-		delete_row: 1,
-		insert_column: 2,
-		delete_column: 3
-	});
-	EXPERIMENTAL_EDITOR_FUNCTIONS = Object.freeze([
-		"hwp5_edit_open",
-		"hwp5_edit_close",
-		"hwp5_edit_section_count",
-		"hwp5_edit_paragraph_count",
-		"hwp5_edit_char_shape_count",
-		"hwp5_edit_copy_text",
-		"hwp5_edit_splice",
-		"hwp5_edit_format",
-		"hwp5_edit_save",
-		"hwp5_edit_output_ptr",
-		"hwp5_edit_output_len",
-		"hwp5_edit_output_free",
-		"hwp5_edit_reflow"
-	]);
-	Object.freeze([
-		"hwp5_edit_text_transaction_capabilities",
-		"hwp5_edit_query_text_transaction",
-		"hwp5_edit_apply_text_transaction"
-	]);
-	Object.freeze([
-		"hwpx_edit_text_transaction_capabilities",
-		"hwpx_edit_query_text_transaction",
-		"hwpx_edit_apply_text_transaction"
-	]);
-	Object.freeze(["hwp5_edit_named_fields"]);
-	Object.freeze(["hwpx_edit_named_fields"]);
-	Object.freeze(["hwpx_edit_named_field_parameters", "hwpx_edit_set_named_field_parameters"]);
-	Object.freeze(["hwpx_edit_create_named_field"]);
-	Object.freeze(["hwpx_edit_rename_named_field"]);
-	HWPX_DOCUMENT_INSERT_FUNCTIONS = Object.freeze(["hwpx_edit_document_insert_capabilities", "hwpx_edit_insert_document"]);
-	HWPX_SOURCE_TABLE_CELL_MERGE_FUNCTIONS = Object.freeze(["hwpx_edit_document_insert_capabilities", "hwpx_edit_merge_source_table_cells"]);
-	HWP5_SOURCE_TABLE_CELL_SPLIT_FUNCTIONS = Object.freeze(["hwp5_edit_source_table_cell_split_capabilities", "hwp5_edit_split_source_table_cells"]);
-	HWPX_SOURCE_TABLE_CELL_SPLIT_FUNCTIONS = Object.freeze(["hwpx_edit_document_insert_capabilities", "hwpx_edit_split_source_table_cells"]);
-	Object.freeze(["hwpx_edit_document_provenance"]);
-	Object.freeze({
-		header_bytes: 8,
-		node_bytes: 56,
-		parent: 0,
-		kind: 4,
-		name_len: 8,
-		content_len: 12,
-		state: 16,
-		reserved: 20,
-		created: 24,
-		modified: 32,
-		clsid: 40
-	});
-	Object.freeze({
-		name: 0,
-		path: 1,
-		content: 2,
-		clsid: 3
-	});
-	Object.freeze({
-		kind: 0,
-		color: 1,
-		left: 2,
-		right: 3,
-		child: 4,
-		state: 5,
-		created: 6,
-		modified: 7,
-		start: 8,
-		size: 9,
-		uses_fat: 10,
-		has_content: 11
-	});
-	REQUIRED_FUNCTIONS = Object.freeze([
-		"hwpjs_abi_version",
-		"cfb_alloc",
-		"cfb_free",
-		"cfb_open",
-		"cfb_open_strict",
-		"cfb_find_exact",
-		"cfb_write",
-		"cfb_document",
-		"cfb_output_ptr",
-		"cfb_output_len",
-		"cfb_output_free",
-		"cfb_close",
-		"cfb_error_ptr",
-		"cfb_error_len",
-		"cfb_error_code_ptr",
-		"cfb_error_code_len",
-		"cfb_count",
-		"cfb_find",
-		"cfb_find_snapshot",
-		"cfb_field_ptr",
-		"cfb_field_len",
-		"cfb_value",
-		"cfb_sector_count",
-		"cfb_raw_ptr",
-		"cfb_raw_len",
-		"hwp5_text_read",
-		"hwp5_text_ptr",
-		"hwp5_text_len",
-		"hwp5_text_free"
-	]);
-	Object.freeze(["hwpx_edit_chart_create_profile_version"]);
+	uint$50 = (n) => Number.isInteger(n) && n >= 0 && n <= 4294967295 && !Object.is(n, -0);
+	decimal$3 = (s) => typeof s === "string" && /^(0|[1-9][0-9]{0,19})$/.test(s) && BigInt(s) <= 18446744073709551615n;
 }));
 // ../../js/source-table-cell-split-capability.mjs
 function sourceTableCellSplitProfile(format) {
@@ -27078,7 +27928,7 @@ function decodeHwp5NamedFields(bytes) {
 	const ids = /* @__PURE__ */ new Set();
 	const rows = source.rows.map(({ section, node, kind, name, text, sourceLocation }) => {
 		const id = `hwp5:${section}:${node}`;
-		if (!uint$40(section) || !uint$40(node) || ids.has(id) || !["CLICK_HERE", "BOOKMARK"].includes(kind) || name !== null && (typeof name !== "string" || !name.isWellFormed()) || text !== null && (typeof text !== "string" || !text.isWellFormed())) throw invalid();
+		if (!uint$49(section) || !uint$49(node) || ids.has(id) || !["CLICK_HERE", "BOOKMARK"].includes(kind) || name !== null && (typeof name !== "string" || !name.isWellFormed()) || text !== null && (typeof text !== "string" || !text.isWellFormed())) throw invalid();
 		ids.add(id);
 		if (text === null !== (sourceLocation === null)) throw invalid();
 		if (sourceLocation !== null) {
@@ -27089,7 +27939,7 @@ function decodeHwp5NamedFields(bytes) {
 				sourceNode,
 				startUnit,
 				endUnit
-			].every(uint$40) || endUnit - startUnit !== text.length) throw invalid();
+			].every(uint$49) || endUnit - startUnit !== text.length) throw invalid();
 		}
 		return {
 			id,
@@ -27110,13 +27960,15 @@ function decodeHwp5NamedFields(bytes) {
 		rows
 	};
 }
-var utf8$3, uint$40;
+var utf8$3, uint$49;
 var init_hwp5_named_fields = __esmMin((() => {
 	utf8$3 = new TextDecoder("utf-8", { fatal: true });
-	uint$40 = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 4294967295;
-})), BORDER_WIDTHS_HUNDREDTH_MM;
+	uint$49 = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 4294967295;
+}));
+// ../../js/border-fill-values.mjs
+var BORDER_LINE_STYLES$1, BORDER_WIDTHS_HUNDREDTH_MM$1;
 var init_border_fill_values = __esmMin((() => {
-	Object.freeze([
+	BORDER_LINE_STYLES$1 = Object.freeze([
 		"NONE",
 		"SOLID",
 		"DASH",
@@ -27135,7 +27987,7 @@ var init_border_fill_values = __esmMin((() => {
 		"3D",
 		"REV3D"
 	]);
-	BORDER_WIDTHS_HUNDREDTH_MM = Object.freeze([
+	BORDER_WIDTHS_HUNDREDTH_MM$1 = Object.freeze([
 		10,
 		12,
 		15,
@@ -27169,7 +28021,7 @@ function validate$3(input, message) {
 		const value = input[name];
 		if (name === "style") cellBorderStyleCode(value);
 		else if (name === "width") {
-			if (!widths.has(value)) throw new RangeError("UnsupportedBorderWidth");
+			if (!widths$1.has(value)) throw new RangeError("UnsupportedBorderWidth");
 		} else {
 			const maximum = name === "color" ? 16777215 : name === "edges" ? 15 : 4294967295;
 			const minimum = name === "edges" ? 1 : 0;
@@ -27182,7 +28034,7 @@ function validate$3(input, message) {
 function validateCellBorder(input) {
 	return validate$3(input, false);
 }
-var CELL_BORDER_STYLES, CELL_BORDER_WIDTHS, styleCodes, widths, names$2, allowed$3;
+var CELL_BORDER_STYLES, CELL_BORDER_WIDTHS, styleCodes, widths$1, names$2, allowed$3;
 var init_cell_border_command = __esmMin((() => {
 	init_border_fill_values();
 	CELL_BORDER_STYLES = Object.freeze([
@@ -27190,9 +28042,9 @@ var init_cell_border_command = __esmMin((() => {
 		"SOLID",
 		"DOUBLE_SLIM"
 	]);
-	CELL_BORDER_WIDTHS = BORDER_WIDTHS_HUNDREDTH_MM;
+	CELL_BORDER_WIDTHS = BORDER_WIDTHS_HUNDREDTH_MM$1;
 	styleCodes = new Map(CELL_BORDER_STYLES.map((style, code) => [style, code]));
-	widths = new Set(CELL_BORDER_WIDTHS);
+	widths$1 = new Set(CELL_BORDER_WIDTHS);
 	names$2 = Object.freeze([
 		"section",
 		"tableNode",
@@ -27271,7 +28123,7 @@ function validateCellDiagonals(input) {
 			listNode: source.listNode,
 			edges: 1,
 			style: fields.includes("style") ? source.style : "NONE",
-			width: fields.includes("width") ? source.width : BORDER_WIDTHS_HUNDREDTH_MM[0],
+			width: fields.includes("width") ? source.width : BORDER_WIDTHS_HUNDREDTH_MM$1[0],
 			color: fields.includes("color") ? source.color : 0
 		});
 		const key = `${normalized.section}:${normalized.listNode}`;
@@ -27342,7 +28194,7 @@ function validateCellBorderPatches(input) {
 			listNode: source.listNode,
 			edges: source.edges,
 			style: fields.includes("style") ? source.style : "NONE",
-			width: fields.includes("width") ? source.width : BORDER_WIDTHS_HUNDREDTH_MM[0],
+			width: fields.includes("width") ? source.width : BORDER_WIDTHS_HUNDREDTH_MM$1[0],
 			color: fields.includes("color") ? source.color : 0
 		});
 		const key = `${normalized.section}:${normalized.listNode}`;
@@ -27394,13 +28246,13 @@ function exact$1(value, names) {
 	if (!value || typeof value !== "object" || Array.isArray(value)) throw TypeError("InvalidCellFill");
 	if (Reflect.ownKeys(value).length !== names.length || names.some((name) => !Object.hasOwn(value, name))) throw TypeError("InvalidCellFill");
 }
-function number$1(value, maximum) {
+function number(value, maximum) {
 	if (!Number.isInteger(value) || value < 0 || value > maximum) throw RangeError("InvalidCellFill");
 	return value;
 }
 function tuple(value) {
 	if (!Array.isArray(value) || value.length !== 2 || Reflect.ownKeys(value).length !== 3 || !Object.hasOwn(value, 0) || !Object.hasOwn(value, 1)) throw TypeError("InvalidCellFill");
-	return Object.freeze([number$1(value[0], 16777215), number$1(value[1], 16777215)]);
+	return Object.freeze([number(value[0], 16777215), number(value[1], 16777215)]);
 }
 function validateCellFill(input) {
 	if (!input || typeof input !== "object") throw TypeError("InvalidCellFill");
@@ -27413,7 +28265,7 @@ function validateCellFill(input) {
 			exact$1(input, ["kind", "color"]);
 			return Object.freeze({
 				kind,
-				color: number$1(input.color, 16777215)
+				color: number(input.color, 16777215)
 			});
 		case "hatch": {
 			exact$1(input, [
@@ -27426,8 +28278,8 @@ function validateCellFill(input) {
 			if (!hatchCodes.has(style)) throw TypeError("InvalidCellFill");
 			return Object.freeze({
 				kind,
-				face: number$1(input.face, 16777215),
-				hatch: number$1(input.hatch, 16777215),
+				face: number(input.face, 16777215),
+				hatch: number(input.hatch, 16777215),
 				style
 			});
 		}
@@ -27444,11 +28296,11 @@ function validateCellFill(input) {
 			return Object.freeze({
 				kind,
 				colors: tuple(input.colors),
-				angle: number$1(input.angle, 359),
-				centerX: number$1(input.centerX, 100),
-				centerY: number$1(input.centerY, 100),
-				step: number$1(input.step, 100),
-				stepCenter: number$1(input.stepCenter, 100)
+				angle: number(input.angle, 359),
+				centerX: number(input.centerX, 100),
+				centerY: number(input.centerY, 100),
+				step: number(input.step, 100),
+				stepCenter: number(input.stepCenter, 100)
 			});
 		default: throw TypeError("InvalidCellFill");
 	}
@@ -27468,7 +28320,7 @@ function validateCellFills(input) {
 			"listNode",
 			"fill"
 		]);
-		const section = number$1(source.section, 4294967295), tableNode = number$1(source.tableNode, 4294967295), listNode = number$1(source.listNode, 4294967295), fill = validateCellFill(source.fill), key = `${section}:${listNode}`;
+		const section = number(source.section, 4294967295), tableNode = number(source.tableNode, 4294967295), listNode = number(source.listNode, 4294967295), fill = validateCellFill(source.fill), key = `${section}:${listNode}`;
 		if (owners.has(key)) throw TypeError("DuplicateCellFillEdit");
 		owners.add(key);
 		values.push(Object.freeze({
@@ -27668,7 +28520,7 @@ function checkedParagraphBulletDefinitions(result) {
 	if (result.definitionWriter !== void 0 && result.definitionWriter !== "character-definitions-v1") invalid();
 	const counts = /* @__PURE__ */ new Map();
 	for (const [index, row] of result.declarations.entries()) {
-		if (!row || row.ordinal !== index || row.id !== null && !uint$39(row.id) || row.marker !== null && !scalar(row.marker) || typeof row.canApply !== "boolean") invalid();
+		if (!row || row.ordinal !== index || row.id !== null && !uint$48(row.id) || row.marker !== null && !scalar(row.marker) || typeof row.canApply !== "boolean") invalid();
 		if (row.canApply ? row.id === null || row.marker === null || row.reason !== null : !reasons.has(row.reason)) invalid();
 		if (row.id === null !== (row.reason === "InvalidBulletId")) invalid();
 		if (row.definition != null) {
@@ -27690,7 +28542,7 @@ function checkedParagraphBulletDefinitions(result) {
 function decodeParagraphBulletDefinitions(bytes) {
 	return checkedParagraphBulletDefinitions(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
-var reasons, uint$39, scalar;
+var reasons, uint$48, scalar;
 var init_paragraph_bullet_definitions = __esmMin((() => {
 	init_paragraph_bullet_definition_write();
 	reasons = /* @__PURE__ */ new Set([
@@ -27698,8 +28550,8 @@ var init_paragraph_bullet_definitions = __esmMin((() => {
 		"DuplicateBulletId",
 		"UnsupportedBulletDeclaration"
 	]);
-	uint$39 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
-	scalar = (value) => uint$39(value) && value > 32 && value <= 1114111 && !(value >= 127 && value <= 159) && !(value >= 55296 && value <= 57343);
+	uint$48 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	scalar = (value) => uint$48(value) && value > 32 && value <= 1114111 && !(value >= 127 && value <= 159) && !(value >= 55296 && value <= 57343);
 }));
 // ../../js/atomic-formatting-api.mjs
 function createAtomicFormattingApi({ wasm, memory, check, prefix }) {
@@ -27806,7 +28658,7 @@ function prepareIndependentTextRequest(input, limits) {
 		"requestStructure"
 	]) if (!Number.isSafeInteger(limits?.[key]) || limits[key] <= 0) throw Error("InvalidTextTransactionLimits");
 	if (limits.requestDepth > 64) throw Error("InvalidTextTransactionLimits");
-	if (!input || typeof input !== "object" || Array.isArray(input)) throw invalid$1();
+	if (!input || typeof input !== "object" || Array.isArray(input)) throw invalid$2();
 	let bytes = 0, structure = 0;
 	const active = /* @__PURE__ */ new Set();
 	const addBytes = (amount) => {
@@ -27854,11 +28706,11 @@ function prepareIndependentTextRequest(input, limits) {
 			addBytes(JSON.stringify(value).length);
 			return value;
 		}
-		if (typeof value !== "object" || active.has(value)) throw invalid$1();
+		if (typeof value !== "object" || active.has(value)) throw invalid$2();
 		if (depth > limits.requestDepth) throw Error("LimitExceeded");
 		const array = Array.isArray(value);
 		const proto = Object.getPrototypeOf(value);
-		if (!array && proto !== Object.prototype && proto !== null) throw invalid$1();
+		if (!array && proto !== Object.prototype && proto !== null) throw invalid$2();
 		const keys = Reflect.ownKeys(value);
 		if (keys.length > limits.requestStructure) throw Error("LimitExceeded");
 		addStructure(2);
@@ -27868,12 +28720,12 @@ function prepareIndependentTextRequest(input, limits) {
 			let count = 0;
 			for (const key of keys) {
 				if (array && key === "length") continue;
-				if (typeof key !== "string") throw invalid$1();
-				if (array && !/^(0|[1-9][0-9]*)$/.test(key)) throw invalid$1();
+				if (typeof key !== "string") throw invalid$2();
+				if (array && !/^(0|[1-9][0-9]*)$/.test(key)) throw invalid$2();
 				const descriptor = Object.getOwnPropertyDescriptor(value, key);
 				if (!descriptor || !Object.hasOwn(descriptor, "value")) throw Error("AccessorPayloadUnsupported");
 				if (descriptor.value === void 0) {
-					if (array) throw invalid$1();
+					if (array) throw invalid$2();
 					continue;
 				}
 				if (count++) addStructure(1);
@@ -27885,8 +28737,8 @@ function prepareIndependentTextRequest(input, limits) {
 			}
 			if (array) {
 				const length = Object.getOwnPropertyDescriptor(value, "length")?.value;
-				if (count !== length || output.length !== length) throw invalid$1();
-				for (let index = 0; index < length; index++) if (!Object.hasOwn(output, index)) throw invalid$1();
+				if (count !== length || output.length !== length) throw invalid$2();
+				for (let index = 0; index < length; index++) if (!Object.hasOwn(output, index)) throw invalid$2();
 			}
 			return output;
 		} finally {
@@ -27901,9 +28753,9 @@ function prepareIndependentTextRequest(input, limits) {
 		bytes: encoded
 	};
 }
-var invalid$1;
+var invalid$2;
 var init_independent_text_request = __esmMin((() => {
-	invalid$1 = () => Error("InvalidTextTransactionDTO");
+	invalid$2 = () => Error("InvalidTextTransactionDTO");
 }));
 // ../../js/text-transaction-args.mjs
 function textTransactionArgs({ section, paragraph, startUnit, endUnit, text }) {
@@ -27943,7 +28795,7 @@ function createRichTypingApi({ wasm, memory, check, prefix, available, capabilit
 			if (!input || typeof input !== "object" || ![Object.prototype, null].includes(Object.getPrototypeOf(input))) throw Error("InvalidRichTypingRequest");
 			const request = Object.create(null);
 			for (const key of Reflect.ownKeys(input)) {
-				if (!keys$2.has(key)) throw Error("InvalidRichTypingRequest");
+				if (!keys$5.has(key)) throw Error("InvalidRichTypingRequest");
 				const descriptor = Object.getOwnPropertyDescriptor(input, key);
 				if (!descriptor || !Object.hasOwn(descriptor, "value")) throw Error("AccessorPayloadUnsupported");
 				request[key] = descriptor.value;
@@ -27969,12 +28821,12 @@ function createRichTypingApi({ wasm, memory, check, prefix, available, capabilit
 		}
 	};
 }
-var keys$2, modes, requestLimit;
+var keys$5, modes, requestLimit;
 var init_rich_typing_api = __esmMin((() => {
 	init_independent_text_request();
 	init_native_edit_outcome();
 	init_text_transaction_args();
-	keys$2 = /* @__PURE__ */ new Set([
+	keys$5 = /* @__PURE__ */ new Set([
 		"section",
 		"paragraph",
 		"startUnit",
@@ -27990,6 +28842,94 @@ var init_rich_typing_api = __esmMin((() => {
 		"field"
 	];
 	requestLimit = 65536;
+}));
+// ../../js/created-table-identity.mjs
+function createdTableIdentity(value) {
+	if (typeof value !== "string" || !/^[1-9][0-9]{0,19}$/.test(value)) throw new RangeError("InvalidCreatedTableIdentity");
+	const id = BigInt(value);
+	if (id > 18446744073709551615n) throw new RangeError("InvalidCreatedTableIdentity");
+	return id;
+}
+var init_created_table_identity = __esmMin((() => {}));
+// ../../js/created-cell-typing-api.mjs
+function createCreatedCellTypingApi({ wasm, memory, check, prefix, available, capabilities }) {
+	const action = wasm[`${prefix}_splice_created_cell`];
+	const version = wasm[`${prefix}_created_cell_typing_version`];
+	const supported = () => available() && typeof action === "function" && typeof version === "function" && version() === 1;
+	return {
+		supportsCreatedCellTypingAbi() {
+			check();
+			return supported();
+		},
+		createdCellTypingCapabilities() {
+			check();
+			if (!supported()) throw Error("CreatedCellTypingUnavailable");
+			const value = capabilities();
+			return {
+				schemaVersion: 1,
+				atomic: true,
+				format: value.format,
+				coordinateSpace: "created-cell-utf16",
+				requiresHistoryProtocol: 2,
+				binding: value.binding,
+				limits: value.limits
+			};
+		},
+		spliceCreatedCell(input) {
+			check();
+			if (!supported()) throw Error("CreatedCellTypingUnavailable");
+			if (!input || typeof input !== "object" || ![Object.prototype, null].includes(Object.getPrototypeOf(input))) throw Error("InvalidCreatedCellTypingRequest");
+			const request = Object.create(null);
+			for (const key of Reflect.ownKeys(input)) {
+				if (!keys$4.has(key)) throw Error("InvalidCreatedCellTypingRequest");
+				const d = Object.getOwnPropertyDescriptor(input, key);
+				if (!d || !Object.hasOwn(d, "value")) throw Error("AccessorPayloadUnsupported");
+				request[key] = d.value;
+			}
+			if (![
+				request.section,
+				request.row,
+				request.column,
+				request.startUnit,
+				request.endUnit
+			].every(uint$47) || request.endUnit < request.startUnit) throw RangeError("InvalidTextPosition");
+			const id = createdTableIdentity(request.identity);
+			if (typeof request.text !== "string" || !request.text.isWellFormed()) throw Error("InvalidUnicodeEncoding");
+			const { binding, limits } = capabilities();
+			if (request.text.length > 4194304 || request.startUnit + request.text.length > 4294967295) throw Error("LimitExceeded");
+			const text = new TextEncoder().encode(request.text);
+			if (text.length > Math.min(limits.insertedBytes, 4194304)) throw Error("LimitExceeded");
+			const { bytes: wire } = prepareIndependentTextRequest({
+				schemaVersion: 1,
+				binding,
+				insertion: request.insertion === void 0 ? { character: {} } : request.insertion
+			}, {
+				...limits,
+				requestBytes: Math.min(limits.requestBytes, 65536)
+			});
+			const payload = new Uint8Array(text.length + wire.length);
+			payload.set(text);
+			payload.set(wire, text.length);
+			return applyNativeEdit(memory, payload, (ptr) => action(request.section, Number(id & 4294967295n), Number(id >> 32n), request.row, request.column, request.startUnit, request.endUnit, ptr, text.length, ptr + text.length, wire.length), "InvalidCreatedCellTypingResult");
+		}
+	};
+}
+var keys$4, uint$47;
+var init_created_cell_typing_api = __esmMin((() => {
+	init_created_table_identity();
+	init_independent_text_request();
+	init_native_edit_outcome();
+	keys$4 = /* @__PURE__ */ new Set([
+		"section",
+		"identity",
+		"row",
+		"column",
+		"startUnit",
+		"endUnit",
+		"text",
+		"insertion"
+	]);
+	uint$47 = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 4294967295 && !Object.is(n, -0);
 }));
 // ../../js/independent-text-api.mjs
 function createIndependentTextApi({ wasm, memory, check, prefix }) {
@@ -28060,6 +29000,14 @@ function createIndependentTextApi({ wasm, memory, check, prefix }) {
 			available,
 			capabilities
 		}),
+		...createCreatedCellTypingApi({
+			wasm,
+			memory,
+			check,
+			prefix,
+			available,
+			capabilities
+		}),
 		supportsIndependentTextAbi() {
 			check();
 			return available();
@@ -28089,6 +29037,7 @@ function createIndependentTextApi({ wasm, memory, check, prefix }) {
 }
 var init_independent_text_api = __esmMin((() => {
 	init_rich_typing_api();
+	init_created_cell_typing_api();
 	init_native_edit_outcome();
 	init_independent_text_request();
 }));
@@ -28587,32 +29536,32 @@ function validateHwp5FormSources(rows) {
 		"property_bytes",
 		"property_nodes",
 		"other_direct_children"
-	].every((k) => uint$38(row[k])) && row.paragraph_node < row.control_node && row.source_unit <= 4294967287 && [
+	].every((k) => uint$46(row[k])) && row.paragraph_node < row.control_node && row.source_unit <= 4294967287 && [
 		"unknown",
 		"push_button",
 		"check_box",
 		"combo_box",
 		"radio_button",
 		"edit"
-	].includes(row.kind) && uint$38(row.type_id) && uint$38(row.secondary_type_id) && [
+	].includes(row.kind) && uint$46(row.type_id) && uint$46(row.secondary_type_id) && [
 		"offset_x",
 		"offset_y",
 		"z_order",
 		"prevent_page_break"
-	].every((k) => signed(row[k], -2147483648, 2147483647)) && Array.isArray(row.margins) && row.margins.length === 4 && row.margins.every((v) => signed(v, -32768, 32767)) && (row.description_bytes === null || uint$38(row.description_bytes)));
+	].every((k) => signed(row[k], -2147483648, 2147483647)) && Array.isArray(row.margins) && row.margins.length === 4 && row.margins.every((v) => signed(v, -32768, 32767)) && (row.description_bytes === null || uint$46(row.description_bytes)));
 }
 function validateHwp5FormAnchors(rows) {
-	return uniqueRows(rows, (row) => uint$38(row.paragraph) && uint$38(row.source_unit) && row.source_unit <= 4294967287 && uint$38(row.current_unit) && row.current_unit <= 4294967287);
+	return uniqueRows(rows, (row) => uint$46(row.paragraph) && uint$46(row.source_unit) && row.source_unit <= 4294967287 && uint$46(row.current_unit) && row.current_unit <= 4294967287);
 }
-var uint$38, signed, uniqueRows, decode$1, decodeHwp5FormSources, decodeHwp5FormAnchors;
+var uint$46, signed, uniqueRows, decode$1, decodeHwp5FormSources, decodeHwp5FormAnchors;
 var init_hwp5_form_sources = __esmMin((() => {
-	uint$38 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$46 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	signed = (value, min, max) => Number.isInteger(value) && value >= min && value <= max;
 	uniqueRows = (rows, inspect) => {
 		const controls = /* @__PURE__ */ new Set(), objects = /* @__PURE__ */ new Set();
 		if (!Array.isArray(rows)) throw Error("InvalidHwp5FormSources");
 		for (const row of rows) {
-			if (!row || !uint$38(row.control_node) || !uint$38(row.object_node) || row.control_node >= row.object_node || controls.has(row.control_node) || objects.has(row.object_node) || !inspect(row)) throw Error("InvalidHwp5FormSources");
+			if (!row || !uint$46(row.control_node) || !uint$46(row.object_node) || row.control_node >= row.object_node || controls.has(row.control_node) || objects.has(row.object_node) || !inspect(row)) throw Error("InvalidHwp5FormSources");
 			controls.add(row.control_node);
 			objects.add(row.object_node);
 		}
@@ -28636,7 +29585,7 @@ function validateHwp5FormProperties(rows) {
 			"object_node",
 			"known_nodes",
 			"deferred_nodes"
-		].every((k) => uint$37(row[k])) || row.control_node >= row.object_node || controls.has(row.control_node) || objects.has(row.object_node) || !Array.isArray(row.fields)) fail();
+		].every((k) => uint$45(row[k])) || row.control_node >= row.object_node || controls.has(row.control_node) || objects.has(row.object_node) || !Array.isArray(row.fields)) fail();
 		const fields = /* @__PURE__ */ new Set();
 		for (const property of row.fields) {
 			if (!property || typeof property.field !== "string" || !/^[a-z][a-z0-9_]{0,63}$/.test(property.field) || fields.has(property.field) || ![
@@ -28658,9 +29607,9 @@ function validateHwp5FormProperties(rows) {
 function decodeHwp5FormProperties(bytes) {
 	return validateHwp5FormProperties(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
-var uint$37;
+var uint$45;
 var init_hwp5_form_properties = __esmMin((() => {
-	uint$37 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$45 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 }));
 // ../../js/hwp5-note-shape-sources.mjs
 function validateHwp5NoteShapeSources(rows) {
@@ -28714,52 +29663,6 @@ function decodeHwp5CaptionSources(bytes) {
 	return validateHwp5CaptionSources(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 var init_hwp5_caption_sources = __esmMin((() => {}));
-// ../../js/hwp5-drawing-sources.mjs
-function validateHwp5DrawingSources(rows) {
-	const integer = (value, min, max) => Number.isInteger(value) && value >= min && value <= max;
-	if (!Array.isArray(rows)) throw new Error("InvalidHwp5DrawingSources");
-	const controls = /* @__PURE__ */ new Set(), components = /* @__PURE__ */ new Set();
-	for (const row of rows) {
-		if (!row || ![
-			"control_node",
-			"component_node",
-			"paragraph_node",
-			"kind_id",
-			"flags",
-			"width",
-			"height",
-			"instance_id",
-			"original_width",
-			"original_height",
-			"current_width",
-			"current_height",
-			"component_attributes",
-			"matrix_pairs",
-			"component_extra_bytes"
-		].every((key) => integer(row[key], 0, 4294967295)) || ![
-			"offset_x",
-			"offset_y",
-			"component_offset_x",
-			"component_offset_y"
-		].every((key) => integer(row[key], -2147483648, 2147483647)) || !integer(row.rotation_angle, -32768, 32767) || row.matrix_pairs > 65535 || !(row.paragraph_node < row.control_node && row.control_node < row.component_node) || controls.has(row.control_node) || components.has(row.component_node)) throw new Error("InvalidHwp5DrawingSources");
-		controls.add(row.control_node);
-		components.add(row.component_node);
-		if ([
-			"z_order",
-			"outer_margins",
-			"prevent_page_break",
-			"description_bytes",
-			"object_extra_bytes"
-		].some((key) => Object.hasOwn(row, key))) {
-			if (!integer(row.z_order, -2147483648, 2147483647) || !integer(row.prevent_page_break, -2147483648, 2147483647) || !Array.isArray(row.outer_margins) || row.outer_margins.length !== 4 || !Array.from(row.outer_margins).every((value) => integer(value, -32768, 32767)) || row.description_bytes !== null && (!integer(row.description_bytes, 0, 131070) || row.description_bytes % 2 !== 0) || !integer(row.object_extra_bytes, 0, 4294967295)) throw new Error("InvalidHwp5DrawingSources");
-		}
-	}
-	return rows;
-}
-function decodeHwp5DrawingSources(bytes) {
-	return validateHwp5DrawingSources(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
-}
-var init_hwp5_drawing_sources = __esmMin((() => {}));
 // ../../js/hwp5-drawing-object-extras.mjs
 function decodeHwp5DrawingObjectExtras(bytes) {
 	const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
@@ -28944,6 +29847,332 @@ function decodeHwp5DrawingRectangleCorners(bytes) {
 	return validateHwp5DrawingRectangleCorners(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 var init_hwp5_drawing_rectangle_corners = __esmMin((() => {}));
+// ../../js/document-text-observation-schema.mjs
+function documentTextFormat(prefix) {
+	if (prefix === "hwp5_edit" || prefix === "hwp5_read") return "hwp5";
+	if (prefix === "hwpx_edit") return "hwpx";
+	throw Error("InvalidDocumentTextAbiFamily");
+}
+var uint$44, keys$3, binding, scalarText, scalarBoundary, identity;
+var init_document_text_observation_schema = __esmMin((() => {
+	uint$44 = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 4294967295;
+	keys$3 = (value, names) => value !== null && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === names.length && names.every((name) => Object.hasOwn(value, name));
+	binding = (value) => keys$3(value, ["session", "revision"]) && typeof value.session === "string" && value.session.length > 0 && (value.revision === null || uint$44(value.revision) && value.revision < 4294967295);
+	scalarText = (text) => {
+		if (typeof text !== "string") return false;
+		for (let i = 0; i < text.length; i++) {
+			const code = text.charCodeAt(i);
+			if (code >= 55296 && code <= 56319) {
+				const next = text.charCodeAt(++i);
+				if (!(next >= 56320 && next <= 57343)) return false;
+			} else if (code >= 56320 && code <= 57343) return false;
+		}
+		return true;
+	};
+	scalarBoundary = (text, index) => !(index > 0 && index < text.length && text.charCodeAt(index - 1) >= 55296 && text.charCodeAt(index - 1) <= 56319 && text.charCodeAt(index) >= 56320 && text.charCodeAt(index) <= 57343);
+	identity = (value) => typeof value === "string" && value.length > 0 && value.length <= 20 && /^[1-9][0-9]*$/.test(value) && (value.length < 20 || value <= "18446744073709551615");
+}));
+// ../../js/document-text-read-stamp.mjs
+function validDocumentTextReadStamp(value) {
+	return !!value && typeof value === "object" && !Array.isArray(value) && Reflect.ownKeys(value).length === 2 && Object.hasOwn(value, "epoch") && Object.hasOwn(value, "serial") && decimal$2(value.epoch, false) && decimal$2(value.serial, true);
+}
+function sameDocumentTextReadStamp(a, b) {
+	return a === void 0 && b === void 0 || validDocumentTextReadStamp(a) && validDocumentTextReadStamp(b) && a.epoch === b.epoch && a.serial === b.serial;
+}
+var decimal$2;
+var init_document_text_read_stamp = __esmMin((() => {
+	decimal$2 = (value, zero) => typeof value === "string" && /^(0|[1-9][0-9]{0,19})$/.test(value) && (zero || value !== "0") && (value.length < 20 || value <= "18446744073709551615");
+}));
+// ../../js/document-text-read-binding-api.mjs
+function createDocumentTextReadBindingApi({ wasm, memory, check, prefix }) {
+	const format = documentTextFormat(prefix);
+	const available = () => [
+		"document_text_read_binding",
+		"output_ptr",
+		"output_len",
+		"output_free"
+	].every((name) => typeof wasm[`${prefix}_${name}`] === "function");
+	return {
+		supportsDocumentTextReadBinding() {
+			check();
+			return available();
+		},
+		documentTextReadBinding() {
+			check();
+			if (!available()) throw Error("DocumentTextReadBindingUnavailable");
+			try {
+				if (wasm[`${prefix}_document_text_read_binding`]() !== 1) throw memory.error();
+				const length = wasm[`${prefix}_output_len`]();
+				if (!Number.isSafeInteger(length) || length < 0 || length > 2048) throw Error("LimitExceeded");
+				const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm[`${prefix}_output_ptr`](), length)));
+				if (!keys$3(value, [
+					"schemaVersion",
+					"scope",
+					"executionAuthority",
+					"format",
+					"session",
+					"epoch",
+					"serial"
+				]) || value.schemaVersion !== 1 || value.scope !== "native-document-text-read-binding" || value.executionAuthority !== false || value.format !== format || typeof value.session !== "string" || !value.session || value.session.length > 256 || !validDocumentTextReadStamp({
+					epoch: value.epoch,
+					serial: value.serial
+				})) throw Error("MalformedDocumentTextReadBinding");
+				check();
+				return value;
+			} finally {
+				wasm[`${prefix}_output_free`]();
+			}
+		}
+	};
+}
+var init_document_text_read_binding_api = __esmMin((() => {
+	init_document_text_read_stamp();
+	init_document_text_observation_schema();
+}));
+// ../../js/document-text-anchor-api.mjs
+function createDocumentTextAnchorApi({ wasm, memory, check, prefix }) {
+	const format = documentTextFormat(prefix);
+	const available = () => [
+		"document_text_anchor",
+		"output_ptr",
+		"output_len",
+		"output_free"
+	].every((name) => typeof wasm[`${prefix}_${name}`] === "function");
+	return {
+		supportsDocumentTextAnchor() {
+			check();
+			return available();
+		},
+		documentTextAnchor(input) {
+			check();
+			if (!available()) throw Error("DocumentTextAnchorUnavailable");
+			const owned = prepareIndependentTextRequest(input, {
+				requestBytes: maximum,
+				requestDepth: 8,
+				requestStructure: 64
+			});
+			const request = owned.value, point = request.target;
+			const paragraph = point?.kind === "paragraph";
+			if (!keys$3(request, [
+				"schemaVersion",
+				"scope",
+				"binding",
+				"target",
+				...Object.hasOwn(request, "readBinding") ? ["readBinding"] : []
+			]) || request.schemaVersion !== 1 || request.scope !== scope$1 || !binding(request.binding) || Object.hasOwn(request, "readBinding") && !validDocumentTextReadStamp(request.readBinding) || !(paragraph ? keys$3(point, [
+				"kind",
+				"section",
+				"paragraph",
+				"unit",
+				"beforeText"
+			]) && uint$44(point.paragraph) : point?.kind === "created-cell" && keys$3(point, [
+				"kind",
+				"section",
+				"identity",
+				"row",
+				"column",
+				"unit",
+				"beforeText"
+			]) && identity(point.identity) && uint$44(point.row) && uint$44(point.column)) || !uint$44(point.section) || !uint$44(point.unit) || !scalarText(point.beforeText) || point.beforeText.length > 4194304 || point.unit > point.beforeText.length || !scalarBoundary(point.beforeText, point.unit)) throw Error("InvalidDocumentTextAnchorRequest");
+			return memory.withBytes(owned.bytes, (ptr, size) => {
+				try {
+					if (wasm[`${prefix}_document_text_anchor`](ptr, size) !== 1) throw memory.error();
+					const length = wasm[`${prefix}_output_len`]();
+					if (!Number.isSafeInteger(length) || length < 0 || length > maximum) throw Error("LimitExceeded");
+					const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm[`${prefix}_output_ptr`](), length)));
+					if (!keys$3(value, [
+						"schemaVersion",
+						"scope",
+						"coordinateSpace",
+						"executionAuthority",
+						"format",
+						...Object.hasOwn(value, "readBinding") ? ["readBinding"] : [],
+						"binding",
+						"ref",
+						"startUnit",
+						"endUnit"
+					]) || value.schemaVersion !== 1 || value.scope !== scope$1 || value.coordinateSpace !== "native-read-inventory" || value.executionAuthority !== false || value.format !== format || !binding(value.binding) || !sameDocumentTextReadStamp(value.readBinding, request.readBinding) || value.binding.session !== request.binding.session || value.binding.revision !== request.binding.revision || typeof value.ref !== "string" || !value.ref || new TextEncoder().encode(value.ref).length > 256 || !uint$44(value.startUnit) || value.startUnit !== value.endUnit || value.startUnit > 4194304) throw Error("MalformedDocumentTextAnchor");
+					check();
+					return value;
+				} finally {
+					wasm[`${prefix}_output_free`]();
+				}
+			});
+		}
+	};
+}
+var scope$1, maximum;
+var init_document_text_anchor_api = __esmMin((() => {
+	init_document_text_read_stamp();
+	init_independent_text_request();
+	init_document_text_observation_schema();
+	scope$1 = "native-document-text-anchor";
+	maximum = 16777216;
+}));
+// ../../js/document-text-selection-api.mjs
+function createDocumentTextSelectionApi({ wasm, memory, check, prefix }) {
+	const format = documentTextFormat(prefix);
+	const available = () => [
+		"document_text_selection",
+		"output_ptr",
+		"output_len",
+		"output_free"
+	].every((name) => typeof wasm[`${prefix}_${name}`] === "function");
+	return {
+		supportsDocumentTextSelection() {
+			check();
+			return available();
+		},
+		documentTextSelection(input) {
+			check();
+			if (!available()) throw Error("DocumentTextSelectionUnavailable");
+			const owned = prepareIndependentTextRequest(input, {
+				requestBytes: maxReplyBytes,
+				requestDepth: 8,
+				requestStructure: 64
+			});
+			const request = owned.value;
+			if (!keys$3(request, [
+				"schemaVersion",
+				"scope",
+				"binding",
+				"ref",
+				"startUnit",
+				"endUnit",
+				"expectedOriginal",
+				...Object.hasOwn(request, "readBinding") ? ["readBinding"] : []
+			]) || request.schemaVersion !== 1 || request.scope !== scope || !binding(request.binding) || Object.hasOwn(request, "readBinding") && !validDocumentTextReadStamp(request.readBinding) || typeof request.ref !== "string" || !request.ref || new TextEncoder().encode(request.ref).length > 256 || !uint$44(request.startUnit) || !uint$44(request.endUnit) || request.startUnit >= request.endUnit || typeof request.expectedOriginal !== "string" || !request.expectedOriginal || request.expectedOriginal.length > 2e5 || request.expectedOriginal.length !== request.endUnit - request.startUnit) throw Error("InvalidDocumentTextSelectionRequest");
+			return memory.withBytes(owned.bytes, (ptr, size) => {
+				try {
+					if (wasm[`${prefix}_document_text_selection`](ptr, size) !== 1) throw memory.error();
+					const length = wasm[`${prefix}_output_len`]();
+					if (!Number.isSafeInteger(length) || length < 0 || length > maxReplyBytes) throw Error("LimitExceeded");
+					const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm[`${prefix}_output_ptr`](), length)));
+					if (!keys$3(value, [
+						"schemaVersion",
+						"scope",
+						"coordinateSpace",
+						"executionAuthority",
+						"format",
+						...Object.hasOwn(value, "readBinding") ? ["readBinding"] : [],
+						"binding",
+						"ref",
+						"expectedOriginal",
+						"beforeText",
+						"target"
+					]) || value.schemaVersion !== 1 || value.scope !== scope || value.coordinateSpace !== "native-current-text-observation" || value.executionAuthority !== false || value.format !== format || !binding(value.binding) || !sameDocumentTextReadStamp(value.readBinding, request.readBinding) || value.binding.session !== request.binding.session || value.binding.revision !== request.binding.revision || value.ref !== request.ref || value.expectedOriginal !== request.expectedOriginal || !scalarText(value.beforeText) || value.beforeText.length > 4194304) throw Error("MalformedDocumentTextSelection");
+					const target = value.target;
+					if (!(target?.kind === "paragraph" ? keys$3(target, [
+						"kind",
+						"section",
+						"paragraph",
+						"startUnit",
+						"endUnit"
+					]) && uint$44(target.paragraph) : target?.kind === "created-cell" && keys$3(target, [
+						"kind",
+						"section",
+						"identity",
+						"row",
+						"column",
+						"startUnit",
+						"endUnit"
+					]) && identity(target.identity) && uint$44(target.row) && uint$44(target.column)) || !uint$44(target.section) || !uint$44(target.startUnit) || !uint$44(target.endUnit) || target.startUnit >= target.endUnit || target.endUnit > value.beforeText.length || !scalarBoundary(value.beforeText, target.startUnit) || !scalarBoundary(value.beforeText, target.endUnit) || value.beforeText.slice(target.startUnit, target.endUnit) !== request.expectedOriginal) throw Error("MalformedDocumentTextSelection");
+					return value;
+				} finally {
+					wasm[`${prefix}_output_free`]();
+				}
+			});
+		}
+	};
+}
+var scope, maxReplyBytes;
+var init_document_text_selection_api = __esmMin((() => {
+	init_document_text_read_stamp();
+	init_independent_text_request();
+	init_document_text_observation_schema();
+	scope = "native-document-text-selection";
+	maxReplyBytes = 16777216;
+}));
+// ../../js/document-text-api.mjs
+function createDocumentTextApi({ wasm, memory, check, prefix }) {
+	const format = documentTextFormat(prefix);
+	const available = () => [
+		"document_text_snapshot",
+		"output_ptr",
+		"output_len",
+		"output_free"
+	].every((name) => typeof wasm[`${prefix}_${name}`] === "function");
+	return {
+		...createDocumentTextSelectionApi({
+			wasm,
+			memory,
+			check,
+			prefix
+		}),
+		...createDocumentTextAnchorApi({
+			wasm,
+			memory,
+			check,
+			prefix
+		}),
+		...createDocumentTextReadBindingApi({
+			wasm,
+			memory,
+			check,
+			prefix
+		}),
+		supportsDocumentTextSnapshot() {
+			check();
+			return available();
+		},
+		supportsDocumentReplaceAll() {
+			check();
+			return available() && typeof wasm[`${prefix}_replace_document_text`] === "function";
+		},
+		replaceDocumentText(input) {
+			check();
+			if (!available() || typeof wasm[`${prefix}_replace_document_text`] !== "function") throw Error("DocumentReplaceAllUnavailable");
+			const owned = prepareIndependentTextRequest(input, {
+				requestBytes: 16777216,
+				requestDepth: 16,
+				requestStructure: 262144
+			});
+			const value = owned.value;
+			const binding = value.binding;
+			if (value.schemaVersion !== 1 || value.scope !== "native-document-text" || Object.keys(value).some((key) => ![
+				"schemaVersion",
+				"scope",
+				"binding",
+				"query",
+				"replacement"
+			].includes(key)) || !binding || typeof binding !== "object" || Array.isArray(binding) || Object.keys(binding).some((key) => !["session", "revision"].includes(key)) || typeof binding.session !== "string" || !binding.session || !Number.isSafeInteger(binding.revision) || binding.revision < 0 || binding.revision >= 4294967295 || typeof value.query !== "string" || !value.query || value.query.length > 2e5 || typeof value.replacement !== "string" || new TextEncoder().encode(value.replacement).length > 4194304) throw Error("InvalidDocumentReplaceAllRequest");
+			return applyNativeEdit(memory, owned.bytes, (ptr, length) => wasm[`${prefix}_replace_document_text`](ptr, length), "InvalidDocumentReplaceAllResult");
+		},
+		documentTextSnapshot() {
+			check();
+			if (!available()) throw Error("DocumentTextSnapshotUnavailable");
+			try {
+				if (wasm[`${prefix}_document_text_snapshot`]() !== 1) throw memory.error();
+				const length = wasm[`${prefix}_output_len`]();
+				if (!Number.isSafeInteger(length) || length < 0 || length > 16777216) throw Error("LimitExceeded");
+				const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm[`${prefix}_output_ptr`](), length)));
+				if (value?.schemaVersion !== 1 || value.scope !== "native-document-text" || value.complete !== true || value.format !== format || !Array.isArray(value.rows) || !value.coverage || !value.binding || Object.hasOwn(value, "readBinding") && !validDocumentTextReadStamp(value.readBinding)) throw Error("MalformedDocumentTextSnapshot");
+				return value;
+			} finally {
+				wasm[`${prefix}_output_free`]();
+			}
+		}
+	};
+}
+var init_document_text_api = __esmMin((() => {
+	init_document_text_observation_schema();
+	init_document_text_read_stamp();
+	init_document_text_read_binding_api();
+	init_document_text_anchor_api();
+	init_native_edit_outcome();
+	init_independent_text_request();
+	init_document_text_selection_api();
+}));
 // ../../js/hwp5-counted-point-layout.mjs
 /** Shared explicit counted-coordinate wire layouts; no byte-shape guessing. */
 function countedPointLayoutArg(layout, error) {
@@ -30116,7 +31345,7 @@ function decodeHwp5ParagraphFlow(bytes) {
 	for (const [index, row] of rows.entries()) {
 		if (row?.empty_line_eligible !== void 0 && (typeof row.empty_line_eligible !== "boolean" || row.empty_line_eligible && row.top_level !== true)) throw new Error("InvalidHwp5ParagraphFlow");
 		if (row && (Object.hasOwn(row, "memo_index") || Object.hasOwn(row, "memo_node"))) {
-			if (!(row.memo_index === null && row.memo_node === null) && !(uint$36(row.memo_index) && uint$36(row.memo_node) && row.host === "other" && row.top_level === false && uint$36(row.list_node) && row.memo_node + 1 === row.list_node)) throw new Error("InvalidHwp5ParagraphFlow");
+			if (!(row.memo_index === null && row.memo_node === null) && !(uint$43(row.memo_index) && uint$43(row.memo_node) && row.host === "other" && row.top_level === false && uint$43(row.list_node) && row.memo_node + 1 === row.list_node)) throw new Error("InvalidHwp5ParagraphFlow");
 		}
 		if (row?.host !== void 0) {
 			if (![
@@ -30130,9 +31359,9 @@ function decodeHwp5ParagraphFlow(bytes) {
 				"master_page",
 				"drawing",
 				"other"
-			].includes(row.host) || !(row.list_node === null || uint$36(row.list_node)) || row.top_level !== (row.host === "body") || row.host === "body" !== (row.list_node === null)) throw new Error("InvalidHwp5ParagraphFlow");
+			].includes(row.host) || !(row.list_node === null || uint$43(row.list_node)) || row.top_level !== (row.host === "body") || row.host === "body" !== (row.list_node === null)) throw new Error("InvalidHwp5ParagraphFlow");
 		}
-		if (!row || row.paragraph !== index || !uint$36(row.template_node) || !(row.source_node === null || uint$36(row.source_node)) || !(row.parent_node === null || uint$36(row.parent_node)) || !Number.isInteger(row.break_flags) || row.break_flags < 0 || row.break_flags > 255 || typeof row.generated !== "boolean" || row.generated !== (row.source_node === null) || row.top_level !== (row.parent_node === null) || row.generated && (![
+		if (!row || row.paragraph !== index || !uint$43(row.template_node) || !(row.source_node === null || uint$43(row.source_node)) || !(row.parent_node === null || uint$43(row.parent_node)) || !Number.isInteger(row.break_flags) || row.break_flags < 0 || row.break_flags > 255 || typeof row.generated !== "boolean" || row.generated !== (row.source_node === null) || row.top_level !== (row.parent_node === null) || row.generated && (![
 			0,
 			4,
 			8
@@ -30150,14 +31379,14 @@ function decodeHwp5ColumnSources(bytes) {
 	const rows = parse$3(bytes);
 	if (!Array.isArray(rows)) throw new Error("InvalidHwp5ColumnSources");
 	for (const row of rows) {
-		if (!row || !uint$36(row.current_paragraph) || !uint$36(row.current_unit)) throw new Error("InvalidHwp5ColumnSources");
+		if (!row || !uint$43(row.current_paragraph) || !uint$43(row.current_unit)) throw new Error("InvalidHwp5ColumnSources");
 		if (!row || ![
 			"source_node",
 			"paragraph_node",
 			"flags",
 			"color",
 			"extra_bytes"
-		].every((name) => uint$36(row[name])) || !Number.isInteger(row.count) || row.count < 1 || row.count > 255 || ![
+		].every((name) => uint$43(row[name])) || !Number.isInteger(row.count) || row.count < 1 || row.count > 255 || ![
 			0,
 			1,
 			2,
@@ -30173,9 +31402,9 @@ function decodeHwp5ColumnSources(bytes) {
 	}
 	return rows;
 }
-var uint$36, parse$3;
+var uint$43, parse$3;
 var init_hwp5_flow_sources = __esmMin((() => {
-	uint$36 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$43 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	parse$3 = (bytes) => JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 }));
 // ../../js/hwp5-formula-sources.mjs
@@ -30184,15 +31413,15 @@ function decodeHwp5FormulaSources(bytes) {
 	if (!Array.isArray(rows) || rows.length > 1e6) throw new Error("InvalidHwp5FormulaSources");
 	const seen = /* @__PURE__ */ new Set();
 	for (const row of rows) {
-		if (!row || !uint$35(row.source_node) || row.source_node === 0 || !uint$35(row.paragraph) || seen.has(row.source_node) || typeof row.formula !== "string" || !row.formula.startsWith("=") || row.formula.length < 2 || typeof row.last_result !== "string" || typeof row.derived !== "boolean" || !row.formula.isWellFormed() || !row.last_result.isWellFormed()) throw new Error("InvalidHwp5FormulaSources");
+		if (!row || !uint$42(row.source_node) || row.source_node === 0 || !uint$42(row.paragraph) || seen.has(row.source_node) || typeof row.formula !== "string" || !row.formula.startsWith("=") || row.formula.length < 2 || typeof row.last_result !== "string" || typeof row.derived !== "boolean" || !row.formula.isWellFormed() || !row.last_result.isWellFormed()) throw new Error("InvalidHwp5FormulaSources");
 		seen.add(row.source_node);
 	}
 	return rows;
 }
-var decoder$6, uint$35;
+var decoder$6, uint$42;
 var init_hwp5_formula_sources = __esmMin((() => {
 	decoder$6 = new TextDecoder("utf-8", { fatal: true });
-	uint$35 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$42 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 }));
 // ../../js/hwp5-field-spans.mjs
 function validateHwp5FieldSpans(rows) {
@@ -30221,18 +31450,18 @@ function validateHwp5FieldTopology(value) {
 	if (!value || !Array.isArray(value.spans) || !Array.isArray(value.unresolved)) fail();
 	const starts = /* @__PURE__ */ new Set();
 	for (const row of value.spans) {
-		if (!row || !uint$34(row.field_id) || !uint$34(row.ordinal) || !position$2(row.begin) || !position$2(row.end) || before(row.end, row.begin)) fail();
+		if (!row || !uint$41(row.field_id) || !uint$41(row.ordinal) || !position$2(row.begin) || !position$2(row.end) || before(row.end, row.begin)) fail();
 		const key = row.begin.paragraph + ":" + row.ordinal;
 		if (starts.has(key)) fail();
 		starts.add(key);
 	}
 	let previous = null;
 	for (const row of value.unresolved) {
-		if (!row || !position$2(row.position) || !uint$34(row.marker_id) || !(row.list_node === null || uint$34(row.list_node))) fail();
+		if (!row || !position$2(row.position) || !uint$41(row.marker_id) || !(row.list_node === null || uint$41(row.list_node))) fail();
 		if (previous && !before(previous, row.position)) fail();
 		previous = row.position;
 		if (row.kind === "unclosed_start") {
-			if (!uint$34(row.ordinal)) fail();
+			if (!uint$41(row.ordinal)) fail();
 			const key = row.position.paragraph + ":" + row.ordinal;
 			if (starts.has(key)) fail();
 			starts.add(key);
@@ -30248,10 +31477,10 @@ function validateHwp5FieldTopology(value) {
 function decodeHwp5FieldTopology(bytes) {
 	return validateHwp5FieldTopology(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
-var uint$34, position$2, before;
+var uint$41, position$2, before;
 var init_hwp5_field_topology = __esmMin((() => {
-	uint$34 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
-	position$2 = (value) => value && uint$34(value.paragraph) && uint$34(value.unit);
+	uint$41 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	position$2 = (value) => value && uint$41(value.paragraph) && uint$41(value.unit);
 	before = (lhs, rhs) => lhs.paragraph < rhs.paragraph || lhs.paragraph === rhs.paragraph && lhs.unit < rhs.unit;
 }));
 // ../../js/hwp5-text-source-protection.mjs
@@ -30376,13 +31605,638 @@ var init_hwp5_available_section_copy = __esmMin((() => {
 	init_hwp5_section_inventory();
 	Object.freeze(["hwp5_edit_open_available_section_copy", "hwp5_edit_available_section_copy_info"]);
 }));
+// ../../js/hwpx-inline-object-record.mjs
+/** Strict data-only record; shared by creation payload and owner contracts. */
+function inlineInsertRecord(input, keys) {
+	if (!input || typeof input !== "object" || ![Object.prototype, null].includes(Object.getPrototypeOf(input))) throw Error("InvalidInlineObjectRequest");
+	const descriptors = Object.getOwnPropertyDescriptors(input);
+	if (Reflect.ownKeys(descriptors).length !== keys.length) throw Error("InvalidInlineObjectRequest");
+	const result = {};
+	for (const key of keys) {
+		const entry = descriptors[key];
+		if (!entry || !Object.hasOwn(entry, "value")) throw Error("InvalidInlineObjectRequest");
+		result[key] = entry.value;
+	}
+	return result;
+}
+var init_hwpx_inline_object_record = __esmMin((() => {}));
+// ../../js/hwpx-inline-object-placement.mjs
+function checkedInlineObjectOwner(input) {
+	const kind = input && Object.getOwnPropertyDescriptor(input, "kind");
+	if (!kind || !Object.hasOwn(kind, "value")) throw Error("InvalidInlineObjectOwner");
+	const keys = kind.value === "body" ? [] : kind.value === "sourceCell" ? ["table_node", "list_node"] : kind.value === "createdCell" ? [
+		"identity",
+		"row",
+		"column"
+	] : null;
+	if (!keys) throw Error("InvalidInlineObjectOwner");
+	const owner = inlineInsertRecord(input, [
+		"kind",
+		"binding",
+		...keys
+	]);
+	const binding = inlineInsertRecord(owner.binding, [
+		"session",
+		"revision",
+		"serial"
+	]);
+	if (typeof binding.session !== "string" || !/^s[1-9][0-9]{0,19}$/.test(binding.session)) throw Error("InvalidInlineObjectOwner");
+	decimal$1(binding.session.slice(1), true);
+	const out = {
+		kind: kind.value,
+		binding: {
+			session: binding.session,
+			revision: uint$40(binding.revision),
+			serial: decimal$1(binding.serial)
+		}
+	};
+	if (kind.value === "sourceCell") return {
+		...out,
+		table_node: uint$40(owner.table_node),
+		list_node: uint$40(owner.list_node)
+	};
+	if (kind.value === "createdCell") return {
+		...out,
+		identity: decimal$1(owner.identity, true),
+		row: uint$40(owner.row),
+		column: uint$40(owner.column)
+	};
+	return out;
+}
+function checkedInlineObjectTarget(input, equation = false) {
+	const descriptor = input && Object.getOwnPropertyDescriptor(input, "owner");
+	const owner = descriptor ? checkedInlineObjectOwner(Object.hasOwn(descriptor, "value") ? descriptor.value : void 0) : void 0;
+	const created = owner?.kind === "createdCell";
+	const affinity = !!input && Object.hasOwn(input, "affinity");
+	const unit = equation ? "start" : "unit";
+	const witness = equation ? "expectedText" : "expected_text";
+	const value = inlineInsertRecord(input, [
+		"section",
+		...created ? [] : ["paragraph"],
+		unit,
+		witness,
+		...owner ? ["owner"] : [],
+		...affinity ? ["affinity"] : []
+	]);
+	const section = uint$40(value.section);
+	if (section !== 0 && !owner) throw Error("InlineObjectOwnerRequired");
+	if (affinity && (!owner || !["forward", "backward"].includes(value.affinity))) throw Error("InvalidInlineObjectOwner");
+	if (typeof value[witness] !== "string") throw Error("InvalidInlineObjectText");
+	const paragraph = created ? void 0 : uint$40(value.paragraph);
+	if (paragraph === 0) throw Error("InvalidInlineObjectOwner");
+	return {
+		section,
+		...created ? {} : { paragraph },
+		[unit]: uint$40(value[unit]),
+		[witness]: value[witness],
+		...owner ? { owner } : {},
+		...affinity ? { affinity: value.affinity } : {}
+	};
+}
+function checkedInlineObjectSelector(input) {
+	const created = !!input && Object.hasOwn(input, "created_cell");
+	const value = inlineInsertRecord(input, ["section", created ? "created_cell" : "paragraph"]);
+	const section = uint$40(value.section);
+	if (!created) {
+		const paragraph = uint$40(value.paragraph);
+		if (!paragraph) throw Error("InvalidInlineObjectOwner");
+		return {
+			section,
+			paragraph
+		};
+	}
+	const cell = inlineInsertRecord(value.created_cell, [
+		"identity",
+		"row",
+		"column"
+	]);
+	return {
+		section,
+		created_cell: {
+			identity: decimal$1(cell.identity, true),
+			row: uint$40(cell.row),
+			column: uint$40(cell.column)
+		}
+	};
+}
+function checkedInlineObjectObservation(input) {
+	const descriptors = Object.getOwnPropertyDescriptors(input ?? {});
+	const value = inlineInsertRecord(input, [
+		"schemaVersion",
+		"section",
+		...Object.hasOwn(descriptors, "paragraph") ? ["paragraph"] : [],
+		"expected_text",
+		"owner"
+	]);
+	if (value.schemaVersion !== 1 || typeof value.expected_text !== "string") throw Error("InvalidInlineObjectOwner");
+	const { schemaVersion, ...target } = value;
+	const { unit: _unit, ...checked } = checkedInlineObjectTarget({
+		...target,
+		unit: 0
+	});
+	return {
+		schemaVersion,
+		...checked
+	};
+}
+function matchInlineObjectObservation(selector, observation) {
+	const selected = checkedInlineObjectSelector(selector), observed = checkedInlineObjectObservation(observation);
+	const cell = selected.created_cell;
+	if (observed.section !== selected.section || (cell ? observed.owner.kind !== "createdCell" || observed.owner.identity !== cell.identity || observed.owner.row !== cell.row || observed.owner.column !== cell.column : observed.paragraph !== selected.paragraph)) throw Error("InlineObjectOwnerMismatch");
+	return observed;
+}
+/** Optional query absence is a compatibility boundary, never inferred support. */
+function inlineObjectPlacementAvailable(wasm) {
+	try {
+		return typeof wasm.hwpx_edit_inline_object_placement_version === "function" && wasm.hwpx_edit_inline_object_placement_version() === 1 && typeof wasm.hwpx_edit_inline_object_owner === "function";
+	} catch {
+		return false;
+	}
+}
+function requireInlineObjectPlacement(wasm, request) {
+	const target = request.target ?? request;
+	if ((target.section !== 0 || Object.hasOwn(target, "owner")) && !inlineObjectPlacementAvailable(wasm)) throw Error("InlineObjectPlacementUnavailable");
+}
+var uint$40, decimal$1;
+var init_hwpx_inline_object_placement = __esmMin((() => {
+	init_hwpx_inline_object_record();
+	uint$40 = (value) => {
+		if (!Number.isSafeInteger(value) || value < 0 || value > 4294967295 || Object.is(value, -0)) throw Error("InvalidInlineObjectOwner");
+		return value;
+	};
+	decimal$1 = (value, positive = false) => {
+		if (typeof value !== "string" || !/^(0|[1-9][0-9]{0,19})$/.test(value) || BigInt(value) > 18446744073709551615n || positive && value === "0") throw Error("InvalidInlineObjectOwner");
+		return value;
+	};
+}));
+// ../../js/chart-create-decimal.mjs
+function parseChartDecimal(text) {
+	if (typeof text !== "string" || text.length === 0 || text.length > 128) throw Error("InvalidChartNumber");
+	const match = /^([+-]?)(?:(\d+)(?:\.(\d*))?|\.(\d+))(?:[eE]([+-]?)(\d+))?$/.exec(text);
+	if (!match) throw Error("InvalidChartNumber");
+	let exponent = 0;
+	for (const digit of match[6] ?? "") {
+		exponent = exponent * 10 + digit.charCodeAt(0) - 48;
+		if (exponent > 1e4) throw Error("InvalidChartNumber");
+	}
+	if (match[5] === "-") exponent = -exponent;
+	const fraction = match[3] ?? match[4] ?? "";
+	const digits = ((match[2] ?? "") + fraction).replace(/^0+/, "");
+	return {
+		negative: match[1] === "-" && digits.length !== 0,
+		digits,
+		scale: digits.length === 0 ? 0 : exponent - fraction.length + digits.length
+	};
+}
+function compareChartDecimals(left, right) {
+	const x = parseChartDecimal(left), y = parseChartDecimal(right);
+	if (x.negative !== y.negative) return x.negative ? -1 : 1;
+	let order = 0;
+	if (x.digits.length === 0 || y.digits.length === 0) order = Math.sign(x.digits.length - y.digits.length);
+	else if (x.scale !== y.scale) order = Math.sign(x.scale - y.scale);
+	else for (let i = 0; i < Math.max(x.digits.length, y.digits.length); ++i) {
+		const xd = x.digits[i] ?? "0", yd = y.digits[i] ?? "0";
+		if (xd !== yd) {
+			order = xd < yd ? -1 : 1;
+			break;
+		}
+	}
+	return order === 0 ? 0 : x.negative ? -order : order;
+}
+var init_chart_create_decimal = __esmMin((() => {}));
+// ../../js/hwpx-inline-object-insert.mjs
+function integer$3(value, min = 0, max = 4294967295) {
+	if (!Number.isSafeInteger(value) || value < min || value > max || Object.is(value, -0)) throw Error("InvalidInlineObjectInteger");
+	return value;
+}
+function text$2(value, max, empty = false) {
+	if (typeof value !== "string" || !empty && !value.length || /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF\uD800-\uDFFF]/u.test(value) || new TextEncoder().encode(value).length > max) throw Error("InvalidInlineObjectText");
+	return value;
+}
+function list$1(input, limit, convert, empty = false) {
+	if (!Array.isArray(input) || input.length < (empty ? 0 : 1) || input.length > limit) throw Error("InvalidInlineObjectArray");
+	const entries = inlineInsertRecord(inputRecord(input), Array.from({ length: input.length }, (_, i) => String(i)));
+	return Array.from({ length: input.length }, (_, i) => convert(entries[String(i)]));
+}
+function inputRecord(input) {
+	const descriptors = Object.getOwnPropertyDescriptors(input);
+	delete descriptors.length;
+	return Object.defineProperties({}, descriptors);
+}
+function checkedEquationInsertOptions(input) {
+	const p = inlineInsertRecord(input, [
+		"script",
+		"width",
+		"height",
+		"baseLine",
+		"baseUnit",
+		"version",
+		"font"
+	]);
+	return {
+		script: text$2(p.script, 1048576, true),
+		width: integer$3(p.width, 1, maxInt),
+		height: integer$3(p.height, 1, maxInt),
+		baseLine: integer$3(p.baseLine),
+		baseUnit: integer$3(p.baseUnit, 1, maxInt),
+		version: text$2(p.version, 128),
+		font: text$2(p.font, 128)
+	};
+}
+function legacyChartCreateOptions(input) {
+	const p = inlineInsertRecord(input, [
+		"width",
+		"height",
+		"categories",
+		"series"
+	]);
+	const categories = list$1(p.categories, 4096, (value) => text$2(value, 4096));
+	const series = list$1(p.series, 64, (value) => {
+		const s = inlineInsertRecord(value, ["name", "values"]);
+		const values = list$1(s.values, 4096, (number) => {
+			if (typeof number !== "number" || !Number.isFinite(number)) throw Error("InvalidChartNumber");
+			return number;
+		});
+		if (values.length !== categories.length) throw Error("ChartCategoryCountMismatch");
+		return {
+			name: text$2(s.name, 4096),
+			values
+		};
+	});
+	if (categories.length * series.length > 16384) throw Error("ChartPointLimitExceeded");
+	return {
+		width: integer$3(p.width, 1, maxInt),
+		height: integer$3(p.height, 1, maxInt),
+		categories,
+		series
+	};
+}
+function checkedEquationInsertRequest(input) {
+	const optionKeys = [
+		"script",
+		"width",
+		"height",
+		"baseLine",
+		"baseUnit",
+		"version",
+		"font"
+	];
+	const fields = Object.getOwnPropertyDescriptors(input ?? {});
+	const owner = Object.hasOwn(fields, "owner");
+	const targetKeys = [
+		"section",
+		...Object.hasOwn(fields, "paragraph") ? ["paragraph"] : [],
+		"start",
+		"expectedText",
+		...owner ? ["owner"] : [],
+		...Object.hasOwn(fields, "affinity") ? ["affinity"] : []
+	];
+	const p = inlineInsertRecord(input, [...targetKeys, ...optionKeys]);
+	const target = checkedInlineObjectTarget(Object.fromEntries(targetKeys.map((k) => [k, p[k]])), true);
+	return {
+		...target,
+		expectedText: text$2(target.expectedText, 8388608, true),
+		...checkedEquationInsertOptions(Object.fromEntries(optionKeys.map((k) => [k, p[k]])))
+	};
+}
+function legacyChartCreatePayload(input) {
+	const p = inlineInsertRecord(input, ["size", "data"]);
+	const size = inlineInsertRecord(p.size, ["width", "height"]);
+	const data = inlineInsertRecord(p.data, ["categories", "series"]);
+	const series = list$1(data.series, 64, (value) => {
+		const s = inlineInsertRecord(value, ["name", "values"]);
+		return {
+			name: s.name,
+			values: list$1(s.values, 4096, (value) => {
+				if (typeof value !== "string" || value.length > 32 || !/^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(value) || !Number.isFinite(Number(value))) throw Error("InvalidChartNumber");
+				return Number(value);
+			})
+		};
+	});
+	const options = checkedChartCreateOptions({
+		...size,
+		categories: data.categories,
+		series
+	});
+	return {
+		size: {
+			width: options.width,
+			height: options.height
+		},
+		data: {
+			categories: options.categories,
+			series: list$1(data.series, 64, (value) => {
+				const s = inlineInsertRecord(value, ["name", "values"]);
+				return {
+					name: s.name,
+					values: list$1(s.values, 4096, (value) => value)
+				};
+			})
+		}
+	};
+}
+function legacyChartCreateRequest(input) {
+	const p = inlineInsertRecord(input, [
+		"target",
+		"size",
+		"data"
+	]);
+	const target = checkedInlineObjectTarget(p.target);
+	const payload = legacyChartCreatePayload({
+		size: p.size,
+		data: p.data
+	});
+	return {
+		target: {
+			...target,
+			expected_text: text$2(target.expected_text, 8388608, true)
+		},
+		...payload
+	};
+}
+function checkedChartCreateProfile(input) {
+	const kind = input && typeof input === "object" ? Object.getOwnPropertyDescriptor(input, "kind")?.value : void 0;
+	if (typeof kind !== "string" || !Object.hasOwn(chartProfileKeys, kind)) throw Error("InvalidChartCreateProfile");
+	const p = inlineInsertRecord(input, ["kind", ...chartProfileKeys[kind]]);
+	for (const key of chartProfileKeys[kind]) if (key === "wireframe" ? typeof p[key] !== "boolean" : !chartOptionValues[key].includes(p[key])) throw Error("InvalidChartCreateProfile");
+	if (p.grouping === "clustered" && !["barChart", "bar3DChart"].includes(kind)) throw Error("InvalidChartCreateProfile");
+	return p;
+}
+function profileData(input, chart, strings) {
+	const p = inlineInsertRecord(input, ["categories", "series"]);
+	const kind = chart.kind, xy = ["scatterChart", "bubbleChart"].includes(kind);
+	const pie = [
+		"pieChart",
+		"pie3DChart",
+		"ofPieChart",
+		"doughnutChart"
+	].includes(kind);
+	const stock = kind === "stockChart";
+	const roles = chart.stock_layout === "openHighLowClose" ? [
+		"open",
+		"high",
+		"low",
+		"close"
+	] : [
+		"high",
+		"low",
+		"close"
+	];
+	const categories = list$1(p.categories, 4096, (v) => text$2(v, 4096), xy);
+	if (xy && categories.length !== 0) throw Error("InvalidChartCreateShape");
+	let points = 0, bytes = categories.reduce((n, s) => n + new TextEncoder().encode(s).length, 0);
+	const numeric = (value, nonnegative = false) => {
+		if (!(strings ? typeof value === "string" && value.length <= 128 && /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(value) && Number.isFinite(Number(value)) : typeof value === "number" && Number.isFinite(value))) throw Error("InvalidChartNumber");
+		const parsed = parseChartDecimal(String(value));
+		if (nonnegative && parsed.negative) throw Error("InvalidChartNumber");
+		bytes += String(value).length;
+		return value;
+	};
+	const series = list$1(p.series, 64, (item) => {
+		const row = inlineInsertRecord(item, [
+			"name",
+			"values",
+			...xy ? ["x_values"] : [],
+			...kind === "bubbleChart" ? ["bubble_sizes"] : [],
+			...stock ? ["stock_role"] : []
+		]);
+		const name = text$2(row.name, 4096);
+		bytes += new TextEncoder().encode(name).length;
+		const values = list$1(row.values, 4096, (n) => numeric(n, pie));
+		points += values.length * (kind === "bubbleChart" ? 3 : 2);
+		if (points > 16384) throw Error("ChartPointLimitExceeded");
+		if (!xy && values.length !== categories.length) throw Error("ChartCategoryCountMismatch");
+		const result = {
+			name,
+			values
+		};
+		if (xy) {
+			result.x_values = list$1(row.x_values, 4096, (n) => numeric(n));
+			if (result.x_values.length !== values.length) throw Error("InvalidChartCreateShape");
+		}
+		if (kind === "bubbleChart") {
+			result.bubble_sizes = list$1(row.bubble_sizes, 4096, (n) => numeric(n, true));
+			if (result.bubble_sizes.length !== values.length) throw Error("InvalidChartCreateShape");
+		}
+		if (stock) result.stock_role = row.stock_role;
+		return result;
+	});
+	if (pie && kind !== "doughnutChart" && series.length !== 1) throw Error("InvalidChartCreateShape");
+	if (["surfaceChart", "surface3DChart"].includes(kind) && (categories.length < 2 || series.length < 2)) throw Error("InvalidChartCreateShape");
+	if (stock) {
+		if (series.length !== roles.length || series.some((s, i) => s.stock_role !== roles[i])) throw Error("InvalidChartCreateShape");
+		const offset = roles.length === 4 ? 1 : 0;
+		for (let i = 0; i < categories.length; ++i) {
+			const high = String(series[offset].values[i]), low = String(series[offset + 1].values[i]);
+			const close = String(series[offset + 2].values[i]);
+			const open = offset ? String(series[0].values[i]) : close;
+			if (compareChartDecimals(low, high) > 0 || compareChartDecimals(close, low) < 0 || compareChartDecimals(close, high) > 0 || compareChartDecimals(open, low) < 0 || compareChartDecimals(open, high) > 0) throw Error("InvalidChartStockValues");
+		}
+	}
+	if (bytes > 4194304) throw Error("ChartInputLimitExceeded");
+	return {
+		categories,
+		series
+	};
+}
+function checkedChartCreateOptions(input) {
+	if (!hasChart(input)) return legacyChartCreateOptions(input);
+	const p = inlineInsertRecord(input, [
+		"width",
+		"height",
+		"categories",
+		"series",
+		"chart"
+	]);
+	const chart = checkedChartCreateProfile(p.chart);
+	return {
+		width: integer$3(p.width, 1, maxInt),
+		height: integer$3(p.height, 1, maxInt),
+		...profileData({
+			categories: p.categories,
+			series: p.series
+		}, chart, false),
+		chart
+	};
+}
+function checkedChartCreateRequest(input) {
+	if (!hasChart(input)) return legacyChartCreateRequest(input);
+	const p = inlineInsertRecord(input, [
+		"target",
+		"size",
+		"data",
+		"chart"
+	]);
+	const target = checkedInlineObjectTarget(p.target);
+	const size = inlineInsertRecord(p.size, ["width", "height"]);
+	const chart = checkedChartCreateProfile(p.chart);
+	return {
+		target: {
+			...target,
+			expected_text: text$2(target.expected_text, 8388608, true)
+		},
+		...profileChartCreatePayload(size, p.data, chart)
+	};
+}
+function profileChartCreatePayload(size, data, chart) {
+	return {
+		size: {
+			width: integer$3(size.width, 1, maxInt),
+			height: integer$3(size.height, 1, maxInt)
+		},
+		data: profileData(data, chart, true),
+		chart
+	};
+}
+/** Validate lexical chart data independently of any physical insert target. */
+function checkedChartCreatePayload(input) {
+	if (!hasChart(input)) return legacyChartCreatePayload(input);
+	const p = inlineInsertRecord(input, [
+		"size",
+		"data",
+		"chart"
+	]);
+	const size = inlineInsertRecord(p.size, ["width", "height"]);
+	const chart = checkedChartCreateProfile(p.chart);
+	return profileChartCreatePayload(size, p.data, chart);
+}
+function createHwpxInlineObjectInsertApi({ wasm, memory, check }) {
+	const profileVersion = () => {
+		check();
+		try {
+			return typeof wasm.hwpx_edit_create_chart === "function" && typeof wasm.hwpx_edit_chart_create_profile_version === "function" && wasm.hwpx_edit_chart_create_profile_version() === 1 ? 1 : 0;
+		} catch {
+			return 0;
+		}
+	};
+	const insert = (name, request) => {
+		check();
+		if (typeof wasm[name] !== "function") throw Error("InlineObjectInsertionUnavailable");
+		requireInlineObjectPlacement(wasm, request);
+		const bytes = new TextEncoder().encode(JSON.stringify(request));
+		if (bytes.length > 8388608) throw Error("InlineObjectRequestLimitExceeded");
+		return applyNativeEdit(memory, bytes, (ptr, size) => wasm[name](ptr, size), "InvalidInlineObjectInsertResult");
+	};
+	return {
+		inlineObjectOwner: (selector) => {
+			check();
+			if (!inlineObjectPlacementAvailable(wasm)) throw Error("InlineObjectPlacementUnavailable");
+			const request = checkedInlineObjectSelector(selector);
+			return memory.withBytes(new TextEncoder().encode(JSON.stringify(request)), (ptr, size) => {
+				if (wasm.hwpx_edit_inline_object_owner(ptr, size) !== 1) throw memory.error();
+				try {
+					return matchInlineObjectObservation(request, JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()))));
+				} finally {
+					wasm.hwpx_edit_output_free();
+				}
+			});
+		},
+		inlineObjectPlacementVersion: () => {
+			check();
+			return inlineObjectPlacementAvailable(wasm) ? 1 : 0;
+		},
+		supportsEquationInsertionAbi: () => typeof wasm.hwpx_edit_insert_equation === "function",
+		supportsChartCreationAbi: () => typeof wasm.hwpx_edit_create_chart === "function",
+		insertEquation: (input) => insert("hwpx_edit_insert_equation", checkedEquationInsertRequest(input)),
+		chartCreateProfileVersion: () => profileVersion(),
+		supportsChartCreateProfileAbi: () => profileVersion() === 1,
+		createChart: (input) => {
+			const request = checkedChartCreateRequest(input);
+			if (request.chart) {
+				if (profileVersion() !== 1) throw Error("ChartCreateProfileUnavailable");
+			}
+			return insert("hwpx_edit_create_chart", request);
+		}
+	};
+}
+var maxInt, chartProfileKeys, chartOptionValues, hasChart;
+var init_hwpx_inline_object_insert = __esmMin((() => {
+	init_hwpx_inline_object_placement();
+	init_chart_create_decimal();
+	init_native_edit_outcome();
+	init_hwpx_inline_object_record();
+	maxInt = 2147483647;
+	chartProfileKeys = {
+		barChart: ["bar_direction", "grouping"],
+		bar3DChart: ["bar_direction", "grouping"],
+		lineChart: ["grouping"],
+		line3DChart: ["grouping"],
+		areaChart: ["grouping"],
+		area3DChart: ["grouping"],
+		radarChart: ["radar_style"],
+		scatterChart: ["scatter_style"],
+		bubbleChart: [],
+		pieChart: [],
+		pie3DChart: [],
+		doughnutChart: [],
+		ofPieChart: ["of_pie_type"],
+		stockChart: ["stock_layout"],
+		surfaceChart: ["wireframe"],
+		surface3DChart: ["wireframe"]
+	};
+	chartOptionValues = {
+		bar_direction: ["col", "bar"],
+		grouping: [
+			"standard",
+			"clustered",
+			"stacked",
+			"percentStacked"
+		],
+		radar_style: [
+			"standard",
+			"marker",
+			"filled"
+		],
+		scatter_style: [
+			"none",
+			"line",
+			"lineMarker",
+			"marker",
+			"smooth",
+			"smoothMarker"
+		],
+		of_pie_type: ["pie", "bar"],
+		stock_layout: ["highLowClose", "openHighLowClose"]
+	};
+	hasChart = (input) => !!input && typeof input === "object" && Object.hasOwn(input, "chart");
+}));
+// ../../js/hwp5-equation-insert.mjs
+function checkedHwp5EquationInsertOptions(input) {
+	const p = inlineInsertRecord(input, [
+		"script",
+		"width",
+		"height",
+		"baseLine",
+		"baseUnit",
+		"version",
+		"font",
+		"colorRgb",
+		"lineMode"
+	]);
+	if (!Number.isInteger(p.baseLine) || p.baseLine < -32768 || p.baseLine > 32767 || !Number.isInteger(p.colorRgb) || p.colorRgb < 0 || p.colorRgb > 16777215 || typeof p.lineMode !== "boolean") throw Error("InvalidHwp5EquationInsertOptions");
+	const { colorRgb, lineMode, baseLine, ...shared } = p;
+	const options = checkedEquationInsertOptions({
+		...shared,
+		baseLine: 0
+	});
+	if (!options.script.length || options.script.length > 65535 || options.version !== "Equation Version 60" || options.font !== "HYhwpEQ") throw Error("UnsupportedEquationCreateProfile");
+	return {
+		...options,
+		baseLine,
+		colorRgb,
+		lineMode
+	};
+}
+var init_hwp5_equation_insert = __esmMin((() => {
+	init_hwpx_inline_object_insert();
+}));
 // ../../js/hwp5-exclusive-text-delta.mjs
 function decodeHwp5TextWindow(bytes) {
 	if (!(bytes instanceof Uint8Array) || bytes.length < 48) bad();
 	const v = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 	const n = (i) => v.getUint32(4 + i * 4, true);
 	const e = (BigInt(n(2)) << 32n | BigInt(n(1))).toString();
-	if (String.fromCharCode(...bytes.slice(0, 4)) !== "H5W1" || n(0) !== 1 || !epoch(e) || !uint$33(n(3)) || !uint$33(n(4)) || n(7) > n(8) || n(8) > n(6) || n(8) - n(7) > 4096 || n(9) !== 1 || n(10) !== (n(8) - n(7)) * 2 || bytes.length !== 48 + n(10)) bad();
+	if (String.fromCharCode(...bytes.slice(0, 4)) !== "H5W1" || n(0) !== 1 || !epoch(e) || !uint$39(n(3)) || !uint$39(n(4)) || n(7) > n(8) || n(8) > n(6) || n(8) - n(7) > 4096 || n(9) !== 1 || n(10) !== (n(8) - n(7)) * 2 || bytes.length !== 48 + n(10)) bad();
 	const text = new TextDecoder("utf-16le", {
 		fatal: true,
 		ignoreBOM: true
@@ -30425,13 +32279,13 @@ function decodeHwp5TextDelta(bytes) {
 		"sourceNode",
 		"startUnit",
 		"totalUnits"
-	]) if (!uint$33(r[k])) bad();
-	if (r.parentNode !== null && !uint$33(r.parentNode)) bad();
+	]) if (!uint$39(r[k])) bad();
+	if (r.parentNode !== null && !uint$39(r.parentNode)) bad();
 	for (const k of ["removed", "inserted"]) if (!Array.isArray(r[k]) || r[k].length > 4096 || r[k].some((x) => !Number.isInteger(x) || x < 0 || x > 65535)) bad();
 	if (!Array.isArray(r.runs) || !r.runs.length || r.runs.length > 4096) bad();
 	let prev = -1;
 	for (const run of r.runs) {
-		if (Object.keys(run).sort().join() !== "char_shape_id,start_unit" || !uint$33(run.start_unit) || !uint$33(run.char_shape_id) || run.start_unit <= prev || run.start_unit > r.totalUnits) bad();
+		if (Object.keys(run).sort().join() !== "char_shape_id,start_unit" || !uint$39(run.start_unit) || !uint$39(run.char_shape_id) || run.start_unit <= prev || run.start_unit > r.totalUnits) bad();
 		prev = run.start_unit;
 	}
 	if (r.runs[0].start_unit !== 0 || r.totalUnits < 1 || r.totalUnits > 4096) bad();
@@ -30469,7 +32323,7 @@ function createHwp5ExclusiveTextApi({ wasm, output, check, encode, currentSource
 			const length = w.text.length - 1;
 			let cursor = 0;
 			for (const range of raw) {
-				if (range.start !== cursor || range.end < range.start || range.end > w.totalUnits || !uint$33(range.charShapeId)) bad();
+				if (range.start !== cursor || range.end < range.start || range.end > w.totalUnits || !uint$39(range.charShapeId)) bad();
 				cursor = range.end;
 				const start = Math.min(length, range.start), end = Math.min(length, range.end), charShapeId = range.charShapeId;
 				if (start === end) {
@@ -30520,10 +32374,10 @@ function createHwp5ExclusiveTextApi({ wasm, output, check, encode, currentSource
 		}
 	};
 }
-var uint$33, epoch, bad;
+var uint$39, epoch, bad;
 var init_hwp5_exclusive_text_delta = __esmMin((() => {
 	init_character_shapes_wire();
-	uint$33 = (x) => Number.isSafeInteger(x) && x >= 0 && x < 4294967295;
+	uint$39 = (x) => Number.isSafeInteger(x) && x >= 0 && x < 4294967295;
 	epoch = (x) => typeof x === "string" && /^[1-9][0-9]{0,19}$/.test(x) && BigInt(x) <= 18446744073709551615n;
 	bad = () => {
 		throw Error("InvalidExclusiveTextDelta");
@@ -30531,25 +32385,25 @@ var init_hwp5_exclusive_text_delta = __esmMin((() => {
 }));
 // ../../js/hwp5-current-references.mjs
 function validate$1(reference) {
-	if (!reference || typeof reference !== "object" || Array.isArray(reference)) invalid();
-	if (Object.keys(reference).length !== fields$5.length || fields$5.some((key) => !Object.hasOwn(reference, key))) invalid();
+	if (!reference || typeof reference !== "object" || Array.isArray(reference)) invalid$1();
+	if (Object.keys(reference).length !== fields$5.length || fields$5.some((key) => !Object.hasOwn(reference, key))) invalid$1();
 	const { epoch, kind, section, id, row, column } = reference;
-	if (!decimal(epoch) || epoch === "0" || !decimal(id) || !uint$32(section) || !uint$32(row) || !uint$32(column)) invalid();
+	if (!decimal(epoch) || epoch === "0" || !decimal(id) || !uint$38(section) || !uint$38(row) || !uint$38(column)) invalid$1();
 	if (![
 		"original",
 		"generated",
 		"cell"
-	].includes(kind)) invalid();
-	if (kind !== "cell" && (row !== 0 || column !== 0 || BigInt(id) > 4294967295n)) invalid();
-	if (kind !== "original" && id === "0") invalid();
+	].includes(kind)) invalid$1();
+	if (kind !== "cell" && (row !== 0 || column !== 0 || BigInt(id) > 4294967295n)) invalid$1();
+	if (kind !== "original" && id === "0") invalid$1();
 	return reference;
 }
 function decodeHwp5CurrentReferences(bytes) {
 	const value = JSON.parse(utf8$2.decode(bytes));
-	if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).sort().join() !== "first,references,total,version") invalid();
-	if (value.version !== 1 || !uint$32(value.total) || !uint$32(value.first) || value.first > value.total || !Array.isArray(value.references) || value.references.length > 1024 || value.first + value.references.length > value.total) invalid();
+	if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).sort().join() !== "first,references,total,version") invalid$1();
+	if (value.version !== 1 || !uint$38(value.total) || !uint$38(value.first) || value.first > value.total || !Array.isArray(value.references) || value.references.length > 1024 || value.first + value.references.length > value.total) invalid$1();
 	for (const reference of value.references) validate$1(reference);
-	if (value.references.some((reference) => reference.epoch !== value.references[0].epoch)) invalid();
+	if (value.references.some((reference) => reference.epoch !== value.references[0].epoch)) invalid$1();
 	return value;
 }
 function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u32, referenceScope }) {
@@ -30567,7 +32421,7 @@ function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u
 		if (!reference || reference.scope !== scope || Object.keys(reference).length !== fields$5.length + 1) throw new Error("InvalidCurrentReferenceScope");
 		const wire = Object.fromEntries(fields$5.map((key) => [key, reference[key]]));
 		validate$1(wire);
-		return encoder$9.encode(JSON.stringify(wire));
+		return encoder$10.encode(JSON.stringify(wire));
 	};
 	const copyCurrentText = (reference) => {
 		ready();
@@ -30585,7 +32439,7 @@ function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u
 		];
 		if (count > 1024) throw new RangeError("LimitExceeded");
 		const window = decodeHwp5CurrentReferences(output(() => wasm[name](...args)).bytes);
-		if (window.first !== args[1] || window.references.length !== Math.min(args[2], window.total - args[1]) || window.references.some((ref) => ref.section !== args[0])) invalid();
+		if (window.first !== args[1] || window.references.length !== Math.min(args[2], window.total - args[1]) || window.references.some((ref) => ref.section !== args[0])) invalid$1();
 		return {
 			...window,
 			references: window.references.map((reference) => Object.freeze({
@@ -30602,6 +32456,49 @@ function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u
 			currentSourceReferences: (section, options) => windowQuery("hwp5_edit_current_source_references", section, options),
 			output: (action, bytes) => bytes === void 0 ? output(action).bytes : memory.withBytes(bytes, (ptr, size) => output(() => action(ptr, size)).bytes)
 		}),
+		supportsEquationInsertionAbi() {
+			check();
+			return available() && typeof wasm.hwp5_edit_insert_equation === "function" && typeof wasm.hwp5_edit_equation_insert_profile_version === "function" && wasm.hwp5_edit_equation_insert_profile_version() === 1;
+		},
+		insertEquation(input) {
+			ready();
+			if (!this.supportsEquationInsertionAbi()) throw Error("InlineObjectInsertionUnavailable");
+			const { reference, start, ...options } = inlineInsertRecord(input, [
+				"reference",
+				"start",
+				"script",
+				"width",
+				"height",
+				"baseLine",
+				"baseUnit",
+				"version",
+				"font",
+				"colorRgb",
+				"lineMode"
+			]);
+			const refBytes = encode(reference);
+			if (!["original", "generated"].includes(reference.kind)) throw Error("UnsupportedEquationInsertOwner");
+			const values = checkedHwp5EquationInsertOptions(options);
+			u32(start, "start");
+			const bytes = encoder$10.encode(JSON.stringify({
+				start,
+				...values
+			}));
+			let outcome;
+			try {
+				return memory.withBytes(refBytes, (refPtr, refSize) => {
+					outcome = applyNativeEdit(memory, bytes, (ptr, size) => wasm.hwp5_edit_insert_equation(refPtr, refSize, ptr, size), "InvalidHwp5EquationInsertResult");
+					return outcome;
+				});
+			} catch (error) {
+				if (!outcome) throw error;
+				return {
+					...outcome,
+					cleanupError: error?.message || String(error),
+					refreshRequired: true
+				};
+			}
+		},
 		supportsCurrentReferences() {
 			check();
 			return available();
@@ -30612,7 +32509,7 @@ function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u
 		},
 		currentSourceReferences(section, options) {
 			const window = windowQuery("hwp5_edit_current_source_references", section, options);
-			if (window.references.some((ref) => ref.kind === "cell")) invalid();
+			if (window.references.some((ref) => ref.kind === "cell")) invalid$1();
 			return window;
 		},
 		currentReferences(section, options = {}) {
@@ -30631,14 +32528,17 @@ function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u
 			if (typeof text !== "string") throw new TypeError("Text must be a string");
 			if (!text.isWellFormed()) throw new Error("InvalidUnicodeEncoding");
 			if (text.length > 4194304) throw new RangeError("LimitExceeded");
-			const bytes = encoder$9.encode(text);
+			const bytes = encoder$10.encode(text);
 			if (bytes.length > 4194304) throw new RangeError("LimitExceeded");
 			memory.withBytes(encode(reference), (ptr, size) => memory.withBytes(bytes, (textPtr, textSize) => success(wasm.hwp5_edit_splice_current(ptr, size, ...range, textPtr, textSize))));
 		}
 	};
 }
-var utf8$2, utf16, encoder$9, fields$5, scopeSequence$1, invalid, uint$32, decimal;
+var utf8$2, utf16, encoder$10, fields$5, scopeSequence$1, invalid$1, uint$38, decimal;
 var init_hwp5_current_references = __esmMin((() => {
+	init_hwpx_inline_object_record();
+	init_hwp5_equation_insert();
+	init_native_edit_outcome();
 	init_hwp5_exclusive_text_delta();
 	utf8$2 = new TextDecoder("utf-8", {
 		fatal: true,
@@ -30648,7 +32548,7 @@ var init_hwp5_current_references = __esmMin((() => {
 		fatal: true,
 		ignoreBOM: true
 	});
-	encoder$9 = new TextEncoder();
+	encoder$10 = new TextEncoder();
 	fields$5 = [
 		"epoch",
 		"kind",
@@ -30658,20 +32558,12 @@ var init_hwp5_current_references = __esmMin((() => {
 		"column"
 	];
 	scopeSequence$1 = 0n;
-	invalid = () => {
+	invalid$1 = () => {
 		throw new Error("InvalidHwp5CurrentReference");
 	};
-	uint$32 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$38 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	decimal = (value) => typeof value === "string" && /^(0|[1-9][0-9]{0,19})$/.test(value) && BigInt(value) <= 18446744073709551615n;
 }));
-// ../../js/created-table-identity.mjs
-function createdTableIdentity(value) {
-	if (typeof value !== "string" || !/^[1-9][0-9]{0,19}$/.test(value)) throw new RangeError("InvalidCreatedTableIdentity");
-	const id = BigInt(value);
-	if (id > 18446744073709551615n) throw new RangeError("InvalidCreatedTableIdentity");
-	return id;
-}
-var init_created_table_identity = __esmMin((() => {}));
 // ../../js/created-table-grid.mjs
 /** @param {unknown} input @returns {Readonly<CreatedTableGridRequest>} */
 function captureCreatedTableGridRequest(input) {
@@ -30726,6 +32618,25 @@ var init_created_table_grid = __esmMin((() => {
 		"action",
 		"index"
 	];
+}));
+// ../../js/created-cell-character-runs.mjs
+function validateCreatedCellCharacterRuns(text, runs) {
+	const fail = () => {
+		throw Error("InvalidCreatedCellCharacterRuns");
+	};
+	if (typeof text !== "string" || !text.isWellFormed() || !Array.isArray(runs) || !runs.length || runs.length > 65535 || runs[0]?.start_unit !== 0) return fail();
+	let previous = -1;
+	for (const run of runs) {
+		if (!run || typeof run !== "object" || Array.isArray(run) || Object.keys(run).length !== 2 || !Object.hasOwn(run, "start_unit") || !Object.hasOwn(run, "char_shape_id") || !uint$37(run.start_unit) || !uint$37(run.char_shape_id) || run.start_unit <= previous || run.start_unit > text.length) return fail();
+		const at = run.start_unit;
+		if (at > 0 && at < text.length && text.charCodeAt(at - 1) >= 55296 && text.charCodeAt(at - 1) <= 56319 && text.charCodeAt(at) >= 56320 && text.charCodeAt(at) <= 57343) return fail();
+		previous = at;
+	}
+	return runs;
+}
+var uint$37;
+var init_created_cell_character_runs = __esmMin((() => {
+	uint$37 = (n) => Number.isInteger(n) && n >= 0 && n <= 4294967295 && !Object.is(n, -0);
 }));
 // ../../js/hwpx-created-tables.mjs
 function decodeCreatedTables(bytes) {
@@ -30792,6 +32703,7 @@ function validateCreatedTables(rows, { hostBase = 1 } = {}) {
 		let x = 0;
 		for (let index = 0; index < count; index++) {
 			const cell = row.cells[index];
+			const rich = Object.hasOwn(cell ?? {}, "character_runs");
 			if (!keys(cell, [
 				"paragraph_id",
 				"row",
@@ -30800,7 +32712,8 @@ function validateCreatedTables(rows, { hostBase = 1 } = {}) {
 				"y",
 				"width",
 				"height",
-				"text"
+				"text",
+				...rich ? ["character_runs"] : []
 			]) || ![
 				cell.paragraph_id,
 				cell.row,
@@ -30811,6 +32724,11 @@ function validateCreatedTables(rows, { hostBase = 1 } = {}) {
 				cell.height
 			].every(uint)) return fail();
 			if (!cell.paragraph_id || paragraphs.has(cell.paragraph_id) || cell.row !== Math.floor(index / row.columns) || cell.column !== index % row.columns || cell.x !== x || !cell.width || cell.height !== height || cell.y !== cell.row * height || typeof cell.text !== "string" || !cell.text.isWellFormed()) return fail();
+			if (rich) try {
+				validateCreatedCellCharacterRuns(cell.text, cell.character_runs);
+			} catch {
+				return fail();
+			}
 			paragraphs.add(cell.paragraph_id);
 			x += cell.width;
 			if (x > row.width) return fail();
@@ -30823,6 +32741,7 @@ function validateCreatedTables(rows, { hostBase = 1 } = {}) {
 	return rows;
 }
 var init_hwpx_created_tables = __esmMin((() => {
+	init_created_cell_character_runs();
 	init_created_table_identity();
 }));
 // ../../js/hwp5-created-tables.mjs
@@ -30831,17 +32750,17 @@ function decodeHwp5CreatedTables(bytes) {
 		throw new Error("InvalidHwp5CreatedTables");
 	};
 	const rows = JSON.parse(decoder$4.decode(bytes));
-	if (!Array.isArray(rows) || rows.length > 1e5 || rows.some((r) => !keys$1(r, ["table", "options"]))) fail();
+	if (!Array.isArray(rows) || rows.length > 1e5 || rows.some((r) => !keys$2(r, ["table", "options"]))) fail();
 	validateCreatedTables(rows.map((row) => row.table), { hostBase: 0 });
 	for (const row of rows) {
 		const o = row.options;
-		if (!keys$1(o, [
+		if (!keys$2(o, [
 			"common",
 			"table",
 			"cell"
 		])) fail();
 		const c = o.common, t = o.table, l = o.cell;
-		if (!keys$1(c, [
+		if (!keys$2(c, [
 			"flags",
 			"offset_y",
 			"offset_x",
@@ -30849,36 +32768,36 @@ function decodeHwp5CreatedTables(bytes) {
 			"margins",
 			"prevent_page_break",
 			"description"
-		]) || !integer$1(c.flags, 0, 4294967295) || ![
+		]) || !integer$2(c.flags, 0, 4294967295) || ![
 			c.offset_y,
 			c.offset_x,
 			c.z_order
-		].every((n) => integer$1(n, -2147483648, 2147483647)) || !margins(c.margins) || typeof c.prevent_page_break !== "boolean" || typeof c.description !== "string" || !c.description.isWellFormed()) fail();
-		if (!keys$1(t, [
+		].every((n) => integer$2(n, -2147483648, 2147483647)) || !margins(c.margins) || typeof c.prevent_page_break !== "boolean" || typeof c.description !== "string" || !c.description.isWellFormed()) fail();
+		if (!keys$2(t, [
 			"page_break",
 			"repeat_header",
 			"cell_spacing",
 			"margins"
-		]) || !integer$1(t.page_break, 0, 2) || typeof t.repeat_header !== "boolean" || !integer$1(t.cell_spacing, -32768, 32767) || !margins(t.margins)) fail();
-		if (!keys$1(l, [
+		]) || !integer$2(t.page_break, 0, 2) || typeof t.repeat_header !== "boolean" || !integer$2(t.cell_spacing, -32768, 32767) || !margins(t.margins)) fail();
+		if (!keys$2(l, [
 			"layout",
 			"unknown",
 			"attributes",
 			"margins"
-		]) || !integer$1(l.attributes, 0, 4294967295) || !margins(l.margins) || !(l.layout === "spec6" && l.unknown === null || l.layout === "observed8" && integer$1(l.unknown, 0, 65535))) fail();
+		]) || !integer$2(l.attributes, 0, 4294967295) || !margins(l.margins) || !(l.layout === "spec6" && l.unknown === null || l.layout === "observed8" && integer$2(l.unknown, 0, 65535))) fail();
 	}
 	return rows;
 }
-var decoder$4, keys$1, integer$1, margins;
+var decoder$4, keys$2, integer$2, margins;
 var init_hwp5_created_tables = __esmMin((() => {
 	init_hwpx_created_tables();
 	decoder$4 = new TextDecoder("utf-8", {
 		fatal: true,
 		ignoreBOM: true
 	});
-	keys$1 = (v, names) => v && typeof v === "object" && !Array.isArray(v) && Object.keys(v).length === names.length && names.every((k) => Object.hasOwn(v, k));
-	integer$1 = (v, low, high) => Number.isInteger(v) && v >= low && v <= high;
-	margins = (v) => Array.isArray(v) && v.length === 4 && v.every((n) => integer$1(n, -32768, 32767));
+	keys$2 = (v, names) => v && typeof v === "object" && !Array.isArray(v) && Object.keys(v).length === names.length && names.every((k) => Object.hasOwn(v, k));
+	integer$2 = (v, low, high) => Number.isInteger(v) && v >= low && v <= high;
+	margins = (v) => Array.isArray(v) && v.length === 4 && v.every((n) => integer$2(n, -32768, 32767));
 }));
 // ../../js/table-creation-resources.mjs
 function decodeTableCreationResources(bytes) {
@@ -30950,7 +32869,7 @@ function captureTableInitialTexts(rows, columns, input) {
 				const unit = text.charCodeAt(index);
 				if (unit < 32 || unit === 127) throw new TypeError("InvalidTableCellText");
 			}
-			bytes += encoder$8.encode(text).length;
+			bytes += encoder$9.encode(text).length;
 			if (bytes > 4194304) throw new RangeError("LimitExceeded");
 			return text;
 		});
@@ -30959,13 +32878,13 @@ function captureTableInitialTexts(rows, columns, input) {
 function encodeTableTextRequest(request) {
 	const json = JSON.stringify(request);
 	if (json.length > 4194304) throw new RangeError("LimitExceeded");
-	const bytes = encoder$8.encode(json);
+	const bytes = encoder$9.encode(json);
 	if (bytes.length > 4194304) throw new RangeError("LimitExceeded");
 	return bytes;
 }
-var encoder$8;
+var encoder$9;
 var init_table_initial_texts = __esmMin((() => {
-	encoder$8 = new TextEncoder();
+	encoder$9 = new TextEncoder();
 }));
 // ../../js/hwp5-table-creation.mjs
 function createHwp5TableCreationApi({ wasm, memory, check, output, u32 }) {
@@ -31009,7 +32928,7 @@ function createHwp5TableCreationApi({ wasm, memory, check, output, u32 }) {
 			} else {
 				const json = JSON.stringify(request);
 				if (json.length > 1048576) throw new RangeError("LimitExceeded");
-				bytes = encoder$7.encode(json);
+				bytes = encoder$8.encode(json);
 				if (bytes.length > 1048576) throw new RangeError("LimitExceeded");
 			}
 			const response = memory.withBytes(bytes, (ptr, size) => output(() => withTexts ? wasm.hwp5_edit_insert_table_with_texts(ptr, size) : wasm.hwp5_edit_insert_table(ptr, size)).bytes);
@@ -31019,13 +32938,13 @@ function createHwp5TableCreationApi({ wasm, memory, check, output, u32 }) {
 		}
 	};
 }
-var encoder$7, decoder$2;
+var encoder$8, decoder$2;
 var init_hwp5_table_creation = __esmMin((() => {
 	init_created_table_grid();
 	init_hwp5_created_tables();
 	init_table_creation_resources();
 	init_table_initial_texts();
-	encoder$7 = new TextEncoder();
+	encoder$8 = new TextEncoder();
 	decoder$2 = new TextDecoder("utf-8", {
 		fatal: true,
 		ignoreBOM: true
@@ -31226,6 +33145,12 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			check,
 			prefix: "hwp5_edit"
 		}),
+		...createDocumentTextApi({
+			wasm,
+			memory,
+			check,
+			prefix: "hwp5_edit"
+		}),
 		observedDocInfoDiagnostics() {
 			check();
 			if (typeof wasm.hwp5_edit_observed_docinfo_diagnostics !== "function") throw new Error("Hwp5ObservedDocInfoAbiUnavailable");
@@ -31291,6 +33216,12 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			success,
 			u32: u32$2,
 			referenceScope
+		}),
+		...createHwp5ChartDisplayApi({
+			wasm,
+			check,
+			output,
+			u32: u32$2
 		}),
 		...createHwp5TableCreationApi({
 			wasm,
@@ -31675,7 +33606,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			if (typeof text !== "string") throw new TypeError("Form text must be a string");
 			if (!text.isWellFormed()) throw new Error("InvalidUnicodeEncoding");
 			if (text.length > 65535) throw new RangeError("LimitExceeded");
-			const bytes = encoder$6.encode(text);
+			const bytes = encoder$7.encode(text);
 			if (bytes.length > 196605) throw new RangeError("LimitExceeded");
 			memory.withBytes(bytes, (ptr, size) => success(wasm.hwp5_edit_set_form_text(...positions, ptr, size)));
 		},
@@ -31892,7 +33823,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			if (typeof formula !== "string") throw new TypeError("Formula must be a string");
 			if (!formula.isWellFormed()) throw new Error("InvalidUnicodeEncoding");
 			if (formula.length > 4096) throw new RangeError("LimitExceeded");
-			const bytes = encoder$6.encode(formula);
+			const bytes = encoder$7.encode(formula);
 			if (bytes.length > 4096) throw new RangeError("LimitExceeded");
 			memory.withBytes(bytes, (ptr, size) => success(wasm.hwp5_edit_set_formula_definition(...positions, ptr, size)));
 		},
@@ -31912,7 +33843,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			if (!text.isWellFormed()) throw new Error("InvalidUnicodeEncoding");
 			if (rangePolicy !== "reject" && rangePolicy !== "half-open") throw new Error("InvalidRangePolicy");
 			if (text.length > 4194304) throw new RangeError("LimitExceeded");
-			const bytes = encoder$6.encode(text);
+			const bytes = encoder$7.encode(text);
 			if (bytes.length > 4194304) throw new RangeError("LimitExceeded");
 			memory.withBytes(bytes, (ptr, size) => success(wasm.hwp5_edit_splice(...values, ptr, size, rangePolicy === "half-open" ? 1 : 0)));
 		},
@@ -32195,8 +34126,9 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		}
 	};
 }
-var encoder$6, decoder, u32$2;
+var encoder$7, decoder, u32$2;
 var init_hwp5_editor = __esmMin((() => {
+	init_hwp5_chart_display_api();
 	init_hwp5_equation_sources();
 	init_equation_engine();
 	init_object_geometry_api();
@@ -32242,6 +34174,7 @@ var init_hwp5_editor = __esmMin((() => {
 	init_hwp5_drawing_matrix_sources();
 	init_hwp5_drawing_local_transforms();
 	init_hwp5_drawing_rectangle_corners();
+	init_document_text_api();
 	init_hwp5_drawing_polygon_points();
 	init_hwp5_drawing_curve_points();
 	init_hwp5_drawing_line_endpoints();
@@ -32295,7 +34228,7 @@ var init_hwp5_editor = __esmMin((() => {
 	init_hwp5_current_references();
 	init_hwp5_table_creation();
 	init_hwp5_text_wire();
-	encoder$6 = new TextEncoder();
+	encoder$7 = new TextEncoder();
 	decoder = new TextDecoder("utf-16le", {
 		fatal: true,
 		ignoreBOM: true
@@ -32304,6 +34237,396 @@ var init_hwp5_editor = __esmMin((() => {
 		if (!Number.isInteger(value) || value < 0 || value > 4294967295) throw new RangeError(`Invalid ${name}`);
 		return value;
 	};
+}));
+// ../../js/hwpx-note-create.mjs
+function uint$36(value, min = 0, max = 4294967295) {
+	if (!Number.isSafeInteger(value) || value < min || value > max || Object.is(value, -0)) throw Error("InvalidNoteCreateInteger");
+	return value;
+}
+function text$1(value, max, empty = true) {
+	if (typeof value !== "string" || !empty && !value.length || !value.isWellFormed() || /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/u.test(value) || encoder$6.encode(value).length > max) throw Error("InvalidNoteCreateText");
+	return value;
+}
+function record$17(input, required, optional = []) {
+	if (!input || typeof input !== "object") throw Error("InvalidNoteCreateRequest");
+	const d = Object.getOwnPropertyDescriptors(input);
+	return inlineInsertRecord(input, required.concat(optional.filter((k) => Object.hasOwn(d, k))));
+}
+function format(input) {
+	const p = inlineInsertRecord(input, [
+		"number_type",
+		"user_char",
+		"prefix_char",
+		"suffix_char",
+		"superscript"
+	]);
+	if (typeof p.superscript !== "boolean") throw Error("InvalidNoteCreateFormat");
+	return {
+		number_type: text$1(p.number_type, 128, false),
+		user_char: text$1(p.user_char, 4096),
+		prefix_char: text$1(p.prefix_char, 4096),
+		suffix_char: text$1(p.suffix_char, 4096),
+		superscript: p.superscript
+	};
+}
+function shape(input) {
+	const p = inlineInsertRecord(input, [
+		"format",
+		"line_length",
+		"line_type",
+		"line_width",
+		"line_color",
+		"between_notes",
+		"below_line",
+		"above_line",
+		"start",
+		"place",
+		"beneath_text"
+	]);
+	if (typeof p.beneath_text !== "boolean") throw Error("InvalidNoteCreatePolicy");
+	return {
+		format: format(p.format),
+		line_length: uint$36(p.line_length, -2147483648, 2147483647),
+		line_type: text$1(p.line_type, 128, false),
+		line_width: text$1(p.line_width, 128, false),
+		line_color: text$1(p.line_color, 128, false),
+		between_notes: uint$36(p.between_notes),
+		below_line: uint$36(p.below_line),
+		above_line: uint$36(p.above_line),
+		start: uint$36(p.start, 1, 2147483647),
+		place: text$1(p.place, 128, false),
+		beneath_text: p.beneath_text
+	};
+}
+function policies(input) {
+	if (!Array.isArray(input) || input.length > 1024) throw Error("InvalidNoteCreatePolicy");
+	const d = Object.getOwnPropertyDescriptors(input);
+	if (Reflect.ownKeys(d).length !== input.length + 1) throw Error("InvalidNoteCreatePolicy");
+	const seen = /* @__PURE__ */ new Set();
+	return Array.from({ length: input.length }, (_, i) => {
+		if (!d[i] || !Object.hasOwn(d[i], "value")) throw Error("InvalidNoteCreatePolicy");
+		const p = inlineInsertRecord(d[i].value, ["section", "shape"]);
+		const section = uint$36(p.section);
+		if (seen.has(section)) throw Error("InvalidNoteCreatePolicy");
+		seen.add(section);
+		return {
+			section,
+			shape: shape(p.shape)
+		};
+	});
+}
+function checkedNoteInsertOptions(input) {
+	const p = record$17(input, [
+		"resources",
+		"format",
+		"body"
+	], ["initial_policies"]);
+	const resources = inlineInsertRecord(p.resources, [
+		"paragraph",
+		"character",
+		"style"
+	]);
+	return {
+		resources: {
+			paragraph: uint$36(resources.paragraph),
+			character: uint$36(resources.character),
+			style: uint$36(resources.style)
+		},
+		format: format(p.format),
+		body: text$1(p.body, 1048576),
+		initial_policies: policies(p.initial_policies === void 0 ? [] : p.initial_policies)
+	};
+}
+function checkedNoteInsertRequest(input) {
+	const p = record$17(input, [
+		"target",
+		"kind",
+		"resources",
+		"format",
+		"body"
+	], ["initial_policies"]);
+	if (!["foot", "end"].includes(p.kind)) throw Error("InvalidNoteCreateKind");
+	const target = checkedInlineObjectTarget(p.target);
+	if (!target.owner) throw Error("InvalidNoteCreateOwner");
+	return {
+		target,
+		kind: p.kind,
+		...checkedNoteInsertOptions({
+			resources: p.resources,
+			format: p.format,
+			body: p.body,
+			initial_policies: p.initial_policies === void 0 ? [] : p.initial_policies
+		})
+	};
+}
+function checkedNoteCaret(input) {
+	const p = inlineInsertRecord(input, ["schemaVersion", "caret"]);
+	const c = inlineInsertRecord(p.caret, [
+		"section",
+		"paragraph",
+		"unit",
+		"coordinateSpace"
+	]);
+	if (p.schemaVersion !== 1 || c.coordinateSpace !== "plain") throw Error("InvalidNoteCreateCaret");
+	return {
+		section: uint$36(c.section),
+		paragraph: uint$36(c.paragraph, 1),
+		unit: uint$36(c.unit),
+		coordinateSpace: "plain"
+	};
+}
+function createHwpxNoteCreateApi({ wasm, memory, check }) {
+	function available() {
+		check();
+		try {
+			return typeof wasm.hwpx_edit_insert_note === "function" && typeof wasm.hwpx_edit_note_create_version === "function" && wasm.hwpx_edit_note_create_version() === 1;
+		} catch {
+			return false;
+		}
+	}
+	function insertNote(input) {
+		check();
+		const request = checkedNoteInsertRequest(input);
+		if (!available()) throw Error("NoteCreationUnavailable");
+		requireInlineObjectPlacement(wasm, request);
+		const bytes = encoder$6.encode(JSON.stringify(request));
+		if (bytes.length > 2097152) throw Error("LimitExceeded");
+		const result = applyNativeEdit(memory, bytes, (ptr, size) => wasm.hwpx_edit_insert_note(ptr, size), "InvalidNoteCreateResult");
+		let completed = result;
+		try {
+			if (result.application === "applied") {
+				const parsed = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len())));
+				completed = {
+					...result,
+					noteCaret: checkedNoteCaret(parsed)
+				};
+			}
+		} catch (error) {
+			completed = {
+				...result,
+				error: error.message,
+				refreshRequired: true
+			};
+		} finally {
+			try {
+				wasm.hwpx_edit_output_free();
+			} catch (error) {
+				completed.cleanupError = error.message;
+				completed.refreshRequired = true;
+			}
+		}
+		return completed;
+	}
+	const insertKind = (kind, input) => {
+		return insertNote({
+			...record$17(input, [
+				"target",
+				"resources",
+				"format",
+				"body"
+			], ["initial_policies"]),
+			kind
+		});
+	};
+	return {
+		supportsNoteCreationAbi: available,
+		insertNote,
+		insertFootnote: (input) => insertKind("foot", input),
+		insertEndnote: (input) => insertKind("end", input)
+	};
+}
+var encoder$6;
+var init_hwpx_note_create = __esmMin((() => {
+	init_hwpx_inline_object_record();
+	init_hwpx_inline_object_placement();
+	init_native_edit_outcome();
+	encoder$6 = new TextEncoder();
+}));
+// ../../js/hwpx-control-text-batch.mjs
+function own$2(value, keys) {
+	if (!value || typeof value !== "object" || ![Object.prototype, null].includes(Object.getPrototypeOf(value))) invalid();
+	const ds = Object.getOwnPropertyDescriptors(value);
+	if (Reflect.ownKeys(ds).length !== keys.length || keys.some((k) => !Object.hasOwn(ds, k))) invalid();
+	const out = Object.create(null);
+	for (const k of keys) {
+		if (!Object.hasOwn(ds[k], "value")) invalid();
+		out[k] = ds[k].value;
+	}
+	return out;
+}
+function items(value, max) {
+	if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype) invalid();
+	const ds = Object.getOwnPropertyDescriptors(value), length = ds.length?.value;
+	if (!Number.isSafeInteger(length) || length < 0 || length > max || Reflect.ownKeys(ds).length !== length + 1) invalid();
+	const out = [];
+	for (let i = 0; i < length; i++) {
+		const d = ds[i];
+		if (!d || !Object.hasOwn(d, "value")) invalid();
+		out.push(d.value);
+	}
+	return out;
+}
+function boundary(text, at) {
+	return at === 0 || at === text.length || !(text.charCodeAt(at - 1) >= 55296 && text.charCodeAt(at - 1) <= 56319 && text.charCodeAt(at) >= 56320 && text.charCodeAt(at) <= 57343);
+}
+function decodeControlTextSnapshot(value, expectedSection, expectedIdentity) {
+	if (!uint$35(expectedSection)) invalid();
+	const root = own$2(value, [
+		"schemaVersion",
+		"axis",
+		"section",
+		"readStamp",
+		"coverage",
+		"rows"
+	]);
+	const stamp = own$2(root.readStamp, ["session", "serial"]);
+	if (![1, 2].includes(root.schemaVersion) || root.axis !== "native-control-utf16" || root.section !== expectedSection || !["complete", "partial"].includes(root.coverage) || !Array.isArray(root.rows) || root.rows.length > 1e5) invalid();
+	if (typeof stamp.session !== "string" || !stamp.session || stamp.session.length > 256 || typeof stamp.serial !== "string" || !/^(0|[1-9][0-9]{0,19})$/.test(stamp.serial) || BigInt(stamp.serial) > 18446744073709551615n) invalid();
+	let previous = 0, complete = true, units = 0;
+	const rows = items(root.rows, 1e5).map((value) => {
+		const row = own$2(value, [
+			"paragraph",
+			"sourceNode",
+			"plain",
+			"text",
+			"units",
+			"controls",
+			"coverage",
+			"issue"
+		]);
+		if (!uint$35(row.paragraph) || row.paragraph === 0 || (!previous ? false : row.paragraph !== previous + 1) || !uint$35(row.sourceNode) || !uint$35(row.units) || typeof row.plain !== "string" || !row.plain.isWellFormed() || !Array.isArray(row.controls) || row.controls.length > 2e6) invalid();
+		previous = row.paragraph;
+		units += row.plain.length;
+		if (row.coverage === "complete") {
+			if (typeof row.text !== "string" || !row.text.isWellFormed() || row.text.length !== row.units || row.issue !== null) invalid();
+			units += row.text.length;
+		} else if (row.coverage === "partial") {
+			complete = false;
+			if (row.text !== null || row.controls.length !== 0 || !issues.has(row.issue)) invalid();
+		} else invalid();
+		let last = -1;
+		const seen = /* @__PURE__ */ new Set();
+		let plainAt = 0;
+		const literalParts = [];
+		const controls = items(row.controls, 2e6).map((value) => {
+			const c = own$2(value, [
+				"kind",
+				"node",
+				"startUnit",
+				"endUnit"
+			]);
+			if (!spellings.has(c.kind) || !uint$35(c.node) || !uint$35(c.startUnit) || !uint$35(c.endUnit) || c.startUnit < last || c.endUnit !== c.startUnit + 1 || c.endUnit > row.text.length || !boundary(row.text, c.startUnit) || !boundary(row.text, c.endUnit) || row.text.slice(c.startUnit, c.endUnit) !== spellings.get(c.kind) || seen.has(c.node)) invalid();
+			literalParts.push(row.text.slice(plainAt, c.startUnit));
+			plainAt = c.endUnit;
+			last = c.endUnit;
+			seen.add(c.node);
+			return Object.freeze({ ...c });
+		});
+		if (row.coverage === "complete") {
+			literalParts.push(row.text.slice(plainAt));
+			if (literalParts.join("") !== row.plain) invalid();
+		}
+		if (units > 134217728) invalid();
+		return Object.freeze({
+			...row,
+			controls: Object.freeze(controls)
+		});
+	});
+	if (root.coverage === "complete" !== complete) invalid();
+	if (expectedIdentity) {
+		const expected = decodeControlTextIdentity(expectedIdentity, expectedSection);
+		if (root.schemaVersion !== 2 || stamp.session !== expected.readBinding.session || stamp.serial !== expected.readBinding.serial || rows.length !== expected.paragraphCount || rows.length && rows[0].paragraph !== expected.firstParagraph) invalid();
+	}
+	return Object.freeze({
+		...root,
+		readStamp: Object.freeze({ ...stamp }),
+		rows: Object.freeze(rows)
+	});
+}
+function decodeControlTextIdentity(value, section) {
+	const root = own$2(value, [
+		"schemaVersion",
+		"scope",
+		"executionAuthority",
+		"section",
+		"firstParagraph",
+		"paragraphCount",
+		"readBinding"
+	]);
+	const b = own$2(root.readBinding, [
+		"session",
+		"epoch",
+		"serial"
+	]);
+	if (root.schemaVersion !== 1 || root.scope !== "native-control-text-identity" || root.executionAuthority !== false || root.section !== section || !uint$35(section) || !uint$35(root.firstParagraph) || root.firstParagraph === 0 || !uint$35(root.paragraphCount) || root.paragraphCount > 1e5 || root.firstParagraph + root.paragraphCount > 4294967296 || !validDocumentTextReadStamp({
+		epoch: b.epoch,
+		serial: b.serial
+	}) || b.session !== `s${b.epoch}`) invalid();
+	return Object.freeze({
+		...root,
+		readBinding: Object.freeze({ ...b })
+	});
+}
+function createHwpxControlTextBatchApi({ wasm, memory, check }) {
+	const supported = () => [
+		"hwpx_edit_paragraph_control_text_snapshot_current",
+		"hwpx_edit_control_text_read_identity",
+		"hwpx_edit_output_ptr",
+		"hwpx_edit_output_len",
+		"hwpx_edit_output_free"
+	].every((name) => typeof wasm[name] === "function");
+	const query = (name, section, limit) => {
+		try {
+			if (wasm[name](section) !== 1) throw memory.error();
+			const size = wasm.hwpx_edit_output_len();
+			if (!uint$35(size) || size > limit) invalid();
+			return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), size)));
+		} finally {
+			wasm.hwpx_edit_output_free();
+		}
+	};
+	return {
+		supportsParagraphControlTextSnapshotAbi() {
+			check();
+			return supported();
+		},
+		paragraphControlTextSnapshot(section) {
+			check();
+			if (!uint$35(section)) invalid();
+			if (!supported()) throw Error("HwpxControlTextFreshnessAbiUnavailable");
+			const before = decodeControlTextIdentity(query("hwpx_edit_control_text_read_identity", section, 2048), section);
+			check();
+			const value = decodeControlTextSnapshot(query("hwpx_edit_paragraph_control_text_snapshot_current", section, 134217728), section, before);
+			check();
+			const after = decodeControlTextIdentity(query("hwpx_edit_control_text_read_identity", section, 2048), section);
+			check();
+			if (!sameIdentity(before, after)) throw Error("StaleHwpxControlTextSnapshot");
+			return value;
+		}
+	};
+}
+var invalid, uint$35, spellings, issues, sameIdentity;
+var init_hwpx_control_text_batch = __esmMin((() => {
+	init_document_text_read_stamp();
+	invalid = () => {
+		throw Error("InvalidHwpxControlTextSnapshot");
+	};
+	uint$35 = (v) => Number.isInteger(v) && v >= 0 && v <= 4294967295 && !Object.is(v, -0);
+	spellings = /* @__PURE__ */ new Map([
+		["tab", "	"],
+		["anchor", "￼"],
+		["nb_space", "\xA0"],
+		["fw_space", " "],
+		["line_break", "\n"],
+		["hypen", "­"]
+	]);
+	issues = /* @__PURE__ */ new Set([
+		"UnknownControl",
+		"UnresolvedField",
+		"MissingCurrentSite",
+		"InconsistentControlOwner"
+	]);
+	sameIdentity = (a, b) => a.section === b.section && a.firstParagraph === b.firstParagraph && a.paragraphCount === b.paragraphCount && a.readBinding.session === b.readBinding.session && a.readBinding.epoch === b.readBinding.epoch && a.readBinding.serial === b.readBinding.serial;
 }));
 // ../../js/named-field-parameters.mjs
 function checkedNamedFieldParameterValues(value) {
@@ -32463,418 +34786,6 @@ var init_hwpx_document_insert = __esmMin((() => {
 		if (!Number.isInteger(value) || value < 0 || value > 4294967295 || Object.is(value, -0)) throw new TypeError("InvalidDocumentInsertCoordinate");
 		return value;
 	};
-}));
-// ../../js/chart-create-decimal.mjs
-function parseChartDecimal(text) {
-	if (typeof text !== "string" || text.length === 0 || text.length > 128) throw Error("InvalidChartNumber");
-	const match = /^([+-]?)(?:(\d+)(?:\.(\d*))?|\.(\d+))(?:[eE]([+-]?)(\d+))?$/.exec(text);
-	if (!match) throw Error("InvalidChartNumber");
-	let exponent = 0;
-	for (const digit of match[6] ?? "") {
-		exponent = exponent * 10 + digit.charCodeAt(0) - 48;
-		if (exponent > 1e4) throw Error("InvalidChartNumber");
-	}
-	if (match[5] === "-") exponent = -exponent;
-	const fraction = match[3] ?? match[4] ?? "";
-	const digits = ((match[2] ?? "") + fraction).replace(/^0+/, "");
-	return {
-		negative: match[1] === "-" && digits.length !== 0,
-		digits,
-		scale: digits.length === 0 ? 0 : exponent - fraction.length + digits.length
-	};
-}
-function compareChartDecimals(left, right) {
-	const x = parseChartDecimal(left), y = parseChartDecimal(right);
-	if (x.negative !== y.negative) return x.negative ? -1 : 1;
-	let order = 0;
-	if (x.digits.length === 0 || y.digits.length === 0) order = Math.sign(x.digits.length - y.digits.length);
-	else if (x.scale !== y.scale) order = Math.sign(x.scale - y.scale);
-	else for (let i = 0; i < Math.max(x.digits.length, y.digits.length); ++i) {
-		const xd = x.digits[i] ?? "0", yd = y.digits[i] ?? "0";
-		if (xd !== yd) {
-			order = xd < yd ? -1 : 1;
-			break;
-		}
-	}
-	return order === 0 ? 0 : x.negative ? -order : order;
-}
-var init_chart_create_decimal = __esmMin((() => {}));
-// ../../js/hwpx-inline-object-insert.mjs
-function inlineInsertRecord(input, keys) {
-	if (!input || typeof input !== "object" || ![Object.prototype, null].includes(Object.getPrototypeOf(input))) throw Error("InvalidInlineObjectRequest");
-	const descriptors = Object.getOwnPropertyDescriptors(input);
-	if (Reflect.ownKeys(descriptors).length !== keys.length) throw Error("InvalidInlineObjectRequest");
-	const result = {};
-	for (const key of keys) {
-		const entry = descriptors[key];
-		if (!entry || !Object.hasOwn(entry, "value")) throw Error("InvalidInlineObjectRequest");
-		result[key] = entry.value;
-	}
-	return result;
-}
-function integer(value, min = 0, max = 4294967295) {
-	if (!Number.isSafeInteger(value) || value < min || value > max || Object.is(value, -0)) throw Error("InvalidInlineObjectInteger");
-	return value;
-}
-function text$2(value, max, empty = false) {
-	if (typeof value !== "string" || !empty && !value.length || /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF\uD800-\uDFFF]/u.test(value) || new TextEncoder().encode(value).length > max) throw Error("InvalidInlineObjectText");
-	return value;
-}
-function list$1(input, limit, convert, empty = false) {
-	if (!Array.isArray(input) || input.length < (empty ? 0 : 1) || input.length > limit) throw Error("InvalidInlineObjectArray");
-	const entries = inlineInsertRecord(inputRecord(input), Array.from({ length: input.length }, (_, i) => String(i)));
-	return Array.from({ length: input.length }, (_, i) => convert(entries[String(i)]));
-}
-function inputRecord(input) {
-	const descriptors = Object.getOwnPropertyDescriptors(input);
-	delete descriptors.length;
-	return Object.defineProperties({}, descriptors);
-}
-function checkedEquationInsertOptions(input) {
-	const p = inlineInsertRecord(input, [
-		"script",
-		"width",
-		"height",
-		"baseLine",
-		"baseUnit",
-		"version",
-		"font"
-	]);
-	return {
-		script: text$2(p.script, 1048576, true),
-		width: integer(p.width, 1, maxInt),
-		height: integer(p.height, 1, maxInt),
-		baseLine: integer(p.baseLine),
-		baseUnit: integer(p.baseUnit, 1, maxInt),
-		version: text$2(p.version, 128),
-		font: text$2(p.font, 128)
-	};
-}
-function legacyChartCreateOptions(input) {
-	const p = inlineInsertRecord(input, [
-		"width",
-		"height",
-		"categories",
-		"series"
-	]);
-	const categories = list$1(p.categories, 4096, (value) => text$2(value, 4096));
-	const series = list$1(p.series, 64, (value) => {
-		const s = inlineInsertRecord(value, ["name", "values"]);
-		const values = list$1(s.values, 4096, (number) => {
-			if (typeof number !== "number" || !Number.isFinite(number)) throw Error("InvalidChartNumber");
-			return number;
-		});
-		if (values.length !== categories.length) throw Error("ChartCategoryCountMismatch");
-		return {
-			name: text$2(s.name, 4096),
-			values
-		};
-	});
-	if (categories.length * series.length > 16384) throw Error("ChartPointLimitExceeded");
-	return {
-		width: integer(p.width, 1, maxInt),
-		height: integer(p.height, 1, maxInt),
-		categories,
-		series
-	};
-}
-function checkedEquationInsertRequest(input) {
-	const p = inlineInsertRecord(input, [
-		"section",
-		"paragraph",
-		"start",
-		"expectedText",
-		"script",
-		"width",
-		"height",
-		"baseLine",
-		"baseUnit",
-		"version",
-		"font"
-	]);
-	return {
-		section: integer(p.section, 0, 0),
-		paragraph: integer(p.paragraph, 1),
-		start: integer(p.start),
-		expectedText: text$2(p.expectedText, 8388608, true),
-		...checkedEquationInsertOptions(Object.fromEntries([
-			"script",
-			"width",
-			"height",
-			"baseLine",
-			"baseUnit",
-			"version",
-			"font"
-		].map((k) => [k, p[k]])))
-	};
-}
-function legacyChartCreateRequest(input) {
-	const p = inlineInsertRecord(input, [
-		"target",
-		"size",
-		"data"
-	]);
-	const t = inlineInsertRecord(p.target, [
-		"section",
-		"paragraph",
-		"unit",
-		"expected_text"
-	]);
-	const size = inlineInsertRecord(p.size, ["width", "height"]);
-	const data = inlineInsertRecord(p.data, ["categories", "series"]);
-	const series = list$1(data.series, 64, (value) => {
-		const s = inlineInsertRecord(value, ["name", "values"]);
-		return {
-			name: s.name,
-			values: list$1(s.values, 4096, (value) => {
-				if (typeof value !== "string" || value.length > 32 || !/^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(value) || !Number.isFinite(Number(value))) throw Error("InvalidChartNumber");
-				return Number(value);
-			})
-		};
-	});
-	const options = checkedChartCreateOptions({
-		...size,
-		categories: data.categories,
-		series
-	});
-	return {
-		target: {
-			section: integer(t.section, 0, 0),
-			paragraph: integer(t.paragraph, 1),
-			unit: integer(t.unit),
-			expected_text: text$2(t.expected_text, 8388608, true)
-		},
-		size: {
-			width: options.width,
-			height: options.height
-		},
-		data: {
-			categories: options.categories,
-			series: list$1(data.series, 64, (value) => {
-				const s = inlineInsertRecord(value, ["name", "values"]);
-				return {
-					name: s.name,
-					values: list$1(s.values, 4096, (value) => value)
-				};
-			})
-		}
-	};
-}
-function checkedChartCreateProfile(input) {
-	const kind = input && typeof input === "object" ? Object.getOwnPropertyDescriptor(input, "kind")?.value : void 0;
-	if (typeof kind !== "string" || !Object.hasOwn(chartProfileKeys, kind)) throw Error("InvalidChartCreateProfile");
-	const p = inlineInsertRecord(input, ["kind", ...chartProfileKeys[kind]]);
-	for (const key of chartProfileKeys[kind]) if (key === "wireframe" ? typeof p[key] !== "boolean" : !chartOptionValues[key].includes(p[key])) throw Error("InvalidChartCreateProfile");
-	if (p.grouping === "clustered" && !["barChart", "bar3DChart"].includes(kind)) throw Error("InvalidChartCreateProfile");
-	return p;
-}
-function profileData(input, chart, strings) {
-	const p = inlineInsertRecord(input, ["categories", "series"]);
-	const kind = chart.kind, xy = ["scatterChart", "bubbleChart"].includes(kind);
-	const pie = [
-		"pieChart",
-		"pie3DChart",
-		"ofPieChart",
-		"doughnutChart"
-	].includes(kind);
-	const stock = kind === "stockChart";
-	const roles = chart.stock_layout === "openHighLowClose" ? [
-		"open",
-		"high",
-		"low",
-		"close"
-	] : [
-		"high",
-		"low",
-		"close"
-	];
-	const categories = list$1(p.categories, 4096, (v) => text$2(v, 4096), xy);
-	if (xy && categories.length !== 0) throw Error("InvalidChartCreateShape");
-	let points = 0, bytes = categories.reduce((n, s) => n + new TextEncoder().encode(s).length, 0);
-	const numeric = (value, nonnegative = false) => {
-		if (!(strings ? typeof value === "string" && value.length <= 128 && /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(value) && Number.isFinite(Number(value)) : typeof value === "number" && Number.isFinite(value))) throw Error("InvalidChartNumber");
-		const parsed = parseChartDecimal(String(value));
-		if (nonnegative && parsed.negative) throw Error("InvalidChartNumber");
-		bytes += String(value).length;
-		return value;
-	};
-	const series = list$1(p.series, 64, (item) => {
-		const row = inlineInsertRecord(item, [
-			"name",
-			"values",
-			...xy ? ["x_values"] : [],
-			...kind === "bubbleChart" ? ["bubble_sizes"] : [],
-			...stock ? ["stock_role"] : []
-		]);
-		const name = text$2(row.name, 4096);
-		bytes += new TextEncoder().encode(name).length;
-		const values = list$1(row.values, 4096, (n) => numeric(n, pie));
-		points += values.length * (kind === "bubbleChart" ? 3 : 2);
-		if (points > 16384) throw Error("ChartPointLimitExceeded");
-		if (!xy && values.length !== categories.length) throw Error("ChartCategoryCountMismatch");
-		const result = {
-			name,
-			values
-		};
-		if (xy) {
-			result.x_values = list$1(row.x_values, 4096, (n) => numeric(n));
-			if (result.x_values.length !== values.length) throw Error("InvalidChartCreateShape");
-		}
-		if (kind === "bubbleChart") {
-			result.bubble_sizes = list$1(row.bubble_sizes, 4096, (n) => numeric(n, true));
-			if (result.bubble_sizes.length !== values.length) throw Error("InvalidChartCreateShape");
-		}
-		if (stock) result.stock_role = row.stock_role;
-		return result;
-	});
-	if (pie && kind !== "doughnutChart" && series.length !== 1) throw Error("InvalidChartCreateShape");
-	if (["surfaceChart", "surface3DChart"].includes(kind) && (categories.length < 2 || series.length < 2)) throw Error("InvalidChartCreateShape");
-	if (stock) {
-		if (series.length !== roles.length || series.some((s, i) => s.stock_role !== roles[i])) throw Error("InvalidChartCreateShape");
-		const offset = roles.length === 4 ? 1 : 0;
-		for (let i = 0; i < categories.length; ++i) {
-			const high = String(series[offset].values[i]), low = String(series[offset + 1].values[i]);
-			const close = String(series[offset + 2].values[i]);
-			const open = offset ? String(series[0].values[i]) : close;
-			if (compareChartDecimals(low, high) > 0 || compareChartDecimals(close, low) < 0 || compareChartDecimals(close, high) > 0 || compareChartDecimals(open, low) < 0 || compareChartDecimals(open, high) > 0) throw Error("InvalidChartStockValues");
-		}
-	}
-	if (bytes > 4194304) throw Error("ChartInputLimitExceeded");
-	return {
-		categories,
-		series
-	};
-}
-function checkedChartCreateOptions(input) {
-	if (!hasChart(input)) return legacyChartCreateOptions(input);
-	const p = inlineInsertRecord(input, [
-		"width",
-		"height",
-		"categories",
-		"series",
-		"chart"
-	]);
-	const chart = checkedChartCreateProfile(p.chart);
-	return {
-		width: integer(p.width, 1, maxInt),
-		height: integer(p.height, 1, maxInt),
-		...profileData({
-			categories: p.categories,
-			series: p.series
-		}, chart, false),
-		chart
-	};
-}
-function checkedChartCreateRequest(input) {
-	if (!hasChart(input)) return legacyChartCreateRequest(input);
-	const p = inlineInsertRecord(input, [
-		"target",
-		"size",
-		"data",
-		"chart"
-	]);
-	const target = inlineInsertRecord(p.target, [
-		"section",
-		"paragraph",
-		"unit",
-		"expected_text"
-	]);
-	const size = inlineInsertRecord(p.size, ["width", "height"]);
-	const chart = checkedChartCreateProfile(p.chart);
-	return {
-		target: {
-			section: integer(target.section, 0, 0),
-			paragraph: integer(target.paragraph, 1),
-			unit: integer(target.unit),
-			expected_text: text$2(target.expected_text, 8388608, true)
-		},
-		size: {
-			width: integer(size.width, 1, maxInt),
-			height: integer(size.height, 1, maxInt)
-		},
-		data: profileData(p.data, chart, true),
-		chart
-	};
-}
-function createHwpxInlineObjectInsertApi({ wasm, memory, check }) {
-	const profileVersion = () => {
-		check();
-		try {
-			return typeof wasm.hwpx_edit_create_chart === "function" && typeof wasm.hwpx_edit_chart_create_profile_version === "function" && wasm.hwpx_edit_chart_create_profile_version() === 1 ? 1 : 0;
-		} catch {
-			return 0;
-		}
-	};
-	const insert = (name, request) => {
-		check();
-		if (typeof wasm[name] !== "function") throw Error("InlineObjectInsertionUnavailable");
-		const bytes = new TextEncoder().encode(JSON.stringify(request));
-		if (bytes.length > 8388608) throw Error("InlineObjectRequestLimitExceeded");
-		return applyNativeEdit(memory, bytes, (ptr, size) => wasm[name](ptr, size), "InvalidInlineObjectInsertResult");
-	};
-	return {
-		supportsEquationInsertionAbi: () => typeof wasm.hwpx_edit_insert_equation === "function",
-		supportsChartCreationAbi: () => typeof wasm.hwpx_edit_create_chart === "function",
-		insertEquation: (input) => insert("hwpx_edit_insert_equation", checkedEquationInsertRequest(input)),
-		chartCreateProfileVersion: () => profileVersion(),
-		supportsChartCreateProfileAbi: () => profileVersion() === 1,
-		createChart: (input) => {
-			const request = checkedChartCreateRequest(input);
-			if (request.chart) {
-				if (profileVersion() !== 1) throw Error("ChartCreateProfileUnavailable");
-			}
-			return insert("hwpx_edit_create_chart", request);
-		}
-	};
-}
-var maxInt, chartProfileKeys, chartOptionValues, hasChart;
-var init_hwpx_inline_object_insert = __esmMin((() => {
-	init_chart_create_decimal();
-	init_native_edit_outcome();
-	maxInt = 2147483647;
-	chartProfileKeys = {
-		barChart: ["bar_direction", "grouping"],
-		bar3DChart: ["bar_direction", "grouping"],
-		lineChart: ["grouping"],
-		line3DChart: ["grouping"],
-		areaChart: ["grouping"],
-		area3DChart: ["grouping"],
-		radarChart: ["radar_style"],
-		scatterChart: ["scatter_style"],
-		bubbleChart: [],
-		pieChart: [],
-		pie3DChart: [],
-		doughnutChart: [],
-		ofPieChart: ["of_pie_type"],
-		stockChart: ["stock_layout"],
-		surfaceChart: ["wireframe"],
-		surface3DChart: ["wireframe"]
-	};
-	chartOptionValues = {
-		bar_direction: ["col", "bar"],
-		grouping: [
-			"standard",
-			"clustered",
-			"stacked",
-			"percentStacked"
-		],
-		radar_style: [
-			"standard",
-			"marker",
-			"filled"
-		],
-		scatter_style: [
-			"none",
-			"line",
-			"lineMarker",
-			"marker",
-			"smooth",
-			"smoothMarker"
-		],
-		of_pie_type: ["pie", "bar"],
-		stock_layout: ["highLowClose", "openHighLowClose"]
-	};
-	hasChart = (input) => !!input && typeof input === "object" && Object.hasOwn(input, "chart");
 }));
 // ../../js/hwpx-page-number-display-wire.mjs
 function decodeHwpxPageNumberDisplaySource(bytes) {
@@ -33136,15 +35047,15 @@ var init_hwpx_drawing_text_snapshot = __esmMin((() => {
 }));
 // ../../js/hwpx-drawing-text-requested.mjs
 function drawingTextRequest(nodes, limit) {
-	if (!uint$31(limit) || limit < 1 || limit > 1024) throw Error("InvalidDrawingTextRequestLimit");
+	if (!uint$34(limit) || limit < 1 || limit > 1024) throw Error("InvalidDrawingTextRequestLimit");
 	if (!Array.isArray(nodes)) throw Error("InvalidDrawingTextRequest");
 	const count = nodes.length;
-	if (!uint$31(count) || count > limit) throw Error("InvalidDrawingTextRequest");
+	if (!uint$34(count) || count > limit) throw Error("InvalidDrawingTextRequest");
 	const requested = [];
 	for (let index = 0; index < count; index++) {
 		if (!Object.hasOwn(nodes, index)) throw Error("InvalidDrawingTextRequest");
 		const node = nodes[index];
-		if (!uint$31(node)) throw Error("InvalidDrawingTextRequest");
+		if (!uint$34(node)) throw Error("InvalidDrawingTextRequest");
 		requested.push(node);
 	}
 	if (nodes.length !== count) throw Error("InvalidDrawingTextRequest");
@@ -33184,10 +35095,10 @@ function decodeDrawingTextRequested(bytes, requested) {
 		};
 	});
 }
-var uint$31;
+var uint$34;
 var init_hwpx_drawing_text_requested = __esmMin((() => {
 	init_hwpx_drawing_text_snapshot();
-	uint$31 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$34 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 }));
 // ../../js/u32-index-request.mjs
 /** Shared bounded count+u32 request envelope; callers own semantic errors. */
@@ -33521,7 +35432,7 @@ function decodeTableBorderBatch(bytes, sections) {
 	const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 	if (!Array.isArray(value) || value.length !== sections.length) fail();
 	for (const [index, entry] of value.entries()) {
-		if (!entry || typeof entry !== "object" || Array.isArray(entry) || entry.section !== sections[index] || !uint$30(entry.section)) fail();
+		if (!entry || typeof entry !== "object" || Array.isArray(entry) || entry.section !== sections[index] || !uint$33(entry.section)) fail();
 		if (Object.hasOwn(entry, "error")) {
 			if (Object.hasOwn(entry, "value") || Object.keys(entry).length !== 2 || typeof entry.error !== "string" || !/^[A-Za-z_][A-Za-z0-9_]{0,127}$/.test(entry.error) || entry.error === "OutOfMemory") fail();
 		} else {
@@ -33531,11 +35442,11 @@ function decodeTableBorderBatch(bytes, sections) {
 	}
 	return value;
 }
-var uint$30;
+var uint$33;
 var init_hwpx_table_border_batch = __esmMin((() => {
 	init_u32_index_request();
 	init_hwpx_table_border_sources();
-	uint$30 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$33 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 }));
 // ../../js/hwpx-shape-layout-values.mjs
 function validShapeLayoutValues(value) {
@@ -33573,9 +35484,9 @@ function validShapeCommonSource(value) {
 	if (!validShapeLayoutValues(value)) return false;
 	if (Object.hasOwn(value, "component_sizes")) {
 		const sizes = value.component_sizes;
-		if (!object$10(sizes) || !["original", "current"].every((key) => sizes[key] === null || object$10(sizes[key]) && [sizes[key].width, sizes[key].height].every((n) => n === null || uint$29(n)))) return false;
+		if (!object$10(sizes) || !["original", "current"].every((key) => sizes[key] === null || object$10(sizes[key]) && [sizes[key].width, sizes[key].height].every((n) => n === null || uint$32(n)))) return false;
 	}
-	if (Object.hasOwn(value, "stroke_style") && !(value.stroke_style === null || uint$29(value.stroke_style) && value.stroke_style <= 17)) return false;
+	if (Object.hasOwn(value, "stroke_style") && !(value.stroke_style === null || uint$32(value.stroke_style) && value.stroke_style <= 17)) return false;
 	if (value.stroke && value.stroke_style !== void 0 && value.stroke_style !== value.stroke.style) return false;
 	if ([
 		"stroke",
@@ -33583,19 +35494,19 @@ function validShapeCommonSource(value) {
 		"paint"
 	].some((key) => Object.hasOwn(value, key)) && !validShapePaintValues(value)) return false;
 	const r = value.rendering;
-	if (!object$10(r) || !Array.isArray(r.flip) || r.flip.length !== 2 || !Array.from(r.flip).every(optionalBoolean) || !(r.angle === null || uint$29(r.angle)) || !optionalBoolean(r.reverse) || !optionalBoolean(r.rotate_image) || !Array.isArray(r.center) || r.center.length !== 2 || !Array.from(r.center).every(coordinate$2)) return false;
+	if (!object$10(r) || !Array.isArray(r.flip) || r.flip.length !== 2 || !Array.from(r.flip).every(optionalBoolean) || !(r.angle === null || uint$32(r.angle)) || !optionalBoolean(r.reverse) || !optionalBoolean(r.rotate_image) || !Array.isArray(r.center) || r.center.length !== 2 || !Array.from(r.center).every(coordinate$2)) return false;
 	return r.matrix === null ? [
 		"UnsupportedPictureMatrixSequence",
 		"IncompletePictureMatrix",
 		"NonFinitePictureMatrix"
 	].includes(r.matrix_error) : Array.isArray(r.matrix) && r.matrix.length === 6 && Array.from(r.matrix).every(Number.isFinite) && r.matrix_error === null;
 }
-var object$10, uint$29, coordinate$2, optionalBoolean;
+var object$10, uint$32, coordinate$2, optionalBoolean;
 var init_hwpx_shape_common_source = __esmMin((() => {
 	init_hwpx_shape_layout_values();
 	init_hwpx_shape_paint_values();
 	object$10 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	uint$29 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$32 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	coordinate$2 = (value) => value === null || Number.isInteger(value) && value >= -2147483648 && value <= 4294967295;
 	optionalBoolean = (value) => value === null || typeof value === "boolean";
 }));
@@ -33614,7 +35525,7 @@ var init_hwpx_group_context = __esmMin((() => {}));
 // ../../js/hwpx-curve-geometry.mjs
 function decodeCurveGeometry(bytes) {
 	const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-	if (!object$9(value) || value.sourceOnly !== true || !uint$28(value.node) || Object.hasOwn(value, "common") && (!validShapeCommonSource(value.common) || !validGroupContext(value.common.group_context, value.node)) || Object.hasOwn(value, "text") && value.text !== null && !validDrawingTextValues(value.text, value.node) || !Array.isArray(value.segments) || value.segments.length > 65536 || !Array.from(value.segments).every((segment) => object$9(segment) && (segment.kind === null || typeof segment.kind === "string" && new TextEncoder().encode(segment.kind).length <= 4096) && [
+	if (!object$9(value) || value.sourceOnly !== true || !uint$31(value.node) || Object.hasOwn(value, "common") && (!validShapeCommonSource(value.common) || !validGroupContext(value.common.group_context, value.node)) || Object.hasOwn(value, "text") && value.text !== null && !validDrawingTextValues(value.text, value.node) || !Array.isArray(value.segments) || value.segments.length > 65536 || !Array.from(value.segments).every((segment) => object$9(segment) && (segment.kind === null || typeof segment.kind === "string" && new TextEncoder().encode(segment.kind).length <= 4096) && [
 		"x1",
 		"y1",
 		"x2",
@@ -33622,29 +35533,29 @@ function decodeCurveGeometry(bytes) {
 	].every((key) => coordinate$1(segment[key])))) throw new Error("InvalidCurveGeometry");
 	return value;
 }
-var object$9, uint$28, coordinate$1;
+var object$9, uint$31, coordinate$1;
 var init_hwpx_curve_geometry = __esmMin((() => {
 	init_hwpx_shape_common_source();
 	init_hwpx_group_context();
 	init_hwpx_drawing_text_values();
 	object$9 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	uint$28 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$31 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	coordinate$1 = (value) => value === null || Number.isInteger(value) && value >= -2147483648 && value <= 4294967295;
 }));
 // ../../js/hwpx-curve-owner.mjs
 function decodeCurveOwner(bytes) {
 	const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 	const owner = value?.owner;
-	if (!object$8(value) || value.sourceOnly !== true || !uint$27(value.node) || owner !== null && (!object$8(owner) || ![
+	if (!object$8(value) || value.sourceOnly !== true || !uint$30(value.node) || owner !== null && (!object$8(owner) || ![
 		owner.paragraph,
 		owner.anchor_node,
 		owner.anchor_unit
-	].every(uint$27) || owner.paragraph === 0 || owner.anchor_node >= value.node)) throw new Error("InvalidCurveOwner");
+	].every(uint$30) || owner.paragraph === 0 || owner.anchor_node >= value.node)) throw new Error("InvalidCurveOwner");
 	return value;
 }
-var uint$27, object$8;
+var uint$30, object$8;
 var init_hwpx_curve_owner = __esmMin((() => {
-	uint$27 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$30 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	object$8 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 }));
 // ../../js/hwpx-tab-sources.mjs
@@ -33652,11 +35563,11 @@ function decodeTabSources(bytes) {
 	return validateTabSources(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 function validateTabSources(value) {
-	if (!object$7(value) || !uint$26(value.section) || !uint$26(value.paragraph) || value.paragraph === 0 || !Array.isArray(value.rows)) throw new Error("InvalidTabSources");
+	if (!object$7(value) || !uint$29(value.section) || !uint$29(value.paragraph) || value.paragraph === 0 || !Array.isArray(value.rows)) throw new Error("InvalidTabSources");
 	let previous = -1;
 	const nodes = /* @__PURE__ */ new Set();
 	for (const row of value.rows) {
-		if (!object$7(row) || !uint$26(row.unit) || !uint$26(row.node) || row.unit <= previous || nodes.has(row.node) || ![
+		if (!object$7(row) || !uint$29(row.unit) || !uint$29(row.node) || row.unit <= previous || nodes.has(row.node) || ![
 			row.width,
 			row.tab_type,
 			row.leader
@@ -33666,9 +35577,9 @@ function validateTabSources(value) {
 	}
 	return value;
 }
-var uint$26, object$7;
+var uint$29, object$7;
 var init_hwpx_tab_sources = __esmMin((() => {
-	uint$26 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$29 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	object$7 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 }));
 // ../../js/hwpx-tab-definitions.mjs
@@ -33676,7 +35587,7 @@ function validateTabDefinitions(rows) {
 	if (!Array.isArray(rows)) throw new Error("InvalidTabDefinitions");
 	let previous = -1, count = 0;
 	for (const row of rows) {
-		if (!object$6(row) || !uint$25(row.id) || row.id <= previous || !raw$1(row.auto_left) || !raw$1(row.auto_right) || !Array.isArray(row.items)) throw new Error("InvalidTabDefinitions");
+		if (!object$6(row) || !uint$28(row.id) || row.id <= previous || !raw$1(row.auto_left) || !raw$1(row.auto_right) || !Array.isArray(row.items)) throw new Error("InvalidTabDefinitions");
 		previous = row.id;
 		count += row.items.length;
 		if (count > 1e6) throw new Error("InvalidTabDefinitions");
@@ -33687,9 +35598,9 @@ function validateTabDefinitions(rows) {
 function decodeTabDefinitions(bytes) {
 	return validateTabDefinitions(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
-var uint$25, object$6, raw$1;
+var uint$28, object$6, raw$1;
 var init_hwpx_tab_definitions = __esmMin((() => {
-	uint$25 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$28 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	object$6 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 	raw$1 = (value) => value === null || typeof value === "string" && new TextEncoder().encode(value).length <= 4096;
 }));
@@ -33698,11 +35609,11 @@ function validateSectionTabs(rows) {
 	if (!Array.isArray(rows)) throw new Error("InvalidSectionTabSources");
 	let previous = null;
 	for (const row of rows) {
-		if (!row || typeof row !== "object" || Array.isArray(row) || !uint$24(row.section) || !uint$24(row.node) || ![
+		if (!row || typeof row !== "object" || Array.isArray(row) || !uint$27(row.section) || !uint$27(row.node) || ![
 			row.tab_stop,
 			row.tab_stop_val,
 			row.tab_stop_unit
-		].every(raw) || Object.hasOwn(row, "body_owner") && row.body_owner !== null && (!uint$24(row.body_owner) || row.body_owner >= row.node) || previous && (row.section < previous.section || row.section === previous.section && row.node <= previous.node)) throw new Error("InvalidSectionTabSources");
+		].every(raw) || Object.hasOwn(row, "body_owner") && row.body_owner !== null && (!uint$27(row.body_owner) || row.body_owner >= row.node) || previous && (row.section < previous.section || row.section === previous.section && row.node <= previous.node)) throw new Error("InvalidSectionTabSources");
 		previous = row;
 	}
 	return rows;
@@ -33710,9 +35621,9 @@ function validateSectionTabs(rows) {
 function decodeSectionTabs(bytes) {
 	return validateSectionTabs(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
-var uint$24, raw;
+var uint$27, raw;
 var init_hwpx_section_tabs = __esmMin((() => {
-	uint$24 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$27 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	raw = (value) => value === null || typeof value === "string" && new TextEncoder().encode(value).length <= 4096;
 }));
 // ../../js/hwpx-equation-styles.mjs
@@ -33820,337 +35731,29 @@ function encodeChartPointBatch(edits, { maxEdits, maxBytes }, encodeValue) {
 	return output;
 }
 var init_chart_point_batch = __esmMin((() => {}));
-// ../../js/hwpx-chart-series-text.mjs
-function decodeChartSeriesText(bytes) {
-	return validateChartSeriesText(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
-}
-function validateChartSeriesText(value) {
-	if (value?.kind !== "direct_series" || !Array.isArray(value.values)) throw new Error("InvalidChartSeriesText");
-	const seen = /* @__PURE__ */ new Set();
-	for (const row of value.values) {
-		if (!row || ![
-			row.series_node,
-			row.text_node,
-			row.value_node
-		].every((n) => Number.isInteger(n) && n >= 0 && n <= 4294967295) || !(row.series_node < row.text_node && row.text_node < row.value_node) || typeof row.text !== "string" || !row.text.isWellFormed() || seen.has(row.value_node)) throw new Error("InvalidChartSeriesText");
-		seen.add(row.value_node);
-	}
-	return value;
-}
-var init_hwpx_chart_series_text = __esmMin((() => {}));
-// ../../js/hwpx-chart-rich-text.mjs
-function decodeChartRichText(bytes) {
-	return validateChartRichText(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
-}
-function validateChartRichText(value) {
-	if (value?.kind !== "rich_text" || !Array.isArray(value.values)) throw new Error("InvalidChartRichText");
-	let previousLeaf = -1;
-	const runs = /* @__PURE__ */ new Set();
-	for (const row of value.values) {
-		if (row?.owner_role !== void 0 && ![
-			"chart_title",
-			"axis_title",
-			"data_label",
-			"unclassified"
-		].includes(row.owner_role)) throw new Error("InvalidChartRichText");
-		if (row?.plain_text_complete !== void 0 && (typeof row.plain_text_complete !== "boolean" || row.owner_role === void 0)) throw new Error("InvalidChartRichText");
-		const nodes = row && [
-			row.owner_node,
-			row.text_node,
-			row.rich_node,
-			row.paragraph_node,
-			row.run_node,
-			row.value_node
-		];
-		if (!nodes || !nodes.every((n) => Number.isInteger(n) && n >= 0 && n <= 4294967295) || !nodes.every((n, i) => i === 0 || nodes[i - 1] < n) || row.value_node <= previousLeaf || runs.has(row.run_node) || typeof row.text !== "string" || !row.text.isWellFormed()) throw new Error("InvalidChartRichText");
-		previousLeaf = row.value_node;
-		runs.add(row.run_node);
-	}
-	return value;
-}
-var init_hwpx_chart_rich_text = __esmMin((() => {}));
-// ../../js/chart-display-fields.mjs
-function field$3(value, accepts, owner) {
-	return value === null || object$5(value) && uint$23(value.node) && value.node > owner && (value.value === null || accepts(value.value));
-}
-function number(value) {
-	return object$5(value) && (value.kind === "finite" ? typeof value.value === "number" && Number.isFinite(value.value) : [
-		"positive_infinity",
-		"negative_infinity",
-		"not_a_number"
-	].includes(value.kind) && value.value === null);
-}
-function scaling(value, owner) {
-	return value === null || object$5(value) && uint$23(value.node) && value.node > owner && field$3(value.orientation, oneOf(["minMax", "maxMin"]), value.node) && [
-		value.minimum,
-		value.maximum,
-		value.log_base
-	].every((item) => field$3(item, number, value.node));
-}
-var object$5, uint$23, text$1, nullableUint, oneOf;
-var init_chart_display_fields = __esmMin((() => {
-	object$5 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	uint$23 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
-	text$1 = (value) => typeof value === "string" && value.isWellFormed();
-	nullableUint = (value) => value === null || uint$23(value);
-	oneOf = (values) => (value) => values.includes(value);
-}));
 // ../../js/chart-display-host.mjs
 function chartDisplayHost(value, wrapper) {
-	if (!object$5(value) || value.wrapper_node !== wrapper || !uint$23(value.chart_node) || value.chart_node <= wrapper) return false;
+	if (!object$11(value) || value.wrapper_node !== wrapper || !uint$54(value.chart_node) || value.chart_node <= wrapper) return false;
 	const g = value.geometry, p = value.position;
-	return object$5(g) && object$5(p) && [g.width, g.height].every(optional(uint$23)) && optional(bounded(4))(g.width_relative) && optional(bounded(2))(g.height_relative) && optional(boolean)(g.treat_as_character) && [g.horizontal_offset, g.vertical_offset].every(optional(offset)) && Array.isArray(p.flags) && p.flags.length === 4 && p.flags.every(optional(boolean)) && Array.isArray(p.relations) && p.relations.length === 4 && p.relations.every((v, i) => optional(bounded([
+	return object$11(g) && object$11(p) && [g.width, g.height].every(optional(uint$54)) && optional(bounded(4))(g.width_relative) && optional(bounded(2))(g.height_relative) && optional(boolean$1)(g.treat_as_character) && [g.horizontal_offset, g.vertical_offset].every(optional(offset)) && Array.isArray(p.flags) && p.flags.length === 4 && p.flags.every(optional(boolean$1)) && Array.isArray(p.relations) && p.relations.length === 4 && p.relations.every((v, i) => optional(bounded([
 		2,
 		3,
 		4,
 		4
 	][i]))(v));
 }
-var optional, bounded, boolean, offset;
+var optional, bounded, boolean$1, offset;
 var init_chart_display_host = __esmMin((() => {
 	init_chart_display_fields();
 	optional = (accepts) => (value) => value === null || accepts(value);
-	bounded = (max) => (value) => uint$23(value) && value <= max;
-	boolean = (value) => typeof value === "boolean";
+	bounded = (max) => (value) => uint$54(value) && value <= max;
+	boolean$1 = (value) => typeof value === "boolean";
 	offset = (value) => Number.isInteger(value) && value >= -2147483648 && value <= 4294967295;
-}));
-// ../../js/chart-series-settings.mjs
-/** Wire ownership validation only; native code owns XML and absent defaults. */
-function validChartSeriesSettings(values, plots, series, occupied = null) {
-	if (!Array.isArray(values) || values.length !== series.size) return false;
-	let index = 0;
-	for (const [node, plotNode] of series) {
-		const row = values[index++], kind = plots.get(plotNode)?.kind;
-		if (!object$5(row) || row.series_node !== node || row.plot_node !== plotNode || !field$3(row.smooth, (v) => typeof v === "boolean", node)) return false;
-		if (!field$3(row.index, uint$23, node) || !field$3(row.order, uint$23, node)) return false;
-		const line = [
-			"lineChart",
-			"line3DChart",
-			"stockChart",
-			"scatterChart"
-		].includes(kind);
-		if (row.smooth !== null && !line) return false;
-		if (!field$3(row.explosion, uint$23, node)) return false;
-		if (row.explosion !== null && ![
-			"pieChart",
-			"pie3DChart",
-			"ofPieChart",
-			"doughnutChart"
-		].includes(kind)) return false;
-		const marker = row.marker;
-		if (marker !== null && (!line && kind !== "radarChart" || !object$5(marker) || !uint$23(marker.node) || marker.node <= node || !field$3(marker.symbol, oneOf(symbols), marker.node) || !field$3(marker.size, (v) => uint$23(v) && v >= 2 && v <= 72, marker.node))) return false;
-		const leaves = [
-			row.index,
-			row.order,
-			row.smooth,
-			row.explosion,
-			...marker ? [
-				marker,
-				marker.symbol,
-				marker.size
-			] : []
-		].filter((value) => value !== null);
-		const stroke = row.stroke, strokeNodes = [];
-		if (stroke !== void 0 && stroke !== null) {
-			if (!object$5(stroke) || !uint$23(stroke.node) || stroke.node <= node || !(stroke.no_fill_node === null || uint$23(stroke.no_fill_node) && stroke.no_fill_node > stroke.node)) return false;
-			strokeNodes.push(stroke.node);
-			if (stroke.no_fill_node !== null) strokeNodes.push(stroke.no_fill_node);
-		}
-		const identities = [...leaves.map((value) => value.node), ...strokeNodes];
-		if (new Set(identities).size !== identities.length) return false;
-		for (const leaf of leaves) occupied?.add(leaf.node);
-	}
-	return true;
-}
-var symbols;
-var init_chart_series_settings = __esmMin((() => {
-	init_chart_display_fields();
-	symbols = [
-		"auto",
-		"circle",
-		"dash",
-		"diamond",
-		"dot",
-		"none",
-		"picture",
-		"plus",
-		"square",
-		"star",
-		"triangle",
-		"x"
-	];
-}));
-// ../../js/chart-point-settings.mjs
-/** Typed dPt ownership only; explicit idx is not an array offset. */
-function validChartPointSettings(values, series, occupied = null) {
-	if (!Array.isArray(values)) return false;
-	let previous = -1;
-	for (const row of values) {
-		if (!object$5(row) || !uint$23(row.node) || row.node <= previous || !series.has(row.series_node) || series.get(row.series_node) !== row.plot_node || row.node <= row.series_node || typeof row.unparsed_children !== "boolean" || !field$3(row.index, uint$23, row.node) || !field$3(row.explosion, uint$23, row.node)) return false;
-		if (row.index !== null && row.explosion !== null && row.index.node === row.explosion.node) return false;
-		occupied?.add(row.node);
-		if (row.index !== null) occupied?.add(row.index.node);
-		if (row.explosion !== null) occupied?.add(row.explosion.node);
-		previous = row.node;
-	}
-	return true;
-}
-var init_chart_point_settings = __esmMin((() => {
-	init_chart_display_fields();
-}));
-// ../../js/chart-stock-settings.mjs
-function validChartStockSettings(stock, kind, plotNode, usedNodes) {
-	if (kind !== "stockChart") return stock === null;
-	if (!object$5(stock)) return false;
-	for (const key of [
-		"high_low_node",
-		"up_down_node",
-		"up_node",
-		"down_node"
-	]) if (!nullableUint(stock[key])) return false;
-	if (stock.up_down_node === null && (stock.up_node !== null || stock.down_node !== null || stock.gap_width !== null)) return false;
-	const parent = stock.up_down_node ?? plotNode;
-	if (!field$3(stock.gap_width, (value) => uint$23(value) && value <= 500, parent)) return false;
-	for (const key of ["up_node", "down_node"]) if (stock[key] !== null && stock[key] <= parent) return false;
-	for (const node of [
-		stock.high_low_node,
-		stock.up_down_node,
-		stock.up_node,
-		stock.down_node,
-		stock.gap_width?.node ?? null
-	]) {
-		if (node === null) continue;
-		if (node <= plotNode || usedNodes.has(node)) return false;
-		usedNodes.add(node);
-	}
-	return true;
-}
-var init_chart_stock_settings = __esmMin((() => {
-	init_chart_display_fields();
-}));
-// ../../js/chart-view-3d.mjs
-function validChartView3D(value, occupied = null) {
-	if (value === void 0 || value === null) return true;
-	if (!object$5(value) || !uint$23(value.node) || value.node === 0 || occupied?.has(value.node) || typeof value.unparsed_children !== "boolean") return false;
-	const ranges = {
-		rotation_x: [-90, 90],
-		rotation_y: [0, 360],
-		height_percent: [5, 500],
-		depth_percent: [20, 2e3],
-		perspective: [0, 240]
-	};
-	const nodes = /* @__PURE__ */ new Set([value.node]);
-	for (const key of [...Object.keys(ranges), "right_angle_axes"]) {
-		const accepts = key === "right_angle_axes" ? (v) => typeof v === "boolean" : (v) => Number.isInteger(v) && v >= ranges[key][0] && v <= ranges[key][1];
-		const leaf = value[key];
-		if (!field$3(leaf, accepts, value.node)) return false;
-		if (leaf !== null) {
-			if (nodes.has(leaf.node) || occupied?.has(leaf.node)) return false;
-			nodes.add(leaf.node);
-		}
-	}
-	return true;
-}
-var init_chart_view_3d = __esmMin((() => {
-	init_chart_display_fields();
-}));
-// ../../js/chart-spatial-settings.mjs
-function validChartSpatialSettings(value, kind, owner, leaves) {
-	if (value === void 0) return true;
-	if (![
-		"bar3DChart",
-		"line3DChart",
-		"area3DChart"
-	].includes(kind)) return value === null;
-	if (!object$5(value) || !field$3(value.gap_depth, (v) => uint$23(v) && v <= 500, owner) || !field$3(value.shape, oneOf([
-		"box",
-		"cone",
-		"coneToMax",
-		"cylinder",
-		"pyramid",
-		"pyramidToMax"
-	]), owner)) return false;
-	if (kind !== "bar3DChart" && value.shape !== null) return false;
-	for (const leaf of [value.gap_depth, value.shape]) if (leaf !== null) {
-		if (leaves.has(leaf.node)) return false;
-		leaves.add(leaf.node);
-	}
-	return true;
-}
-var init_chart_spatial_settings = __esmMin((() => {
-	init_chart_display_fields();
-}));
-// ../../js/chart-family-display-settings.mjs
-/** Undefined group = old DTO; null Field = source absence, never a value. */
-function chartFamilyDisplayNodes(settings, kind, owner, leaves) {
-	if (!hasChartFamilyFields(settings)) return [];
-	if (!chartFamilyFieldNames.every((key) => Object.hasOwn(settings, key))) return null;
-	if (Object.values(definitions).some((item) => item.kinds.includes(kind)) ? typeof settings.family_unparsed_children !== "boolean" : settings.family_unparsed_children !== null) return null;
-	const nodes = [];
-	for (const [key, definition] of Object.entries(definitions)) {
-		const value = settings[key];
-		if (!field$3(value, definition.accepts, owner)) return null;
-		if (value !== null) {
-			if (!definition.kinds.includes(kind) || leaves.has(value.node)) return null;
-			leaves.add(value.node);
-			nodes.push(value.node);
-		}
-	}
-	return nodes;
-}
-var chartFamilyFieldNames, definitions, hasChartFamilyFields;
-var init_chart_family_display_settings = __esmMin((() => {
-	init_chart_display_fields();
-	chartFamilyFieldNames = [
-		"hole_size",
-		"radar_style",
-		"bubble_scale",
-		"size_represents",
-		"show_negative_bubbles",
-		"bubble_3d",
-		"wireframe",
-		"family_unparsed_children"
-	];
-	definitions = {
-		hole_size: {
-			kinds: ["doughnutChart"],
-			accepts: (v) => uint$23(v) && v >= 10 && v <= 90
-		},
-		radar_style: {
-			kinds: ["radarChart"],
-			accepts: oneOf([
-				"standard",
-				"marker",
-				"filled"
-			])
-		},
-		bubble_scale: {
-			kinds: ["bubbleChart"],
-			accepts: (v) => uint$23(v) && v <= 300
-		},
-		size_represents: {
-			kinds: ["bubbleChart"],
-			accepts: oneOf(["area", "w"])
-		},
-		show_negative_bubbles: {
-			kinds: ["bubbleChart"],
-			accepts: (v) => typeof v === "boolean"
-		},
-		bubble_3d: {
-			kinds: ["bubbleChart"],
-			accepts: (v) => typeof v === "boolean"
-		},
-		wireframe: {
-			kinds: ["surfaceChart", "surface3DChart"],
-			accepts: (v) => typeof v === "boolean"
-		}
-	};
-	hasChartFamilyFields = (settings) => settings && chartFamilyFieldNames.some((key) => Object.hasOwn(settings, key));
 }));
 // ../../js/hwpx-chart-display.mjs
 function decodeChartDisplay(bytes) {
 	const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-	require(object$5(value) && value.kind === "chart_display");
+	require(object$11(value) && value.kind === "chart_display");
 	for (const name of [
 		"plots",
 		"plot_settings",
@@ -34162,7 +35765,7 @@ function decodeChartDisplay(bytes) {
 		"rich_text"
 	]) require(Array.isArray(value[name]));
 	const pair = value.pair;
-	require(object$5(pair) && text$1(pair.chart_path) && pair.chart_path.length > 0 && text$1(pair.ole_path) && pair.ole_path.length > 0 && uint$23(pair.wrapper_node) && uint$23(pair.section_ordinal) && typeof pair.declared_external === "boolean" && Array.isArray(pair.section_sha256) && pair.section_sha256.length === 32 && pair.section_sha256.every((n) => uint$23(n) && n <= 255));
+	require(object$11(pair) && text$4(pair.chart_path) && pair.chart_path.length > 0 && text$4(pair.ole_path) && pair.ole_path.length > 0 && uint$54(pair.wrapper_node) && uint$54(pair.section_ordinal) && typeof pair.declared_external === "boolean" && Array.isArray(pair.section_sha256) && pair.section_sha256.length === 32 && pair.section_sha256.every((n) => uint$54(n) && n <= 255));
 	require(chartDisplayHost(value.host, pair.wrapper_node));
 	require(value.plots.length === value.plot_settings.length);
 	const plots = /* @__PURE__ */ new Map(), series = /* @__PURE__ */ new Map(), references = /* @__PURE__ */ new Map();
@@ -34173,26 +35776,26 @@ function decodeChartDisplay(bytes) {
 	const occupied = value.view_3d == null && value.blank_policy == null && !hasStrokes && !hasMajorTicks && !hasFamilies ? null : /* @__PURE__ */ new Set();
 	let previousPlot = -1;
 	for (const [index, plot] of value.plots.entries()) {
-		require(object$5(plot) && uint$23(plot.node) && plot.node > previousPlot && uint$23(plot.area_node) && plot.area_node < plot.node && plotKinds.has(plot.kind) && Array.isArray(plot.series_nodes));
+		require(object$11(plot) && uint$54(plot.node) && plot.node > previousPlot && uint$54(plot.area_node) && plot.area_node < plot.node && plotKinds.has(plot.kind) && Array.isArray(plot.series_nodes));
 		plots.set(plot.node, plot);
 		previousPlot = plot.node;
 		occupied?.add(plot.node);
 		occupied?.add(plot.area_node);
 		let previousSeries = plot.node;
 		for (const node of plot.series_nodes) {
-			require(uint$23(node) && node > previousSeries && !series.has(node));
+			require(uint$54(node) && node > previousSeries && !series.has(node));
 			series.set(node, plot.node);
 			previousSeries = node;
 			occupied?.add(node);
 		}
 		const settings = value.plot_settings[index];
-		require(object$5(settings) && field$3(settings.direction, oneOf(["bar", "col"]), plot.node) && field$3(settings.grouping, oneOf([
+		require(object$11(settings) && field$3(settings.direction, oneOf(["bar", "col"]), plot.node) && field$3(settings.grouping, oneOf([
 			"standard",
 			"clustered",
 			"stacked",
 			"percentStacked"
 		]), plot.node) && field$3(settings.vary_colors, (v) => typeof v === "boolean", plot.node) && Array.isArray(settings.axis_references));
-		require(field$3(settings.gap_width, (v) => uint$23(v) && v <= 500, plot.node) && field$3(settings.overlap, (v) => Number.isInteger(v) && v >= -100 && v <= 100, plot.node));
+		require(field$3(settings.gap_width, (v) => uint$54(v) && v <= 500, plot.node) && field$3(settings.overlap, (v) => Number.isInteger(v) && v >= -100 && v <= 100, plot.node));
 		require(field$3(settings.scatter_style, oneOf([
 			"none",
 			"line",
@@ -34202,15 +35805,15 @@ function decodeChartDisplay(bytes) {
 			"smoothMarker"
 		]), plot.node));
 		if (settings.scatter_style !== null) require(plot.kind === "scatterChart");
-		require(field$3(settings.first_slice_angle, (v) => uint$23(v) && v <= 360, plot.node));
+		require(field$3(settings.first_slice_angle, (v) => uint$54(v) && v <= 360, plot.node));
 		if (settings.first_slice_angle !== null) require(["pieChart", "doughnutChart"].includes(plot.kind));
-		require(field$3(settings.of_pie_type, oneOf(["pie", "bar"]), plot.node) && field$3(settings.second_pie_size, (v) => uint$23(v) && v >= 5 && v <= 200, plot.node) && field$3(settings.split_type, oneOf([
+		require(field$3(settings.of_pie_type, oneOf(["pie", "bar"]), plot.node) && field$3(settings.second_pie_size, (v) => uint$54(v) && v >= 5 && v <= 200, plot.node) && field$3(settings.split_type, oneOf([
 			"auto",
 			"cust",
 			"percent",
 			"pos",
 			"val"
-		]), plot.node) && field$3(settings.split_position, number, plot.node) && nullableUint(settings.custom_split_node) && (settings.custom_split_node === null || settings.custom_split_node > plot.node));
+		]), plot.node) && field$3(settings.split_position, number$1, plot.node) && nullableUint(settings.custom_split_node) && (settings.custom_split_node === null || settings.custom_split_node > plot.node));
 		if ([
 			settings.of_pie_type,
 			settings.second_pie_size,
@@ -34249,7 +35852,7 @@ function decodeChartDisplay(bytes) {
 			...settings.custom_split_node === null ? [] : [{ node: settings.custom_split_node }],
 			...settings.axis_references
 		]) if (leaf !== null) {
-			require(object$5(leaf) && uint$23(leaf.node) && !leaves.has(leaf.node));
+			require(object$11(leaf) && uint$54(leaf.node) && !leaves.has(leaf.node));
 			leaves.add(leaf.node);
 		}
 		require(validChartStockSettings(settings.stock, plot.kind, plot.node, leaves));
@@ -34263,7 +35866,7 @@ function decodeChartDisplay(bytes) {
 		}
 		for (const node of leaves) if (!localFamilyNodes.has(node)) occupied?.add(node);
 		for (const reference of settings.axis_references) {
-			require(reference !== null && field$3(reference, uint$23, plot.node));
+			require(reference !== null && field$3(reference, uint$54, plot.node));
 			const key = plot.node + ":" + reference.node;
 			require(!references.has(key));
 			references.set(key, reference.value);
@@ -34273,12 +35876,12 @@ function decodeChartDisplay(bytes) {
 	require(validChartSeriesSettings(value.series_settings, plots, series, occupied));
 	require(validChartPointSettings(value.point_settings, series, occupied));
 	for (const axis of value.axes) {
-		require(object$5(axis) && uint$23(axis.node) && !axes.has(axis.node) && uint$23(axis.area_node) && axis.area_node < axis.node && [
+		require(object$11(axis) && uint$54(axis.node) && !axes.has(axis.node) && uint$54(axis.area_node) && axis.area_node < axis.node && [
 			"catAx",
 			"valAx",
 			"dateAx",
 			"serAx"
-		].includes(axis.kind) && field$3(axis.id, uint$23, axis.node) && field$3(axis.cross_axis, uint$23, axis.node) && field$3(axis.position, oneOf([
+		].includes(axis.kind) && field$3(axis.id, uint$54, axis.node) && field$3(axis.cross_axis, uint$54, axis.node) && field$3(axis.position, oneOf([
 			"b",
 			"l",
 			"r",
@@ -34315,7 +35918,7 @@ function decodeChartDisplay(bytes) {
 	require(value.axis_links.length === references.size);
 	const seenLinks = /* @__PURE__ */ new Set();
 	for (const link of value.axis_links) {
-		require(object$5(link) && uint$23(link.plot_node) && plots.has(link.plot_node) && uint$23(link.reference_node) && nullableUint(link.id) && object$5(link.target));
+		require(object$11(link) && uint$54(link.plot_node) && plots.has(link.plot_node) && uint$54(link.reference_node) && nullableUint(link.id) && object$11(link.target));
 		const key = link.plot_node + ":" + link.reference_node;
 		require(references.has(key) && !seenLinks.has(key) && references.get(key) === link.id);
 		seenLinks.add(key);
@@ -34327,12 +35930,12 @@ function decodeChartDisplay(bytes) {
 	let previousLeaf = -1;
 	const pointNodes = /* @__PURE__ */ new Set();
 	for (const [index, point] of value.points.entries()) {
-		require(object$5(point) && [
+		require(object$11(point) && [
 			point.cache_node,
 			point.point_node,
 			point.value_node,
 			point.index
-		].every(uint$23) && point.cache_node < point.point_node && point.point_node < point.value_node && point.value_node > previousLeaf && !pointNodes.has(point.point_node) && pointKinds.has(point.kind) && text$1(point.value) && nullableUint(point.level_node) && (point.level_node === null || point.cache_node < point.level_node && point.level_node < point.point_node) && point.kind === "multilevel_cache" === (point.level_node !== null));
+		].every(uint$54) && point.cache_node < point.point_node && point.point_node < point.value_node && point.value_node > previousLeaf && !pointNodes.has(point.point_node) && pointKinds.has(point.kind) && text$4(point.value) && nullableUint(point.level_node) && (point.level_node === null || point.cache_node < point.level_node && point.level_node < point.point_node) && point.kind === "multilevel_cache" === (point.level_node !== null));
 		previousLeaf = point.value_node;
 		pointNodes.add(point.point_node);
 		for (const node of [
@@ -34342,7 +35945,7 @@ function decodeChartDisplay(bytes) {
 			point.level_node
 		]) if (node !== null) occupied?.add(node);
 		const binding = value.bindings[index];
-		require(object$5(binding) && binding.point === index && [
+		require(object$11(binding) && binding.point === index && [
 			binding.series_node,
 			binding.plot_node,
 			binding.role_node
@@ -34884,7 +36487,7 @@ function decodeHwpxNamedFields(bytes) {
 	const invalid = () => /* @__PURE__ */ new Error("InvalidHwpxNamedFields");
 	if (source?.format !== "hwpx" || !["complete", "partial"].includes(source.coverage) || !Array.isArray(source.rows) || !Array.isArray(source.views)) throw invalid();
 	const projectionViews = source.views.map(({ section, paragraph, text }) => {
-		if (!uint$22(section) || !uint$22(paragraph) || paragraph === 0 || typeof text !== "string") throw invalid();
+		if (!uint$26(section) || !uint$26(paragraph) || paragraph === 0 || typeof text !== "string") throw invalid();
 		return {
 			section,
 			paragraph: paragraph - 1,
@@ -34892,13 +36495,13 @@ function decodeHwpxNamedFields(bytes) {
 		};
 	});
 	const rows = source.rows.map(({ section, element, name, kind, protection, sourceEditable, text, location }) => {
-		if (!uint$22(section) || !uint$22(element) || name !== null && typeof name !== "string" || typeof kind !== "string" || !["protected", "unknown"].includes(protection) || sourceEditable != null && typeof sourceEditable !== "boolean" || text !== null && typeof text !== "string") throw invalid();
+		if (!uint$26(section) || !uint$26(element) || name !== null && typeof name !== "string" || typeof kind !== "string" || !["protected", "unknown"].includes(protection) || sourceEditable != null && typeof sourceEditable !== "boolean" || text !== null && typeof text !== "string") throw invalid();
 		let target = null;
 		if (location !== null) {
-			if (!location || !uint$22(location.view)) throw invalid();
+			if (!location || !uint$26(location.view)) throw invalid();
 			const view = projectionViews[location.view];
 			const { startUnit, endUnit } = location;
-			if (!view || view.section !== section || !uint$22(startUnit) || !uint$22(endUnit) || endUnit < startUnit || endUnit > view.text.length || text === null || view.text.slice(startUnit, endUnit) !== text) throw invalid();
+			if (!view || view.section !== section || !uint$26(startUnit) || !uint$26(endUnit) || endUnit < startUnit || endUnit > view.text.length || text === null || view.text.slice(startUnit, endUnit) !== text) throw invalid();
 			target = {
 				owner: `section:${section}:body`,
 				section,
@@ -34929,10 +36532,10 @@ function decodeHwpxNamedFields(bytes) {
 		projectionViews
 	};
 }
-var utf8, uint$22;
+var utf8, uint$26;
 var init_hwpx_named_fields = __esmMin((() => {
 	utf8 = new TextDecoder("utf-8", { fatal: true });
-	uint$22 = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 4294967295;
+	uint$26 = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 4294967295;
 }));
 // ../../js/hwpx-field-target-wire.mjs
 function validateFieldTargets(targets) {
@@ -35040,21 +36643,21 @@ function decode(bytes, maximum) {
 }
 function decodeFormSourceNodes(bytes) {
 	const value = decode(bytes, 8388608);
-	if (!object$4(value) || value.sourceOnly !== true || !Array.isArray(value.nodes) || value.nodes.length > 1e5 || !value.nodes.every((row, i) => object$4(row) && uint$21(row.formNode) && kinds.has(row.kind) && (i === 0 || row.formNode > value.nodes[i - 1].formNode))) throw new Error("InvalidFormSource");
+	if (!object$5(value) || value.sourceOnly !== true || !Array.isArray(value.nodes) || value.nodes.length > 1e5 || !value.nodes.every((row, i) => object$5(row) && uint$25(row.formNode) && kinds.has(row.kind) && (i === 0 || row.formNode > value.nodes[i - 1].formNode))) throw new Error("InvalidFormSource");
 	return value;
 }
 function decodeFormSourceAttributes(bytes) {
 	const value = decode(bytes, 1048576);
-	const group = (data, check) => object$4(data) && Object.keys(data).length <= 128 && Object.entries(data).every(([key, item]) => /^[A-Za-z][A-Za-z0-9]*$/.test(key) && key.length <= 128 && (item === null || check(item)));
-	if (!object$4(value) || value.sourceOnly !== true || !kinds.has(value.kind) || !group(value.strings, (item) => typeof item === "string" && item.isWellFormed() && new TextEncoder().encode(item).length <= 65536) || !group(value.booleans, (item) => typeof item === "boolean") || !group(value.integers, uint$21)) throw new Error("InvalidFormSource");
+	const group = (data, check) => object$5(data) && Object.keys(data).length <= 128 && Object.entries(data).every(([key, item]) => /^[A-Za-z][A-Za-z0-9]*$/.test(key) && key.length <= 128 && (item === null || check(item)));
+	if (!object$5(value) || value.sourceOnly !== true || !kinds.has(value.kind) || !group(value.strings, (item) => typeof item === "string" && item.isWellFormed() && new TextEncoder().encode(item).length <= 65536) || !group(value.booleans, (item) => typeof item === "boolean") || !group(value.integers, uint$25)) throw new Error("InvalidFormSource");
 	return value;
 }
 function decodeFormSites(bytes) {
 	const sites = decode(bytes, 16777216);
 	if (!Array.isArray(sites) || sites.length > 1e5 || !sites.every((site, i) => {
-		if (!object$4(site) || !uint$21(site.formNode) || !kinds.has(site.kind) || i > 0 && site.formNode <= sites[i - 1].formNode) return false;
-		if (site.state === "located") return uint$21(site.paragraph) && site.paragraph > 0 && uint$21(site.anchorUnit);
-		if (site.state === "unsupported_anchor") return uint$21(site.paragraph) && site.paragraph > 0 && site.anchorUnit === null;
+		if (!object$5(site) || !uint$25(site.formNode) || !kinds.has(site.kind) || i > 0 && site.formNode <= sites[i - 1].formNode) return false;
+		if (site.state === "located") return uint$25(site.paragraph) && site.paragraph > 0 && uint$25(site.anchorUnit);
+		if (site.state === "unsupported_anchor") return uint$25(site.paragraph) && site.paragraph > 0 && site.anchorUnit === null;
 		return [
 			"conditional",
 			"missing_host",
@@ -35066,7 +36669,7 @@ function decodeFormSites(bytes) {
 function decodeFormSourceLayout(bytes) {
 	const value = decode(bytes, 65536);
 	const bool = (value) => value === null || typeof value === "boolean";
-	if (!object$4(value) || value.sourceOnly !== true || !uint$21(value.formNode) || !kinds.has(value.kind) || !validShapeLayoutValues(value) || !object$4(value.character) || !(value.character.id === null || uint$21(value.character.id)) || ![
+	if (!object$5(value) || value.sourceOnly !== true || !uint$25(value.formNode) || !kinds.has(value.kind) || !validShapeLayoutValues(value) || !object$5(value.character) || !(value.character.id === null || uint$25(value.character.id)) || ![
 		value.character.follow_context,
 		value.character.auto_size,
 		value.character.word_wrap,
@@ -35074,7 +36677,7 @@ function decodeFormSourceLayout(bytes) {
 	].every(bool)) throw new Error("InvalidFormSource");
 	return value;
 }
-var kinds, uint$21, object$4;
+var kinds, uint$25, object$5;
 var init_hwpx_form_source = __esmMin((() => {
 	init_hwpx_shape_layout_values();
 	kinds = /* @__PURE__ */ new Set([
@@ -35084,8 +36687,8 @@ var init_hwpx_form_source = __esmMin((() => {
 		"radio_button",
 		"edit_box"
 	]);
-	uint$21 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
-	object$4 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	uint$25 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	object$5 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 }));
 // ../../js/hwpx-document-provenance.mjs
 /** Validate Native's profile DTO; never classify a producer or reinterpret its encoding in JS. */
@@ -35132,13 +36735,13 @@ function decodeDocumentProvenance(bytes) {
 			version.major,
 			version.minor,
 			version.xml_bytes
-		].every(uint$20) || ![
+		].every(uint$24) || ![
 			"micro",
 			"build_number",
 			"patch",
 			"revision",
 			"os"
-		].every((key) => version[key] === null || uint$20(version[key])) || ![
+		].every((key) => version[key] === null || uint$24(version[key])) || ![
 			"xml_version",
 			"target_application",
 			"application",
@@ -35148,11 +36751,11 @@ function decodeDocumentProvenance(bytes) {
 	if (value.sourceVersionError !== null && (version !== null || typeof value.sourceVersionError !== "string" || !/^[A-Za-z_][A-Za-z0-9_]{0,127}$/.test(value.sourceVersionError))) return fail();
 	return value;
 }
-var object$3, exact, uint$20, text;
+var object$4, exact, uint$24, text;
 var init_hwpx_document_provenance = __esmMin((() => {
-	object$3 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	exact = (value, keys) => object$3(value) && Object.keys(value).length === keys.length && keys.every((key) => Object.hasOwn(value, key));
-	uint$20 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	object$4 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	exact = (value, keys) => object$4(value) && Object.keys(value).length === keys.length && keys.every((key) => Object.hasOwn(value, key));
+	uint$24 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	text = (value) => typeof value === "string" && value.length <= 4096;
 }));
 // ../../js/hwpx-font-face-metadata.mjs
@@ -35383,24 +36986,24 @@ function decodeEllipseSources(bytes) {
 	const text = (value) => value === null || typeof value === "string" && new TextEncoder().encode(value).length <= 4096;
 	if (!Array.isArray(rows) || rows.length > 1e5 || rows.some((row, index) => {
 		const owner = row?.owner, geometry = row?.geometry;
-		return !object$2(row) || row.sourceOnly !== true || !uint$19(row.node) || index > 0 && row.node <= rows[index - 1].node || Object.hasOwn(row, "common") && !validShapeCommonSource(row.common) || row.common && Object.hasOwn(row.common, "group_context") && !validGroupContext(row.common.group_context, row.node) || row.common?.group_context && row.common.group_context.root_anchor !== owner?.anchor_node || !object$2(owner) || ![
+		return !object$3(row) || row.sourceOnly !== true || !uint$23(row.node) || index > 0 && row.node <= rows[index - 1].node || Object.hasOwn(row, "common") && !validShapeCommonSource(row.common) || row.common && Object.hasOwn(row.common, "group_context") && !validGroupContext(row.common.group_context, row.node) || row.common?.group_context && row.common.group_context.root_anchor !== owner?.anchor_node || !object$3(owner) || ![
 			"paragraph",
 			"anchor_node",
 			"anchor_unit"
-		].every((key) => uint$19(owner[key])) || owner.paragraph < 1 || !object$2(geometry) || ![
+		].every((key) => uint$23(owner[key])) || owner.paragraph < 1 || !object$3(geometry) || ![
 			"interval_dirty",
 			"has_arc_properties",
 			"arc_type"
-		].every((key) => text(geometry[key])) || !Array.isArray(geometry.points) || geometry.points.length !== 7 || !Array.from(geometry.points).every((point) => point === null || object$2(point) && coordinate(point.x) && coordinate(point.y));
+		].every((key) => text(geometry[key])) || !Array.isArray(geometry.points) || geometry.points.length !== 7 || !Array.from(geometry.points).every((point) => point === null || object$3(point) && coordinate(point.x) && coordinate(point.y));
 	})) throw new Error("InvalidEllipseSources");
 	return rows;
 }
-var object$2, uint$19, coordinate;
+var object$3, uint$23, coordinate;
 var init_hwpx_ellipse_sources = __esmMin((() => {
 	init_hwpx_shape_common_source();
 	init_hwpx_group_context();
-	object$2 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	uint$19 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	object$3 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	uint$23 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	coordinate = (value) => value === null || Number.isInteger(value) && value >= -2147483648 && value <= 4294967295;
 }));
 // ../../js/hwpx-picture-sites-wire.mjs
@@ -35456,7 +37059,7 @@ function checkedOleAxisFrame(value) {
 		"offset"
 	]);
 	if (!r) return null;
-	const original = array$1(r.original, 2, uint$18), current = array$1(r.current, 2, uint$18), matrix = array$1(r.matrix, 6, Number.isFinite), flip = array$1(r.flip, 2, (x) => typeof x === "boolean"), offset = array$1(r.offset, 2, Number.isFinite);
+	const original = array$1(r.original, 2, uint$22), current = array$1(r.current, 2, uint$22), matrix = array$1(r.matrix, 6, Number.isFinite), flip = array$1(r.flip, 2, (x) => typeof x === "boolean"), offset = array$1(r.offset, 2, Number.isFinite);
 	if (!original || !current || !matrix || !flip || !offset || !Number.isInteger(r.angle) || r.angle < 0 || r.angle > 4294967295 || r.reverse !== null) return null;
 	return {
 		original,
@@ -35468,9 +37071,9 @@ function checkedOleAxisFrame(value) {
 		offset
 	};
 }
-var uint$18, own$1, array$1;
+var uint$22, own$1, array$1;
 var init_ole_source_frame = __esmMin((() => {
-	uint$18 = (value) => Number.isInteger(value) && value > 0 && value <= 4294967295;
+	uint$22 = (value) => Number.isInteger(value) && value > 0 && value <= 4294967295;
 	own$1 = (value, keys) => {
 		if (!value || ![Object.prototype, null].includes(Object.getPrototypeOf(value))) return null;
 		const d = Object.getOwnPropertyDescriptors(value);
@@ -35505,8 +37108,8 @@ function decodeOleSites(bytes) {
 	const value = parse$2(bytes, 16777216, "InvalidOleSites"), seen = /* @__PURE__ */ new Set();
 	if (!Array.isArray(value) || value.length > 1e5) fail();
 	for (const row of value) {
-		if (!row || !uint$17(row.ole_node) || seen.has(row.ole_node) || !(row.paragraph === null || uint$17(row.paragraph) && row.paragraph > 0) || !(row.anchor_unit === null || uint$17(row.anchor_unit))) fail();
-		if (Object.hasOwn(row, "chart_wrapper") && row.chart_wrapper !== null && !uint$17(row.chart_wrapper)) fail();
+		if (!row || !uint$21(row.ole_node) || seen.has(row.ole_node) || !(row.paragraph === null || uint$21(row.paragraph) && row.paragraph > 0) || !(row.anchor_unit === null || uint$21(row.anchor_unit))) fail();
+		if (Object.hasOwn(row, "chart_wrapper") && row.chart_wrapper !== null && !uint$21(row.chart_wrapper)) fail();
 		if (row.error_name === null ? row.paragraph === null || row.anchor_unit === null : !errors.has(row.error_name) || row.anchor_unit !== null) fail();
 		seen.add(row.ole_node);
 	}
@@ -35551,11 +37154,11 @@ function decodeOleBytes(bytes) {
 		bytes: bytes.slice(1)
 	};
 }
-var uint$17, errors;
+var uint$21, errors;
 var init_hwpx_ole_source = __esmMin((() => {
 	init_ole_source_frame();
 	init_hwpx_shape_source_values();
-	uint$17 = (v) => Number.isInteger(v) && v >= 0 && v <= 4294967295;
+	uint$21 = (v) => Number.isInteger(v) && v >= 0 && v <= 4294967295;
 	errors = /* @__PURE__ */ new Set([
 		"UnsupportedOleDisplayHost",
 		"MissingCurrentParagraphDisplayHost",
@@ -35594,51 +37197,51 @@ var init_hwpx_picture_corners_wire = __esmMin((() => {}));
 // ../../js/hwpx-connector-source.mjs
 function decodeConnectorNodes(bytes) {
 	const nodes = parse$1(bytes);
-	if (!Array.isArray(nodes) || !nodes.every((value, index) => uint$16(value) && (index === 0 || value > nodes[index - 1]))) throw new Error("InvalidConnectorNodes");
+	if (!Array.isArray(nodes) || !nodes.every((value, index) => uint$20(value) && (index === 0 || value > nodes[index - 1]))) throw new Error("InvalidConnectorNodes");
 	return nodes;
 }
 function decodeConnectorSource(bytes) {
 	const value = parse$1(bytes), geometry = value?.geometry;
-	const point = (item) => item === null || object$1(item) && [
+	const point = (item) => item === null || object$2(item) && [
 		"x",
 		"y",
 		"subject_id_ref",
 		"subject_index",
 		"control_type"
 	].every((name) => item[name] === null || typeof item[name] === "string");
-	if (!object$1(value) || value.sourceOnly !== true || !uint$16(value.node) || !object$1(geometry) || !(geometry.raw_type === null || typeof geometry.raw_type === "string") || typeof geometry.known_type !== "boolean" || !point(geometry.start) || !point(geometry.end) || typeof geometry.controls_present !== "boolean" || !Array.isArray(geometry.controls) || geometry.controls.length > 4096 || !geometry.controls.every((item) => item !== null && point(item)) || !geometry.controls_present && geometry.controls.length !== 0 || !uint$16(geometry.unexpected_children)) throw new Error("InvalidConnectorSource");
+	if (!object$2(value) || value.sourceOnly !== true || !uint$20(value.node) || !object$2(geometry) || !(geometry.raw_type === null || typeof geometry.raw_type === "string") || typeof geometry.known_type !== "boolean" || !point(geometry.start) || !point(geometry.end) || typeof geometry.controls_present !== "boolean" || !Array.isArray(geometry.controls) || geometry.controls.length > 4096 || !geometry.controls.every((item) => item !== null && point(item)) || !geometry.controls_present && geometry.controls.length !== 0 || !uint$20(geometry.unexpected_children)) throw new Error("InvalidConnectorSource");
 	return value;
 }
 function decodeConnectorOwner(bytes, expectedNode) {
 	const value = parse$1(bytes);
-	if (!object$1(value) || value.current !== true || value.sourceOnly === true || ![
+	if (!object$2(value) || value.current !== true || value.sourceOnly === true || ![
 		"node",
 		"paragraph",
 		"anchor_node",
 		"anchor_unit"
-	].every((name) => uint$16(value[name])) || value.paragraph < 1 || expectedNode !== void 0 && value.node !== expectedNode) throw new Error("InvalidConnectorOwner");
+	].every((name) => uint$20(value[name])) || value.paragraph < 1 || expectedNode !== void 0 && value.node !== expectedNode) throw new Error("InvalidConnectorOwner");
 	return value;
 }
 function decodeConnectorRenderingSource(bytes, expectedNode) {
 	const value = parse$1(bytes);
 	const point = (row) => Array.isArray(row) && row.length === 2 && row.every(Number.isFinite);
-	if (!object$1(value) || value.sourceOnly !== true || value.coordinateSpace !== "renderingInfo" || !uint$16(value.node) || expectedNode !== void 0 && value.node !== expectedNode || !Array.isArray(value.endpoints) || value.endpoints.length !== 2 || !value.endpoints.every(point) || !Array.isArray(value.controls) || value.controls.length > 4096 || !value.controls.every(point)) throw new Error("InvalidConnectorRenderingSource");
+	if (!object$2(value) || value.sourceOnly !== true || value.coordinateSpace !== "renderingInfo" || !uint$20(value.node) || expectedNode !== void 0 && value.node !== expectedNode || !Array.isArray(value.endpoints) || value.endpoints.length !== 2 || !value.endpoints.every(point) || !Array.isArray(value.controls) || value.controls.length > 4096 || !value.controls.every(point)) throw new Error("InvalidConnectorRenderingSource");
 	return value;
 }
-var uint$16, object$1, parse$1;
+var uint$20, object$2, parse$1;
 var init_hwpx_connector_source = __esmMin((() => {
-	uint$16 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
-	object$1 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	uint$20 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	object$2 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 	parse$1 = (bytes) => JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 }));
 // ../../js/hwpx-drawing-stroke-source.mjs
 function decodeDrawingStrokeSource(bytes, expectedNode) {
 	const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 	const attr = value?.attributes;
-	if (!value || value.sourceOnly !== true || !uint$15(value.node) || value.node !== expectedNode || !(value.lineShapeNode === null || uint$15(value.lineShapeNode)) || !(value.knownColor === null || typeof value.knownColor === "boolean") || !uint$15(value.unknownEnums) || value.unknownEnums > 8 || !attr || typeof attr !== "object" || Array.isArray(attr) || !fields$3.every((name) => attr[name] === null || typeof attr[name] === "string" && new TextEncoder().encode(attr[name]).length <= 4096)) throw new Error("InvalidDrawingStrokeSource");
+	if (!value || value.sourceOnly !== true || !uint$19(value.node) || value.node !== expectedNode || !(value.lineShapeNode === null || uint$19(value.lineShapeNode)) || !(value.knownColor === null || typeof value.knownColor === "boolean") || !uint$19(value.unknownEnums) || value.unknownEnums > 8 || !attr || typeof attr !== "object" || Array.isArray(attr) || !fields$3.every((name) => attr[name] === null || typeof attr[name] === "string" && new TextEncoder().encode(attr[name]).length <= 4096)) throw new Error("InvalidDrawingStrokeSource");
 	return value;
 }
-var fields$3, uint$15;
+var fields$3, uint$19;
 var init_hwpx_drawing_stroke_source = __esmMin((() => {
 	fields$3 = [
 		"color",
@@ -35654,7 +37257,7 @@ var init_hwpx_drawing_stroke_source = __esmMin((() => {
 		"outlineStyle",
 		"alpha"
 	];
-	uint$15 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$19 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 }));
 // ../../js/hwpx-note-shapes.mjs
 function decodeNoteShapes(bytes) {
@@ -36101,8 +37704,19 @@ async function createHwpxEditor(source) {
 			check: ready,
 			prefix: "hwpx_edit"
 		}),
+		...createDocumentTextApi({
+			wasm,
+			memory,
+			check: ready,
+			prefix: "hwpx_edit"
+		}),
 		...documentInsert,
 		...createHwpxInlineObjectInsertApi({
+			wasm,
+			memory,
+			check: ready
+		}),
+		...createHwpxNoteCreateApi({
 			wasm,
 			memory,
 			check: ready
@@ -37612,6 +39226,11 @@ async function createHwpxEditor(source) {
 				wasm.hwpx_edit_output_free();
 			}
 		},
+		...createHwpxControlTextBatchApi({
+			wasm,
+			memory,
+			check: ready
+		}),
 		paragraphTextSnapshot(section) {
 			ready();
 			uint(section);
@@ -38404,6 +40023,8 @@ async function createHwpxEditor(source) {
 	};
 }
 var init_hwpx_editor = __esmMin((() => {
+	init_hwpx_note_create();
+	init_hwpx_control_text_batch();
 	init_object_geometry_api();
 	init_page_settings_edit();
 	init_named_field_parameters();
@@ -38420,6 +40041,7 @@ var init_hwpx_editor = __esmMin((() => {
 	init_source_table_cell_merge();
 	init_atomic_formatting_api();
 	init_independent_text_api();
+	init_document_text_api();
 	init_hwpx_read_scope();
 	init_hwpx_drawing_text_requested();
 	init_hwpx_line_display_batch();
@@ -38643,14 +40265,14 @@ function unique(rows, key, warnings, name) {
 	}
 	return map;
 }
-var LIMITS$1, uint$14, diagnostic;
+var LIMITS$1, uint$18, diagnostic;
 var init_common$2 = __esmMin((() => {
 	LIMITS$1 = Object.freeze({
 		maxDepth: 32,
 		maxBlocks: 2e5,
 		maxTextUnits: 4194304
 	});
-	uint$14 = (value) => typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$18 = (value) => typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	diagnostic = (code, message, source) => ({
 		code,
 		message: String(message).slice(0, 512),
@@ -38671,18 +40293,18 @@ function collectHwp5({ sdk, sectionCount }) {
 		const flowResult = get("paragraphFlow"), flows = array(flowResult, warnings, "paragraphFlow", source);
 		const flowMap = unique(flows, (r) => r.paragraph, warnings, "paragraphFlow");
 		const countResult = get("paragraphCount");
-		const count = countResult.ok && uint$14(countResult.value) && countResult.value <= 1e5 ? countResult.value : null;
+		const count = countResult.ok && uint$18(countResult.value) && countResult.value <= 1e5 ? countResult.value : null;
 		const previewRows = previewSections.get(section)?.paragraphs;
 		const paragraphs = [], objectTokens = [];
 		let objectTokensKnown = count !== null && preview.ok && Array.isArray(previewRows) && previewRows.length === count;
 		const ordinals = count !== null ? Array.from({ length: count }, (_, ordinal) => ordinal) : [...new Set(flows.map((row) => row.paragraph))];
 		for (const paragraph of ordinals) {
 			const p = previewRows?.[paragraph], flow = flowMap.get(paragraph);
-			const node = uint$14(flow?.source_node) ? flow.source_node : uint$14(p?.nodeIndex) ? p.nodeIndex : null;
-			const emptyParagraph = p?.textPresent === false && p.text === "" && uint$14(p.nodeIndex) && uint$14(p.declaredUnits) && p.declaredUnits <= 1 && Array.isArray(p.tokens) && p.tokens.length === 0;
+			const node = uint$18(flow?.source_node) ? flow.source_node : uint$18(p?.nodeIndex) ? p.nodeIndex : null;
+			const emptyParagraph = p?.textPresent === false && p.text === "" && uint$18(p.nodeIndex) && uint$18(p.declaredUnits) && p.declaredUnits <= 1 && Array.isArray(p.tokens) && p.tokens.length === 0;
 			let displayText = typeof p?.text === "string" && (p.textPresent === true || emptyParagraph) ? p.text : null;
-			let identityKnown = uint$14(node) && flow?.generated !== true;
-			if (uint$14(p?.nodeIndex) && uint$14(flow?.source_node) && p.nodeIndex !== flow.source_node) {
+			let identityKnown = uint$18(node) && flow?.generated !== true;
+			if (uint$18(p?.nodeIndex) && uint$18(flow?.source_node) && p.nodeIndex !== flow.source_node) {
 				identityKnown = false;
 				displayText = null;
 				warnings.push(diagnostic("ParagraphSourceMismatch", "Native source identities disagree", {
@@ -38700,7 +40322,7 @@ function collectHwp5({ sdk, sectionCount }) {
 			if (!Array.isArray(p?.tokens)) objectTokensKnown = false;
 			else for (const token of p.tokens) {
 				if (token?.type !== "control" || token.code !== 11) continue;
-				if (!uint$14(token.startUnit)) {
+				if (!uint$18(token.startUnit)) {
 					objectTokensKnown = false;
 					continue;
 				}
@@ -38727,9 +40349,9 @@ function collectHwp5({ sdk, sectionCount }) {
 			const draw = drawByComponent.get(row.component_node), anchor = anchorByComponent.get(row.component_node);
 			const owner = draw?.control_node === row.owner_node && anchor?.control_node === row.owner_node;
 			return {
-				inventorySiteKnown: uint$14(row.component_node) && uint$14(row.picture_node) && uint$14(row.owner_node) && uint$14(row.bin_data_id) && row.bin_data_id > 0,
+				inventorySiteKnown: uint$18(row.component_node) && uint$18(row.picture_node) && uint$18(row.owner_node) && uint$18(row.bin_data_id) && row.bin_data_id > 0,
 				pictureNode: row.component_node,
-				parentParagraph: owner && uint$14(anchor?.paragraph) ? anchor.paragraph : null,
+				parentParagraph: owner && uint$18(anchor?.paragraph) ? anchor.paragraph : null,
 				sourceInfo: {
 					section,
 					pictureNode: row.component_node,
@@ -38738,8 +40360,8 @@ function collectHwp5({ sdk, sectionCount }) {
 					ownerNode: row.owner_node,
 					resourceId: row.bin_data_id
 				},
-				width: owner && uint$14(draw?.width) ? draw.width : null,
-				height: owner && uint$14(draw?.height) ? draw.height : null,
+				width: owner && uint$18(draw?.width) ? draw.width : null,
+				height: owner && uint$18(draw?.height) ? draw.height : null,
 				reason: owner ? null : "PictureOwnerUnverified"
 			};
 		});
@@ -38748,7 +40370,7 @@ function collectHwp5({ sdk, sectionCount }) {
 		for (const draw of drawByComponent.values()) {
 			if (draw?.kind_id !== 611346787 || representedPictures.has(draw.component_node)) continue;
 			const anchor = anchorByComponent.get(draw.component_node);
-			const ownerKnown = anchor?.control_node === draw.control_node && uint$14(anchor?.paragraph);
+			const ownerKnown = anchor?.control_node === draw.control_node && uint$18(anchor?.paragraph);
 			pictures.push({
 				inventorySiteKnown: false,
 				pictureNode: draw.component_node,
@@ -38759,8 +40381,8 @@ function collectHwp5({ sdk, sectionCount }) {
 					componentNode: draw.component_node,
 					ownerNode: draw.control_node
 				},
-				width: uint$14(draw?.width) ? draw.width : null,
-				height: uint$14(draw?.height) ? draw.height : null,
+				width: uint$18(draw?.width) ? draw.width : null,
+				height: uint$18(draw?.height) ? draw.height : null,
 				reason: "PictureSourceUnobserved"
 			});
 			representedPictures.add(draw.component_node);
@@ -38772,7 +40394,7 @@ function collectHwp5({ sdk, sectionCount }) {
 		const components = unique(array(componentsResult, warnings, "drawingComponentSources", source), (r) => r.component_node, warnings, "drawing component inventory");
 		let componentsKnown = componentsResult.ok;
 		for (const row of components.values()) {
-			if (!row || !uint$14(row.component_node) || !uint$14(row.kind_id) || !uint$14(row.owner_node)) {
+			if (!row || !uint$18(row.component_node) || !uint$18(row.kind_id) || !uint$18(row.owner_node)) {
 				componentsKnown = false;
 				continue;
 			}
@@ -38801,7 +40423,7 @@ function collectHwp5({ sdk, sectionCount }) {
 				kind: "drawing",
 				node: row.component_node,
 				siteKnown: true,
-				parentParagraph: ownerKnown && uint$14(anchor?.paragraph) ? anchor.paragraph : null,
+				parentParagraph: ownerKnown && uint$18(anchor?.paragraph) ? anchor.paragraph : null,
 				parentObjectNode: components.get(row.owner_node)?.kind_id === 610496366 ? row.owner_node : null,
 				nativeKind: row.kind_id,
 				reason: ownerKnown ? "ObjectDetailsDeferred" : "ObjectOwnerUnverified"
@@ -38810,7 +40432,7 @@ function collectHwp5({ sdk, sectionCount }) {
 		const knownAnchors = /* @__PURE__ */ new Set();
 		let anchorsKnown = anchors.ok && drawingAnchors.ok;
 		for (const row of [...array(anchors, warnings, "tableAnchors", source), ...array(drawingAnchors, warnings, "drawingAnchors", source)]) {
-			if (!uint$14(row?.paragraph) || !uint$14(row?.current_unit)) {
+			if (!uint$18(row?.paragraph) || !uint$18(row?.current_unit)) {
 				anchorsKnown = false;
 				continue;
 			}
@@ -38868,6 +40490,108 @@ function collectHwp5({ sdk, sectionCount }) {
 var init_hwp5 = __esmMin((() => {
 	init_common$2();
 }));
+// ../document/src/model/control-aware-text.ts
+function blockMatches(block, witness) {
+	const source = data(block, "source");
+	return data(block, "type") === "paragraph" && data(block, "displayText") === witness.text && source !== null && typeof source === "object" && data(source, "section") === witness.section && data(source, "paragraph") === witness.paragraph && data(source, "node") === witness.node;
+}
+function carryControlAwareWitness(observation, block) {
+	const witness = witnesses.get(observation);
+	if (witness && data(observation, "identityKnown") === true && data(observation, "paragraph") === witness.paragraph && data(observation, "node") === witness.node && data(observation, "displayText") === witness.text && blockMatches(block, witness)) witnesses.set(block, witness);
+}
+/** Capture the value consumed by rendering and its Native axis together. An
+* accessor is permanently ineligible for this capture even if invoking it
+* replaces the property with the original witnessed own-data value. */
+function consumeParagraphAxis(block) {
+	const descriptor = Object.getOwnPropertyDescriptor(block, "displayText");
+	const ownData = descriptor !== void 0 && Object.hasOwn(descriptor, "value");
+	const text = ownData ? descriptor.value : Reflect.get(block, "displayText");
+	if (text !== null && typeof text !== "string") throw new TypeError("InvalidRenderString");
+	const witness = ownData ? witnesses.get(block) : void 0;
+	const owner = witness && text === witness.text && blockMatches(block, witness) ? Object.freeze({
+		section: witness.section,
+		paragraph: witness.paragraph,
+		node: witness.node
+	}) : null;
+	const anchors = owner && witness ? witness.anchors : null;
+	return Object.freeze({
+		text,
+		owner,
+		allowsAnchor: (unit, node) => anchors?.get(unit) === node
+	});
+}
+/** One optional Native batch per section. Old SDKs retain plain text and
+* visible partial diagnostics; they never fall back to P anchorText queries. */
+function observeControlAwareParagraphs(sdk, section, rows, flows, warnings) {
+	const eligible = (row) => {
+		const flow = flows.get(row.paragraph);
+		return typeof row.text === "string" && uint$18(row.paragraph) && row.paragraph > 0 && flow?.paragraph === row.paragraph && uint$18(flow.source_node);
+	};
+	let batch = null;
+	let unavailable = "ControlAwareBatchUnavailable";
+	const descriptor = Object.getOwnPropertyDescriptor(sdk, "paragraphControlTextSnapshot");
+	if (rows.some(eligible) && descriptor && Object.hasOwn(descriptor, "value") && typeof descriptor.value === "function") try {
+		batch = decodeControlTextSnapshot(Reflect.apply(descriptor.value, sdk, [section]), section);
+		const expected = new Set(rows.map((row) => row.paragraph));
+		if (expected.size !== rows.length || batch.rows.length !== rows.length || batch.rows.some((row) => !expected.has(row.paragraph))) {
+			batch = null;
+			unavailable = "InvalidControlAwareText";
+		}
+	} catch {
+		batch = null;
+		unavailable = "ControlAwareBatchUnavailable";
+	}
+	const byOrdinal = new Map(batch?.rows.map((row) => [row.paragraph, row]));
+	return rows.map((row) => {
+		const flow = flows.get(row.paragraph);
+		const plain = typeof row.text === "string" ? row.text : null;
+		const paragraph = {
+			paragraph: row.paragraph,
+			node: uint$18(flow?.source_node) ? flow.source_node : null,
+			identityKnown: uint$18(flow?.source_node),
+			displayText: plain,
+			flow: flow ?? null
+		};
+		if (plain === null) return paragraph;
+		const fallback = (code) => {
+			warnings.push({
+				code,
+				message: "Plain text retained; complete control-aware Native observation unavailable",
+				source: {
+					section,
+					paragraph: row.paragraph
+				}
+			});
+			return paragraph;
+		};
+		if (!eligible(row)) return fallback("ControlAwareOwnerUnverified");
+		const native = byOrdinal.get(row.paragraph);
+		if (!native) return fallback(unavailable);
+		if (native.sourceNode !== paragraph.node || native.plain !== plain) return fallback("ControlAwareTextMismatch");
+		if (native.coverage !== "complete" || native.text === null) return fallback("ControlAwareTextUnavailable");
+		paragraph.displayText = native.text;
+		const anchors = /* @__PURE__ */ new Map();
+		for (const control of native.controls) if (control.kind === "anchor") anchors.set(control.startUnit, control.node);
+		witnesses.set(paragraph, Object.freeze({
+			section,
+			paragraph: row.paragraph,
+			node: native.sourceNode,
+			text: native.text,
+			anchors
+		}));
+		return paragraph;
+	});
+}
+var witnesses, data;
+var init_control_aware_text = __esmMin((() => {
+	init_hwpx_control_text_batch();
+	init_common$2();
+	witnesses = /* @__PURE__ */ new WeakMap();
+	data = (object, key) => {
+		const descriptor = Object.getOwnPropertyDescriptor(object, key);
+		return descriptor && Object.hasOwn(descriptor, "value") ? descriptor.value : void 0;
+	};
+}));
 // ../document/src/model/hwpx.ts
 function collectSection(sdk, section, warnings) {
 	const source = { section }, get = (name) => call(sdk, name, [section], warnings, source);
@@ -38879,16 +40603,7 @@ function collectSection(sdk, section, warnings) {
 		observedRows.push({ paragraph: flow.paragraph });
 		observedIds.add(flow.paragraph);
 	}
-	const paragraphs = observedRows.map((row) => {
-		const flow = flowMap.get(row.paragraph);
-		return {
-			paragraph: row.paragraph,
-			node: uint$14(flow?.source_node) ? flow.source_node : null,
-			identityKnown: uint$14(flow?.source_node),
-			displayText: typeof row.text === "string" ? row.text : null,
-			flow: flow ?? null
-		};
-	});
+	const paragraphs = observeControlAwareParagraphs(sdk, section, observedRows, flowMap, warnings);
 	const bindings = get("tableBindings"), placements = get("tablePlacements"), tableInventory = get("tableBorderSources"), areas = get("pageAreaDeclarations");
 	for (const [name, result] of Object.entries({
 		bindings,
@@ -38906,7 +40621,7 @@ function collectSection(sdk, section, warnings) {
 	const sitesResult = get("pictureSites"), ownersResult = get("pictureOwners");
 	const owners = unique(array(ownersResult, warnings, "pictureOwners", source), (row) => row.pictureNode, warnings, "picture owner");
 	const sites = array(sitesResult, warnings, "pictureSites", source).slice();
-	const inventoryPictures = new Set(sites.filter((row) => uint$14(row?.pictureNode)).map((row) => row.pictureNode));
+	const inventoryPictures = new Set(sites.filter((row) => uint$18(row?.pictureNode)).map((row) => row.pictureNode));
 	const seenPictures = new Set(sites.map((row) => row.pictureNode));
 	for (const owner of owners.values()) if (owner && !seenPictures.has(owner.pictureNode)) {
 		sites.push({
@@ -38928,13 +40643,13 @@ function collectSection(sdk, section, warnings) {
 			},
 			width: null,
 			height: null,
-			reason: uint$14(parentParagraph) ? null : owner?.error ?? "PictureOwnerUnverified"
+			reason: uint$18(parentParagraph) ? null : owner?.error ?? "PictureOwnerUnverified"
 		};
 	});
 	const objects = /* @__PURE__ */ new Map();
 	let objectsKnown = true;
 	const addObject = (row) => {
-		if (!uint$14(row.node)) {
+		if (!uint$18(row.node)) {
 			objectsKnown = false;
 			return;
 		}
@@ -38955,21 +40670,29 @@ function collectSection(sdk, section, warnings) {
 	for (const row of inventory("chartSites")) addObject({
 		kind: "chart",
 		node: row?.wrapper,
-		parentParagraph: row?.error_name === null && uint$14(row?.paragraph) && uint$14(row?.anchorUnit) ? row.paragraph : null,
+		parentParagraph: row?.error_name === null && uint$18(row?.paragraph) && uint$18(row?.anchorUnit) ? row.paragraph : null,
 		detailUnavailable: row?.error_name !== null,
-		reason: row?.error_name ?? "ObjectDetailsDeferred"
+		reason: row?.error_name ?? "ObjectDetailsDeferred",
+		...row?.error_name === null && uint$18(row?.paragraph) && uint$18(row?.anchorUnit) ? {
+			paragraph: row.paragraph,
+			anchorUnit: row.anchorUnit
+		} : {}
 	});
 	for (const row of inventory("equationSites")) addObject({
 		kind: "equation",
 		node: row?.source?.node,
-		parentParagraph: row?.source?.issue === null && row?.error_name === null && uint$14(row?.paragraph) ? row.paragraph : null,
+		parentParagraph: row?.source?.issue === null && row?.error_name === null && uint$18(row?.paragraph) ? row.paragraph : null,
 		detailUnavailable: row?.source?.issue !== null || row?.error_name !== null,
-		reason: row?.source?.issue ?? row?.error_name ?? "ObjectDetailsDeferred"
+		reason: row?.source?.issue ?? row?.error_name ?? "ObjectDetailsDeferred",
+		...row?.source?.issue === null && row?.error_name === null && uint$18(row?.paragraph) && uint$18(row?.anchor_unit) ? {
+			paragraph: row.paragraph,
+			anchorUnit: row.anchor_unit
+		} : {}
 	});
 	for (const row of inventory("oleSites")) addObject({
 		kind: "ole",
 		node: row?.ole_node,
-		parentParagraph: row?.error_name === null && uint$14(row?.paragraph) ? row.paragraph : null,
+		parentParagraph: row?.error_name === null && uint$18(row?.paragraph) ? row.paragraph : null,
 		detailUnavailable: row?.error_name !== null,
 		reason: row?.error_name ?? "ObjectDetailsDeferred"
 	});
@@ -38987,7 +40710,7 @@ function collectSection(sdk, section, warnings) {
 	for (const row of inventory("ellipseSources")) addObject({
 		kind: "drawing",
 		node: row?.node,
-		parentParagraph: uint$14(row?.owner?.paragraph) ? row.owner.paragraph : null,
+		parentParagraph: uint$18(row?.owner?.paragraph) ? row.owner.paragraph : null,
 		subtype: "ellipse",
 		reason: "ObjectDetailsDeferred"
 	});
@@ -39026,6 +40749,7 @@ function collectHwpx({ sdk, sectionCount }) {
 	};
 }
 var init_hwpx = __esmMin((() => {
+	init_control_aware_text();
 	init_read_observation_scope();
 	init_common$2();
 }));
@@ -39130,7 +40854,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 		}
 		if (!observation.flowsKnown || !observation.areas?.ok || !observation.picturesKnown) model.coverage.inventoryComplete = false;
 		function definition(kind, owner, listNode, apply, declaredParagraphs, declaration) {
-			if (!uint$14(owner) || !uint$14(listNode)) throw new Error("InvalidPageAreaIdentity");
+			if (!uint$18(owner) || !uint$18(listNode)) throw new Error("InvalidPageAreaIdentity");
 			const key = `${owner}:${listNode}`;
 			const existing = defs.get(key);
 			if (existing) {
@@ -39150,7 +40874,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 				range: { state: "unresolved" },
 				blocks: [],
 				observedParagraphs: 0,
-				...uint$14(declaredParagraphs) ? { declaredParagraphs } : {}
+				...uint$18(declaredParagraphs) ? { declaredParagraphs } : {}
 			};
 			section[kind].definitions.push(block);
 			const node = add({
@@ -39167,8 +40891,8 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 			section.header.declarations = section.footer.declarations = "unavailable";
 			model.coverage.pageAreasKnown = false;
 		} else if (format === "hwp5") for (const area of list(observation.areas)) {
-			if (!isPageArea(area.kind) || !uint$14(area.owner_node) || !uint$14(area.list_node)) throw new Error("InvalidPageAreaObservation");
-			const apply = uint$14(area.control_attributes) ? [
+			if (!isPageArea(area.kind) || !uint$18(area.owner_node) || !uint$18(area.list_node)) throw new Error("InvalidPageAreaObservation");
+			const apply = uint$18(area.control_attributes) ? [
 				"both",
 				"even",
 				"odd"
@@ -39201,7 +40925,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 			}
 		}
 		function table(tableNode, rows = null, columns = null) {
-			if (!uint$14(tableNode)) throw new Error("InvalidTableIdentity");
+			if (!uint$18(tableNode)) throw new Error("InvalidTableIdentity");
 			const previous = byTable.get(tableNode);
 			if (previous) return previous;
 			const block = {
@@ -39218,8 +40942,8 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 					section: s,
 					tableNode
 				},
-				rows: uint$14(rows) ? rows : null,
-				columns: uint$14(columns) ? columns : null,
+				rows: uint$18(rows) ? rows : null,
+				columns: uint$18(columns) ? columns : null,
 				cells: []
 			};
 			const node = add({
@@ -39235,15 +40959,15 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 			return node;
 		}
 		function cell(tableNode, listNode, cellNode) {
-			if (!uint$14(listNode)) throw new Error("InvalidCellIdentity");
+			if (!uint$18(listNode)) throw new Error("InvalidCellIdentity");
 			const t = table(tableNode), id = cellKey(s, tableNode, listNode);
 			const previousOwner = cellOwners.get(listNode);
 			if (previousOwner !== void 0 && previousOwner !== tableNode) throw new Error("ConflictingCellSourceIdentity");
 			cellOwners.set(listNode, tableNode);
 			if (cells.has(id)) {
 				const existing = cells.get(id);
-				if (uint$14(cellNode)) {
-					if (uint$14(existing.block.source.cellNode) && existing.block.source.cellNode !== cellNode) throw new Error("ConflictingCellSourceIdentity");
+				if (uint$18(cellNode)) {
+					if (uint$18(existing.block.source.cellNode) && existing.block.source.cellNode !== cellNode) throw new Error("ConflictingCellSourceIdentity");
 					existing.block.source.cellNode = cellNode;
 				}
 				return existing;
@@ -39254,7 +40978,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 					section: s,
 					tableNode,
 					listNode,
-					...uint$14(cellNode) ? { cellNode } : {}
+					...uint$18(cellNode) ? { cellNode } : {}
 				},
 				row: null,
 				column: null,
@@ -39285,7 +41009,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 			else warn("CellInventoryUnavailable", "Native original-cell inventory unavailable", source);
 		}
 		for (const binding of bindings) {
-			if (!uint$14(binding.rows) || !binding.rows || !uint$14(binding.columns) || !binding.columns) throw new Error("InvalidTableGeometry");
+			if (!uint$18(binding.rows) || !binding.rows || !uint$18(binding.columns) || !binding.columns) throw new Error("InvalidTableGeometry");
 			const t = table(binding.tableNode, binding.rows, binding.columns), c = cell(binding.tableNode, binding.listNode);
 			if (t.block.rows === null) t.block.rows = binding.rows;
 			if (t.block.columns === null) t.block.columns = binding.columns;
@@ -39296,20 +41020,20 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 				"rowSpan",
 				"columnSpan"
 			];
-			if (!names.every((n) => uint$14(binding[n])) || !binding.rowSpan || !binding.columnSpan || binding.row + binding.rowSpan > binding.rows || binding.column + binding.columnSpan > binding.columns) throw new Error("InvalidCellGeometry");
+			if (!names.every((n) => uint$18(binding[n])) || !binding.rowSpan || !binding.columnSpan || binding.row + binding.rowSpan > binding.rows || binding.column + binding.columnSpan > binding.columns) throw new Error("InvalidCellGeometry");
 			if (c.block.geometryKnown && names.some((n) => c.block[n] !== binding[n])) throw new Error("ConflictingCellGeometry");
 			for (const n of names) c.block[n] = binding[n];
 			c.block.geometryKnown = true;
 		}
 		for (const p of observation.paragraphs) {
-			if (!uint$14(p.paragraph) || format === "hwpx" && !p.paragraph) throw new Error("InvalidNativeParagraphOrdinal");
+			if (!uint$18(p.paragraph) || format === "hwpx" && !p.paragraph) throw new Error("InvalidNativeParagraphOrdinal");
 			const id = paragraphId(s, p.paragraph), pSource = {
 				section: s,
 				paragraph: p.paragraph,
-				...uint$14(p.node) ? { node: p.node } : {}
+				...uint$18(p.node) ? { node: p.node } : {}
 			};
 			if (paragraphs.has(id)) throw new Error("DuplicateParagraphIdentity");
-			if (p.identityKnown && uint$14(p.node)) {
+			if (p.identityKnown && uint$18(p.node)) {
 				if (paragraphSources.has(p.node)) throw new Error("DuplicateParagraphSourceIdentity");
 				paragraphSources.add(p.node);
 			}
@@ -39325,6 +41049,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 				editability: p.identityKnown ? "range-check-required" : "unknown",
 				...p.identityKnown ? {} : { reason: "SourceIdentityUnverified" }
 			};
+			if (format === "hwpx") carryControlAwareWitness(p, block);
 			if (displayText === null) {
 				warn("DisplayTextUnavailable", "Known display text unavailable", pSource);
 				model.coverage.unknownBlocks++;
@@ -39386,10 +41111,10 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 			warn(code, code, c.block.source);
 		} else geometryCount.set(c.block.source.tableNode, (geometryCount.get(c.block.source.tableNode) ?? 0) + 1);
 		for (const [n, t] of byTable) if (t.block.cells.length > 0 && geometryCount.get(n) === t.block.cells.length && known(observation.tableInventory) && (format !== "hwp5" || known(observation.cellInventory))) model.coverage.tablesWithCompleteCellInventory++;
-		for (const def of defs.values()) if (uint$14(def.block.declaredParagraphs) && def.block.observedParagraphs !== def.block.declaredParagraphs) warn("PageAreaParagraphCountMismatch", "Native definition count differs from observed direct paragraph owners", def.block.source);
+		for (const def of defs.values()) if (uint$18(def.block.declaredParagraphs) && def.block.observedParagraphs !== def.block.declaredParagraphs) warn("PageAreaParagraphCountMismatch", "Native definition count differs from observed direct paragraph owners", def.block.source);
 		if (!observation.picturesKnown) model.coverage.imagesKnown = false;
 		for (const image of observation.pictures) {
-			if (!uint$14(image.pictureNode)) throw new Error("InvalidPictureIdentity");
+			if (!uint$18(image.pictureNode)) throw new Error("InvalidPictureIdentity");
 			const id = `s${s}:i${image.pictureNode}`;
 			const sourceInfo = {};
 			for (const name of [
@@ -39399,7 +41124,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 				"componentNode",
 				"ownerNode",
 				"resourceId"
-			]) if (uint$14(image.sourceInfo?.[name])) sourceInfo[name] = image.sourceInfo[name];
+			]) if (uint$18(image.sourceInfo?.[name])) sourceInfo[name] = image.sourceInfo[name];
 			add({
 				id,
 				kind: "image",
@@ -39422,11 +41147,11 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 					alt: null,
 					altState: "not-exposed",
 					sourceInfo,
-					...uint$14(image.width) ? { width: image.width } : {},
-					...uint$14(image.height) ? { height: image.height } : {},
+					...uint$18(image.width) ? { width: image.width } : {},
+					...uint$18(image.height) ? { height: image.height } : {},
 					sizeUnit: "hwp-unit"
 				},
-				parent: uint$14(image.parentParagraph) && byOrdinal.has(image.parentParagraph) ? paragraphId(s, image.parentParagraph) : null,
+				parent: uint$18(image.parentParagraph) && byOrdinal.has(image.parentParagraph) ? paragraphId(s, image.parentParagraph) : null,
 				reason: image.reason ?? "PictureOwnerUnverified",
 				native: image.pictureNode
 			});
@@ -39439,13 +41164,13 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 		}
 		const objectNodes = /* @__PURE__ */ new Map();
 		for (const object of observation.objects ?? []) {
-			const nodeKnown = object.siteKnown === true && uint$14(object.node);
+			const nodeKnown = object.siteKnown === true && uint$18(object.node);
 			const id = nodeKnown ? `s${s}:o${object.node}` : `s${s}:object:p${object.paragraph}:u${object.anchorUnit}`;
 			const objectSource = {
 				section: s,
-				...uint$14(object.node) ? { node: object.node } : {},
-				...uint$14(object.paragraph) ? { paragraph: object.paragraph } : {},
-				...uint$14(object.anchorUnit) ? { anchorUnit: object.anchorUnit } : {}
+				...uint$18(object.node) ? { node: object.node } : {},
+				...uint$18(object.paragraph) ? { paragraph: object.paragraph } : {},
+				...uint$18(object.anchorUnit) ? { anchorUnit: object.anchorUnit } : {}
 			};
 			const node = add({
 				id,
@@ -39460,10 +41185,10 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 						node: object.node
 					}) : null,
 					detailUnavailable: object.detailUnavailable === true,
-					...uint$14(object.nativeKind) ? { nativeKind: object.nativeKind } : {},
+					...uint$18(object.nativeKind) ? { nativeKind: object.nativeKind } : {},
 					...typeof object.subtype === "string" ? { subtype: object.subtype } : {}
 				},
-				parent: uint$14(object.parentParagraph) && byOrdinal.has(object.parentParagraph) ? paragraphId(s, object.parentParagraph) : null,
+				parent: uint$18(object.parentParagraph) && byOrdinal.has(object.parentParagraph) ? paragraphId(s, object.parentParagraph) : null,
 				reason: object.reason ?? "ObjectOwnerUnverified"
 			});
 			if (nodeKnown) objectNodes.set(object.node, node);
@@ -39471,7 +41196,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 			model.coverage.objectTotal++;
 		}
 		for (const object of observation.objects ?? []) {
-			if (!uint$14(object.node) || !uint$14(object.parentObjectNode)) continue;
+			if (!uint$18(object.node) || !uint$18(object.parentObjectNode)) continue;
 			const node = objectNodes.get(object.node), parent = objectNodes.get(object.parentObjectNode);
 			if (node && parent && node.parent === null) node.parent = parent.id;
 		}
@@ -39565,6 +41290,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 }
 var isPageArea, isApply, cellKey, paragraphId, list, known;
 var init_project = __esmMin((() => {
+	init_control_aware_text();
 	init_common$2();
 	init_object_reference$1();
 	isPageArea = (value) => value === "header" || value === "footer";
@@ -39615,7 +41341,7 @@ function byteInput(value, name) {
 	return Uint8Array.from(value);
 }
 function captureTarget$1(target) {
-	if (!record$15(target)) throw new TypeError("InvalidTarget");
+	if (!record$16(target)) throw new TypeError("InvalidTarget");
 	const { section, paragraph } = target;
 	if (typeof section !== "number" || !Number.isInteger(section) || section < 0 || section > 4294967295 || typeof paragraph !== "number" || !Number.isInteger(paragraph) || paragraph < 0 || paragraph > 4294967295) throw new RangeError("InvalidTarget");
 	return {
@@ -39633,7 +41359,7 @@ function outputBytes(value) {
 	return value;
 }
 async function openDocument(options = {}) {
-	if (!record$15(options)) throw new TypeError("InvalidDocumentOpenOptions");
+	if (!record$16(options)) throw new TypeError("InvalidDocumentOpenOptions");
 	const { bytes, wasm, expectedSha256 } = options;
 	const input = byteInput(bytes, "Document");
 	if (expectedSha256 !== void 0 && (typeof expectedSha256 !== "string" || !/^[a-f0-9]{64}$/.test(expectedSha256))) throw new TypeError("InvalidExpectedSha256");
@@ -39767,14 +41493,14 @@ async function read(options) {
 		return {
 			format: document.format,
 			model,
-			...record$15(options) && options.includeFormControls === true ? { formControls: readFormInventory(document) } : {}
+			...record$16(options) && options.includeFormControls === true ? { formControls: readFormInventory(document) } : {}
 		};
 	} finally {
 		document.close();
 	}
 }
 async function edit(options) {
-	if (!record$15(options)) throw new TypeError("InvalidEditOptions");
+	if (!record$16(options)) throw new TypeError("InvalidEditOptions");
 	const { bytes, wasm, target, replace, with: replacement, allowStaleLayout = false } = options;
 	const capturedTarget = captureTarget$1(target);
 	const document = await openDocument({
@@ -39807,7 +41533,7 @@ async function edit(options) {
 		document.close();
 	}
 }
-var MAX_INPUT_BYTES$1, MAX_OUTPUT_BYTES$1, wasmModules, record$15;
+var MAX_INPUT_BYTES$1, MAX_OUTPUT_BYTES$1, wasmModules, record$16;
 var init_engine = __esmMin((() => {
 	init_document_forms();
 	init_document_format();
@@ -39818,7 +41544,7 @@ var init_engine = __esmMin((() => {
 	MAX_INPUT_BYTES$1 = 67108864;
 	MAX_OUTPUT_BYTES$1 = 134217728;
 	wasmModules = createWasmModuleCache();
-	record$15 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	record$16 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 }));
 // ../document/src/render-content.ts
 function simpleCells(table, allowNested = false) {
@@ -39868,8 +41594,62 @@ function renderContent(model, { markdown, escape, line, references, maxOutputUni
 		}
 		return parts.join(separator);
 	};
+	const candidates = /* @__PURE__ */ new Map();
+	const shown = /* @__PURE__ */ new Set();
+	const ownerKey = (section, paragraph) => `${section}:${paragraph}`;
+	if (model.format === "hwpx") {
+		const stack = [];
+		for (const section of model.sections) {
+			for (const block of section.body) stack.push(block);
+			for (const area of [section.header, section.footer]) for (const definition of area.definitions) for (const block of definition.blocks) stack.push(block);
+		}
+		while (stack.length) {
+			const block = stack.pop();
+			if (block.type === "table") for (const cell of block.cells) for (const child of cell.blocks) stack.push(child);
+			else if (block.type === "unknown" && ["chart", "equation"].includes(block.kind)) {
+				const source = block.source;
+				if (!source || !Number.isSafeInteger(source.paragraph) || !Number.isSafeInteger(source.anchorUnit) || source.anchorUnit < 0 || !references.has(block)) continue;
+				const key = ownerKey(source.section, source.paragraph);
+				const slots = candidates.get(key) ?? /* @__PURE__ */ new Map();
+				const at = source.anchorUnit;
+				slots.set(at, slots.has(at) ? null : block);
+				candidates.set(key, slots);
+			}
+		}
+	}
+	const paragraphText = (block) => {
+		const captured = model.format === "hwpx" ? consumeParagraphAxis(block) : {
+			text: block.displayText,
+			owner: null,
+			allowsAnchor: (_unit, _node) => false
+		};
+		const text = captured.text;
+		if (text === null) return "[문단 내용 확인 불가]";
+		if (model.format !== "hwpx") return escape(text);
+		const slots = captured.owner ? candidates.get(ownerKey(captured.owner.section, captured.owner.paragraph)) : void 0;
+		const parts = [];
+		let last = 0;
+		for (const match of text.matchAll(/[\n\t\ufffc]/gu)) {
+			const at = match.index;
+			parts.push(escape(text.slice(last, at)));
+			if (match[0] === "\n") parts.push(markdown ? "<br>" : "\n");
+			else if (match[0] === "	") parts.push(markdown ? "&#9;" : "	");
+			else {
+				const object = slots?.get(at);
+				const reference = object ? references.get(object) : void 0;
+				const label = object && reference && captured.allowsAnchor(at, reference.node) && !shown.has(object) ? caption(object) : null;
+				if (label && object) {
+					parts.push(label + " [내용 확인 불가]");
+					shown.add(object);
+				} else parts.push(match[0]);
+			}
+			last = at + 1;
+		}
+		parts.push(escape(text.slice(last)));
+		return join(parts, "");
+	};
 	const inline = (block) => {
-		if (block.type === "paragraph") return block.displayText === null ? "[문단 내용 확인 불가]" : escape(block.displayText);
+		if (block.type === "paragraph") return paragraphText(block);
 		if (block.type !== "image") throw new TypeError("UnsupportedInlineBlockType");
 		const label = caption(block);
 		const alt = block.altState === "provided" && block.alt !== "" ? escape(block.alt) : null;
@@ -39892,6 +41672,8 @@ function renderContent(model, { markdown, escape, line, references, maxOutputUni
 	const blocks = (values, context) => {
 		for (const block of values) if (block.type === "paragraph" || block.type === "image") emit(inline(block), "paragraph", context);
 		else if (block.type === "unknown") {
+			if (shown.has(block)) continue;
+			shown.add(block);
 			const label = caption(block);
 			const name = names.get(block.kind);
 			emit(label ? label + " [내용 확인 불가]" : name ? "[" + name + ": 내용·참조 확인 불가]" : "[알 수 없는 내용]", "paragraph", context);
@@ -39938,9 +41720,52 @@ function renderContent(model, { markdown, escape, line, references, maxOutputUni
 		emit("[위치를 확인할 수 없는 내용]", "paragraph", null);
 		blocks([entry.block], null);
 	}
+	const partialCodes = /* @__PURE__ */ new Set([
+		"ControlAwareOwnerUnverified",
+		"ControlAwareTextUnavailable",
+		"ControlAwareTextMismatch",
+		"InvalidControlAwareText",
+		"ControlAwareBatchUnavailable"
+	]);
+	const groups = /* @__PURE__ */ new Map();
+	const nativeUint = (value) => typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	for (const warning of model.warnings) {
+		if (!partialCodes.has(warning.code)) continue;
+		const source = warning.source;
+		const section = source && "section" in source && nativeUint(source.section) ? source.section : null;
+		const paragraph = source && "paragraph" in source && nativeUint(source.paragraph) && source.paragraph > 0 ? source.paragraph : null;
+		const key = `${warning.code}:${section ?? "unknown"}`;
+		let group = groups.get(key);
+		if (!group) {
+			group = {
+				code: warning.code,
+				section,
+				paragraphs: /* @__PURE__ */ new Set(),
+				min: Infinity,
+				max: -Infinity,
+				representative: null,
+				unlocated: false
+			};
+			groups.set(key, group);
+		}
+		if (paragraph === null) group.unlocated = true;
+		else {
+			group.paragraphs.add(paragraph);
+			group.min = Math.min(group.min, paragraph);
+			group.max = Math.max(group.max, paragraph);
+			group.representative ??= paragraph;
+		}
+	}
+	for (const group of groups.values()) {
+		const place = group.section === null ? " · 구역 미확인" : ` · 구역 ${group.section}`;
+		const affected = group.paragraphs.size ? `영향 문단 ${group.paragraphs.size}개 · 관측 번호 범위 ${group.min}–${group.max} · 대표 Native 문단 ${group.representative}` + (group.unlocated ? " · 일부 영향 문단 번호 미확인" : "") : "영향 문단 번호 미확인";
+		emit(`[부분 읽기: ${escape(group.code)}${place}] 본문 텍스트는 보존해 읽었습니다. 줄바꿈·탭·개체 위치의 완전한 관측은 확인하지 못했습니다. ${affected}.`, "paragraph", null);
+	}
 	if (!model.coverage.inventoryComplete || model.warnings.length) emit("[일부 내용의 관측이 불완전합니다]", "paragraph", null);
 }
-var init_render_content = __esmMin((() => {}));
+var init_render_content = __esmMin((() => {
+	init_control_aware_text();
+}));
 // ../document/src/render.ts
 function optionsFor$1(options) {
 	if (!own(options) || !member(["text", "markdown"], options.format)) throw new TypeError("InvalidRenderFormat");
@@ -40302,7 +42127,7 @@ var init_picture_replacement_input = __esmMin((() => {
 }));
 // src/table-reference-resolution.ts
 function field$2(value, key, optional = false) {
-	if (!record$14(value)) throw new TypeError("InvalidTableDeletionModel");
+	if (!record$15(value)) throw new TypeError("InvalidTableDeletionModel");
 	const descriptor = Object.getOwnPropertyDescriptor(value, key);
 	if (!descriptor && optional) return void 0;
 	if (!descriptor || !Object.hasOwn(descriptor, "value")) throw new TypeError("InvalidTableDeletionModel");
@@ -40315,7 +42140,7 @@ function resolveTableReference(model, reference, expected, includeDimensions = f
 	function list(value, visit) {
 		if (!Array.isArray(value)) throw new TypeError("InvalidTableDeletionModel");
 		const length = Object.getOwnPropertyDescriptor(value, "length")?.value;
-		if (!uint$13(length) || length > maximum - edges) throw new RangeError("TableInventoryLimitExceeded");
+		if (!uint$17(length) || length > maximum - edges) throw new RangeError("TableInventoryLimitExceeded");
 		edges += length;
 		for (let index = 0; index < length; index++) {
 			const item = Object.getOwnPropertyDescriptor(value, String(index));
@@ -40327,7 +42152,7 @@ function resolveTableReference(model, reference, expected, includeDimensions = f
 	const sections = /* @__PURE__ */ new Set();
 	list(field$2(model, "sections"), (section) => {
 		const number = field$2(field$2(section, "source"), "section");
-		if (!uint$13(number) || number >= expected.sectionCount || sections.has(number)) throw new Error("InvalidTableDeletionModel");
+		if (!uint$17(number) || number >= expected.sectionCount || sections.has(number)) throw new Error("InvalidTableDeletionModel");
 		sections.add(number);
 		const enqueue = (value) => stack.push({
 			value,
@@ -40347,7 +42172,7 @@ function resolveTableReference(model, reference, expected, includeDimensions = f
 	let selectedObservation;
 	while (stack.length) {
 		const entry = stack.pop();
-		if (!record$14(entry.value) || visited.has(entry.value) || entry.depth > 64) throw new Error("InvalidTableDeletionModel");
+		if (!record$15(entry.value) || visited.has(entry.value) || entry.depth > 64) throw new Error("InvalidTableDeletionModel");
 		visited.add(entry.value);
 		const id = field$2(entry.value, "id"), type = field$2(entry.value, "type");
 		if (typeof id !== "string" || !id || identities.has(id) || typeof type !== "string" || ![
@@ -40366,7 +42191,7 @@ function resolveTableReference(model, reference, expected, includeDimensions = f
 			if (type === "table") {
 				const source = field$2(entry.value, "source");
 				const section = field$2(source, "section"), tableNode = field$2(source, "tableNode");
-				if (!uint$13(section) || !uint$13(tableNode) || section !== parsed.section || tableNode !== parsed.node) throw new Error("InvalidTableDeletionModel");
+				if (!uint$17(section) || !uint$17(tableNode) || section !== parsed.section || tableNode !== parsed.node) throw new Error("InvalidTableDeletionModel");
 				tables.set(value, {
 					section,
 					tableNode
@@ -40389,11 +42214,11 @@ function resolveTableReference(model, reference, expected, includeDimensions = f
 	};
 	return selected;
 }
-var record$14, uint$13;
+var record$15, uint$17;
 var init_table_reference_resolution = __esmMin((() => {
 	init_object_reference();
-	record$14 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	uint$13 = (value) => typeof value === "number" && Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
+	record$15 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	uint$17 = (value) => typeof value === "number" && Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
 }));
 // ../../js/table-file-grid.mjs
 function captureRequest(request) {
@@ -40413,7 +42238,7 @@ function captureRequest(request) {
 		"expectedRows",
 		"expectedColumns",
 		"index"
-	]) if (!uint$12(captured[key])) throw new RangeError("InvalidTableFileGridInteger");
+	]) if (!uint$16(captured[key])) throw new RangeError("InvalidTableFileGridInteger");
 	if (captured.expectedRows === 0 || captured.expectedColumns === 0) throw new RangeError("InvalidTableFileGridDimensions");
 	if (typeof captured.action !== "string" || !Object.hasOwn(actions, captured.action)) throw new TypeError("InvalidTableFileGridAction");
 	if (Object.hasOwn(captured, "layout") && captured.layout !== "spec6" && !(captured.format === "hwp5" && captured.layout === "observed8")) throw new TypeError("InvalidTableFileGridLayout");
@@ -40461,7 +42286,7 @@ async function createSourceTableGridFileApi(source, { instantiate = WebAssembly.
 				attempt(() => memory.withBytes(document, (ptr, length) => attempt(() => {
 					if (wasm.table_file_grid_edit(target.format === "hwp5" ? 1 : 2, ptr, length, target.section, target.tableNode, target.expectedRows, target.expectedColumns, actions[target.action], target.index, target.layout === "observed8" ? 1 : 0) !== 1) throw memory.error();
 					const pointer = wasm.table_file_grid_ptr(), size = wasm.table_file_grid_len();
-					if (!uint$12(pointer) || pointer === 0 || !uint$12(size) || size === 0 || size > TABLE_FILE_GRID_LIMITS.outputBytes || pointer > wasm.memory.buffer.byteLength - size) throw new RangeError("InvalidTableFileGridOutput");
+					if (!uint$16(pointer) || pointer === 0 || !uint$16(size) || size === 0 || size > TABLE_FILE_GRID_LIMITS.outputBytes || pointer > wasm.memory.buffer.byteLength - size) throw new RangeError("InvalidTableFileGridOutput");
 					output = memory.copy(pointer, size);
 				})));
 				attempt(() => wasm.table_file_grid_free());
@@ -40481,7 +42306,7 @@ async function createSourceTableGridFileApi(source, { instantiate = WebAssembly.
 		}
 	};
 }
-var TABLE_FILE_GRID_LIMITS, fields$2, actions, uint$12;
+var TABLE_FILE_GRID_LIMITS, fields$2, actions, uint$16;
 var init_table_file_grid = __esmMin((() => {
 	init_abi_schema();
 	init_wasm_memory();
@@ -40506,19 +42331,19 @@ var init_table_file_grid = __esmMin((() => {
 		"insert-column": CREATED_TABLE_GRID_ACTION.insert_column,
 		"delete-column": CREATED_TABLE_GRID_ACTION.delete_column
 	});
-	uint$12 = (value) => Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
+	uint$16 = (value) => Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
 }));
 // src/edit-table-grid.ts
 var edit_table_grid_exports = /* @__PURE__ */ __exportAll$1({ editDocumentTableGrid: () => editDocumentTableGrid });
 function field$1(value, key, optional = false) {
-	if (!record$13(value)) throw new TypeError("InvalidTableGridModel");
+	if (!record$14(value)) throw new TypeError("InvalidTableGridModel");
 	const descriptor = Object.getOwnPropertyDescriptor(value, key);
 	if (!descriptor && optional) return void 0;
 	if (!descriptor || !Object.hasOwn(descriptor, "value")) throw new TypeError("InvalidTableGridModel");
 	return descriptor.value;
 }
 async function editDocumentTableGrid(input, dependencies = {}) {
-	if (!record$13(input) || Reflect.ownKeys(input).some((key) => typeof key !== "string" || ![
+	if (!record$14(input) || Reflect.ownKeys(input).some((key) => typeof key !== "string" || ![
 		"bytes",
 		"wasm",
 		"reference",
@@ -40543,7 +42368,7 @@ async function editDocumentTableGrid(input, dependencies = {}) {
 		"delete-row",
 		"insert-column",
 		"delete-column"
-	].includes(action) || !uint$11(index) || !uint$11(expectedRows) || !uint$11(expectedColumns) || expectedRows < 1 || expectedColumns < 1 || Object.hasOwn(input, "layout") && layout !== "spec6" && layout !== "observed8") throw new TypeError("InvalidTableGridInput");
+	].includes(action) || !uint$15(index) || !uint$15(expectedRows) || !uint$15(expectedColumns) || expectedRows < 1 || expectedColumns < 1 || Object.hasOwn(input, "layout") && layout !== "spec6" && layout !== "observed8") throw new TypeError("InvalidTableGridInput");
 	const axis = action.endsWith("row") ? expectedRows : expectedColumns;
 	if (action.startsWith("insert-") ? index > axis || axis === 4294967295 : index >= axis || axis === 1) throw new RangeError("InvalidTableGridIndex");
 	const format = detectDocumentFormat(source);
@@ -40570,7 +42395,7 @@ async function editDocumentTableGrid(input, dependencies = {}) {
 		});
 		own(document);
 		const sectionCount = field$1(document, "sectionCount"), sdk = field$1(document, "sdk");
-		if (field$1(document, "format") !== format || field$1(document, "sourceSha256") !== sourceSha256 || !uint$11(sectionCount) || sectionCount < 1 || sectionCount > 4096 || target.section >= sectionCount || !record$13(sdk)) throw new Error("InvalidTableGridDocument");
+		if (field$1(document, "format") !== format || field$1(document, "sourceSha256") !== sourceSha256 || !uint$15(sectionCount) || sectionCount < 1 || sectionCount > 4096 || target.section >= sectionCount || !record$14(sdk)) throw new Error("InvalidTableGridDocument");
 		const selected = resolveTableReference(await observe({
 			format,
 			sourceSha256,
@@ -40619,7 +42444,7 @@ async function editDocumentTableGrid(input, dependencies = {}) {
 	if (!result) throw new Error("InvalidTableGridResult");
 	return result;
 }
-var record$13, uint$11;
+var record$14, uint$15;
 var init_edit_table_grid = __esmMin((() => {
 	init_table_reference_resolution();
 	init_document_format();
@@ -40628,8 +42453,8 @@ var init_edit_table_grid = __esmMin((() => {
 	init_engine();
 	init_document_model();
 	init_object_reference();
-	record$13 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	uint$11 = (value) => typeof value === "number" && Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
+	record$14 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	uint$15 = (value) => typeof value === "number" && Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
 }));
 // src/grid-file-host.ts
 var grid_file_host_exports = /* @__PURE__ */ __exportAll$1({ runGridFileCommand: () => runGridFileCommand });
@@ -40660,7 +42485,7 @@ async function runGridFileCommand(options, { files, io, loadWasm, dependencies =
 		expectedColumns: options.expectedColumns,
 		...options.layout === void 0 ? {} : { layout: options.layout }
 	});
-	if (!record$12(value)) throw new Error("InvalidFileTransformResult");
+	if (!record$13(value)) throw new Error("InvalidFileTransformResult");
 	const { format: returnedFormat, bytes, sourceSha256, layoutRequiresReflow, previewStale } = value;
 	if (returnedFormat !== format || sourceSha256 !== source.sha256 || layoutRequiresReflow !== true || previewStale !== true || !(bytes instanceof Uint8Array) || bytes.byteLength === 0 || bytes.byteLength > 67108864 || typeof SharedArrayBuffer !== "undefined" && bytes.buffer instanceof SharedArrayBuffer) throw new Error("InvalidFileTransformResult");
 	const output = copyFileTransformInput(bytes, MAX_DOCUMENT_BYTES$1, "Output");
@@ -40673,12 +42498,12 @@ async function runGridFileCommand(options, { files, io, loadWasm, dependencies =
 	await io.stdout.write(line("output", receipt.path) + line("format", format) + line("sha256", receipt.sha256) + line("sourceSHA256", sourceSha256) + line("layoutRequiresReflow", true) + line("previewStale", true) + warningLines(receipt.warnings));
 	return 0;
 }
-var record$12;
+var record$13;
 var init_grid_file_host = __esmMin((() => {
 	init_document_format();
 	init_picture_replacement_input();
 	init_object_reference();
-	record$12 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	record$13 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 }));
 // ../document/src/bytes.ts
 function copyDocumentBytes(value, limit, name) {
@@ -40880,11 +42705,11 @@ function createDocumentImages({ sdk, format, sourceSha256, sectionCount, limits 
 		if (sites.length > budget.maxImages - rows.size) fail("ImageCountLimitExceeded");
 		if (format === "hwp5") validateHwp5PictureSources(sites);
 		for (const row of sites) {
-			if (!record$11(row)) fail("InvalidImageIdentity");
+			if (!record$12(row)) fail("InvalidImageIdentity");
 			const node = format === "hwp5" ? row.component_node : row.pictureNode;
-			if (!uint$10(node)) fail("InvalidImageIdentity");
-			if (format === "hwpx" && (typeof row.state !== "string" || !siteStates.has(row.state) || !(row.paragraph === null || uint$10(row.paragraph) && row.paragraph > 0) || !(row.anchorUnit === null || uint$10(row.anchorUnit)))) fail("InvalidImageInventory");
-			if (format === "hwp5" && (!uint$10(row.picture_node) || !uint$10(row.owner_node) || !uint$10(row.bin_data_id))) fail("InvalidImageInventory");
+			if (!uint$14(node)) fail("InvalidImageIdentity");
+			if (format === "hwpx" && (typeof row.state !== "string" || !siteStates.has(row.state) || !(row.paragraph === null || uint$14(row.paragraph) && row.paragraph > 0) || !(row.anchorUnit === null || uint$14(row.anchorUnit)))) fail("InvalidImageInventory");
+			if (format === "hwp5" && (!uint$14(row.picture_node) || !uint$14(row.owner_node) || !uint$14(row.bin_data_id))) fail("InvalidImageInventory");
 			const id = canonicalImageId({
 				format,
 				section,
@@ -41012,7 +42837,7 @@ function createDocumentImages({ sdk, format, sourceSha256, sectionCount, limits 
 		}
 	};
 }
-var DOCUMENT_IMAGE_LIMITS, uint$10, digest$2, siteStates, unsupported$1, DocumentImageError, pngDepths, isRows, record$11, errorMessage, invoke$1;
+var DOCUMENT_IMAGE_LIMITS, uint$14, digest$2, siteStates, unsupported$1, DocumentImageError, pngDepths, isRows, record$12, errorMessage, invoke$1;
 var init_document_images$1 = __esmMin((() => {
 	init_hwp5_picture_sources();
 	init_object_reference$1();
@@ -41021,7 +42846,7 @@ var init_document_images$1 = __esmMin((() => {
 		maxBytes: 8388608,
 		maxTotalBytes: 33554432
 	});
-	uint$10 = (n) => typeof n === "number" && Number.isInteger(n) && n >= 0 && n <= 4294967295;
+	uint$14 = (n) => typeof n === "number" && Number.isInteger(n) && n >= 0 && n <= 4294967295;
 	digest$2 = (s) => typeof s === "string" && /^[a-f0-9]{64}$/.test(s);
 	siteStates = /* @__PURE__ */ new Set([
 		"located",
@@ -41074,7 +42899,7 @@ var init_document_images$1 = __esmMin((() => {
 		6: [8, 16]
 	};
 	isRows = (value) => Array.isArray(value);
-	record$11 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	record$12 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 	errorMessage = (error) => error !== null && typeof error === "object" && "message" in error && typeof error.message === "string" ? error.message : void 0;
 	invoke$1 = (sdk, method, args) => {
 		const fn = Reflect.get(sdk, method);
@@ -41447,7 +43272,7 @@ function warningStrings(warnings) {
 			"anchorUnit"
 		]) {
 			const property = Object.getOwnPropertyDescriptor(value.source, key);
-			if (property && Object.hasOwn(property, "value") && uint$9(property.value)) addresses.push(key + "=" + property.value);
+			if (property && Object.hasOwn(property, "value") && uint$13(property.value)) addresses.push(key + "=" + property.value);
 		}
 		if (value.code.length + value.message.length > 2048) throw new RangeError("HtmlWarningLimitExceeded");
 		const text = displayWarning("[" + value.code + "] " + value.message + (addresses.length ? " (" + addresses.join(", ") + ")" : ""));
@@ -41459,9 +43284,9 @@ function warningStrings(warnings) {
 function validateNativeScope(model, count, references) {
 	const source = (value, expected) => {
 		if (value === void 0) return;
-		if (!object(value)) throw new Error("HtmlModelSourceMismatch");
+		if (!object$1(value)) throw new Error("HtmlModelSourceMismatch");
 		const section = value.section;
-		if (section !== void 0 && section !== null && (!uint$9(section) || section >= count || expected !== void 0 && section !== expected)) throw new Error("HtmlModelSourceMismatch");
+		if (section !== void 0 && section !== null && (!uint$13(section) || section >= count || expected !== void 0 && section !== expected)) throw new Error("HtmlModelSourceMismatch");
 	};
 	const stack = [];
 	const sections = /* @__PURE__ */ new Set();
@@ -41506,7 +43331,7 @@ function validateNativeScope(model, count, references) {
 	}
 }
 function capture$2(value, withBytes) {
-	if (!object(value)) throw new TypeError("ExplicitWasmRequired");
+	if (!object$1(value)) throw new TypeError("ExplicitWasmRequired");
 	const allowed = [
 		"wasm",
 		"embedImages",
@@ -41601,11 +43426,11 @@ async function exportDocumentHTML(input, dependencies = {}) {
 				if (listing.version !== 1 || listing.format !== format || listing.sourceSha256 !== sourceSha256 || !Array.isArray(listing.images) || listing.images.length > 4096) throw new Error("InvalidHtmlImageInventory");
 				const members = /* @__PURE__ */ new Map();
 				for (const row of listing.images) {
-					if (!object(row) || !object(row.source) || !uint$9(row.source.section) || row.source.section >= document.sectionCount || !uint$9(row.source.pictureNode) || typeof row.id !== "string" || members.has(row.id) || row.id !== canonicalImageId({
+					if (!object$1(row) || !object$1(row.source) || !uint$13(row.source.section) || row.source.section >= document.sectionCount || !uint$13(row.source.pictureNode) || typeof row.id !== "string" || members.has(row.id) || row.id !== canonicalImageId({
 						format,
 						section: row.source.section,
 						node: row.source.pictureNode
-					}) || typeof row.resourceKey !== "string" || (format === "hwp5" ? !uint$9(row.source.resourceOrdinal) || !uint$9(row.source.recordNode) || !uint$9(row.source.ownerNode) || row.resourceKey !== `docinfo:${row.source.resourceOrdinal}` : row.resourceKey !== `source:${row.source.section}:${row.source.pictureNode}`)) throw new Error("InvalidHtmlImageInventory");
+					}) || typeof row.resourceKey !== "string" || (format === "hwp5" ? !uint$13(row.source.resourceOrdinal) || !uint$13(row.source.recordNode) || !uint$13(row.source.ownerNode) || row.resourceKey !== `docinfo:${row.source.resourceOrdinal}` : row.resourceKey !== `source:${row.source.section}:${row.source.pictureNode}`)) throw new Error("InvalidHtmlImageInventory");
 					members.set(row.id, row);
 				}
 				const supported = /* @__PURE__ */ new Set([
@@ -41630,7 +43455,7 @@ async function exportDocumentHTML(input, dependencies = {}) {
 					}
 					if (!uri && !exhausted) try {
 						const value = images.read(id, { sourceSha256 });
-						if (!object(value) || !object(value.source) || value.id !== id || value.sourceSha256 !== sourceSha256 || value.resourceKey !== member.resourceKey || value.source.section !== ref.section || value.source.pictureNode !== ref.node) throw new Error("HtmlImageSourceMismatch");
+						if (!object$1(value) || !object$1(value.source) || value.id !== id || value.sourceSha256 !== sourceSha256 || value.resourceKey !== member.resourceKey || value.source.section !== ref.section || value.source.pictureNode !== ref.node) throw new Error("HtmlImageSourceMismatch");
 						if (value.recognized !== true || !value.mime || !supported.has(value.mime)) {
 							unavailable.add(member.resourceKey);
 							additions.push(warning("HtmlImageFormatUnsupported", "지원되는 raster 형식으로 관측되지 않아 바이트를 포함하지 않았습니다.", ref.section, ref.node));
@@ -41695,7 +43520,7 @@ async function exportDocumentHTML(input, dependencies = {}) {
 	if (!result) throw new Error("MissingHtmlExportResult");
 	return result;
 }
-var object, uint$9, displayWarning, ALPHABET, warning;
+var object$1, uint$13, displayWarning, ALPHABET, warning;
 var init_export_html$1 = __esmMin((() => {
 	init_document_format();
 	init_bytes();
@@ -41707,8 +43532,8 @@ var init_export_html$1 = __esmMin((() => {
 	init_render_html();
 	init_render_escape$1();
 	init_limits();
-	object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	uint$9 = (value) => typeof value === "number" && Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
+	object$1 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	uint$13 = (value) => typeof value === "number" && Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
 	displayWarning = createDisplayEscaper({
 		format: "text",
 		view: "structure"
@@ -41743,13 +43568,13 @@ function captureTarget(request) {
 		values[name] = field.value;
 	}
 	const { format, section, tableNodes } = values;
-	if (!["hwp5", "hwpx"].includes(format) || !uint$8(section) || !Array.isArray(tableNodes)) throw new TypeError("InvalidTableDeletionTarget");
+	if (!["hwp5", "hwpx"].includes(format) || !uint$12(section) || !Array.isArray(tableNodes)) throw new TypeError("InvalidTableDeletionTarget");
 	const length = Object.getOwnPropertyDescriptor(tableNodes, "length")?.value;
 	if (!Number.isInteger(length) || length < 1 || length > TABLE_FILE_DELETION_LIMITS.maxTables) throw new RangeError("TableDeletionTargetLimitExceeded");
 	const bytes = new Uint8Array(length * 4), wire = new DataView(bytes.buffer), seen = /* @__PURE__ */ new Set();
 	for (let index = 0; index < length; index++) {
 		const field = Object.getOwnPropertyDescriptor(tableNodes, String(index));
-		if (!field || !Object.hasOwn(field, "value") || !uint$8(field.value) || seen.has(field.value)) throw new TypeError("InvalidTableDeletionTarget");
+		if (!field || !Object.hasOwn(field, "value") || !uint$12(field.value) || seen.has(field.value)) throw new TypeError("InvalidTableDeletionTarget");
 		seen.add(field.value);
 		wire.setUint32(index * 4, field.value, true);
 	}
@@ -41798,7 +43623,7 @@ async function createTableDeleter(source, { instantiate = WebAssembly.instantiat
 				new Uint8Array(wasm.memory.buffer, targetsPtr, target.bytes.length).set(target.bytes);
 				if (wasm.table_file_delete(target.format === "hwp5" ? 1 : 2, ptr, size, target.section, targetsPtr, target.count) !== 1) throw memory.error();
 				const pointer = wasm.table_file_delete_ptr(), length = wasm.table_file_delete_len();
-				if (!uint$8(pointer) || pointer === 0 || !uint$8(length) || length === 0 || length > TABLE_FILE_DELETION_LIMITS.outputBytes || pointer > wasm.memory.buffer.byteLength - length) throw new RangeError("InvalidTableDeletionOutput");
+				if (!uint$12(pointer) || pointer === 0 || !uint$12(length) || length === 0 || length > TABLE_FILE_DELETION_LIMITS.outputBytes || pointer > wasm.memory.buffer.byteLength - length) throw new RangeError("InvalidTableDeletionOutput");
 				output = memory.copy(pointer, length);
 			})))));
 			attempt(() => wasm.table_file_delete_free());
@@ -41814,7 +43639,7 @@ async function createTableDeleter(source, { instantiate = WebAssembly.instantiat
 		}
 	};
 }
-var TABLE_FILE_DELETION_LIMITS, uint$8;
+var TABLE_FILE_DELETION_LIMITS, uint$12;
 var init_table_file_deletion = __esmMin((() => {
 	init_abi_schema();
 	init_wasm_memory();
@@ -41825,19 +43650,19 @@ var init_table_file_deletion = __esmMin((() => {
 		outputBytes: PICTURE_REPLACEMENT_LIMITS.outputBytes,
 		maxTables: 4096
 	});
-	uint$8 = (value) => Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
+	uint$12 = (value) => Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
 }));
 // src/delete-table.ts
 var delete_table_exports = /* @__PURE__ */ __exportAll$1({ deleteDocumentTable: () => deleteDocumentTable });
 function field(value, key, optional = false) {
-	if (!record$10(value)) throw new TypeError("InvalidTableDeletionModel");
+	if (!record$11(value)) throw new TypeError("InvalidTableDeletionModel");
 	const descriptor = Object.getOwnPropertyDescriptor(value, key);
 	if (!descriptor && optional) return void 0;
 	if (!descriptor || !Object.hasOwn(descriptor, "value")) throw new TypeError("InvalidTableDeletionModel");
 	return descriptor.value;
 }
 async function deleteDocumentTable(input, dependencies = {}) {
-	if (!record$10(input) || Reflect.ownKeys(input).some((key) => typeof key !== "string" || ![
+	if (!record$11(input) || Reflect.ownKeys(input).some((key) => typeof key !== "string" || ![
 		"bytes",
 		"wasm",
 		"reference"
@@ -41870,7 +43695,7 @@ async function deleteDocumentTable(input, dependencies = {}) {
 		});
 		own(document);
 		const sectionCount = field(document, "sectionCount"), sdk = field(document, "sdk");
-		if (field(document, "format") !== format || field(document, "sourceSha256") !== sourceSha256 || !uint$7(sectionCount) || sectionCount < 1 || sectionCount > 4096 || target.section >= sectionCount || !record$10(sdk)) throw new Error("InvalidTableDeletionDocument");
+		if (field(document, "format") !== format || field(document, "sourceSha256") !== sourceSha256 || !uint$11(sectionCount) || sectionCount < 1 || sectionCount > 4096 || target.section >= sectionCount || !record$11(sdk)) throw new Error("InvalidTableDeletionDocument");
 		const selected = resolveTableReference(await observe({
 			format,
 			sourceSha256,
@@ -41913,7 +43738,7 @@ async function deleteDocumentTable(input, dependencies = {}) {
 	if (!result) throw new Error("InvalidTableDeletionResult");
 	return result;
 }
-var record$10, uint$7;
+var record$11, uint$11;
 var init_delete_table = __esmMin((() => {
 	init_table_reference_resolution();
 	init_document_format();
@@ -41922,22 +43747,22 @@ var init_delete_table = __esmMin((() => {
 	init_engine();
 	init_document_model();
 	init_object_reference();
-	record$10 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	uint$7 = (value) => typeof value === "number" && Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
+	record$11 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	uint$11 = (value) => typeof value === "number" && Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
 }));
 // ../../js/image-file-insertion.mjs
 function captureImageInsertionRequest(input) {
 	if (!input || typeof input !== "object" || Array.isArray(input)) throw new TypeError("InvalidImageInsertionRequest");
-	if (Reflect.ownKeys(input).some((key) => !keys.includes(key))) throw new TypeError("InvalidImageInsertionRequest");
+	if (Reflect.ownKeys(input).some((key) => !keys$1.includes(key))) throw new TypeError("InvalidImageInsertionRequest");
 	const fields = Object.create(null);
-	for (const key of keys) {
+	for (const key of keys$1) {
 		const descriptor = Object.getOwnPropertyDescriptor(input, key);
 		if (!descriptor || !Object.hasOwn(descriptor, "value")) throw new TypeError("InvalidImageInsertionRequest");
 		fields[key] = descriptor.value;
 	}
 	const { format, section, paragraph, unit, width, height, expectedText, expectedSha256 } = fields;
-	if (!["hwp5", "hwpx"].includes(format) || !uint$6(section) || !uint$6(paragraph) || format === "hwpx" && paragraph === 0 || !uint$6(unit)) throw new TypeError("InvalidImageInsertionTarget");
-	if (!uint$6(width) || !uint$6(height) || width < 1 || height < 1 || width > 2147483647 || height > 2147483647) throw new RangeError("InvalidImageInsertionSize");
+	if (!["hwp5", "hwpx"].includes(format) || !uint$10(section) || !uint$10(paragraph) || format === "hwpx" && paragraph === 0 || !uint$10(unit)) throw new TypeError("InvalidImageInsertionTarget");
+	if (!uint$10(width) || !uint$10(height) || width < 1 || height < 1 || width > 2147483647 || height > 2147483647) throw new RangeError("InvalidImageInsertionSize");
 	if (typeof expectedSha256 !== "string" || !/^[a-f0-9]{64}$/.test(expectedSha256)) throw new TypeError("InvalidExpectedSha256");
 	if (typeof expectedText !== "string" || !expectedText.isWellFormed()) throw new TypeError("InvalidImageInsertionText");
 	if (expectedText.length > 4194240) throw new RangeError("ImageInsertionRequestByteLimitExceeded");
@@ -42017,7 +43842,7 @@ async function createImageInserter(source, { instantiate = WebAssembly.instantia
 						if (wasm.image_file_insert(captured.format === "hwp5" ? 1 : 2, ptr, size, requestPtr, requestSize, imagePtr, imageSize) !== 1) throw memory.error();
 						const outputPtr = wasm.image_file_insert_ptr();
 						const length = wasm.image_file_insert_len();
-						if (!uint$6(outputPtr) || outputPtr === 0 || !uint$6(length) || length === 0 || length > PICTURE_REPLACEMENT_LIMITS.outputBytes || outputPtr > wasm.memory.buffer.byteLength - length) throw new RangeError("InvalidImageInsertionOutput");
+						if (!uint$10(outputPtr) || outputPtr === 0 || !uint$10(length) || length === 0 || length > PICTURE_REPLACEMENT_LIMITS.outputBytes || outputPtr > wasm.memory.buffer.byteLength - length) throw new RangeError("InvalidImageInsertionOutput");
 						return memory.copy(outputPtr, length);
 					})));
 				} catch (error) {
@@ -42045,15 +43870,15 @@ async function createImageInserter(source, { instantiate = WebAssembly.instantia
 		}
 	};
 }
-var headerBytes, encoder$4, uint$6, keys;
+var headerBytes, encoder$4, uint$10, keys$1;
 var init_image_file_insertion = __esmMin((() => {
 	init_abi_schema();
 	init_wasm_memory();
 	init_picture_replacement_input();
 	headerBytes = 64;
 	encoder$4 = new TextEncoder();
-	uint$6 = (value) => Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
-	keys = [
+	uint$10 = (value) => Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
+	keys$1 = [
 		"format",
 		"section",
 		"paragraph",
@@ -42178,7 +44003,7 @@ async function runStructuralCommand(options, { files, io, loadWasm, dependencies
 			wasm,
 			embedImages: options.embedImages
 		});
-		if (!record$9(result)) throw new Error("InvalidHTMLConversionResult");
+		if (!record$10(result)) throw new Error("InvalidHTMLConversionResult");
 		const { html, sourceSha256, semanticOnly, warnings } = result;
 		const warningCount = Array.isArray(warnings) ? warnings.length : void 0;
 		if (result.format !== format || sourceSha256 !== source.sha256 || semanticOnly !== true || typeof html !== "string" || !html.isWellFormed() || html.length === 0 || html.length > 33554432 || !Array.isArray(warnings) || typeof warningCount !== "number" || !Number.isInteger(warningCount) || warningCount < 0 || warningCount > 4096) throw new Error("InvalidHTMLConversionResult");
@@ -42220,7 +44045,7 @@ async function runStructuralCommand(options, { files, io, loadWasm, dependencies
 			height: options.height
 		});
 	}
-	if (!record$9(value)) throw new Error("InvalidFileTransformResult");
+	if (!record$10(value)) throw new Error("InvalidFileTransformResult");
 	const { bytes, sourceSha256, layoutRequiresReflow, previewStale } = value;
 	if (value.format !== format || sourceSha256 !== source.sha256 || layoutRequiresReflow !== true || previewStale !== true || !(bytes instanceof Uint8Array) || bytes.byteLength === 0 || bytes.byteLength > 67108864 || typeof SharedArrayBuffer !== "undefined" && bytes.buffer instanceof SharedArrayBuffer || image !== void 0 && value.imageSha256 !== image.sha256) throw new Error("InvalidFileTransformResult");
 	const output = copyFileTransformInput(bytes, MAX_DOCUMENT_BYTES$1, "Output");
@@ -42233,7 +44058,7 @@ async function runStructuralCommand(options, { files, io, loadWasm, dependencies
 	await io.stdout.write(line("output", receipt.path) + line("format", format) + line("sha256", receipt.sha256) + line("sourceSHA256", sourceSha256) + (image ? line("imageSHA256", image.sha256) : "") + line("layoutRequiresReflow", true) + line("previewStale", true) + warningLines(receipt.warnings));
 	return 0;
 }
-var encoder$3, record$9;
+var encoder$3, record$10;
 var init_structural_host = __esmMin((() => {
 	init_document_format();
 	init_picture_replacement_input();
@@ -42241,7 +44066,654 @@ var init_structural_host = __esmMin((() => {
 	init_object_reference();
 	init_host_output();
 	encoder$3 = new TextEncoder();
-	record$9 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	record$10 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+}));
+// ../core/src/commands/formatting-resource-intent.ts
+function object(value) {
+	if (value === null || typeof value !== "object" || Array.isArray(value)) throw Error("InvalidFormattingResource");
+	return value;
+}
+function keys(value, allowed) {
+	for (const key of Object.keys(value)) if (!allowed.includes(key)) throw Error(`UnknownFormattingField:${key}`);
+}
+function integer$1(value, minimum, maximum) {
+	if (typeof value !== "number" || !Number.isInteger(value) || value < minimum || value > maximum) throw Error("InvalidFormattingResourceValue");
+}
+function rgb$1(value) {
+	integer$1(value, 0, 16777215);
+}
+function validateBorderPatch(value) {
+	const border = object(value);
+	keys(border, [
+		"left",
+		"right",
+		"top",
+		"bottom"
+	]);
+	let present = false;
+	for (const edge of Object.values(border)) {
+		if (edge === void 0) continue;
+		const row = object(edge);
+		keys(row, [
+			"style",
+			"widthHundredthMm",
+			"color"
+		]);
+		if (row.style !== void 0) {
+			if (!styles.has(row.style)) throw Error("UnsupportedBorderLineStyle");
+			present = true;
+		}
+		if (row.widthHundredthMm !== void 0) {
+			if (!widths.has(row.widthHundredthMm)) throw Error("UnsupportedBorderWidth");
+			present = true;
+		}
+		if (row.color !== void 0) {
+			rgb$1(row.color);
+			present = true;
+		}
+	}
+	return present;
+}
+function validateBackgroundPatch(value) {
+	const row = object(value);
+	switch (row.kind) {
+		case "none":
+			keys(row, ["kind"]);
+			return;
+		case "solid":
+			keys(row, [
+				"kind",
+				"color",
+				"hatchColor"
+			]);
+			rgb$1(row.color);
+			if (row.hatchColor !== void 0) rgb$1(row.hatchColor);
+			return;
+		case "hatch":
+			keys(row, [
+				"kind",
+				"faceColor",
+				"hatchColor",
+				"style"
+			]);
+			rgb$1(row.faceColor);
+			rgb$1(row.hatchColor);
+			if (!hatch.has(row.style)) throw Error("UnsupportedBackgroundHatch");
+			return;
+		case "linear":
+			keys(row, [
+				"kind",
+				"colors",
+				"angle",
+				"centerX",
+				"centerY",
+				"step",
+				"stepCenter"
+			]);
+			if (!Array.isArray(row.colors) || row.colors.length !== 2) throw Error("UnsupportedBackgroundStops");
+			for (const color of row.colors) rgb$1(color);
+			integer$1(row.angle, 0, 359);
+			for (const name of [
+				"centerX",
+				"centerY",
+				"step",
+				"stepCenter"
+			]) integer$1(row[name], 0, 100);
+			return;
+		default: throw Error("UnsupportedBackgroundKind");
+	}
+}
+var styles, widths, hatch;
+var init_formatting_resource_intent = __esmMin((() => {
+	init_border_fill_values();
+	styles = new Set(BORDER_LINE_STYLES$1);
+	widths = new Set(BORDER_WIDTHS_HUNDREDTH_MM$1);
+	hatch = /* @__PURE__ */ new Set([
+		"HORIZONTAL",
+		"VERTICAL",
+		"BACK_SLASH",
+		"SLASH",
+		"CROSS",
+		"CROSS_DIAGONAL"
+	]);
+	Object.freeze([...styles]);
+	Object.freeze([...widths]);
+	Object.freeze([...hatch]);
+}));
+// ../core/src/commands/character-formatting-patch.ts
+function record$9(value, allowed) {
+	if (!value || typeof value !== "object" || Array.isArray(value) || Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null) throw Error("InvalidFormattingPatch");
+	for (const key of Reflect.ownKeys(value)) {
+		if (typeof key !== "string" || !allowed.includes(key)) throw Error("UnknownFormattingField");
+		if (!("value" in Object.getOwnPropertyDescriptor(value, key))) throw Error("InvalidFormattingPatch");
+	}
+	return value;
+}
+function integer(value, lo, hi) {
+	if (typeof value !== "number" || !Number.isInteger(value) || value < lo || value > hi) throw Error("InvalidCharacterFormattingValue");
+}
+function rgb(value) {
+	integer(value, 0, 16777215);
+}
+function choice(value, values) {
+	if (typeof value !== "string" || !values.includes(value)) throw Error("UnsupportedCharacterFormattingValue");
+}
+function boolean(value) {
+	if (typeof value !== "boolean") throw Error("InvalidCharacterFormattingValue");
+}
+/** Mirrors the existing Native JSON intent. Per-format support, ownership and
+* conditional source creation remain Native preflight decisions, not defaults here. */
+function validateCharacterFormattingPatch(value) {
+	const c = record$9(value, [
+		"size",
+		"bold",
+		"italic",
+		"textColor",
+		"fonts",
+		"ratio",
+		"charSpacing",
+		"relativeSize",
+		"offset",
+		"underline",
+		"strike",
+		"shade",
+		"outlineKind",
+		"effects",
+		"shadow",
+		"border",
+		"background"
+	]);
+	if (c.size !== void 0) integer(c.size, 0, 409600);
+	for (const key of ["bold", "italic"]) if (c[key] !== void 0) boolean(c[key]);
+	if (c.textColor !== void 0) rgb(c.textColor);
+	if (c.fonts !== void 0) {
+		const fonts = record$9(c.fonts, FONT_LANGUAGES);
+		for (const language of FONT_LANGUAGES) {
+			if (fonts[language] === void 0) continue;
+			const f = record$9(fonts[language], ["id", "name"]);
+			if (f.id !== void 0 === (f.name !== void 0)) throw Error("InvalidCharacterFontIntent");
+			if (f.id !== void 0) integer(f.id, 0, 4294967295);
+			else characterFontNameArgs(language, f.name);
+		}
+	}
+	for (const [key, lo, hi] of [
+		[
+			"ratio",
+			50,
+			200
+		],
+		[
+			"charSpacing",
+			-50,
+			50
+		],
+		[
+			"relativeSize",
+			10,
+			250
+		],
+		[
+			"offset",
+			-100,
+			100
+		]
+	]) {
+		if (c[key] === void 0) continue;
+		const metrics = record$9(c[key], FONT_LANGUAGES);
+		for (const v of Object.values(metrics)) if (v !== void 0) integer(v, lo, hi);
+	}
+	for (const key of ["underline", "strike"]) {
+		if (c[key] === void 0) continue;
+		const d = record$9(c[key], key === "underline" ? [
+			"kind",
+			"style",
+			"color"
+		] : [
+			"enabled",
+			"style",
+			"color"
+		]);
+		if (d.color !== void 0) rgb(d.color);
+		if (d.style !== void 0 && !lineStyles.has(d.style)) throw Error("UnsupportedCharacterLineStyle");
+		if (key === "underline" && d.kind !== void 0) choice(d.kind, [
+			"none",
+			"bottom",
+			"center",
+			"top"
+		]);
+		if (key === "strike" && d.enabled !== void 0) boolean(d.enabled);
+	}
+	if (c.shade !== void 0) {
+		const s = record$9(c.shade, ["kind", "color"]);
+		choice(s.kind, ["none", "color"]);
+		if (s.kind === "none") {
+			if (s.color !== void 0) throw Error("InvalidCharacterShade");
+		} else rgb(s.color);
+	}
+	if (c.outlineKind !== void 0) choice(c.outlineKind, [
+		"none",
+		"solid",
+		"dot",
+		"thick",
+		"dash",
+		"dash_dot",
+		"dash_dot_dot"
+	]);
+	if (c.effects !== void 0) {
+		const e = record$9(c.effects, ["relief", "script"]);
+		if (e.relief !== void 0) choice(e.relief, [
+			"none",
+			"emboss",
+			"engrave"
+		]);
+		if (e.script !== void 0) choice(e.script, [
+			"normal",
+			"superscript",
+			"subscript"
+		]);
+	}
+	if (c.shadow !== void 0) {
+		const s = record$9(c.shadow, [
+			"kind",
+			"offsetX",
+			"offsetY",
+			"color"
+		]);
+		if (s.kind !== void 0) choice(s.kind, [
+			"none",
+			"drop",
+			"continuous"
+		]);
+		for (const k of ["offsetX", "offsetY"]) if (s[k] !== void 0) integer(s[k], -100, 100);
+		if (s.color !== void 0) rgb(s.color);
+	}
+	if (c.border !== void 0) validateBorderPatch(c.border);
+	if (c.background !== void 0) validateBackgroundPatch(c.background);
+}
+var lineStyles;
+var init_character_formatting_patch = __esmMin((() => {
+	init_formatting_resource_intent();
+	init_font_face_identity();
+	init_character_font_name_args();
+	lineStyles = /* @__PURE__ */ new Set([
+		"SOLID",
+		"DASH",
+		"DOT",
+		"DASH_DOT",
+		"DASH_DOT_DOT",
+		"LONG_DASH",
+		"CIRCLE",
+		"DOUBLE_SLIM",
+		"SLIM_THICK",
+		"THICK_SLIM",
+		"SLIM_THICK_SLIM",
+		"WAVE",
+		"DOUBLEWAVE",
+		"THICK3D",
+		"THICKREV3D",
+		"3D",
+		"REV3D"
+	]);
+}));
+// ../../web/preview/utf16-boundary.mjs
+function isUtf16Boundary(text, unit) {
+	if (typeof text !== "string" || !Number.isSafeInteger(unit) || unit < 0 || unit > text.length) return false;
+	const previous = text.charCodeAt(unit - 1), current = text.charCodeAt(unit);
+	return !(previous >= 55296 && previous <= 56319 && current >= 56320 && current <= 57343);
+}
+var init_utf16_boundary = __esmMin((() => {}));
+// ../../web/preview/created-cell-typing-admission.mjs
+function prepareCreatedCellTypingTarget({ editor, format, message, scope }) {
+	if (!["hwp5", "hwpx"].includes(format) || editor?.supportsCreatedCellTypingAbi?.() !== true) throw Error("CreatedCellTypingUnavailable");
+	if (!Number.isSafeInteger(scope) || scope < 0 || message.createdCellTypingScope !== scope || !uint$9(message.expectedHistoryRevision) || message.expectedHistoryRevision !== editor.historyRevision()) throw Error("StaleCreatedCellTypingBinding");
+	if (![
+		message.section,
+		message.row,
+		message.column,
+		message.startUnit,
+		message.endUnit
+	].every(uint$9) || message.endUnit < message.startUnit) throw Error("InvalidCreatedCellTypingTarget");
+	if (typeof message.identity !== "string" || !/^[1-9][0-9]{0,19}$/.test(message.identity) || BigInt(message.identity) > 18446744073709551615n) throw Error("InvalidCreatedCellTypingTarget");
+	if (typeof message.text !== "string" || !message.text.isWellFormed()) throw Error("InvalidUnicodeEncoding");
+	const cell = currentCreatedCell(editor, format, message);
+	if (message.headlessBinding !== void 0) {
+		const capability = currentCreatedCellCapability(editor, format);
+		if (capability.binding.session !== message.headlessBinding?.session || capability.binding.revision !== message.headlessBinding?.revision || cell.text !== message.expectedText) throw Error("StaleCreatedCellTypingBinding");
+	}
+	if (message.endUnit > cell.text.length || !isUtf16Boundary(cell.text, message.startUnit) || !isUtf16Boundary(cell.text, message.endUnit)) throw Error("InvalidTextPosition");
+	if (format === "hwp5") {
+		const ref = message.reference;
+		if (!ref || ref.kind !== "cell" || ref.section !== message.section || ref.id !== message.identity || ref.row !== message.row || ref.column !== message.column) throw Error("InvalidCurrentReferenceScope");
+		if (editor.currentText(ref) !== cell.text + "\r") throw Error("SourceBindingMismatch");
+	}
+	return {
+		section: message.section,
+		identity: message.identity,
+		row: message.row,
+		column: message.column,
+		startUnit: message.startUnit,
+		endUnit: message.endUnit,
+		text: message.text,
+		insertion: message.insertion === void 0 ? { character: {} } : message.insertion
+	};
+}
+function currentCreatedCell(editor, format, selector) {
+	const snapshots = editor.createdTables(selector.section);
+	if (!Array.isArray(snapshots)) throw Error("InvalidCreatedCellTypingTarget");
+	let table = null, cell = null;
+	for (const snapshot of snapshots) {
+		const value = format === "hwp5" ? snapshot?.table : snapshot;
+		if (value?.identity !== selector.identity) continue;
+		if (table) throw Error("InvalidCreatedCellTypingTarget");
+		table = value;
+	}
+	if (!table || !Array.isArray(table.cells)) throw Error("InvalidCreatedCellTypingTarget");
+	for (const value of table.cells) {
+		if (value?.row !== selector.row || value.column !== selector.column) continue;
+		if (cell) throw Error("InvalidCreatedCellTypingTarget");
+		cell = value;
+	}
+	if (!cell || !Object.hasOwn(cell, "character_runs")) throw Error("CreatedCellTypingUnavailable");
+	validateCreatedCellCharacterRuns(cell.text, cell.character_runs);
+	return cell;
+}
+function currentCreatedCellCapability(editor, format) {
+	if (!["hwp5", "hwpx"].includes(format) || editor?.supportsCreatedCellTypingAbi?.() !== true) throw Error("CreatedCellTypingUnavailable");
+	const capability = editor.createdCellTypingCapabilities();
+	if (capability?.schemaVersion !== 1 || capability.atomic !== true || capability.format !== format || capability.coordinateSpace !== "created-cell-utf16" || capability.requiresHistoryProtocol !== 2 || typeof capability.binding?.session !== "string" || !capability.binding.session || !uint$9(capability.binding.revision) || capability.binding.revision !== editor.historyRevision()) throw Error("StaleCreatedCellTypingBinding");
+	return capability;
+}
+/** Fresh synchronous Native logical owner query, without a DOM/Surface selection. */
+function observeCreatedCellTextTarget({ editor, format, selector, scope }) {
+	if (!selector || typeof selector !== "object" || Array.isArray(selector) || Object.keys(selector).length !== 4 || ![
+		"section",
+		"identity",
+		"row",
+		"column"
+	].every((k) => Object.hasOwn(selector, k)) || ![
+		selector.section,
+		selector.row,
+		selector.column
+	].every(uint$9) || typeof selector.identity !== "string" || !/^[1-9][0-9]{0,19}$/.test(selector.identity) || BigInt(selector.identity) > 18446744073709551615n || !Number.isSafeInteger(scope) || scope < 0) throw Error("InvalidCreatedCellTypingTarget");
+	const before = currentCreatedCellCapability(editor, format);
+	const cell = currentCreatedCell(editor, format, selector);
+	let reference;
+	if (format === "hwp5") {
+		let first = 0, total;
+		do {
+			const page = editor.currentReferences(selector.section, {
+				first,
+				count: 256
+			});
+			if (!page || !uint$9(page.total) || page.total > 1048576 || page.first !== first || !Array.isArray(page.references) || page.references.length !== Math.min(256, page.total - first) || total !== void 0 && page.total !== total) throw Error("InvalidCurrentReferenceWindow");
+			total = page.total;
+			for (const ref of page.references) {
+				if (ref?.kind !== "cell" || ref.section !== selector.section || ref.id !== selector.identity || ref.row !== selector.row || ref.column !== selector.column) continue;
+				if (reference) throw Error("AmbiguousCurrentReference");
+				reference = ref;
+			}
+			first += page.references.length;
+		} while (first < total);
+		if (!reference) throw Error("InvalidCurrentReferenceScope");
+		if (editor.currentText(reference) !== cell.text + "\r") throw Error("SourceBindingMismatch");
+	}
+	const after = currentCreatedCellCapability(editor, format);
+	if (before.binding.session !== after.binding.session || before.binding.revision !== after.binding.revision) throw Error("StaleCreatedCellTypingBinding");
+	return {
+		schemaVersion: 1,
+		format,
+		scope,
+		binding: {
+			session: after.binding.session,
+			revision: after.binding.revision
+		},
+		selector: { ...selector },
+		text: cell.text,
+		...reference === void 0 ? {} : { reference }
+	};
+}
+var uint$9;
+var init_created_cell_typing_admission = __esmMin((() => {
+	init_created_cell_character_runs();
+	init_utf16_boundary();
+	uint$9 = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 4294967295 && !Object.is(n, -0);
+}));
+// src/mutations/created-operation-selector.ts
+function checkedOperationSelector(input) {
+	const descriptor = input && typeof input === "object" ? Object.getOwnPropertyDescriptor(input, "created_cell") : void 0;
+	const cell = descriptor && "value" in descriptor ? descriptor.value : void 0;
+	if (cell && Object.hasOwn(cell, "operation")) {
+		const selector = inlineInsertRecord(input, ["section", "created_cell"]);
+		const captured = inlineInsertRecord(cell, [
+			"operation",
+			"row",
+			"column"
+		]);
+		if (![
+			selector.section,
+			captured.operation,
+			captured.row,
+			captured.column
+		].every(uint$8)) throw Error("InvalidInlineObjectOperationSelector");
+		return {
+			section: selector.section,
+			created_cell: captured
+		};
+	}
+	return checkedInlineObjectSelector(input);
+}
+function validateCreatedOperationReferences(operations) {
+	for (const [index, operation] of operations.entries()) {
+		if (![
+			"chart-create",
+			"equation-insert",
+			"created-cell-splice"
+		].includes(operation.kind) || !("selector" in operation)) continue;
+		const cell = operation.selector.created_cell;
+		if (!cell || !("operation" in cell)) continue;
+		const earlier = operations[cell.operation];
+		if (cell.operation >= index || !earlier || earlier.kind !== "table-insert" || earlier.section !== operation.selector.section || cell.row >= earlier.rows || cell.column >= earlier.columns) throw Error("InvalidCreatedTableOperationReference");
+	}
+}
+function resolveOperationSelector(selector, tables) {
+	const cell = selector.created_cell;
+	if (cell && "operation" in cell) {
+		const table = tables.get(cell.operation);
+		if (!table || table.section !== selector.section) throw Error("MissingCreatedTableOperationResult");
+		return checkedInlineObjectSelector({
+			section: table.section,
+			created_cell: {
+				identity: table.identity,
+				row: cell.row,
+				column: cell.column
+			}
+		});
+	}
+	return checkedInlineObjectSelector(selector);
+}
+function checkedCreatedTableReceipt(identity) {
+	if (typeof identity !== "string" || !/^[1-9][0-9]{0,19}$/.test(identity) || BigInt(identity) > 18446744073709551615n) throw Error("InvalidCreatedTableIdentity");
+	return identity;
+}
+var uint$8;
+var init_created_operation_selector = __esmMin((() => {
+	init_hwpx_inline_object_insert();
+	init_hwpx_inline_object_placement();
+	uint$8 = (value) => typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && value <= 4294967295 && !Object.is(value, -0);
+}));
+// src/mutations/created-cell-splice.ts
+function isCreatedCellSpliceOperation(value) {
+	return value.kind === "created-cell-splice";
+}
+function validateCreatedCellSpliceOperation(input) {
+	const optional = input && typeof input === "object" && Object.hasOwn(input, "insertion");
+	const value = inlineInsertRecord(input, [
+		"kind",
+		"coordinates",
+		"selector",
+		"startUnit",
+		"endUnit",
+		"expectedText",
+		"text",
+		...optional ? ["insertion"] : []
+	]);
+	const selector = checkedOperationSelector(value.selector);
+	if (!selector.created_cell || !("operation" in selector.created_cell)) throw Error("CreatedTableOperationReferenceRequired");
+	if (!uint$7(value.startUnit) || !uint$7(value.endUnit) || value.endUnit < value.startUnit) throw Error("InvalidTextPosition");
+	for (const text of [value.text, value.expectedText]) {
+		if (typeof text !== "string" || !text.isWellFormed()) throw Error("InvalidUnicodeEncoding");
+		for (let i = 0; i < text.length; i++) {
+			const unit = text.charCodeAt(i);
+			if (unit < 32 && unit !== 10 || unit === 127) throw Error("InvalidCreatedCellTextControl");
+		}
+	}
+	const text = value.expectedText;
+	if (value.endUnit > text.length || !isUtf16Boundary(text, value.startUnit) || !isUtf16Boundary(text, value.endUnit)) throw Error("InvalidScalarBoundary");
+	if (optional) {
+		const insertion = inlineInsertRecord(value.insertion, Object.hasOwn(value.insertion, "character") ? ["character"] : []);
+		if (Object.hasOwn(insertion, "character")) validateCharacterFormattingPatch(insertion.character);
+	}
+}
+function requireCreatedCellSpliceStatic(document) {
+	const sdk = document.sdk;
+	if (typeof sdk.historyV2Available !== "function" || sdk.historyV2Available() !== true || typeof sdk.enableHistoryV2 !== "function") throw Error("HistoryV2AbiUnavailable");
+	if (typeof sdk.supportsCreatedCellTypingAbi !== "function" || sdk.supportsCreatedCellTypingAbi() !== true || typeof sdk.spliceCreatedCell !== "function" || typeof sdk.createdTables !== "function" || typeof sdk.historyRevision !== "function" || typeof sdk.createdCellTypingCapabilities !== "function") throw Error("CreatedCellTypingUnavailable");
+	if (document.format === "hwp5" && (typeof document.sdk.currentReferences !== "function" || typeof document.sdk.currentText !== "function")) throw Error("InvalidCurrentReferenceScope");
+}
+function requireCreatedCellSplice(document) {
+	requireCreatedCellSpliceStatic(document);
+	const sdk = document.sdk;
+	const cap = sdk.createdCellTypingCapabilities();
+	if (cap.schemaVersion !== 1 || cap.atomic !== true || cap.format !== document.format || cap.coordinateSpace !== "created-cell-utf16" || cap.requiresHistoryProtocol !== 2 || typeof cap.binding?.session !== "string" || !cap.binding.session || !uint$7(cap.binding.revision) || cap.binding.revision !== sdk.historyRevision()) throw Error("StaleCreatedCellTypingBinding");
+}
+function applyCreatedCellSpliceOperation(document, operation, tables) {
+	requireCreatedCellSplice(document);
+	const resolved = resolveOperationSelector(operation.selector, tables);
+	const cell = resolved.created_cell;
+	if (!cell) throw Error("CreatedTableOperationReferenceRequired");
+	const selector = {
+		section: resolved.section,
+		identity: cell.identity,
+		row: cell.row,
+		column: cell.column
+	};
+	const scope = 0;
+	const observed = observeCreatedCellTextTarget({
+		editor: document.sdk,
+		format: document.format,
+		selector,
+		scope
+	});
+	if (observed.text !== operation.expectedText) throw Error("OperationTextPreconditionFailed");
+	const request = prepareCreatedCellTypingTarget({
+		editor: document.sdk,
+		format: document.format,
+		scope,
+		message: {
+			...selector,
+			startUnit: operation.startUnit,
+			endUnit: operation.endUnit,
+			text: operation.text,
+			insertion: operation.insertion,
+			expectedText: operation.expectedText,
+			headlessBinding: observed.binding,
+			reference: observed.reference,
+			createdCellTypingScope: scope,
+			expectedHistoryRevision: observed.binding.revision
+		}
+	});
+	const result = document.sdk.spliceCreatedCell(request);
+	if (result.error || result.cleanupError || result.refreshRequired || !(result.application === "applied" && result.changed === true || result.nativeCode === 2 && result.application === "unapplied" && result.changed === false)) throw Error(result.error || result.cleanupError || "CreatedCellSpliceNotCommitted");
+}
+var uint$7;
+var init_created_cell_splice = __esmMin((() => {
+	init_character_formatting_patch();
+	init_hwpx_inline_object_insert();
+	init_utf16_boundary();
+	init_created_cell_typing_admission();
+	init_created_operation_selector();
+	uint$7 = (n) => typeof n === "number" && Number.isSafeInteger(n) && n >= 0 && n <= 4294967295 && !Object.is(n, -0);
+}));
+// src/mutations/inline-object-create.ts
+function isInlineObjectOperation(value) {
+	return value.kind === "chart-create" || value.kind === "equation-insert";
+}
+/** Called only after the shared operation capture owns every nested data field. */
+function validateInlineObjectOperation(input) {
+	const value = inlineInsertRecord(input, [
+		"kind",
+		"coordinates",
+		"selector",
+		"unit",
+		"expectedText",
+		"payload",
+		...!!input && typeof input === "object" && Object.hasOwn(input, "affinity") ? ["affinity"] : []
+	]);
+	const selector = checkedOperationSelector(value.selector);
+	if (!uint$6(value.unit) || typeof value.expectedText !== "string" || !value.expectedText.isWellFormed() || value.unit > value.expectedText.length) throw Error("InvalidInlineObjectOperationCaret");
+	if (value.unit > 0 && value.unit < value.expectedText.length && /[\uD800-\uDBFF]/.test(value.expectedText[value.unit - 1]) && /[\uDC00-\uDFFF]/.test(value.expectedText[value.unit])) throw Error("InvalidScalarBoundary");
+	if (Object.hasOwn(value, "affinity") && value.affinity !== "forward" && value.affinity !== "backward") throw Error("InvalidInlineObjectOperationAffinity");
+	const common = {
+		selector,
+		unit: value.unit,
+		expectedText: value.expectedText,
+		...Object.hasOwn(value, "affinity") ? { affinity: value.affinity } : {}
+	};
+	if (value.kind === "chart-create") return {
+		kind: value.kind,
+		...common,
+		payload: checkedChartCreatePayload(value.payload)
+	};
+	if (value.kind === "equation-insert") return {
+		kind: value.kind,
+		...common,
+		payload: checkedEquationInsertOptions(value.payload)
+	};
+	throw Error("InvalidInlineObjectOperationKind");
+}
+function requireInlineObjectOperation(document, operation) {
+	if (document.format !== "hwpx") throw Error("Hwp5InlineObjectCreationUnavailable");
+	const sdk = document.sdk;
+	if (typeof sdk.inlineObjectPlacementVersion !== "function" || sdk.inlineObjectPlacementVersion() !== 1 || typeof sdk.inlineObjectOwner !== "function") throw Error("InlineObjectPlacementUnavailable");
+	if (operation.kind === "chart-create") {
+		if (typeof sdk.supportsChartCreationAbi !== "function" || !sdk.supportsChartCreationAbi() || typeof sdk.createChart !== "function") throw Error("ChartCreationUnavailable");
+		if (operation.payload.chart && (typeof sdk.chartCreateProfileVersion !== "function" || sdk.chartCreateProfileVersion() !== 1)) throw Error("ChartCreateProfileUnavailable");
+	} else if (typeof sdk.supportsEquationInsertionAbi !== "function" || !sdk.supportsEquationInsertionAbi() || typeof sdk.insertEquation !== "function") throw Error("EquationInsertionUnavailable");
+}
+/** Query and dispatch are synchronous: never yield with a borrowed owner proof. */
+function applyInlineObjectOperation(document, operation, tables) {
+	requireInlineObjectOperation(document, operation);
+	const selector = resolveOperationSelector(operation.selector, tables);
+	const observed = matchInlineObjectObservation(selector, document.sdk.inlineObjectOwner(selector));
+	if (observed.expected_text !== operation.expectedText) throw Error("OperationTextPreconditionFailed");
+	const affinity = Object.hasOwn(operation, "affinity") ? { affinity: operation.affinity } : {};
+	const result = operation.kind === "chart-create" ? document.sdk.createChart({
+		target: {
+			section: observed.section,
+			...Object.hasOwn(observed, "paragraph") ? { paragraph: observed.paragraph } : {},
+			owner: observed.owner,
+			unit: operation.unit,
+			expected_text: observed.expected_text,
+			...affinity
+		},
+		...operation.payload
+	}) : document.sdk.insertEquation({
+		section: observed.section,
+		...Object.hasOwn(observed, "paragraph") ? { paragraph: observed.paragraph } : {},
+		owner: observed.owner,
+		start: operation.unit,
+		expectedText: observed.expected_text,
+		...affinity,
+		...operation.payload
+	});
+	if (result.application !== "applied" || result.changed !== true || result.error || result.cleanupError || result.refreshRequired) throw Error(result.error || result.cleanupError || "InlineObjectCreationNotCommitted");
+}
+var uint$6;
+var init_inline_object_create = __esmMin((() => {
+	init_created_operation_selector();
+	init_hwpx_inline_object_insert();
+	init_hwpx_inline_object_placement();
+	uint$6 = (v) => typeof v === "number" && Number.isSafeInteger(v) && v >= 0 && v <= 4294967295 && !Object.is(v, -0);
 }));
 // src/mutations/form-state.ts
 function requireFormOperation(document, operation) {
@@ -42932,6 +45404,13 @@ function validateDocumentOperations(input) {
 		const shape = DOCUMENT_OPERATION_SPECS[operation.kind];
 		fields(operation, shape.required, shape.optional);
 		switch (operation.kind) {
+			case "created-cell-splice":
+				validateCreatedCellSpliceOperation(operation);
+				break;
+			case "chart-create":
+			case "equation-insert":
+				validateInlineObjectOperation(operation);
+				break;
 			case "page-settings":
 				if (operation.scope === "section") uint$5(operation.section);
 				else if (operation.scope !== "document" || Object.hasOwn(operation, "section")) throw new TypeError("InvalidPageSettingsScope");
@@ -43102,10 +45581,14 @@ function validateDocumentOperations(input) {
 		}
 		if (Object.hasOwn(operation, "expectedText")) string(operation.expectedText);
 	}
+	validateCreatedOperationReferences(operations);
 	return operations;
 }
 var MAX_OPERATIONS, MAX_NODES, MAX_UNITS, record$7, encoder$2, common, paragraph, textRange, spec, DOCUMENT_OPERATION_SPECS;
 var init_validate = __esmMin((() => {
+	init_created_operation_selector();
+	init_created_cell_splice();
+	init_inline_object_create();
 	init_character_extensions();
 	init_page_settings_edit();
 	init_object_reference();
@@ -43140,6 +45623,28 @@ var init_validate = __esmMin((() => {
 		optional: Object.freeze(optional)
 	});
 	DOCUMENT_OPERATION_SPECS = Object.freeze({
+		"created-cell-splice": spec([
+			...common,
+			"selector",
+			"startUnit",
+			"endUnit",
+			"expectedText",
+			"text"
+		], ["insertion"]),
+		"chart-create": spec([
+			...common,
+			"selector",
+			"unit",
+			"expectedText",
+			"payload"
+		], ["affinity"]),
+		"equation-insert": spec([
+			...common,
+			"selector",
+			"unit",
+			"expectedText",
+			"payload"
+		], ["affinity"]),
 		"page-settings": spec([
 			...common,
 			"scope",
@@ -43344,6 +45849,7 @@ function requireInitialCellTexts(document) {
 	if (typeof supports !== "function" || Reflect.apply(supports, document.sdk, []) !== true) throw new Error("CreatedCellTextUnavailable");
 }
 function targets(operation) {
+	if (isInlineObjectOperation(operation) || isCreatedCellSpliceOperation(operation)) return [{ section: operation.selector.section }];
 	if (operation.kind === "page-settings") return operation.scope === "section" ? [{ section: operation.section }] : [];
 	if (isFormOperation(operation)) return [{ section: parseObjectReference(operation.reference).section }];
 	if (operation.kind === "source-table-cell-split") return [{ section: parseObjectReference(operation.reference).section }];
@@ -43364,6 +45870,8 @@ function prepareOperationSession(document, operations) {
 	if (!["hwp5", "hwpx"].includes(document?.format) || !Number.isInteger(document.sectionCount) || document.sectionCount < 1 || document.sectionCount > 4096 || !document.sdk || typeof document.close !== "function" || typeof document.save !== "function") throw new Error("InvalidOperationSession");
 	const protectedSections = /* @__PURE__ */ new Set();
 	for (const operation of operations) {
+		if (isCreatedCellSpliceOperation(operation)) requireCreatedCellSpliceStatic(document);
+		if (isInlineObjectOperation(operation)) requireInlineObjectOperation(document, operation);
 		if (isFormOperation(operation)) requireFormOperation(document, operation);
 		if (hasCharacterExtensions(operation)) requireCharacterExtensions(document, operation);
 		if (operation.kind === "page-settings") requirePageSettingsWrite(document);
@@ -43387,9 +45895,10 @@ function prepareOperationSession(document, operations) {
 				"merge-paragraph"
 			].includes(operation.kind)) protectedSections.add(target.section);
 		}
-		if ((Object.hasOwn(operation, "expectedText") || Object.hasOwn(operation, "expectedRangeText") || operation.kind === "replace-paragraph-ranges") && typeof (document.format === "hwp5" ? document.sdk.text : document.sdk.anchorText) !== "function") throw new Error("OperationTextObservationUnavailable");
+		if (!isInlineObjectOperation(operation) && !isCreatedCellSpliceOperation(operation) && (Object.hasOwn(operation, "expectedText") || Object.hasOwn(operation, "expectedRangeText") || operation.kind === "replace-paragraph-ranges") && typeof (document.format === "hwp5" ? document.sdk.text : document.sdk.anchorText) !== "function") throw new Error("OperationTextObservationUnavailable");
 	}
-	if (operations.some((operation) => isFormOperation(operation) || hasCharacterExtensions(operation) || operation.kind === "page-settings" || operation.kind === "source-table-cell-split" || operation.kind === "paragraph-bullet-definition")) document.sdk.enableHistoryV2();
+	if (operations.some((operation) => isInlineObjectOperation(operation) || isCreatedCellSpliceOperation(operation) || isFormOperation(operation) || hasCharacterExtensions(operation) || operation.kind === "page-settings" || operation.kind === "source-table-cell-split" || operation.kind === "paragraph-bullet-definition")) document.sdk.enableHistoryV2();
+	if (operations.some(isCreatedCellSpliceOperation)) requireCreatedCellSplice(document);
 	for (const operation of operations) if (operation.kind === "page-settings") admitPageSettings(document, operation);
 	if (document.format === "hwp5") {
 		if (protectedSections.size && typeof document.sdk.validateTextSourcePolicy !== "function") throw new Error("OperationTextSourcePolicyUnavailable");
@@ -43397,6 +45906,8 @@ function prepareOperationSession(document, operations) {
 	}
 }
 function applyOperation(document, operation) {
+	if (isCreatedCellSpliceOperation(operation)) throw new Error("PreparedCreatedCellOperationRequired");
+	if (isInlineObjectOperation(operation)) throw new Error("PreparedInlineObjectOperationRequired");
 	if (isFormOperation(operation)) throw new Error("PreparedFormStateRequired");
 	const textCache = /* @__PURE__ */ new Map();
 	let observedUnits = 0;
@@ -43565,12 +46076,17 @@ function applyOperation(document, operation) {
 }
 var METHODS;
 var init_dispatch = __esmMin((() => {
+	init_created_cell_splice();
+	init_inline_object_create();
 	init_form_state();
 	init_character_extensions();
 	init_page_settings();
 	init_object_reference();
 	init_hwp5_table_creation_command();
 	METHODS = Object.freeze({
+		"created-cell-splice": "spliceCreatedCell",
+		"chart-create": "createChart",
+		"equation-insert": "insertEquation",
 		"page-settings": "writePageSettings",
 		"form-checkbox-state": "setCheckBoxState",
 		"form-radio-select": "selectRadioButton",
@@ -43622,7 +46138,18 @@ async function applyDocumentOperations(input = {}, dependencies = {}) {
 		const sourceSplits = await prepareSourceTableCellSplits(document, captured);
 		const extensions = prepareCharacterExtensions(document, captured);
 		const identities = [];
+		const createdTables = /* @__PURE__ */ new Map();
 		for (const [index, operation] of captured.entries()) {
+			if (isCreatedCellSpliceOperation(operation)) {
+				extensions.runLegacy(operation, () => applyCreatedCellSpliceOperation(document, operation, createdTables));
+				extensions.advance(operation);
+				continue;
+			}
+			if (isInlineObjectOperation(operation)) {
+				extensions.runLegacy(operation, () => applyInlineObjectOperation(document, operation, createdTables));
+				extensions.advance(operation);
+				continue;
+			}
 			if (isFormOperation(operation)) {
 				identities.push(forms.apply(document, operation, index));
 				continue;
@@ -43634,11 +46161,16 @@ async function applyDocumentOperations(input = {}, dependencies = {}) {
 			}
 			const identity = operation.kind === "source-table-cell-split" ? sourceSplits.apply(document, operation) : extensions.runLegacy(operation, () => applyOperation(document, operation));
 			if (identity !== null) {
-				if (typeof identity !== "string" || !/^[1-9][0-9]{0,19}$/u.test(identity) || BigInt(identity) > 18446744073709551615n) throw new Error("InvalidCreatedTableIdentity");
+				const tableIdentity = checkedCreatedTableReceipt(identity);
+				if (operation.kind !== "table-insert") throw new Error("UnexpectedCreatedTableOperationResult");
+				createdTables.set(index, {
+					section: operation.section,
+					identity: tableIdentity
+				});
 				identities.push({
 					operation: index,
 					kind: "table-insert",
-					identity
+					identity: tableIdentity
 				});
 			}
 			extensions.advance(operation);
@@ -43647,7 +46179,7 @@ async function applyDocumentOperations(input = {}, dependencies = {}) {
 		const hwp5Saved = document.format === "hwp5" && captured.length !== 0;
 		const output = hwp5Saved && record$5(saved) ? saved.bytes : saved;
 		if (!(output instanceof Uint8Array) || output.byteLength === 0 || output.byteLength > 134217728) throw new RangeError("OperationOutputLimitExceeded");
-		const reflow = hwp5Saved && record$5(saved) ? saved.layoutRequiresReflow : captured.some((operation) => operation.kind === "source-table-cell-split" || operation.kind === "page-settings");
+		const reflow = hwp5Saved && record$5(saved) ? saved.layoutRequiresReflow : captured.some((operation) => isInlineObjectOperation(operation) || isCreatedCellSpliceOperation(operation) || operation.kind === "source-table-cell-split" || operation.kind === "page-settings");
 		if (typeof reflow !== "boolean") throw new Error("InvalidOperationLayoutState");
 		const owned = Uint8Array.from(output);
 		const changed = original.length !== owned.length || original.some((byte, index) => byte !== owned[index]);
@@ -43676,6 +46208,9 @@ async function applyDocumentOperations(input = {}, dependencies = {}) {
 }
 var record$5;
 var init_document_operations = __esmMin((() => {
+	init_created_cell_splice();
+	init_created_operation_selector();
+	init_inline_object_create();
 	init_form_state();
 	init_character_extensions();
 	init_source_table_cell_split();
@@ -45522,7 +48057,7 @@ function fileVersion(document, diagnostics) {
 	if (document.format !== "hwp5" || !has(document.sdk, "fileVersion")) return unsupported("FileVersionNotExposedBySdk");
 	try {
 		const value = invoke(document.sdk, "fileVersion");
-		if (!uint$14(value) || value === 0) throw Error("InvalidFileVersionObservation");
+		if (!uint$18(value) || value === 0) throw Error("InvalidFileVersionObservation");
 		return observed(value, "sdk.fileVersion");
 	} catch (error) {
 		return failedObservation(diagnostics, "fileVersion", error);
@@ -45545,7 +48080,7 @@ function textSourceProtection(document, diagnostics) {
 	let paragraphs = 0;
 	for (let section = 0; section < document.sectionCount; section++) try {
 		const count = invoke(sdk, "paragraphCount", [section]);
-		if (!uint$14(count) || count > 1e5) throw Error("InvalidParagraphCountObservation");
+		if (!uint$18(count) || count > 1e5) throw Error("InvalidParagraphCountObservation");
 		paragraphs += count;
 		if (paragraphs > LIMITS$1.maxBlocks) {
 			diagnostics.push(diagnostic("ObservationLimitExceeded", "textSourceProtection", { section }));
@@ -46069,7 +48604,7 @@ function operationSchema() {
 			}
 			if (kind === "source-table-cell-split") {
 				if (name === "reference") return string$3().min(1).max(128).describe("같은 원본 read_document structure의 table reference. 앞선 변경 후 자동 재대상화하지 않습니다.");
-				if (name === "equalizeRows") return boolean$1();
+				if (name === "equalizeRows") return boolean$2();
 				if (name === "mode") return _enum(["each", "merge-then-split"]);
 				if (name === "rows" || name === "columns") return number$3().int().min(1).max(63);
 				return uint();
@@ -46082,8 +48617,8 @@ function operationSchema() {
 						"CENTER",
 						"RIGHT"
 					]),
-					useInstanceWidth: boolean$1(),
-					autoIndent: boolean$1(),
+					useInstanceWidth: boolean$2(),
+					autoIndent: boolean$2(),
 					widthAdjust: number$3().int().min(-1e6).max(1e6),
 					textOffsetType: _enum(["PERCENT", "HWPUNIT"]),
 					textOffset: number$3().int().min(-1e6).max(1e6),
@@ -46092,12 +48627,12 @@ function operationSchema() {
 				return discriminatedUnion("mode", [strictObject({
 					mode: literal("create"),
 					definition,
-					apply: boolean$1()
+					apply: boolean$2()
 				}), strictObject({
 					mode: literal("update"),
 					id: uint(),
 					definition,
-					apply: boolean$1()
+					apply: boolean$2()
 				})]).describe("HWPX 문자 글머리표 정의 생성·수정. update는 같은 ID의 모든 문단에 영향을 줍니다.");
 			}
 			if (coordinateFields.has(name)) return uint();
@@ -46106,8 +48641,8 @@ function operationSchema() {
 			if (name === "value") return number$3().finite();
 			if (name === "properties") return strictObject({
 				size: number$3().int().min(0).max(409600).nullable().optional(),
-				bold: boolean$1().nullable().optional(),
-				italic: boolean$1().nullable().optional(),
+				bold: boolean$2().nullable().optional(),
+				italic: boolean$2().nullable().optional(),
 				...kind === "character-properties" ? {
 					underline: _enum([
 						"none",
@@ -46187,7 +48722,7 @@ function extendedDocumentTools({ invoke, wasm, ocrExecutable }) {
 					expectedRows: uint().min(1),
 					expectedColumns: uint().min(1),
 					layout: _enum(["spec6", "observed8"]).optional(),
-					allowStaleLayout: boolean$1().default(false)
+					allowStaleLayout: boolean$2().default(false)
 				}).refine(({ action, index, expectedRows, expectedColumns }) => {
 					const axis = action.endsWith("row") ? expectedRows : expectedColumns;
 					return action.startsWith("insert") ? index <= axis && axis < 4294967295 : index < axis && axis > 1;
@@ -46224,7 +48759,7 @@ function extendedDocumentTools({ invoke, wasm, ocrExecutable }) {
 							return false;
 						}
 					}, "표 참조가 필요합니다."),
-					allowStaleLayout: boolean$1().default(false)
+					allowStaleLayout: boolean$2().default(false)
 				}),
 				annotations: writeNew
 			},
@@ -46253,7 +48788,7 @@ function extendedDocumentTools({ invoke, wasm, ocrExecutable }) {
 					imagePath: path(),
 					width: uint().min(1).max(2147483647),
 					height: uint().min(1).max(2147483647),
-					allowStaleLayout: boolean$1().default(false)
+					allowStaleLayout: boolean$2().default(false)
 				}),
 				annotations: writeNew
 			},
@@ -46350,13 +48885,13 @@ function extendedDocumentTools({ invoke, wasm, ocrExecutable }) {
 			name: "apply_document_changes",
 			config: {
 				title: "문서 변경 묶음을 새 파일에 저장",
-				description: "명시한 작업들을 독립 Native 세션에서 순서대로 적용하고 한 번 저장합니다. coordinates는 current-transaction 필수이며 직전 작업 이후 실제 Native 좌표입니다. 구조 변경 뒤 문단 번호를 자동 보정하지 않습니다. expectedText와 expectedRangeText는 get_document_paragraph로 확인한 Native 원문 조건입니다. 실패하면 새 파일을 게시하지 않습니다. 기존 원본·출력은 덮어쓰지 않습니다. HWP5 오래된 배치 허용은 새 조판 생성을 뜻하지 않습니다.",
+				description: "명시한 작업들을 독립 Native 세션에서 순서대로 적용하고 한 번 저장합니다. coordinates는 current-transaction 필수이며 직전 작업 이후 실제 Native 좌표입니다. 구조 변경 뒤 문단 번호를 자동 보정하지 않습니다. HWPX chart-create/equation-insert는 selector로 Native owner를 조회하며, created_cell.operation은 선행 table-insert 결과 identity만 참조합니다. chart payload의 values/x_values/bubble_sizes는 유한 숫자 어휘 문자열이며 size,data,선택 chart 프로필을 명시합니다. HWP5 새 차트·수식 생성은 이 경로에서 지원하지 않습니다. expectedText와 expectedRangeText는 get_document_paragraph로 확인한 Native 원문 조건입니다. 실패하면 새 파일을 게시하지 않습니다. 기존 원본·출력은 덮어쓰지 않습니다. HWP5 오래된 배치 허용은 새 조판 생성을 뜻하지 않습니다.",
 				inputSchema: strictObject({
 					inputPath: path(),
 					outputPath: path(),
 					expectedSha256: sha(),
 					operations: operationSchema(),
-					allowStaleLayout: boolean$1().default(false)
+					allowStaleLayout: boolean$2().default(false)
 				}),
 				annotations: writeNew
 			},
@@ -46380,7 +48915,7 @@ function extendedDocumentTools({ invoke, wasm, ocrExecutable }) {
 					outputPath: path(),
 					format: _enum(["hwp5", "hwpx"]),
 					text: string$3().default(""),
-					allowStaleLayout: boolean$1().default(false)
+					allowStaleLayout: boolean$2().default(false)
 				}),
 				annotations: writeNew
 			},
@@ -46403,7 +48938,7 @@ function extendedDocumentTools({ invoke, wasm, ocrExecutable }) {
 					to: _enum(["hwp5", "hwpx"]),
 					expectedSha256: sha().optional(),
 					lossPolicy: _enum(["reject", "text-only"]).default("reject"),
-					allowStaleLayout: boolean$1().default(false)
+					allowStaleLayout: boolean$2().default(false)
 				}),
 				annotations: writeNew
 			},
@@ -46550,7 +49085,7 @@ function documentTools({ wasmPath, ocrExecutable, mainModuleURL, executeCLI = ru
 					expectedSha256: string$3().min(1).describe("read_document의 view: structure로 조회한 동일 스냅샷의 documentSHA256."),
 					findText: string$3().min(1),
 					replacement: string$3().describe("Literal replacement; empty string deletes the unique match."),
-					allowStaleLayout: boolean$1().default(false)
+					allowStaleLayout: boolean$2().default(false)
 				}),
 				annotations: {
 					readOnlyHint: false,
