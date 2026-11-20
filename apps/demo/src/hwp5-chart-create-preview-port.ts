@@ -1,10 +1,13 @@
-import type { EditorState, HeadlessEditor } from '@hwpjs/core';
+import type { EditorState, HeadlessEditor, SelectionTarget } from '@hwpjs/core';
 import {
   HWP5_CHART_CREATE_PROFILE,
   checkedHwp5ChartCreateOptions,
   type Hwp5ChartCreateOptions,
 } from '../../../js/hwp5-chart-create.mjs';
-import type { ChartCreateOptions } from '../../../packages/core/src/commands/inline-object-insert.ts';
+import type {
+  ChartCreateOptions,
+  CreateChartPayload,
+} from '../../../packages/core/src/commands/inline-object-insert.ts';
 import type { InlineObjectInsertCapture } from './inline-object-insert-port.ts';
 import {
   createHwp5ChartCreateInputLane,
@@ -15,7 +18,7 @@ import { hwp5ChartRasterSize } from './hwp5-chart-raster-size.mjs';
 
 type Capture = InlineObjectInsertCapture;
 type Payload = {
-  target: NonNullable<EditorState['selection']> | NonNullable<Capture['target']>;
+  target: CreateChartPayload['target'];
   selectionVersion: number;
   options: Hwp5ChartCreateOptions;
 };
@@ -77,9 +80,11 @@ export function createHwp5ChartCreatePreviewPort(options: {
     preview: async (draft, wrapped) => {
       if (!current(wrapped.capture)) throw Error('StaleChartCreateInput');
       const capture = wrapped.capture;
+      const target = capture.target ?? (capture.state.selection as SelectionTarget | null);
+      if (!target) throw Error('StaleChartCreateInput');
       const request = options.core.hwp5ChartCreatePreviewMessage(
         {
-          target: capture.target ?? capture.state.selection!,
+          target,
           selectionVersion: capture.state.stateVersion,
           options: makeOptions(draft, profiles.get(wrapped)!),
         },
