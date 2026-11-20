@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: '24.20.0'
       - name: Test document search Native registration
-        run: node --test tools/tests/document-search-native-registration.test.mjs
+        run: node --test tools/tests/document-search-native-registration.test.mjs tools/tests/document-search-native-snapshot.test.mjs
       - name: Install pinned document search Zig toolchain
         shell: bash
         run: |

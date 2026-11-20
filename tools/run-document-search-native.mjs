@@ -10,13 +10,14 @@ import {
   chmod,
   statfs,
   readlink,
+  lstat,
   open,
   unlink,
 } from 'node:fs/promises';
 import { resolve, dirname, join, relative, basename, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn, execFileSync } from 'node:child_process';
-import { openSync, writeSync, closeSync } from 'node:fs';
+import { constants, openSync, writeSync, closeSync } from 'node:fs';
 import {
   documentSearchTargets,
   nativeSearchResults,
@@ -34,6 +35,71 @@ const allowedTop = new Set([
   'docs',
   '.github',
 ]);
+// Only these committed own public aliases may become regular snapshot files.
+const sourceAliases = Object.freeze({
+  'src/testing/noori-column/noori.hwp': Object.freeze({
+    link: '../../../apps/docs/docs/public/editor/fixtures/noori.hwp',
+    target: 'apps/docs/docs/public/editor/fixtures/noori.hwp',
+    bytes: 257536,
+    sha256: 'b18be0217a5d9f81e587705edc0c514cdd11e6314bbe434f17d256aa21b75a7f',
+  }),
+  'src/testing/noori-column/noori.hwpx': Object.freeze({
+    link: '../../../apps/docs/docs/public/editor/fixtures/noori.hwpx',
+    target: 'apps/docs/docs/public/editor/fixtures/noori.hwpx',
+    bytes: 324413,
+    sha256: '6ee9014f23650987803481e7aa51b3b2201f91f549dccfe34880469621d62aab',
+  }),
+});
+async function ownAliasBytes(root, path) {
+  const pin = Object.hasOwn(sourceAliases, path) ? sourceAliases[path] : null;
+  assert(pin, 'UnexpectedSnapshotSymlink:' + path);
+  const alias = join(root, path),
+    literal = await readlink(alias);
+  assert.equal(literal, pin.link, 'SnapshotAliasLiteralMismatch:' + path);
+  const canonicalRoot = await realpath(root),
+    target = join(canonicalRoot, pin.target);
+  assert.equal(await realpath(alias), target, 'SnapshotAliasTargetMismatch:' + path);
+  // Refuse symlink ancestors and terminal links before opening any target data.
+  let at = canonicalRoot;
+  for (const part of pin.target.split('/')) {
+    at = join(at, part);
+    const metadata = await lstat(at);
+    assert(!metadata.isSymbolicLink(), 'SnapshotAliasPhysicalSymlink:' + path);
+    assert(
+      at === target ? metadata.isFile() : metadata.isDirectory(),
+      'SnapshotAliasPhysicalType:' + path,
+    );
+  }
+  const before = await lstat(target);
+  assert.equal(before.size, pin.bytes, 'SnapshotAliasSizeMismatch:' + path);
+  assert.equal(typeof constants.O_NOFOLLOW, 'number', 'SnapshotNoFollowUnavailable');
+  const handle = await open(target, constants.O_RDONLY | constants.O_NOFOLLOW);
+  let bytes;
+  try {
+    const opened = await handle.stat();
+    assert(
+      opened.isFile() && opened.dev === before.dev && opened.ino === before.ino,
+      'SnapshotAliasIdentityChanged:' + path,
+    );
+    bytes = await handle.readFile();
+  } finally {
+    await handle.close();
+  }
+  assert.equal(bytes.length, pin.bytes, 'SnapshotAliasSizeMismatch:' + path);
+  assert.equal(digest(bytes), pin.sha256, 'SnapshotAliasDigestMismatch:' + path);
+  assert.equal(await readlink(alias), literal, 'SnapshotAliasChanged:' + path);
+  return {
+    bytes,
+    evidence: {
+      path,
+      link: literal,
+      target: pin.target,
+      bytes: bytes.length,
+      sha256: pin.sha256,
+      physicalRegularTarget: true,
+    },
+  };
+}
 function forbidden(path) {
   return (
     path === 'tests/hwpx/title-column-roundtrip.test.mjs' ||
@@ -41,7 +107,7 @@ function forbidden(path) {
     basename(path) === 'hwpers_test4_complex_table.hwp'
   );
 }
-async function files(root, prefix = '', compiler = false) {
+async function files(root, prefix = '', compiler = false, verifiedAliases = null) {
   const rows = [];
   for (const entry of await readdir(join(root, prefix), { withFileTypes: true })) {
     const path = prefix ? prefix + '/' + entry.name : entry.name;
@@ -57,6 +123,12 @@ async function files(root, prefix = '', compiler = false) {
     )
       continue;
     if (entry.isSymbolicLink()) {
+      if (!compiler) {
+        const verified = await ownAliasBytes(root, path);
+        verifiedAliases?.set(path, verified);
+        rows.push({ path, bytes: verified.bytes.length, sha256: digest(verified.bytes) });
+        continue;
+      }
       assert(compiler, 'UnexpectedSnapshotSymlink:' + path);
       const target = await readlink(join(root, path)),
         absolute = await realpath(join(root, path)),
@@ -68,13 +140,28 @@ async function files(root, prefix = '', compiler = false) {
       rows.push({ path, link: target });
       continue;
     }
-    if (entry.isDirectory()) rows.push(...(await files(root, path, compiler)));
+    if (entry.isDirectory()) rows.push(...(await files(root, path, compiler, verifiedAliases)));
     else if (entry.isFile()) {
       const bytes = await readFile(join(root, path));
       rows.push({ path, bytes: bytes.length, sha256: digest(bytes) });
     }
   }
   return rows.sort((a, b) => a.path.localeCompare(b.path));
+}
+export { files as documentSearchSnapshotFiles };
+export async function prepareDocumentSearchSnapshot(source, input) {
+  const verifiedAliases = new Map();
+  const sourceFiles = await files(source, '', false, verifiedAliases);
+  await mkdir(input);
+  for (const row of sourceFiles) {
+    const target = join(input, row.path);
+    await mkdir(dirname(target), { recursive: true });
+    const verified = verifiedAliases.get(row.path);
+    if (verified) await writeFile(target, verified.bytes, { flag: 'wx' });
+    else await copyFile(join(source, row.path), target);
+    await chmod(target, 0o444);
+  }
+  return { sourceFiles, sourceLinks: [...verifiedAliases.values()].map((v) => v.evidence) };
 }
 async function lockDirectories(root) {
   for (const entry of await readdir(root, { withFileTypes: true }))
@@ -116,15 +203,8 @@ export async function runDocumentSearchNative({ zig, out, source = ownRoot }) {
   const compiler = await realpath(zig),
     compilerRoot = dirname(compiler);
   await mkdir(out);
-  const sourceFiles = await files(source),
-    input = join(out, 'input-source');
-  await mkdir(input);
-  for (const row of sourceFiles) {
-    const target = join(input, row.path);
-    await mkdir(dirname(target), { recursive: true });
-    await copyFile(join(source, row.path), target);
-    await chmod(target, 0o444);
-  }
+  const input = join(out, 'input-source');
+  const { sourceFiles, sourceLinks } = await prepareDocumentSearchSnapshot(source, input);
   await lockDirectories(input);
   const writeDenial = await proveReadOnly(input);
   const compilerWriteDenial = await proveReadOnly(compilerRoot, basename(compiler));
@@ -132,6 +212,7 @@ export async function runDocumentSearchNative({ zig, out, source = ownRoot }) {
   const sourcePin = digest(Buffer.from(JSON.stringify(sourceFiles)));
   await save(join(out, 'INPUTS.json'), {
     sourceFiles,
+    sourceLinks,
     sourcePin,
     compiler,
     targets,

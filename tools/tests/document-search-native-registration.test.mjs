@@ -118,6 +118,7 @@ test('regular workflow invokes all-target runner and preserves first evidence wi
   );
   for (const required of [
     'runs-on: ubuntu-24.04',
+    'tools/tests/document-search-native-snapshot.test.mjs',
     'node tools/run-document-search-native.mjs --execute',
     'sha256sum --check --strict',
     'chmod -R a-w',
