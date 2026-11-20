@@ -12,6 +12,12 @@
     "available": true
   },
   {
+    "id": "hwp5-chart-create.hwp",
+    "name": "hwp5-chart-create.hwp",
+    "label": "[기능 예제] HWP5 차트 생성과 미리보기",
+    "available": true
+  },
+  {
     "id": "noori.hwp",
     "name": "noori.hwp",
     "label": "noori.hwp",
