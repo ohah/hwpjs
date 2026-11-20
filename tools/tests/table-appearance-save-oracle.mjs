@@ -4,6 +4,7 @@ import { inflateRawSync } from 'node:zlib';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { readLegacyCfbStreams } from '../cfb-stream-map.mjs';
+import { inspectNewHwp5Profile } from './new-hwp5-profile-oracle.mjs';
 const widths = [10, 12, 15, 20, 25, 30, 40, 50, 60, 70, 100, 150, 200, 300, 400, 500];
 const swap = (n) => ((n & 255) << 16) | (n & 0xff00) | ((n >>> 16) & 255);
 export function records(bytes) {
@@ -246,7 +247,7 @@ function strictNewCfbMetadata(bytes) {
   return active;
 }
 export function verifyNewDocument(
-  { format, bytes, expectedTexts = [''], strictMetadata = true },
+  { format, bytes, expectedTexts = [''], strictMetadata = true, hwp5Profile = 'modern_5_0_3_0' },
   optimized = false,
 ) {
   if (format === 'hwpx')
@@ -261,7 +262,6 @@ export function verifyNewDocument(
   assert.deepEqual(names, ['BodyText/Section0', 'DocInfo', 'FileHeader']);
   const header = doc.streams.get('FileHeader');
   assert.equal(header.length, 256);
-  assert.equal(header.readUInt32LE(32), 0x05000107);
   assert.equal(header.readUInt32LE(36), 0);
   const chars = doc.info.filter((r) => r.tag === 21);
   assert.equal(chars.length, 1);
@@ -274,6 +274,7 @@ export function verifyNewDocument(
   }
   const body = records(doc.decode('BodyText/Section0')),
     pages = body.filter((r) => r.tag === 73);
+  const profile = inspectNewHwp5Profile({ header, info: doc.info, body }, hwp5Profile);
   assert.equal(pages.length, 1);
   assert.deepEqual(
     Array.from({ length: 8 }, (_, i) => pages[0].payload.readUInt32LE(i * 4)),
@@ -305,6 +306,7 @@ export function verifyNewDocument(
   assert.deepEqual(texts, expectedTexts, 'independent paragraph texts');
   assert.equal(body.filter((r) => r.tag === 66).length, expectedTexts.length);
   return {
+    ...profile,
     paragraphs: texts.length,
     fontHeight: 1100,
     page: [59528, 84189],

@@ -41,7 +41,7 @@ test "closed container field edits cell and body text without consuming its tabl
     const cell = try session.fieldLabels(0, 3);
     defer a.free(cell);
     try std.testing.expectEqual(@as(usize, 1), cell.len);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: *const @import("editor_session.zig").Session, begin: u32) !void {
             var proxy = source.*;
             proxy.allocator = allocator;

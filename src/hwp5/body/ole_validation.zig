@@ -15,6 +15,10 @@ pub fn inspect(tree: Tree, layout: ole.Layout) !Report {
     return (try inspectDetailed(tree, layout, null, .uninspected)).ole;
 }
 pub fn inspectDetailed(tree: Tree, layout: ole.Layout, count: ?usize, policy: references.Policy) !Detailed {
+    return inspectSelected(tree, .{ .explicit = layout }, count, policy);
+}
+/// Same owner/duplicate/reference validators with a per-record read policy.
+pub fn inspectSelected(tree: Tree, selection: ole.Selection, count: ?usize, policy: references.Policy) !Detailed {
     var report: Report = .{};
     var refs: references.Report = .{};
     for (tree.nodes, 0..) |node, index| {
@@ -24,7 +28,7 @@ pub fn inspectDetailed(tree: Tree, layout: ole.Layout, count: ?usize, policy: re
         }
         if (!try isOwner(node)) continue;
         const child = (owned.find(tree, index, ole.tag) catch return error.DuplicateOle) orelse return error.MissingOle;
-        const p = try ole.Properties.parse(tree.nodes[child].record.framing.payload, layout);
+        const p = try ole.Properties.read(tree.nodes[child].record.framing.payload, selection);
         report.objects += 1;
         report.pending_references += @intFromBool(!try refs.observe(p.bin_data_id, count, policy));
         report.monikers += @intFromBool(p.hasMoniker());

@@ -13,6 +13,7 @@ const PrefixColumns = @import("independent_prefix_columns.zig");
 const Flags = struct {
     field: bool = false,
     title: bool = false,
+    title_mark: bool = false,
     page: bool = false,
     tracked: bool = false,
     prefix: PrefixColumns.Source = .{},
@@ -42,17 +43,30 @@ pub const Context = struct {
     consumed: bool = false,
     resource_ids: ?[]u32 = null,
     resource_set: std.AutoHashMapUnmanaged(u32, void) = .empty,
+    document_observation: ?*const @import("document_text_snapshot.zig").Observation = null,
     // Request work counters describe actual source/candidate preparation, not a grant.
     work: if (@import("builtin").is_test) Work else void = if (@import("builtin").is_test) .{} else {},
     pub fn init(session: *editor.Session) !Context {
+        return initialize(session, null);
+    }
+    /// Dedicated whole-document preparation. A fresh complete read proves the
+    /// pending owner set; ordinary source/metadata admission remains unchanged.
+    /// finish() cannot publish this context without the whole pending batch.
+    pub fn initForDocument(session: *editor.Session, observation: *const @import("document_text_snapshot.zig").Observation) !Context {
+        try observation.assertCurrent(session);
+        if (!session.history_delta_managed) return error.HistoryProtocolRequired;
+        return initialize(session, observation);
+    }
+    fn initialize(session: *editor.Session, observation: ?*const @import("document_text_snapshot.zig").Observation) !Context {
         const a = session.allocator;
         var self: Context = .{ .session = session, .source = session.source.ptr, .serial = session.mutation_serial, .active = session.history_transaction_active, .section_pointer = session.sections.ptr, .total_bytes = 0, .options = session.options, .global_digests = &.{}, .fields = try a.alloc([]Range, session.sections.len) };
         @memset(self.fields, &.{});
+        self.document_observation = observation;
         errdefer {
             for (self.fields) |rows| a.free(rows);
             a.free(self.fields);
         }
-        if (@import("created_table_host_splice.zig").hasPending(session)) return error.UnsupportedIndependentCreatedTableMetadata;
+        if (observation == null and @import("created_table_host_splice.zig").hasPending(session)) return error.UnsupportedIndependentCreatedTableMetadata;
         self.global_digests = try a.alloc(u64, session.sections.len);
         errdefer a.free(self.global_digests);
         for (session.sections, self.global_digests) |section, *seal| {
@@ -199,6 +213,7 @@ pub const Context = struct {
             const f = &flags[paragraph];
             if (active != 0 or element.is(xml.paragraph_uri, "fieldBegin") or element.is(xml.paragraph_uri, "fieldEnd")) f.field = true;
             if (element.is(xml.paragraph_uri, "titleMark") or element.is(xml.paragraph_uri, "bookmark") or element.is(xml.paragraph_uri, "autoNum")) f.title = true;
+            if (element.is(xml.paragraph_uri, "titleMark")) f.title_mark = true;
             if (element.is(xml.paragraph_uri, "header") or element.is(xml.paragraph_uri, "footer") or element.is(xml.paragraph_uri, "pageNum") or element.is(xml.paragraph_uri, "newNum")) f.page = true;
             f.prefix.observe(element, i);
             if (element.is(xml.paragraph_uri, "p") or element.is(xml.paragraph_uri, "run")) {
@@ -264,6 +279,10 @@ pub const Context = struct {
         if (index >= draft.values.paragraphs.len) return error.InvalidParagraphIndex;
         const paragraph = &draft.values.paragraphs[index];
         _ = try @import("current_paragraph_reference.zig").from(paragraph);
+        if (self.isDocumentPage(draft, paragraph))
+            return self.prepareDocumentPage(selected, draft, paragraph, paragraph_index, claimed_units, edits);
+        if (self.isDocumentTitle(draft, paragraph))
+            return self.prepareDocumentTitle(selected, draft, paragraph, paragraph_index, claimed_units, edits);
         try self.authorize(selected, draft, paragraph, paragraph_index);
         const tree = &selected.tree;
         const positions = try currentPositions(a, tree, paragraph);
@@ -281,15 +300,7 @@ pub const Context = struct {
         if (!text.changed) return .{ .before_units = units, .changed = false };
         const owned = if (paragraph.character_styles == null) try originalStyles(a, tree, &paragraph.sites, positions, s.options.max_sites) else null;
         defer if (owned) |rows| a.free(rows);
-        if (self.resource_ids == null) {
-            const ids = try @import("character_style_resources.zig").ids(s);
-            errdefer a.free(ids);
-            var set: std.AutoHashMapUnmanaged(u32, void) = .empty;
-            errdefer set.deinit(a);
-            for (ids) |id| try set.put(a, id, {});
-            self.resource_ids = ids;
-            self.resource_set = set;
-        }
+        try self.ensureCharacterResources();
         const current_styles = paragraph.character_styles orelse owned.?;
         for (current_styles) |span| {
             const id = span.char_shape_id orelse return error.MissingCharacterShapeReference;
@@ -312,9 +323,96 @@ pub const Context = struct {
         draft.changed = true;
         return .{ .before_units = units, .changed = true };
     }
+    fn ensureCharacterResources(self: *Context) !void {
+        if (self.resource_ids != null) return;
+        const inventory = try @import("character_style_resources.zig").buildMembershipIndex(self.session);
+        self.resource_ids = inventory.ids;
+        self.resource_set = inventory.current;
+    }
+    fn isDocumentTitle(self: *const Context, draft: *const SectionDraft, paragraph: *const model.Paragraph) bool {
+        return self.document_observation != null and paragraph.template_element < draft.flags.len and
+            (draft.flags[paragraph.template_element].title_mark or (if (paragraph.title_positions) |rows| rows.len != 0 else false) or
+                paragraph.title_output_projection != null or paragraph.title_fragment_owners != null);
+    }
+    fn documentTitlePositions(self: *Context, selected: *const editor.Section, draft: *const SectionDraft, paragraph: *model.Paragraph, ordinal: usize) ![]Segment {
+        const flags = draft.flags[paragraph.template_element];
+        if (flags.field) return error.UnsupportedIndependentFieldMetadata;
+        if (flags.page) return error.DocumentTextTitleGroupRequired;
+        if (flags.tracked) return error.UnsupportedParagraphTracking;
+        if (flags.prefix.column != null) try PrefixColumns.validate(self.session.allocator, selected, paragraph, ordinal, flags.prefix);
+        if (paragraph.title_positions == null)
+            paragraph.title_positions = try @import("title_mark_current.zig").read(self.session.allocator, &selected.tree, paragraph);
+        return @import("title_mark_text_batch.zig").positions(self.session.allocator, &selected.tree, paragraph);
+    }
+    fn prepareDocumentTitle(self: *Context, selected: *const editor.Section, draft: *SectionDraft, paragraph: *model.Paragraph, ordinal: usize, claimed: ?u32, edits: []const Edit) !TargetResult {
+        const a = self.session.allocator;
+        const positions = try self.documentTitlePositions(selected, draft, paragraph, ordinal);
+        defer a.free(positions);
+        const units = std.math.cast(u32, if (positions.len == 0) 0 else positions[positions.len - 1].end_unit) orelse return error.LimitExceeded;
+        if (claimed) |value| if (value != units) return error.TextTransactionBeforeMismatch;
+        if (@import("builtin").is_test) {
+            self.work.paragraphs += 1;
+            self.work.edits += edits.len;
+        }
+        if (paragraph.character_styles != null) try self.ensureCharacterResources();
+        var candidate = (try @import("title_mark_text_batch.zig").prepare(a, &selected.tree, paragraph, edits, .{
+            .max_bytes = self.session.options.max_text_bytes,
+            .max_spans = self.session.options.max_sites,
+        }, if (paragraph.character_styles != null) &self.resource_set else null)) orelse
+            return .{ .before_units = units, .changed = false };
+        errdefer candidate.deinit(a);
+        var before: usize = 0;
+        for (paragraph.sites.items) |site| before += site.text.len;
+        var after: usize = 0;
+        for (candidate.sites.items) |site| after += site.text.len;
+        const total = std.math.add(usize, self.total_bytes - before, after) catch return error.LimitExceeded;
+        paragraph.deinit(a);
+        paragraph.* = candidate;
+        self.total_bytes = total;
+        draft.changed = true;
+        return .{ .before_units = units, .changed = true };
+    }
+    fn isDocumentPage(self: *const Context, draft: *const SectionDraft, paragraph: *const model.Paragraph) bool {
+        return self.document_observation != null and paragraph.template_element < draft.flags.len and
+            (draft.flags[paragraph.template_element].page or (if (paragraph.page_area_positions) |rows| rows.len != 0 else false));
+    }
+    fn documentPagePositions(self: *Context, selected: *const editor.Section, draft: *const SectionDraft, paragraph: *model.Paragraph, ordinal: usize) ![]Segment {
+        const flags = draft.flags[paragraph.template_element];
+        if (flags.field) return error.UnsupportedIndependentFieldMetadata;
+        if (flags.title) return error.UnsupportedIndependentTitleMetadata;
+        if (flags.tracked) return error.UnsupportedParagraphTracking;
+        if (flags.prefix.column != null) try PrefixColumns.validate(self.session.allocator, selected, paragraph, ordinal, flags.prefix);
+        try @import("page_area_materialize.zig").install(self.session.allocator, &selected.tree, paragraph, selected.tree.elements.len);
+        return @import("page_area_text_batch.zig").positions(self.session.allocator, &selected.tree, paragraph);
+    }
+    fn prepareDocumentPage(self: *Context, selected: *const editor.Section, draft: *SectionDraft, paragraph: *model.Paragraph, ordinal: usize, claimed: ?u32, edits: []const Edit) !TargetResult {
+        const a = self.session.allocator;
+        const positions = try self.documentPagePositions(selected, draft, paragraph, ordinal);
+        defer a.free(positions);
+        const units = std.math.cast(u32, if (positions.len == 0) 0 else positions[positions.len - 1].end_unit) orelse return error.LimitExceeded;
+        if (claimed) |value| if (value != units) return error.TextTransactionBeforeMismatch;
+        if (@import("builtin").is_test) {
+            self.work.paragraphs += 1;
+            self.work.edits += edits.len;
+        }
+        var candidate = (try @import("page_area_text_batch.zig").prepare(a, &selected.tree, paragraph, edits, self.session.options.max_text_bytes)) orelse
+            return .{ .before_units = units, .changed = false };
+        errdefer candidate.deinit(a);
+        var before: usize = 0;
+        for (paragraph.sites.items) |site| before += site.text.len;
+        var after: usize = 0;
+        for (candidate.sites.items) |site| after += site.text.len;
+        const total = std.math.add(usize, self.total_bytes - before, after) catch return error.LimitExceeded;
+        paragraph.deinit(a);
+        paragraph.* = candidate;
+        self.total_bytes = total;
+        draft.changed = true;
+        return .{ .before_units = units, .changed = true };
+    }
     /// Request preflight seal; never finishes or transfers private candidates.
     pub fn validatePrepared(self: *const Context) !void {
         try self.check();
+        if (self.document_observation) |observation| try observation.assertCurrent(self.session);
         const s = self.session;
         if (self.total_bytes > s.options.max_text_bytes) return error.LimitExceeded;
         for (s.sections, self.global_digests) |live, seal| {
@@ -323,6 +421,7 @@ pub const Context = struct {
         }
     }
     pub fn finish(self: *Context) !bool {
+        if (self.document_observation != null) return error.DocumentTextWholePublicationRequired;
         try self.validatePrepared();
         const s = self.session;
         const a = s.allocator;
@@ -352,6 +451,56 @@ pub const Context = struct {
         };
         self.consumed = true;
         return changed;
+    }
+
+    /// Independently admitted current Native axis, prior to editing this owner.
+    pub fn documentText(self: *Context, section_index: usize, paragraph_index: usize) ![]u8 {
+        if (self.document_observation == null) return error.DocumentTextObservationRequired;
+        const draft = try self.getSection(section_index);
+        const section = &self.session.sections[section_index];
+        if (paragraph_index < section.first_paragraph or paragraph_index > section.last_paragraph) return error.InvalidParagraphIndex;
+        const index = paragraph_index - section.first_paragraph;
+        if (index >= draft.values.paragraphs.len) return error.InvalidParagraphIndex;
+        const paragraph = &draft.values.paragraphs[index];
+        const a = self.session.allocator;
+        const positions = if (self.isDocumentPage(draft, paragraph))
+            try self.documentPagePositions(section, draft, paragraph, paragraph_index)
+        else if (self.isDocumentTitle(draft, paragraph))
+            try self.documentTitlePositions(section, draft, paragraph, paragraph_index)
+        else block: {
+            try self.authorize(section, draft, paragraph, paragraph_index);
+            break :block try currentPositions(a, &section.tree, paragraph);
+        };
+        defer a.free(positions);
+        var output: std.ArrayList(u8) = .empty;
+        defer output.deinit(a);
+        for (positions) |position| {
+            const text = @import("paragraph_text_positions.zig").segmentText(&paragraph.sites, position);
+            if (text.len > self.session.options.max_text_bytes -| output.items.len) return error.LimitExceeded;
+            try output.appendSlice(a, text);
+        }
+        return output.toOwnedSlice(a);
+    }
+
+    pub fn takeDocumentPublication(self: *Context) !@import("document_text_source_publication.zig").Publication {
+        if (self.document_observation == null) return error.DocumentTextObservationRequired;
+        try self.validatePrepared();
+        const publication = @import("document_text_source_publication.zig");
+        const a = self.session.allocator;
+        const sections = try a.alloc(?publication.Section, self.session.sections.len);
+        @memset(sections, null);
+        var result: publication.Publication = .{ .allocator = a, .owner = self.session, .source_pointer = self.source, .sections_pointer = self.section_pointer, .serial = self.serial, .active = self.active, .sections = sections };
+        errdefer result.deinit();
+        var iterator = self.drafts.iterator();
+        while (iterator.next()) |entry| if (entry.value_ptr.changed) {
+            const draft = entry.value_ptr;
+            const empty = try a.alloc(@import("text_sites.zig").Site, 0);
+            sections[entry.key_ptr.*] = .{ .values = draft.values, .sites = .{ .items = empty }, .original_values = draft.original_values, .original_sites = draft.original_sites };
+            draft.values = .{ .paragraphs = &.{} };
+        };
+        try result.validateCurrent(self.session);
+        self.consumed = true;
+        return result;
     }
 };
 fn authorizePart(draft: *const SectionDraft, paragraph: *const model.Paragraph) !void {

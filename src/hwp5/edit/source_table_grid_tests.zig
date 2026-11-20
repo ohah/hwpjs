@@ -317,7 +317,7 @@ test "HWP5 source table grid merged extensions zones caption nested cache opaque
         defer a.free(source);
         var r = request(.{ .insert_row = 1 }, layout);
         if (mutation == .caption) r.table_node = 9;
-        try refusal(source, r, error.UnsupportedSourceTableGrid);
+        try refusal(source, r, if (mutation == .cache) error.UnsupportedSourceLineCache else error.UnsupportedSourceTableGrid);
     };
 }
 fn allocationAttempt(allocator: std.mem.Allocator, source: []const u8, baseline: []const u8, layout: Layout, c: Case) !void {
@@ -369,4 +369,166 @@ test "HWP5 source grid semantic oracle rejects wrong retained text and empty hea
         try std.testing.expect(changed);
         try std.testing.expectError(error.TestExpectedEqual, check(input, wrong, .observed8, c.rows, c.columns, c.matrix, c.templates));
     }
+}
+
+// Own source authored above, with independent object-frame and cell dimensions.
+fn independentFrameFixture(layout: Layout, frame: u32, mutation: Mutation) ![]u8 {
+    const bytes = try fixture(layout, mutation);
+    errdefer a.free(bytes);
+    var it = wire.Iterator.init(bytes, .{});
+    while (try it.next()) |r| {
+        const at = r.offset + r.raw.len - r.payload.len;
+        if (r.tag == 71 and r.level == 1) put(u32, bytes, at + 20, frame);
+        if (r.tag == 72 and r.level == 2) {
+            const base: usize = if (layout == .spec6) 6 else 8;
+            const row = std.mem.readInt(u16, r.payload[base + 2 ..][0..2], .little);
+            put(u32, bytes, at + base + 12, if (row == 0) 2000 else 3000);
+        }
+    }
+    return bytes;
+}
+
+test "HWP5 independent frame row focused serialized frames tracks and surviving body bytes" {
+    const RowCase = struct { command: Command, frame: u32, heights: []const u32 };
+    const rows = [_]RowCase{
+        .{ .command = .{ .insert_row = 0 }, .frame = 6000, .heights = &.{ 2000, 2000, 3000 } },
+        .{ .command = .{ .insert_row = 1 }, .frame = 6000, .heights = &.{ 2000, 2000, 3000 } },
+        .{ .command = .{ .insert_row = 2 }, .frame = 7000, .heights = &.{ 2000, 3000, 3000 } },
+        .{ .command = .{ .delete_row = 0 }, .frame = 2000, .heights = &.{3000} },
+        .{ .command = .{ .delete_row = 1 }, .frame = 1000, .heights = &.{2000} },
+    };
+    for ([_]Layout{ .spec6, .observed8 }) |layout| for (rows) |row_case| {
+        const input = try independentFrameFixture(layout, 4000, .none);
+        defer a.free(input);
+        const snapshot = try a.dupe(u8, input);
+        defer a.free(snapshot);
+        const output = try grid.prepare(a, input, version, request(row_case.command, layout), .{});
+        defer a.free(output);
+        try std.testing.expectEqualSlices(u8, snapshot, input);
+        const before = try records(input);
+        defer a.free(before);
+        const after = try records(output);
+        defer a.free(after);
+        for (0..4) |i| try std.testing.expectEqualSlices(u8, before[i].raw, after[i].raw);
+        for (0..4) |i| try std.testing.expectEqualSlices(u8, before[before.len - 4 + i].raw, after[after.len - 4 + i].raw);
+        try std.testing.expectEqualSlices(u8, before[4].payload[0..20], after[4].payload[0..20]);
+        try std.testing.expectEqualSlices(u8, before[4].payload[24..], after[4].payload[24..]);
+        try std.testing.expectEqual(row_case.frame, std.mem.readInt(u32, after[4].payload[20..24], .little));
+        try std.testing.expectEqual(@as(u16, @intCast(row_case.heights.len)), std.mem.readInt(u16, after[5].payload[4..6], .little));
+        try std.testing.expectEqual(@as(u16, 2), std.mem.readInt(u16, after[5].payload[6..8], .little));
+        var cell_count: usize = 0;
+        var fresh_count: usize = 0;
+        for (after, 0..) |r, index| {
+            if (r.tag != 72 or r.level != 2) continue;
+            const base: usize = if (layout == .spec6) 6 else 8;
+            const row = std.mem.readInt(u16, r.payload[base + 2 ..][0..2], .little);
+            const column = std.mem.readInt(u16, r.payload[base..][0..2], .little);
+            const expected_slots = [_][2]u16{ .{ 0, 0 }, .{ 0, 1 }, .{ 1, 0 }, .{ 1, 1 }, .{ 2, 0 }, .{ 2, 1 } };
+            try std.testing.expect(cell_count < row_case.heights.len * 2);
+            try std.testing.expectEqual(expected_slots[cell_count][0], row);
+            try std.testing.expectEqual(expected_slots[cell_count][1], column);
+            try std.testing.expectEqual(@as(u16, 1), std.mem.readInt(u16, r.payload[base + 4 ..][0..2], .little));
+            try std.testing.expectEqual(@as(u16, 1), std.mem.readInt(u16, r.payload[base + 6 ..][0..2], .little));
+            try std.testing.expect(row < row_case.heights.len);
+            try std.testing.expectEqual(row_case.heights[row], std.mem.readInt(u32, r.payload[base + 12 ..][0..4], .little));
+            try std.testing.expectEqual(@as(u32, if (column == 0) 51 else 50), std.mem.readInt(u32, r.payload[base + 8 ..][0..4], .little));
+            const id = std.mem.readInt(u32, after[index + 1].payload[18..22], .little);
+            if (id >= 101 and id <= 104) {
+                const source_index: usize = id - 101;
+                const original: usize = 6 + source_index * 4;
+                const old_row: u16 = @intCast(source_index / 2);
+                const expected_row: u16 = switch (row_case.command) {
+                    .insert_row => |at| old_row + @intFromBool(old_row >= at),
+                    .delete_row => |at| old_row - @intFromBool(old_row > at),
+                    else => unreachable,
+                };
+                try std.testing.expectEqual(expected_row, row);
+                try std.testing.expectEqual(@as(u16, @intCast(source_index % 2)), column);
+                var expected_list: [34]u8 = undefined;
+                const n = before[original].payload.len;
+                @memcpy(expected_list[0..n], before[original].payload);
+                put(u16, &expected_list, base + 2, expected_row);
+                put(u32, &expected_list, base + 12, row_case.heights[expected_row]);
+                try std.testing.expectEqualSlices(u8, expected_list[0..n], r.payload);
+                for (1..4) |j| try std.testing.expectEqualSlices(u8, before[original + j].raw, after[index + j].raw);
+            } else {
+                try std.testing.expectEqual(fresh[fresh_count], id);
+                try std.testing.expectEqual(@as(u32, 0x80000001), std.mem.readInt(u32, after[index + 1].payload[0..4], .little));
+                fresh_count += 1;
+            }
+            cell_count += 1;
+        }
+        try std.testing.expectEqual(row_case.heights.len * 2, cell_count);
+        try std.testing.expectEqual(@as(usize, if (row_case.heights.len == 3) 2 else 0), fresh_count);
+    };
+}
+
+test "HWP5 independent frame row focused section refusal keeps original source" {
+    for ([_]Layout{ .spec6, .observed8 }) |layout| for ([_]Mutation{ .none, .protected_last_cell, .unknown_child }) |mutation| {
+        const input = try independentFrameFixture(layout, if (mutation == .none) 2000 else 4000, mutation);
+        defer a.free(input);
+        const snapshot = try a.dupe(u8, input);
+        defer a.free(snapshot);
+        try std.testing.expectError(error.UnsupportedSourceTableGrid, grid.prepare(a, input, version, request(.{ .delete_row = 1 }, layout), .{}));
+        try std.testing.expectEqualSlices(u8, snapshot, input);
+    };
+}
+
+test "HWP5 independent frame row focused final verification rebinds TABLE after cache retirement" {
+    const original = try independentFrameFixture(.observed8, 4000, .none);
+    defer a.free(original);
+    const before = try records(original);
+    defer a.free(before);
+    var input: std.ArrayList(u8) = .empty;
+    defer input.deinit(a);
+    var host: [24]u8 = undefined;
+    @memcpy(&host, before[0].payload);
+    put(u16, &host, 16, 1);
+    try writer.append(a, &input, 66, 0, &host, budget);
+    try input.appendSlice(a, before[1].raw);
+    try input.appendSlice(a, before[2].raw);
+    var cache: [36]u8 = @splat(0);
+    put(i32, &cache, 8, 1);
+    put(i32, &cache, 12, 1);
+    try writer.append(a, &input, 69, 1, &cache, budget);
+    for (before[3..]) |record| try input.appendSlice(a, record.raw);
+    var r = request(.{ .insert_row = 1 }, .observed8);
+    r.table_node = 6;
+    const output = try grid.prepare(a, input.items, version, r, .{});
+    defer a.free(output);
+    const after = try records(output);
+    defer a.free(after);
+    try std.testing.expectEqual(@as(u10, 77), after[5].tag);
+    try std.testing.expectEqual(@as(u16, 0), std.mem.readInt(u16, after[0].payload[16..18], .little));
+    try std.testing.expectEqual(@as(u32, 6000), std.mem.readInt(u32, after[4].payload[20..24], .little));
+    for (after) |record| try std.testing.expect(record.tag != 69);
+}
+
+fn independentFrameAllocationAttempt(allocator: std.mem.Allocator, input: []const u8, snapshot: []const u8, layout: Layout, frame: u32, command: Command) !void {
+    defer std.testing.expectEqualSlices(u8, snapshot, input) catch @panic("independent row frame source changed during OOM");
+    const output = grid.prepare(allocator, input, version, request(command, layout), .{}) catch |err| {
+        if (frame == 2000 and err == error.UnsupportedSourceTableGrid) return;
+        return err;
+    };
+    defer allocator.free(output);
+    if (frame == 2000) return error.TestExpectedError;
+    const expected_frame: u32 = if (command == .insert_row) 6000 else 1000;
+    var it = wire.Iterator.init(output, .{});
+    var found = false;
+    while (try it.next()) |record| if (record.tag == 71 and record.level == 1) {
+        try std.testing.expectEqual(expected_frame, std.mem.readInt(u32, record.payload[20..24], .little));
+        found = true;
+    };
+    try std.testing.expect(found);
+}
+
+test "HWP5 independent frame row OOM Section success refusal and final output cleanup" {
+    for ([_]Layout{ .spec6, .observed8 }) |layout| for ([_]u32{ 4000, 2000 }) |frame| {
+        const input = try independentFrameFixture(layout, frame, .none);
+        defer a.free(input);
+        const snapshot = try a.dupe(u8, input);
+        defer a.free(snapshot);
+        try @import("../../testing/allocation_failures.zig").check(independentFrameAllocationAttempt, .{ input, snapshot, layout, frame, Command{ .delete_row = 1 } });
+        if (frame == 4000) try @import("../../testing/allocation_failures.zig").check(independentFrameAllocationAttempt, .{ input, snapshot, layout, frame, Command{ .insert_row = 1 } });
+    };
 }

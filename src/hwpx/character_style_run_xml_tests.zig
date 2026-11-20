@@ -175,7 +175,7 @@ test "HWPX character style run XML partitions multiple text sites without duplic
     try std.testing.expect(std.mem.indexOf(u8, closed, "xmlns:p=") != null);
     try std.testing.expectError(error.SourceBindingMismatch, @import("character_style_run_xml.zig").write(a, &tree, &sites, spans[0..2], 2000));
     try std.testing.expectError(error.LimitExceeded, @import("character_style_run_xml.zig").write(a, &tree, &sites, &spans, result.len - 1));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, t: *const @import("xml_part_tree.zig").Tree, s: *const @import("text_sites.zig").Sites, partition: []const Span) !void {
             const rendered = try @import("character_style_run_xml.zig").write(allocator, t, s, partition, 2000);
             defer allocator.free(rendered);

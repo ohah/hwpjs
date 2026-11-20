@@ -1,3 +1,4 @@
+import { displayDocumentParagraph } from '../../js/document-text-coordinates.mjs';
 // Read-only presentation of native events. Never an edit model or save input.
 import { clipText } from './content.mjs';
 const inlineText = {
@@ -57,9 +58,11 @@ export function displayHwpxContent(
       const key = `${event.section}:${event.paragraph}`;
       if (seen.has(key)) throw new Error('InvalidHwpxParagraphEvents');
       seen.add(key);
+      const paragraph = displayDocumentParagraph('hwpx', event.paragraph);
+      if (paragraph === undefined) throw new Error('InvalidHwpxParagraphEvents');
       const value = {
         section: event.section,
-        paragraph: event.paragraph - 1,
+        paragraph,
         editable: false,
         label: `구역 ${event.section + 1} · 문단 ${event.paragraph}${stack.length ? ' · 중첩' : ''} · HWPX 읽기 전용`,
         text: '',

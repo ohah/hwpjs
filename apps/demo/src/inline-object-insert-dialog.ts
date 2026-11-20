@@ -1,3 +1,11 @@
+import {
+  HWP5_CHART_CREATE_PROFILE,
+  checkedHwp5ChartCreateOptions,
+  type Hwp5ChartCreateOptions,
+} from '../../../js/hwp5-chart-create.mjs';
+import { hwp5ChartRasterSize } from './hwp5-chart-raster-size.mjs';
+import type { ChartRasterPayload } from './hwp5-chart-create-input-lane.ts';
+import { checkedHwp5EquationInsertOptions } from '../../../js/hwp5-equation-insert.mjs';
 import { createChartTypeOptions } from './inline-object-insert-chart-type-options.ts';
 import { createInlineObjectInsertDataGrid } from './inline-object-insert-data-grid.ts';
 import { createCellSizeUnitDraft, parseCellSize } from './table-cell-size-units.ts';
@@ -16,16 +24,22 @@ export function createInlineObjectInsertDialog(
   root: HTMLElement,
   kind: InlineObjectKind,
   callbacks: {
-    onInsert(options: EquationInsertOptions | ChartCreateOptions): void;
+    onInsert(options: EquationInsertOptions | ChartCreateOptions | Hwp5ChartCreateOptions): void;
+    onPreview?(options: Hwp5ChartCreateOptions): void;
+    onDraftChange?(): void;
     onDismiss(): void;
     chartCreateProfileVersion?: unknown;
+    format?: string;
   },
 ) {
   const doc = root.ownerDocument,
     dialog = doc.createElement('dialog');
   const chart = kind === 'chart';
+  const hwp5 = callbacks.format === 'hwp5',
+    hwp5Chart = hwp5 && chart;
   let busy = false,
-    unavailable = false;
+    unavailable = false,
+    previewBusy = false;
   dialog.className = 'inline-object-insert-dialog';
   const heading = doc.createElement('h2');
   heading.id = 'inline-object-insert-heading';
@@ -34,8 +48,11 @@ export function createInlineObjectInsertDialog(
   const scope = doc.createElement('p');
   scope.id = 'inline-object-insert-scope';
   scope.className = 'inline-object-insert-scope';
-  scope.textContent =
-    'HWPX 첫 구역의 일반 본문 커서 위치에 삽입합니다. 셀 안과 선택 영역에서는 사용할 수 없습니다.';
+  scope.textContent = hwp5Chart
+    ? 'HWP5 일반 본문 커서에 기본 막대 차트를 만듭니다. 외부 프로그램의 표시 호환성은 아직 확인되지 않았습니다.'
+    : hwp5
+      ? 'HWP5 일반 본문 커서에 수식을 삽입합니다. 검정색과 일반 모드를 기본값으로 사용합니다. 저장 호환성은 후속 검증 대상입니다.'
+      : 'HWPX 첫 구역의 일반 본문 커서 위치에 삽입합니다. 셀 안과 선택 영역에서는 사용할 수 없습니다.';
   dialog.setAttribute('aria-describedby', scope.id);
   const form = doc.createElement('form');
   form.noValidate = true;
@@ -92,7 +109,7 @@ export function createInlineObjectInsertDialog(
       grid?.setProfile(profile);
       if (!busy && !unavailable) status.textContent = '';
     });
-    chartTypes.setProfileVersion(callbacks.chartCreateProfileVersion);
+    chartTypes.setProfileVersion(hwp5Chart ? 0 : callbacks.chartCreateProfileVersion);
     grid = createInlineObjectInsertDataGrid(data, () => {
       if (!busy && !unavailable) status.textContent = '';
     });
@@ -105,6 +122,25 @@ export function createInlineObjectInsertDialog(
       true,
       '예: x over y. 빈 수식도 삽입할 수 있습니다. 수식의 크기를 자동 계산하지 않습니다.',
     );
+  }
+  let profileChoice: HTMLSelectElement | undefined;
+  if (hwp5Chart) {
+    const group = section('HWP5 차트 생성 방식'),
+      label = doc.createElement('label');
+    label.textContent = '생성 방식';
+    profileChoice = doc.createElement('select');
+    profileChoice.setAttribute('aria-label', 'HWP5 차트 생성 방식');
+    for (const [value, text] of [
+      ['', '생성 방식을 선택하세요'],
+      [HWP5_CHART_CREATE_PROFILE, '기본 막대 차트 (외부 호환 미검증)'],
+    ]) {
+      const option = doc.createElement('option');
+      option.value = value;
+      option.textContent = text;
+      profileChoice.append(option);
+    }
+    label.append(profileChoice);
+    group.append(label);
   }
   const size = section('크기');
   size.className = 'inline-object-insert-size';
@@ -129,6 +165,15 @@ export function createInlineObjectInsertDialog(
     field(advanced, 'baseUnit', '기본 글자 크기 (pt)', baseDraft.read().width);
     field(advanced, 'version', '수식 버전', 'Equation Version 60');
     field(advanced, 'font', '글꼴', 'HYhwpEQ');
+    if (hwp5) {
+      const color = field(advanced, 'colorRgb', '수식 색상', '#000000');
+      if (color.tagName === 'INPUT') (color as HTMLInputElement).type = 'color';
+      const line = field(advanced, 'lineMode', '줄 모드', '');
+      if (line.tagName === 'INPUT') {
+        (line as HTMLInputElement).type = 'checkbox';
+        line.required = false;
+      }
+    }
   }
   status.className = 'inline-object-insert-status';
   status.id = 'inline-object-insert-status';
@@ -164,8 +209,18 @@ export function createInlineObjectInsertDialog(
   function baseline() {
     const raw = value('baseLine').trim(),
       n = Number(raw);
-    if (!/^\d+$/.test(raw) || !Number.isSafeInteger(n) || n < 0 || n > 4294967295)
-      invalid('baseLine', '기준선은 0~4,294,967,295의 정수로 입력하세요.');
+    if (
+      !(hwp5 ? /^-?\d+$/ : /^\d+$/).test(raw) ||
+      !Number.isSafeInteger(n) ||
+      n < (hwp5 ? -32768 : 0) ||
+      n > (hwp5 ? 32767 : 4294967295)
+    )
+      invalid(
+        'baseLine',
+        hwp5
+          ? '기준선은 -32,768~32,767의 정수로 입력하세요.'
+          : '기준선은 0~4,294,967,295의 정수로 입력하세요.',
+      );
     return n;
   }
   function dimension(name: 'width' | 'height' | 'baseUnit') {
@@ -183,51 +238,73 @@ export function createInlineObjectInsertDialog(
     const points = draft.points();
     return parseCellSize(axis === 'width' ? points.widthPoints : points.heightPoints, 'pt')!;
   }
+  function collect() {
+    const size = { width: dimension('width'), height: dimension('height') };
+    let options: EquationInsertOptions | ChartCreateOptions | Hwp5ChartCreateOptions;
+    if (chart) {
+      const profile = chartTypes!.read();
+      const data = grid!.collect();
+      try {
+        options = checkedChartCreateOptions({
+          ...size,
+          ...data,
+          ...(profile ? { chart: profile } : {}),
+        });
+      } catch (error) {
+        grid!.focus();
+        const message = (error as Error).message;
+        throw Error(
+          message === 'InvalidChartStockValues'
+            ? '주가 값은 저가 ≤ 시가·종가 ≤ 고가 순서를 지켜야 합니다.'
+            : message === 'InvalidChartNumber'
+              ? '숫자를 확인하세요. 원형 값과 버블 크기는 0 이상이어야 합니다.'
+              : '범주·계열 이름과 데이터 크기를 확인하세요. 이름은 UTF-8 4,096바이트 이하이며 차트별 배열 크기와 역할이 일치해야 합니다.',
+        );
+      }
+      if (hwp5Chart) {
+        if (profileChoice?.value !== HWP5_CHART_CREATE_PROFILE)
+          throw Error('HWP5 차트 생성 방식을 선택하세요.');
+        options = checkedHwp5ChartCreateOptions({
+          ...options,
+          profile: profileChoice.value,
+          preview: hwp5ChartRasterSize(options),
+        });
+      }
+    } else {
+      const input = {
+        ...size,
+        script: value('script'),
+        baseLine: baseline(),
+        baseUnit: dimension('baseUnit'),
+        version: value('version'),
+        font: value('font'),
+      };
+      try {
+        options = hwp5
+          ? checkedHwp5EquationInsertOptions({
+              ...input,
+              colorRgb: Number.parseInt(value('colorRgb').slice(1), 16),
+              lineMode: (fields.get('lineMode') as HTMLInputElement).checked,
+            })
+          : checkedEquationInsertOptions(input);
+      } catch {
+        invalid(
+          'script',
+          '수식과 세부 설정의 문자를 확인하세요. 수식은 UTF-8 1MB, 버전과 글꼴은 각각 128바이트까지 입력할 수 있습니다.',
+        );
+      }
+    }
+    return options!;
+  }
+  const showError = (error: unknown) => {
+    status.textContent = (error as Error).message;
+  };
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    if (busy || unavailable) return;
+    if (busy || previewBusy || unavailable) return;
     try {
-      const size = { width: dimension('width'), height: dimension('height') };
-      let options: EquationInsertOptions | ChartCreateOptions;
-      if (chart) {
-        const profile = chartTypes!.read();
-        const data = grid!.collect();
-        try {
-          options = checkedChartCreateOptions({
-            ...size,
-            ...data,
-            ...(profile ? { chart: profile } : {}),
-          });
-        } catch (error) {
-          grid!.focus();
-          const message = (error as Error).message;
-          throw Error(
-            message === 'InvalidChartStockValues'
-              ? '주가 값은 저가 ≤ 시가·종가 ≤ 고가 순서를 지켜야 합니다.'
-              : message === 'InvalidChartNumber'
-                ? '숫자를 확인하세요. 원형 값과 버블 크기는 0 이상이어야 합니다.'
-                : '범주·계열 이름과 데이터 크기를 확인하세요. 이름은 UTF-8 4,096바이트 이하이며 차트별 배열 크기와 역할이 일치해야 합니다.',
-          );
-        }
-      } else {
-        const input = {
-          ...size,
-          script: value('script'),
-          baseLine: baseline(),
-          baseUnit: dimension('baseUnit'),
-          version: value('version'),
-          font: value('font'),
-        };
-        try {
-          options = checkedEquationInsertOptions(input);
-        } catch {
-          invalid(
-            'script',
-            '수식과 세부 설정의 문자를 확인하세요. 수식은 UTF-8 1MB, 버전과 글꼴은 각각 128바이트까지 입력할 수 있습니다.',
-          );
-        }
-      }
-      callbacks.onInsert(options!);
+      const options = collect();
+      callbacks.onInsert(options);
     } catch (error) {
       const message = (error as Error).message;
       status.textContent =
@@ -236,6 +313,49 @@ export function createInlineObjectInsertDialog(
           : message;
     }
   });
+  const previewButton = hwp5Chart && callbacks.onPreview ? doc.createElement('button') : undefined;
+  const previewSlot = hwp5Chart ? doc.createElement('figure') : undefined;
+  let previewURL: string | undefined;
+  const clearPreview = () => {
+    if (previewURL) doc.defaultView?.URL.revokeObjectURL(previewURL);
+    previewURL = undefined;
+    previewSlot?.replaceChildren();
+  };
+  const updateEnabled = () => {
+    const blocked = busy || previewBusy || unavailable;
+    const chosen = !hwp5Chart || profileChoice?.value === HWP5_CHART_CREATE_PROFILE;
+    submit.disabled = blocked || !chosen;
+    if (previewButton) previewButton.disabled = blocked || !chosen;
+    if (profileChoice) profileChoice.disabled = blocked;
+    cancel.disabled = busy;
+    for (const input of fields.values()) input.disabled = blocked;
+    grid?.setDisabled(blocked);
+    chartTypes?.setDisabled(blocked);
+  };
+  if (previewButton) {
+    previewButton.type = 'button';
+    previewButton.textContent = '미리보기';
+    previewButton.addEventListener('click', () => {
+      if (busy || previewBusy || unavailable) return;
+      try {
+        callbacks.onPreview!(collect() as Hwp5ChartCreateOptions);
+      } catch (error) {
+        showError(error);
+      }
+    });
+    actions.append(previewButton);
+  }
+  profileChoice?.addEventListener('change', () => {
+    clearPreview();
+    callbacks.onDraftChange?.();
+    updateEnabled();
+  });
+  form.addEventListener('input', () => {
+    clearPreview();
+    callbacks.onDraftChange?.();
+  });
+  if (previewSlot) form.append(previewSlot);
+  updateEnabled();
   actions.append(cancel, submit);
   form.append(status, actions);
   dialog.append(heading, scope, form);
@@ -254,7 +374,28 @@ export function createInlineObjectInsertDialog(
       grid?.setDisabled(busy || unavailable);
       chartTypes?.setDisabled(busy || unavailable);
       status.textContent = busy ? '처리 중입니다. 결과를 확인할 때까지 기다려주세요.' : '';
+      updateEnabled();
       if (busy) dialog.focus();
+    },
+    setPreviewBusy(next: boolean) {
+      previewBusy = next;
+      updateEnabled();
+      if (!unavailable) status.textContent = next ? '차트 미리보기를 준비하고 있습니다.' : '';
+    },
+    showPreview(payload: ChartRasterPayload) {
+      clearPreview();
+      if (!previewSlot || unavailable) return;
+      const image = doc.createElement('img'),
+        caption = doc.createElement('figcaption');
+      image.alt = '새 HWP5 차트 미리보기';
+      previewURL = doc.defaultView!.URL.createObjectURL(
+        new Blob([payload.bytes.slice().buffer], { type: 'image/png' }),
+      );
+      image.src = previewURL;
+      image.width = payload.pixel_width;
+      image.height = payload.pixel_height;
+      caption.textContent = '미리보기이며 실제 차트의 글꼴과 모양은 다를 수 있습니다.';
+      previewSlot.append(image, caption);
     },
     setUnavailable(reason: string) {
       unavailable = true;
@@ -263,11 +404,14 @@ export function createInlineObjectInsertDialog(
       for (const input of fields.values()) input.disabled = true;
       grid?.setDisabled(true);
       chartTypes?.setDisabled(true);
+      clearPreview();
+      updateEnabled();
     },
     setChartProfileVersion(version: unknown) {
-      chartTypes?.setProfileVersion(version);
+      chartTypes?.setProfileVersion(hwp5Chart ? 0 : version);
     },
     destroy() {
+      clearPreview();
       dialog.close();
       dialog.remove();
     },

@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { createDocument } from '../src/document-create.ts';
 import { createNewDocumentBytes } from '../../../js/new-document.mjs';
 import { openDocument } from '../src/engine.ts';
+import { verifyNewDocument } from '../../../tools/tests/table-appearance-save-oracle.mjs';
 
 const h5 = Uint8Array.of(0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1);
 const hx = Uint8Array.of(80, 75, 3, 4);
@@ -204,10 +205,12 @@ for (const format of ['hwp5', 'hwpx'])
       const wasm = readFileSync(process.env.HWPJS_TEST_WASM);
       assert.equal(createHash('sha256').update(wasm).digest('hex'), expectedWasmSHA);
       const blank = await createNewDocumentBytes(wasm, format);
+      verifyNewDocument({ format, bytes: blank });
       const text = '첫🙂\n\n둘é\n';
       const result = await createDocument({ format, text, wasm, allowStaleLayout: true });
       assert.equal(result.paragraphCount, 4);
       assert.equal(result.layoutRequiresReflow, format === 'hwp5');
+      verifyNewDocument({ format, bytes: result.bytes, expectedTexts: text.split('\n') });
       const doc = await openDocument({ bytes: result.bytes, wasm }),
         base = await openDocument({ bytes: blank, wasm });
       try {

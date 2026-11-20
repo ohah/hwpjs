@@ -20,6 +20,23 @@ comptime {
     if (descriptors.len != @typeInfo(Kind).@"enum".field_names.len) @compileError("header resource kind/descriptor mismatch");
 }
 
+/// Read-only physical resource classification using the same descriptor SSOT.
+/// Does not read IDs, inspect unrelated payloads, or grant edit permission.
+pub fn kindAt(tree: *const @import("xml_part_tree.zig").Tree, node: usize) ?Kind {
+    if (tree.part_kind != .header or tree.elements.len == 0 or node >= tree.elements.len or !tree.elements[0].is(document_xml.head_uri, "head")) return null;
+    const group = tree.elements[node].parent orelse return null;
+    if (group >= tree.elements.len) return null;
+    const list = tree.elements[group].parent orelse return null;
+    if (list >= tree.elements.len or !tree.elements[list].is(document_xml.head_uri, "refList") or tree.elements[list].parent != 0) return null;
+    for (descriptors, 0..) |descriptor, index| {
+        if (tree.elements[group].is(document_xml.head_uri, descriptor.group) and tree.elements[node].is(document_xml.head_uri, descriptor.item)) {
+            const kind: Kind = @fromBackingInt(@as(u8, @intCast(index)));
+            return kind;
+        }
+    }
+    return null;
+}
+
 pub const Options = struct {
     max_xml_bytes: usize = 32 * 1024 * 1024,
     max_attribute_bytes: usize = 4096,

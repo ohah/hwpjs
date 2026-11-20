@@ -18,6 +18,15 @@ pub fn kind(tree: *const trees.Tree, index: usize) ?Kind {
     const run = tree.elements[run_index];
     const paragraph_index = run.parent orelse return null;
     if (!run.is(uri, "run") or !tree.elements[paragraph_index].is(uri, "p")) return null;
+    return knownReadChildKind(tree, index);
+}
+
+/// Read-only shape facts. The caller must already prove a current actual run
+/// through selected_run_owner; this function issues no edit/geometry authority.
+/// kind() retains the original physical direct-run admission above.
+pub fn knownReadChildKind(tree: *const trees.Tree, index: usize) ?Kind {
+    if (index >= tree.elements.len) return null;
+    const element = tree.elements[index];
     if (element.is(uri, "tbl")) return .table;
     if (element.is(uri, "pic")) return .picture;
     if (element.is(uri, "equation")) return .equation;
@@ -36,7 +45,7 @@ pub fn kind(tree: *const trees.Tree, index: usize) ?Kind {
     if (element.is(uri, "comboBox")) return .combo_box;
     if (element.is(uri, "radioBtn")) return .radio_button;
     if (element.is(uri, "edit")) return .edit_box;
-    if (@import("run_switch_anchor.zig").supported(tree, index)) return .conditional_object;
+    if (@import("run_switch_anchor.zig").readShapeSupported(tree, index)) return .conditional_object;
     if (!element.is(uri, "ctrl")) return null;
     const child_index = element.first_child orelse return null;
     const child = tree.elements[child_index];

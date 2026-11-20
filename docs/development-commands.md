@@ -1,5 +1,15 @@
 ## 수식 표시·원본 커서 서식·개체 위치 편집
 
+<a id="hwp5-line-cache-leaf"></a>
+
+## HWP5 줄 배치 캐시의 하위 레코드
+
+[캐시 소유권 계약](source-table-grid-caches.md#hwp5-줄-배치-캐시의-하위-레코드)의 합성 회귀입니다. 정상 캐시의 정확한 제거, 미지 하위 구조의 거부와 중복 오류 우선순위를 일반 성공·NoResize 할당 실패 경로에서 확인합니다. 실제 SDK·Canvas 검증과 구분합니다.
+
+```sh
+nice -n 10 mise exec -- zig test src/line_cache_leaf_proof_probe.zig -O ReleaseSafe -fllvm -j1 --test-filter 'line cache leaf proof'
+```
+
 형식별 원본의 조회·서식 상속·개체 위치/크기 저장 회귀는 다음 집중 대상에서 검사합니다. 전체 `test`에도 연결됩니다.
 
 ```sh
@@ -9,6 +19,44 @@ zig build test-editor-extensions -Doptimize=ReleaseSafe -j1 --summary all
 `test-hwp5-equation-display`, `test-object-geometry`, `test-caret-rich`, `test-caret-eof`, `test-caret-eof-managed`로 책임별 검사를 실행할 수 있습니다. 코어 검사는 정상 SDK·실제 Canvas 입력·저장 파일의 독립 검사와 구분합니다. 지원 조건은 [수식 표시](hwp5-equation-rendering.md), [커서 서식](collapsed-caret-formatting.md), [개체 위치 편집](object-geometry-editing.md)의 주제 계약을 따릅니다.
 
 # 개발·검증 명령
+
+## 선택 필드 쓰기 후보 r14 검증 경계
+
+r14는 raw 연결 분석의 `InvalidFieldLinks`와 선택된 분기의 엄격한 연결 분석을 구분한다. raw 분석 캐시와 기존 필드 쓰기 권한은 바꾸지 않는다. 선택된 분기도 충돌하면 거부한다. 원본 사이트 하나 안의 필드 외부 교체 후보만 준비하며, 기존 저장 후 검증과 단일 History 게시를 거친다. 필드 내부·여러 사이트를 가로지르는 교체·생성 또는 분할 문단이 섞인 경우는 아직 미지원이다. 이 후보를 전체 찾기/모두 바꾸기 완료로 표현하지 않는다.
+
+기존 batch-delegation12의 시험 본문과 입력을 보존하고 새 정상·거부 회귀3을 추가해 정적 예상15로 등록했다. 전체 정적 이름 선언 예상은126회, 고유120개다. 원 진단의 replace/InvalidFieldLinks 실패는 그대로 보존한다. r14는 Native 컴파일/실행 전이며 원 진단의 실패와 기존 통과 수를 새 후보 결과로 승계하지 않는다.
+
+## 전체문서 검색 Native 등록과 정규 CI
+
+`build.zig`의 검색 등록 표가 13개 root의 경로·필터·집중 step과 이름 테스트 예상 수를 소유한다. 기존7개 필터는 그대로 유지한다. 각 실행은 전체 `test`와 `test-document-search`에도 연결한다. 기존 필터와 테스트 본문은 유지한다.
+
+```sh
+node --test tools/tests/document-search-native-registration.test.mjs
+zig build test-document-search -Doptimize=ReleaseSafe -j1 --summary all
+```
+
+개별 step은 `test-document-search-read`, `test-document-search-transaction`, `test-document-search-hx`, `test-document-search-selection`, `test-document-search-title-diagnostic`, `test-document-search-title-emission`, `test-document-search-title-linear` 및 후속 `test-document-search-anchor`, `test-document-search-read-generation`, `test-document-search-readonly-hwp`, `test-document-search-batch-delegation`, `test-document-search-control-kernel`, `test-document-search-paragraph-coverage`이다. 현재 r9 정적 이름 선언 합계는123회이고 고유 선언은117개다. readonly H5는 소유자7+이름 공간2, 공통 위임은12, 공통 kernel은13+coverage3이다. 익명 수와 Native 실행 결과는 이 숫자로 확정하지 않는다.
+
+JavaScript Quality의 `document-search-native` 작업은 Node24.20.0과 고정 Linux Zig0.17.0 아카이브를 사용한다. 도구체인의 URL·SHA·크기는 `tools/document-search-zig-toolchain.json`이 소유하며 다운로드 뒤 해시·크기를 확인한다. Docs가 이 reusable workflow를 기다리므로 빌드 그래프 등록만 하고 CI 실행을 생략하지 않는다. 이 작업은 npm이나 workspace 의존성 설치가 필요 없다.
+
+CI runner `tools/run-document-search-native.mjs`는 같은 빌드 표의 7개 필터를 순차 `zig test`로 실행해 기본 runner의 이름·익명 결과를 나눠 보존한다. 각 그룹은 ReleaseSafe·LLVM·nice10·j1과 새 개별 캐시를 사용하며, 첫 실패 뒤에는 다음 그룹을 실행하지 않는다. 전체 양성 소스 사본과 컴파일러의 전후 해시, 쓰기 거부 확인, 디스크8GiB, 단독 컴파일 확인, 자기 프로세스 그룹 RSS8GiB 제한 및 최초 로그를 기록한다. 이 CI 경로는 별도 로컬 Native 슬롯 승인·sandbox 계약을 대체하지 않는다.
+
+```sh
+# GitHub Actions에서만 실행한다. 로컬 실행 승인을 의미하지 않는다.
+node tools/run-document-search-native.mjs --execute --zig="$HWPJS_SEARCH_ZIG" --out="$RUNNER_TEMP/document-search-native"
+```
+
+등록 소스 검사의 통과는 실제 Native·WASM·정상 SDK·화면 찾기 완료와 구분한다. 현재 선택 연결과 남은 최초 caret 역변환·화면 밖/읽기 전용 대상·문단별 emission·복잡 profile 범위는 [검색 선택 계약](document-text-selection.md)을 따른다.
+
+## 전체문서 검색 선택의 소스 합성 검사
+
+[읽기 선택 관측 계약](document-text-selection.md)의 선택 조회 전송과 기존 snapshot·모두바꾸기 전송을 함께 확인한다. 아래 검사는 mock Native 메모리만 사용하며 실제 Native/WASM·화면 선택 검증이 아니다.
+
+```sh
+node --test tests/canvas/document-text-selection-api.test.mjs tests/canvas/document-text-api.test.mjs tests/canvas/document-replace-all-api.test.mjs
+```
+
+`src/document_text_selection_probe.zig`의 추가 Native 검사 소스는 기존 HX25와 분리한다. 실행은 별도 정확한 소스 동결·슬롯 승인을 받은 뒤에만 수행한다.
 
 <a id="hwpx-inline-object-creation"></a>
 
@@ -2051,3 +2099,130 @@ mise exec -- node --test tests/hwp5/equation-snapshot.test.mjs tests/hwp5/equati
 test -n "$HWPJS_TEST_WASM" || exit 1
 mise exec -- node tests/hwp5/equation-snapshot-native.mjs
 ```
+
+## 역사 HWPX 패키지 corpus 입력 준비
+
+[역사 484개 복원 계약](hwpx-package-historical-corpus.md)에 따라 두 로컬 Git 객체 저장소에서 원문서만 새 경로로 복원·검증합니다. `python3 -B tools/restore-hwpx-package-corpus.py --help`와 `python3 -B -m unittest discover -s tools/tests -p 'test_restore_hwpx_package_corpus.py' -v`를 사용합니다. Native 실행 시 `-Dhwpx-package-corpus-root=/absolute/new-dataset`을 전달하며, 누락은 필수 입력 실패이고 skip이 아닙니다. 도구의 성공과 Native·전체 CI 성공은 구분합니다.
+
+## HWPX 제어 축 묶음 읽기 회귀
+
+제어 축·현재 문단 소유권·부분 관측·UTF-16 경계·할당 실패와 요청 작업량의 집중 Native 대상은 다음과 같습니다. 이 대상은 `test-editor-extensions`와 기본 `test`에도 등록하며 기존 corpus/Noori 대상은 유지합니다.
+
+```sh
+zig build test-control-text-read-context -Doptimize=ReleaseSafe -j1
+```
+
+선언된 Native16개와 익명 발견 수를 분리해 기록하고, source 등록 검사는 기본 대상 연결·추가 coverage 모듈 import·두 filter 접두사를 함께 검사합니다. 소스 등록 확인을 실제 Native 실행으로 부르지 않습니다.
+
+다음 source 검사는 같은 collector·renderer의 완전/부분 관측, 리터럴 U+FFFC, 소유권 불일치, getter 교체, 구역별 진단 집계와 구엔진의 문단별 anchor 호출0을 검사합니다. 실제 SDK·설치 bin 검사는 별도입니다.
+
+```sh
+node --max-old-space-size=512 --test --test-concurrency=1 \
+  packages/cli/tests/hwpx-control-aware-read.test.mjs \
+  packages/cli/tests/hwpx-control-aware-witness.test.mjs \
+  packages/cli/tests/hwpx-incomplete-read-content.test.mjs \
+  packages/cli/tests/hwpx-partial-read-summary.test.mjs \
+  packages/cli/tests/hwpx-consumed-axis-snapshot.test.mjs \
+  tools/tests/hwpx-control-text-batch.test.mjs
+```
+
+합본 검증은 Native 집중 대상과 전체 정규 대상, 새 Small의 기존 typed ABI 보존/optional export/import0, 정상 SDK·공개 타입, 기본 선언 bin의 합성 읽기2 및 별도 이미지 검사, 기존 Noori40을 각각 확인합니다. 과거 독립 묶음 읽기 성공을 외부 generation·선택 run·검색의 새 합본 증거로 재분류하지 않습니다. 표시 계약과 부분 읽기 경계는 [CLI 문서 읽기](cli-ai-document-view.md#hwpx-제어-문자를-보존하는-읽기)를 따릅니다.
+
+검색 읽기 연결 후속의 정규 Native 등록은 기존 7개 필터를 유지하며 역조회7·세대8·readonly H5 9·공통 kernel 위임2를 추가한다. 새 11그룹의 이름 선언 합계는97이며 실제 실행 수/익명 수가 아니다. readonly H5 9는 기존 소유자7과 이름 공간2이고, 공통 위임2는 serializer→Snapshot 및 caret/선택 실제 호출 경로다. 실제 Native 실행은 별도 정확 슬롯 승인이 있어야 한다.
+
+```sh
+node --experimental-transform-types --test tests/canvas/hwp5-readonly-public-reader.test.mjs tests/canvas/hwp5-readonly-core-path.test.mjs
+```
+
+위 Node 경로는 통제된 Native exports/모듈 자격으로 실제 SDK·Runtime·Core 소스를 호출한다. 실제 Native 또는 정상 배포 SDK 실행의 근거로 사용하지 않는다.
+
+공통 kernel13과 direct paragraph coverage3도 같은 등록 표·CI runner에 포함하므로 최종 표는13그룹/이름 선언113회(고유107)다. 앞의11그룹97은 이 두 공통 루트를 합치기 전 단계이며 삭제한 옛 증거가 아니다. 기존 `test-control-text-read-context` 이름은 동일 run artifact의 alias로 유지해 전체 `zig build test`에서 중복 실행하지 않는다. 숫자는 정적 예상 수이며 Native 실측이나 CI 성공을 의미하지 않는다.
+
+r7의 wire 검증 두 선언을 더한 최종 정적 명부는13그룹/이름115회(고유109)다. 공통 위임 그룹4는 실제 kernel 호출2와 Native first ordinal·v1/v2 wire 의미2다. 위113은 그 전 단계이며 이 새 코호트의 실측 성공으로 읽지 않는다.
+
+현재 r8은 r7의115회 명부에 실제 Session에서 선택 branch 정책을 사용하는 Snapshot·anchor·selection·transaction verifyAfter 회귀1을 추가해116회(고유110)다. 공통 위임5의 기존4 선언과 필터는 유지한다. 위113/115는 각 과거 소스 단계의 정적 명부이며 r8 실행 증거가 아니다. 새 집중 선택은 readonly9+세대8+위임5+kernel13+coverage3=38회이고 아직 Native 실행하지 않았다.
+
+선택 run 조회 r9 후보의 batch-delegation12는 기존5와 새 부모/프레임 회귀7이다. 필터는 바뀌지 않는다. 다음 JS·fixture 검사는 실제 Native 실행 대신으로 세지 않는다.
+
+```sh
+node --experimental-transform-types --test tools/tests/selected-run-owner-contract.test.mjs
+python3 -B -m unittest discover -s tools/tests -p 'test_document_text_selected_run_fixture.py' -v
+```
+
+등록 표의 현재 예상123은 정적 선언 수다. 별도 정확 슬롯 승인 후에만 Native를 실행하며 실제 익명 수와 named 수를 구분한다. 프레임 변경의 기존 field/선택/streaming 회귀와 전체 소스 영향은 새 실행 계획에 포함해야 하며 원문서 없는 ordinary snapshot을 full Native 입력 준비 완료로 표현하지 않는다.
+
+## HWPX 각주 및 미주 생성 후보
+
+[생성 계약](hwpx-note-creation.md)을 따릅니다. 격리 후보 소스에서 mock 및 타입 검사를 실행합니다.
+
+```sh
+node --test --test-concurrency=1 tests/hwpx/note-create-transport.test.mjs
+bun test --no-install tests/hwpx/note-create-core.test.ts
+bun --tsconfig-override=tools/tests/tsconfig.note-create.json test --no-install apps/demo/tests/note-insert-tool.test.ts
+node node_modules/typescript/bin/tsc -p tools/tests/tsconfig.note-create.json
+```
+
+Native 집중 step은 test-hwpx-note-public-wire, test-hwpx-note-create, test-hwpx-note-delete-protection, test-hwpx-note-delete입니다. 각각 새 wire3, 생성18, 보호18, 삭제18 이름을 선택합니다. 실제 실행은 Main이 승인한 소스와 compiler 및 입력 핀, 전체 PG 관리, 자원 검사와 최대2 cohort 조율이 있는 공식 준비 driver로 수행합니다. 위 mock 명령은 Native 또는 실제 SDK 및 browser 통과가 아닙니다.
+
+
+## HWP5 새 차트 생성 자원 준비 후보
+
+[후보 계약](hwp5-chart-creation-foundation.md)의 자체 합성9개다. 새 Native 슬롯 승인 전에는 다음 명령을 실행하지 않는다. 전체 HWP 파일 생성/History나 실제 앱 상호운용 시험과 구분한다.
+
+```sh
+nice -n 10 zig test src/hwp5_chart_create_resources_probe.zig -O ReleaseSafe -fllvm -j1 --test-filter 'H5 chart create foundation'
+```
+
+공유 Root에서 실행하지 않고 Main이 검토한 정확 격리 후보·컴파일러 핀과 전용 캐시/새 증거 디렉터리를 사용한다. 처음 실패는 보존하고 자동 재시도하지 않는다.
+## HWPX 현재 주석 참조 삭제 후보
+
+[삭제 계약](hwpx-note-creation.md#현재-참조에서-주석-삭제-후보)을 따릅니다. 다음은 격리 소스의 가벼운 검사이며 실제 삭제 ABI 검증이 아닙니다.
+
+```sh
+node --test --test-concurrency=1 tests/hwpx/note-delete-transport.test.mjs
+bun test --no-install tests/hwpx/note-delete-core.test.ts
+bun --tsconfig-override=tools/tests/tsconfig.note-delete.json test --no-install apps/demo/tests/note-delete-tool.test.ts
+node node_modules/typescript/bin/tsc -p tools/tests/tsconfig.note-delete.json
+```
+
+정규 root 등록은 `hwpx_note_public_delete_probe.zig`를 import합니다. 아래 Native 명령은 명부8의 실행 준비용이며 소스, compiler, 자원, 최대2 슬롯과 소유 PG가 조율된 뒤 별도로 실행합니다. 무필터 전체 재실행이나 자동 재시도하지 않습니다.
+
+```sh
+nice -n 10 zig test src/hwpx_note_public_delete_probe.zig -O ReleaseSafe -fllvm -j1 --test-filter 'HWPX N02 public delete'
+```
+
+## HWP5 조판 저장 계약 후보 준비
+
+`node --test tools/tests/hwp5-line-layout-candidate.test.mjs`는 순수 데이터와 기존 layout/page 엔진의 합성 측정 관측을 검사합니다. WASM·Native·실제 폰트·브라우저 검증이 아닙니다. `zig fmt --check src/hwp5/body/line_segment_writer.zig src/hwp5/edit/line_layout_patch.zig src/hwp5/edit/line_layout_patch_tests.zig src/hwp5_line_layout_patch_probe.zig`는 포맷만 검사합니다. Main의 Native 슬롯 승인 후 별도로 `zig test -fllvm -j1 -O ReleaseSafe src/hwp5_line_layout_patch_probe.zig --test-filter 'layout segment writer' --test-filter 'layout section patch'`를 사용할 수 있습니다. 정확한 named7과 실제 anonymous/skip·전후 핀·전체 PG 종료는 실행 때 대조합니다. [데이터/원본 보존/권위/남은 gate](hwp5-layout-save-contract.md)를 따릅니다.
+
+## 격리 strict plain 조판 저장 후보
+
+상태와 범위는 [통합 계약](hwp5-strict-layout-integration.md)을 따른다. Node 집중 검사는 후보 안에서 다음과 같다.
+
+```sh
+node --test tools/tests/hwp5-strict-plain-lines.test.mjs
+```
+
+Native는 승인된 슬롯과 실행 직전 자원/코호트/전후 핀 검사 후에만 실행한다. 새 probe는 `src/strict_layout_integration_probe.zig`, 정확 필터는 `strict save integration` + `strict save admission`이다. `hwp5-strict-layout-integration.md`에 compiler·환경·출력·캐시가 격리된 실제 명령을 기록했다. 이 명령을 준비한 것과 실행한 것은 구분한다.
+
+## strict Worker/UI 측정 저장 집중 검사
+
+```sh
+node --test tools/tests/hwp5-strict-worker-ui.test.mjs tools/tests/hwp5-strict-plain-lines.test.mjs
+```
+
+이 검사는 Node의 모의 realm/transport다. 실제 제품 E2E는 [측정 저장 연결](hwp5-strict-layout-integration.md)의 `tools/browser/strict-layout-worker-ui-product.mjs`를 별도 브라우저 조율 뒤 사용한다. 이 파일은 browser를 직접 시작하지 않으며 Main이 승인한 page와 fixture/font/WASM SHA, output 디렉터리, fixture의 검증한 caret 좌표가 필요하다. Native/SDK 빌드와 실제 브라우저는 별도 실행 증거로 둔다.
+
+
+## 공개 데모의 HWP5 측정 저장 연결
+
+[typed 측정 저장 계약](hwp5-strict-layout-integration.md)의 Core/Window 연결과 공개 shell을 모의 runtime/DOM으로 검사한다. Native 또는 브라우저를 시작하지 않는다.
+
+```sh
+node --max-old-space-size=256 --test --test-concurrency=1 \
+  packages/core/tests/editor/strict-layout-save.test.ts \
+  apps/demo/tests/strict-layout-save-tool.test.ts \
+  packages/core/tests/editor/new-document.test.ts
+```
+
+Node 24.20의 TypeScript strip 실행을 사용한다. 실제 제품 E2E는 별도 승인된 page를 받아 tools/browser/strict-layout-demo-product.mjs의 runStrictDemoProductE2E를 호출한다. 공식 /demo/vanilla, 새 bundle manifest의 active Worker URL/SHA, 같은 WASM SHA, 승인된 own fixture/폰트 바이트 및 실제 확인한 caret 좌표가 필요하다. 이 모듈은 브라우저를 시작하지 않는다. exact preview 제품 경로의 검증과 공개 데모 결과를 서로 대체하지 않는다.

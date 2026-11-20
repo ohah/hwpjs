@@ -1,6 +1,6 @@
 const body = @import("reader.zig");
 const Tree = @import("tree.zig").Tree;
-pub const Children = struct { text_node: ?usize = null, metadata: body.Metadata = .{} };
+pub const Children = struct { text_node: ?usize = null, line_node: ?usize = null, metadata: body.Metadata = .{} };
 /// Shared direct-child association and uniqueness rules; no resource validation.
 pub fn collect(tree: Tree, paragraph: usize) !Children {
     var result: Children = .{};
@@ -18,6 +18,7 @@ pub fn collect(tree: Tree, paragraph: usize) !Children {
             },
             .line_segments => |v| {
                 if (result.metadata.lines != null) return error.DuplicateParagraphRecord;
+                result.line_node = child;
                 result.metadata.lines = v;
             },
             .range_tags => |v| {

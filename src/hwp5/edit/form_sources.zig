@@ -67,10 +67,11 @@ pub fn read(a: std.mem.Allocator, bytes: []const u8, version: Version) ![]Source
 
 test "HWP5 owned form sources bind real calendar controls without changing the input" {
     const a = std.testing.allocator;
-    inline for (.{ .{ "calendar_monthly", @as(usize, 4) }, .{ "calendar_year", @as(usize, 3) } }) |example| {
-        const path = try std.fmt.allocPrint(a, "reference/rhwp/samples/basic/{s}.hwp", .{example[0]});
-        defer a.free(path);
-        const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, a, .limited(8_000_000));
+    inline for (.{
+        .{ "reference/rhwp/samples/basic/calendar_monthly.hwp", @as(usize, 4) },
+        .{ "reference/rhwp/samples/basic/calendar_year.hwp", @as(usize, 3) },
+    }) |example| {
+        const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, example[0], a, .limited(8_000_000));
         defer a.free(input);
         var source = try @import("../text_source.zig").Source.open(a, input);
         defer source.deinit();

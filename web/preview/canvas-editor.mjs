@@ -1,4 +1,5 @@
 import { allowsCellBlockMenuFocus, bindCellBlockMenuFocus } from './cell-block-menu-focus.mjs';
+import { textRangeTarget } from './text-range-target.mjs';
 import {
   adjacentBlockCell,
   tableCellBlockContext,
@@ -75,6 +76,7 @@ import { pictureResizeTarget } from './picture-resize-target.mjs';
 import { transferSelectedText, pasteClipboardText } from './clipboard-transfer.mjs';
 import { installCanvasPointerFrameGate } from './canvas-pointer-frame-gate.mjs';
 import { createHistoryInputIntentQueue } from './history-input-intent-queue.mjs';
+import { matchesCreatedCellAck } from './created-cell-ack.mjs';
 
 const RANGE_FORMATTING_KINDS = Object.freeze([
   'formatting-patch',
@@ -176,13 +178,42 @@ export function createCanvasEditor({
   });
   listen(canvas, 'pointerdown', () => generatedGridSelectionEpoch++);
   let historyPaintBarrier;
+  let documentReadSelection = null;
   const hostControls = controls;
   controls = {
+    admitDocumentReadSelection: (token, range) =>
+      hostControls.admitDocumentReadSelection?.(token, range) === true,
     ready: () => !events.signal.aborted && hostControls.ready(),
     busy: () =>
       events.signal.aborted || hostControls.busy() || historyPaintBarrier?.pending === true,
     request: (message) =>
-      !events.signal.aborted && viewAllowsRequest(message) && hostControls.request(message),
+      !events.signal.aborted &&
+      (!documentReadSelection ||
+        ['undo', 'redo', 'query-edit-range', 'query-split-range'].includes(message.kind)) &&
+      viewAllowsRequest(message) &&
+      hostControls.request(message),
+  };
+  const readPointMatches = (range, point) =>
+    point?.section === range.section &&
+    (range.createdCell
+      ? point.paragraph === undefined &&
+        point.createdCell?.identity === range.createdCell.identity &&
+        point.createdCell.row === range.createdCell.row &&
+        point.createdCell.column === range.createdCell.column
+      : !point.createdCell && point.paragraph === range.paragraph);
+  const documentReadSelectionCurrent = (a, f) => {
+    const read = documentReadSelection;
+    if (
+      !read ||
+      !readPointMatches(read.range, a) ||
+      !readPointMatches(read.range, f) ||
+      !(
+        (a.unit === read.range.startUnit && f.unit === read.range.endUnit) ||
+        (f.unit === read.range.startUnit && a.unit === read.range.endUnit)
+      )
+    )
+      return false;
+    return controls.admitDocumentReadSelection(read.token, read.range);
   };
   let target = null,
     committed = '',
@@ -229,6 +260,7 @@ export function createCanvasEditor({
       'splice-character-properties',
       'splice-rich-character',
       'created-cell-text',
+      'created-cell-splice',
     ].includes(pending?.kind);
   // Buffer only a draft descended from an active text edit. Native submission
   // still uses textEditable(), including a fresh selection-scoped permission.
@@ -422,7 +454,10 @@ export function createCanvasEditor({
     viewAllowsRange(anchor, focus) &&
     Boolean(target) &&
     !multipleParagraphs() &&
-    renderer.paragraph(target)?.editable === true;
+    renderer.paragraph(target)?.editable === true &&
+    (!target.createdCell ||
+      renderer.createdCellCanonicalRuns?.(target) !== true ||
+      Boolean(renderer.createdCellTypingOwner?.(target)));
   const editRange = () => {
     if (target?.createdCell) return null;
     if (!target || !anchor || !focus || multipleParagraphs()) return null;
@@ -459,6 +494,7 @@ export function createCanvasEditor({
   };
   const updateReadOnly = () => {
     input.readOnly =
+      Boolean(documentReadSelection) ||
       Boolean(cellBlock) ||
       compositionInvalidated ||
       !controls.ready() ||
@@ -724,14 +760,22 @@ export function createCanvasEditor({
     origin = 'canvas',
     block = null,
     nextCellBlock = null,
+    documentRead = null,
   ) => {
-    if (!viewAllowsRange(a, f)) {
+    if (!documentRead && documentReadSelectionCurrent(a, f)) documentRead = documentReadSelection;
+    const read =
+      documentRead && controls.admitDocumentReadSelection(documentRead.token, documentRead.range);
+    if (documentRead && !read) return false;
+    if (!read && !viewAllowsRange(a, f)) {
       reconcilePreviewPolicy?.();
       return false;
     }
     if (a && f && !composing) compositionInvalidated = false;
-    a = editablePoint(a);
-    f = editablePoint(f);
+    documentReadSelection = read ? documentRead : null;
+    if (!read) {
+      a = editablePoint(a);
+      f = editablePoint(f);
+    }
     blockSelection = block;
     if (cellBlock !== nextCellBlock) mergeCapture = null;
     cellBlock = nextCellBlock;
@@ -973,14 +1017,20 @@ export function createCanvasEditor({
     wholeTextEditable() &&
     Number.isSafeInteger(renderer.richTypingScope?.(target));
   const currentRichTyping = () =>
-    richTyping && sameParagraph(richTyping, target) ? richTyping : null;
+    richTyping && sameParagraph(richTyping, target) && richTyping.owner === currentTypingOwner()
+      ? richTyping
+      : null;
   const currentRichCharacter = () => currentRichTyping()?.character ?? null;
+  const currentTypingOwner = () =>
+    target?.createdCell
+      ? (renderer.createdCellTypingOwner?.(target)?.owner ?? null)
+      : paragraphSelectionOwner(renderer.paragraph(target));
   const setRichTyping = (owned, onCommit = null) => {
     if (!richTypingAvailable()) return false;
     const patch = caretRichCharacter(owned);
     if (!patch || !Object.keys(patch).length) return false;
     const scope = renderer.richTypingScope(target);
-    const owner = paragraphSelectionOwner(renderer.paragraph(target));
+    const owner = currentTypingOwner();
     const current = currentRichTyping();
     let previous = current?.scope === scope && current.owner === owner ? current.character : {};
     if (typingProperties && sameParagraph(typingProperties, target))
@@ -1053,8 +1103,10 @@ export function createCanvasEditor({
       (!richTypingAvailable() ||
         !sameParagraph(intent, target) ||
         intent.scope !== renderer.richTypingScope(target) ||
-        intent.owner !== paragraphSelectionOwner(renderer.paragraph(target)) ||
-        /[\r\n]/.test(change.text))
+        intent.owner !== currentTypingOwner() ||
+        /\r/.test(change.text) ||
+        (/\n/.test(change.text) &&
+          !(target.createdCell && renderer.paragraph(target)?.softLineBreakAvailable === true)))
     ) {
       rejectRichDraft('현재 입력 위치 또는 여러 줄 입력에 지정한 서식을 적용할 수 없습니다.');
       return;
@@ -1065,9 +1117,16 @@ export function createCanvasEditor({
       change.text && typingProperties && sameParagraph(typingProperties, target)
         ? { ...typingProperties.properties }
         : null;
+    const cellTyping = target.createdCell ? renderer.createdCellTypingOwner?.(target) : null;
+    if (target.createdCell && renderer.createdCellCanonicalRuns?.(target) === true && !cellTyping) {
+      rejectRichDraft('현재 생성 셀의 Native 서식 입력 권한을 확인할 수 없습니다.');
+      return;
+    }
     pending = {
       kind: target.createdCell
-        ? 'created-cell-text'
+        ? cellTyping
+          ? 'created-cell-splice'
+          : 'created-cell-text'
         : character
           ? 'splice-rich-character'
           : font
@@ -1079,6 +1138,25 @@ export function createCanvasEditor({
       end: change.endUnit,
       afterText:
         committed.slice(0, change.startUnit) + change.text + committed.slice(change.endUnit),
+      ...(cellTyping
+        ? {
+            cellTypingOwner: cellTyping.owner,
+            cellTypingScope: cellTyping.scope,
+            // This command's canonical caret, not the final queued local draft.
+            afterSelection: {
+              anchor: {
+                ...target,
+                createdCell: { ...target.createdCell },
+                unit: change.startUnit + change.text.length,
+              },
+              focus: {
+                ...target,
+                createdCell: { ...target.createdCell },
+                unit: change.startUnit + change.text.length,
+              },
+            },
+          }
+        : {}),
       beforeSelection: queued?.beforeSelection ??
         draftSelection ?? {
           anchor: { ...target, unit: change.startUnit },
@@ -1096,7 +1174,16 @@ export function createCanvasEditor({
           identity: target.createdCell.identity,
           row: target.createdCell.row,
           column: target.createdCell.column,
-          text: pending.afterText,
+          ...(cellTyping
+            ? {
+                startUnit: change.startUnit,
+                endUnit: change.endUnit,
+                text: change.text,
+                insertion: { character: character ?? {} },
+                expectedHistoryRevision: historyRevision,
+                createdCellTypingScope: cellTyping.scope,
+              }
+            : { text: pending.afterText }),
         }
       : {
           kind: pending.kind,
@@ -1116,7 +1203,9 @@ export function createCanvasEditor({
         };
     const reference = renderer.paragraph(target)?.currentReference;
     if (
-      ['splice', 'splice-rich-character', 'created-cell-text'].includes(pending.kind) &&
+      ['splice', 'splice-rich-character', 'created-cell-text', 'created-cell-splice'].includes(
+        pending.kind,
+      ) &&
       reference
     )
       request.reference = reference;
@@ -1147,7 +1236,11 @@ export function createCanvasEditor({
     return {
       ...target,
       text: input.value,
-      characterRanges: projectTypingDraftRanges(renderer.paragraph(target), input.value, change),
+      characterRanges:
+        target.createdCell && renderer.createdCellCanonicalRuns?.(target) === true
+          ? (renderer.createdCellTypingDraftRanges?.(target, input.value, change, committed) ??
+            null)
+          : projectTypingDraftRanges(renderer.paragraph(target), input.value, change),
     };
   };
   const preview = () => {
@@ -1718,7 +1811,7 @@ export function createCanvasEditor({
       controls.busy()
     )
       return false;
-    if (currentRichTyping()) {
+    if (currentRichTyping() && !target.createdCell) {
       if (multipleParagraphs() || /[\r\n]/.test(text)) {
         report('이 교체 범위에는 입력 대기 서식을 적용할 수 없습니다.');
         return false;
@@ -1733,6 +1826,7 @@ export function createCanvasEditor({
         (normalized.includes('\n') && renderer.paragraph(target)?.softLineBreakAvailable !== true)
       )
         return false;
+      if (guard && guard() !== true) return false;
       sync();
       const start = snapUnit(committed, input.selectionStart),
         end = snapUnit(committed, input.selectionEnd, true);
@@ -1819,6 +1913,11 @@ export function createCanvasEditor({
       return character.underline.kind !== 'none';
     if (property === 'strike' && character?.strike?.enabled !== undefined)
       return character.strike.enabled;
+    if (target?.createdCell)
+      return (
+        renderer.createdCellTypingObservation?.({ ...target, unit: input.selectionStart })
+          ?.observation?.[property] ?? null
+      );
     const span = typingSourceSpan(committed, input.selectionStart);
     return span
       ? (renderer.characterState?.(target, span.start, span.end, property) ?? null)
@@ -3300,6 +3399,7 @@ export function createCanvasEditor({
     clipboard = environment.clipboard ?? realm.navigator?.clipboard,
     multiOnly = false,
     isCurrent = null,
+    onStatus = undefined,
   } = {}) => {
     const saved = transferableSelection(cut, multiOnly);
     if (!saved) return null;
@@ -3317,7 +3417,8 @@ export function createCanvasEditor({
         isCurrent: current,
         cut,
         remove: () => replaceSelectedText('', isCurrent ? current : null),
-        report,
+        report: onStatus ?? report,
+        onFailure: onStatus,
       });
     };
   };
@@ -3366,7 +3467,7 @@ export function createCanvasEditor({
     const saved = settledSelection(true);
     if (
       !saved ||
-      saved.target.createdCell ||
+      (saved.target.createdCell && !richTypingAvailable()) ||
       multipleParagraphs() ||
       saved.start !== saved.end ||
       saved.anchor.unit !== saved.focus.unit ||
@@ -3686,6 +3787,70 @@ export function createCanvasEditor({
     });
   };
   const canDeleteSelection = () => settledSelection() !== null && selectionTextEditAvailable();
+  const selectTextRangeInternal = (
+    range,
+    { focusInput = true, selectionOrigin: origin = 'canvas' } = {},
+    readToken = null,
+  ) => {
+    if (!range || events.signal.aborted) return false;
+    const { startUnit, endUnit, affinity = 'forward', expectedText } = range;
+    if (readToken && !controls.admitDocumentReadSelection(readToken, range)) return false;
+    if (!['forward', 'backward'].includes(affinity)) return false;
+    if (
+      composing ||
+      pending ||
+      historyPending ||
+      drag !== null ||
+      input.value !== committed ||
+      controls.busy()
+    )
+      return false;
+    const admitted = textRangeTarget(range, renderer.layout());
+    if (!admitted) return false;
+    const next = admitted.target,
+      row = renderer.paragraph(next);
+    if (
+      (!readToken && !viewAllowsRange({ ...next, unit: startUnit }, { ...next, unit: endUnit })) ||
+      !row ||
+      (admitted.paragraph && row !== admitted.paragraph) ||
+      (expectedText !== undefined && row.text !== expectedText) ||
+      row.clipped ||
+      !selectableText(row) ||
+      ![startUnit, endUnit].every(Number.isInteger) ||
+      startUnit < 0 ||
+      endUnit < startUnit ||
+      endUnit > row.text.length
+    )
+      return false;
+    if (snapUnit(row.text, startUnit) !== startUnit || snapUnit(row.text, endUnit) !== endUnit)
+      return false;
+    if (!caretGeometry(renderer.layout(), { ...next, unit: startUnit })) return false;
+    if (next.createdCell && !caretGeometry(renderer.layout(), { ...next, unit: endUnit }))
+      return false;
+    target = next;
+    committed = row.text;
+    input.value = committed;
+    input.disabled = false;
+    if (origin === 'canvas' || richTyping)
+      resetTypingForUserSelection(
+        { ...next, unit: affinity === 'backward' ? endUnit : startUnit },
+        { ...next, unit: affinity === 'backward' ? startUnit : endUnit },
+      );
+    const selected = setSelection(
+      { ...next, unit: affinity === 'backward' ? endUnit : startUnit },
+      { ...next, unit: affinity === 'backward' ? startUnit : endUnit },
+      null,
+      origin,
+      null,
+      null,
+      readToken ? { token: readToken, range } : null,
+    );
+    if (!selected) return false;
+    if (focusInput) input.focus({ preventScroll: true });
+    paint();
+    reveal();
+    return true;
+  };
   const controller = {
     focusInput,
     canInsertParagraphBreak,
@@ -3725,9 +3890,278 @@ export function createCanvasEditor({
       });
     },
     hasMultiParagraphSelection: () => multipleParagraphs(),
+    canCutCreatedCellClipboardSelection() {
+      const saved = this.captureCreatedCellClipboardSelection();
+      if (
+        !saved ||
+        !historyAvailable ||
+        !richTypingAvailable() ||
+        !controls.ready() ||
+        controls.busy()
+      )
+        return false;
+      const first = renderer.createdCellTypingObservation?.(anchor);
+      const last = renderer.createdCellTypingObservation?.(focus);
+      return Boolean(
+        first &&
+        last &&
+        first.owner === last.owner &&
+        first.scope === last.scope &&
+        saved.current(),
+      );
+    },
+    captureCreatedCellClipboardSelection() {
+      const saved = settledSelection();
+      if (
+        !saved?.target.createdCell ||
+        multipleParagraphs() ||
+        drag ||
+        inputIntents.size ||
+        historyPaintBarrier.pending
+      )
+        return null;
+      const paragraph = renderer.paragraph(saved.target);
+      const first = renderer.createdCellClipboardSource?.(saved.anchor);
+      const last = renderer.createdCellClipboardSource?.(saved.focus);
+      if (
+        !paragraph ||
+        paragraph.text !== saved.committed ||
+        !first ||
+        !last ||
+        first.table !== last.table ||
+        first.cell !== last.cell ||
+        first.paragraphId !== last.paragraphId ||
+        Math.min(saved.anchor.unit, saved.focus.unit) !== saved.start ||
+        Math.max(saved.anchor.unit, saved.focus.unit) !== saved.end ||
+        saved.text.includes('\ufffc')
+      )
+        return null;
+      const table = first.table,
+        cellSource = first.cell,
+        paragraphId = first.paragraphId;
+      const valid = () => {
+        if (
+          !selectionCurrent(saved) ||
+          drag ||
+          inputIntents.size ||
+          historyPaintBarrier.pending ||
+          renderer.paragraph(saved.target) !== paragraph ||
+          paragraph.text !== saved.committed
+        )
+          return false;
+        const a = renderer.createdCellClipboardSource?.(saved.anchor);
+        const b = renderer.createdCellClipboardSource?.(saved.focus);
+        return (
+          a?.table === table &&
+          b?.table === table &&
+          a.cell === cellSource &&
+          b.cell === cellSource &&
+          a.paragraphId === paragraphId &&
+          b.paragraphId === paragraphId &&
+          Boolean(caretGeometry(renderer.layout(), saved.anchor)) &&
+          Boolean(caretGeometry(renderer.layout(), saved.focus))
+        );
+      };
+      if (!valid()) return null;
+      let invalid = false;
+      const cell = saved.target.createdCell;
+      return Object.freeze({
+        selector: Object.freeze({
+          section: saved.target.section,
+          identity: cell.identity,
+          row: cell.row,
+          column: cell.column,
+        }),
+        range: Object.freeze({ startUnit: saved.start, endUnit: saved.end }),
+        text: saved.text,
+        expectedText: saved.committed,
+        current() {
+          if (invalid) return false;
+          if (valid()) return true;
+          invalid = true;
+          return false;
+        },
+      });
+    },
+    captureCreatedCellClipboardCutContinuation() {
+      const saved = settledSelection();
+      if (!saved?.target.createdCell || !this.canCutCreatedCellClipboardSelection()) return null;
+      const owner = renderer.createdCellTypingOwner?.(saved.target);
+      if (!owner) return null;
+      const epoch = generatedGridSelectionEpoch;
+      const lifetime = new AbortController();
+      events.signal.addEventListener('abort', () => lifetime.abort(), {
+        once: true,
+        signal: lifetime.signal,
+      });
+      let invalid = false,
+        used = false,
+        resetState = null,
+        resetSequence = null;
+      const cancelIntent = () => {
+        invalid = true;
+      };
+      for (const type of ['pointerdown', 'keydown', 'beforeinput', 'compositionstart'])
+        ownerDocument.addEventListener(type, cancelIntent, {
+          capture: true,
+          signal: lifetime.signal,
+        });
+      ownerDocument.addEventListener(
+        'focusin',
+        (event) => {
+          if (event.target !== input) invalid = true;
+        },
+        { capture: true, signal: lifetime.signal },
+      );
+      const windowBlur = (event) => {
+        if (event.target === realm) invalid = true;
+      };
+      realm.addEventListener('blur', windowBlur, { capture: true, signal: lifetime.signal });
+      viewport.addEventListener(
+        'scroll',
+        (event) => {
+          if (event.target === viewport) invalid = true;
+        },
+        { capture: true, signal: lifetime.signal },
+      );
+      const point = { ...saved.target, unit: saved.start };
+      const previous = {
+        afterText: saved.committed.slice(0, saved.start) + saved.committed.slice(saved.end),
+        afterSelection: { anchor: point, focus: point },
+        cellTypingOwner: owner.owner,
+        cellTypingScope: owner.scope,
+      };
+      return Object.freeze({
+        reset(state) {
+          if (used || resetState || target || anchor || focus || pending || composing) {
+            invalid = true;
+            return;
+          }
+          resetState = state;
+          resetSequence = ackProjectionSequence;
+        },
+        complete(state, revision, current) {
+          if (used) return false;
+          used = true;
+          const valid = () =>
+            !invalid &&
+            !events.signal.aborted &&
+            resetState === state &&
+            ackProjectionSequence === resetSequence &&
+            generatedGridSelectionEpoch === epoch &&
+            !pending &&
+            !composing &&
+            !drag &&
+            !historyPending &&
+            !historyPaintBarrier.pending &&
+            !inputIntents.size &&
+            controls.ready() &&
+            !controls.busy() &&
+            current();
+          try {
+            if (!valid() || target || anchor || focus) return false;
+            const paragraph = renderer.paragraph(saved.target);
+            const nativeOwner = renderer.createdCellTypingOwner?.(saved.target);
+            if (
+              !paragraph?.editable ||
+              paragraph.clipped ||
+              !selectableText(paragraph) ||
+              !matchesCreatedCellAck({
+                previous,
+                target: saved.target,
+                paragraph,
+                nativeOwner,
+                revision,
+                current: valid,
+              }) ||
+              !caretGeometry(renderer.layout(), point) ||
+              !valid()
+            )
+              return false;
+            // ACK와 같은 현재 Native revision/선택 이력을 먼저 확정합니다.
+            historySelections.remember(saved.revision, {
+              anchor: saved.anchor,
+              focus: saved.focus,
+            });
+            historyRevision = revision;
+            historySelections.remember(revision, previous.afterSelection);
+            target = paragraphTarget(saved.target);
+            committed = paragraph.text;
+            input.value = committed;
+            input.disabled = false;
+            // 논리 생성셀을 가짜 Core/source SelectionTarget으로 게시하지 않습니다.
+            setSelection(point, point, null, 'core');
+            if (!valid() || renderer.paragraph(saved.target) !== paragraph) return false;
+            input.focus({ preventScroll: true });
+            if (!valid()) return false;
+            reveal();
+            return valid();
+          } finally {
+            lifetime.abort();
+          }
+        },
+        cancel() {
+          used = true;
+          invalid = true;
+          lifetime.abort();
+        },
+      });
+    },
     captureRangeFormatting,
     captureSelectionFormatting,
     captureCaretFormatting,
+    // Captures UI coordinates only. Native owner query grants creation proof;
+    // a generated cell never receives a fabricated source paragraph number.
+    captureInlineObjectInsertCaret() {
+      const saved = settledSelection(true);
+      if (
+        !saved ||
+        multipleParagraphs() ||
+        saved.start !== saved.end ||
+        saved.anchor.unit !== saved.focus.unit ||
+        !sameParagraph(saved.anchor, saved.focus) ||
+        drag ||
+        inputIntents.size ||
+        historyPaintBarrier.pending ||
+        !controls.ready()
+      )
+        return null;
+      const paragraph = renderer.paragraph(saved.target);
+      if (
+        !paragraph ||
+        paragraph.clipped ||
+        paragraph.editable !== true ||
+        paragraph.drawingText ||
+        paragraph.drawingCaption
+      )
+        return null;
+      const created = saved.target.createdCell;
+      const selector = Object.freeze(
+        created
+          ? {
+              section: saved.target.section,
+              created_cell: Object.freeze({
+                identity: created.identity,
+                row: created.row,
+                column: created.column,
+              }),
+            }
+          : { section: saved.target.section, paragraph: saved.target.paragraph + 1 },
+      );
+      return Object.freeze({
+        selector,
+        unit: saved.focus.unit,
+        affinity: saved.focus.affinity ?? 'forward',
+        expected_text: paragraph.text,
+        current: () =>
+          selectionCurrent(saved) &&
+          !drag &&
+          !inputIntents.size &&
+          !historyPaintBarrier.pending &&
+          controls.ready() &&
+          renderer.paragraph(saved.target) === paragraph,
+      });
+    },
     // The Surface supplies its settled source DTO; the actual Canvas selection owns the address.
     captureSourceTableGridSelection(content) {
       const saved = settledSelection(true);
@@ -3787,6 +4221,17 @@ export function createCanvasEditor({
     },
     startFormattingPaint,
     requestAtomicFormatting,
+    // Read capture shares the existing input-interaction epoch. No edit capability is issued.
+    captureDocumentTextSelectionFence() {
+      const epoch = generatedGridSelectionEpoch;
+      return () =>
+        !events.signal.aborted &&
+        generatedGridSelectionEpoch === epoch &&
+        this.settled() &&
+        !drag &&
+        !historyPaintBarrier.pending &&
+        !inputIntents.size;
+    },
     currentFormattingSelection: () =>
       anchor && focus ? { anchor: { ...anchor }, focus: { ...focus } } : null,
     captureTransferSelection,
@@ -3796,56 +4241,17 @@ export function createCanvasEditor({
       );
     },
     transferSelection,
-    selectTextRange(
-      { section, paragraph, startUnit, endUnit, affinity = 'forward' },
-      { focusInput = true, selectionOrigin: origin = 'canvas' } = {},
-    ) {
-      if (!['forward', 'backward'].includes(affinity)) return false;
-      if (
-        composing ||
-        pending ||
-        historyPending ||
-        drag !== null ||
-        input.value !== committed ||
-        controls.busy()
-      )
-        return false;
-      const next = { section, paragraph },
-        row = renderer.paragraph(next);
-      if (
-        !viewAllowsRange({ ...next, unit: startUnit }, { ...next, unit: endUnit }) ||
-        !row ||
-        row.clipped ||
-        !selectableText(row) ||
-        ![startUnit, endUnit].every(Number.isInteger) ||
-        startUnit < 0 ||
-        endUnit < startUnit ||
-        endUnit > row.text.length
-      )
-        return false;
-      if (snapUnit(row.text, startUnit) !== startUnit || snapUnit(row.text, endUnit) !== endUnit)
-        return false;
-      if (!caretGeometry(renderer.layout(), { ...next, unit: startUnit })) return false;
-      target = next;
-      committed = row.text;
-      input.value = committed;
-      input.disabled = false;
-      if (origin === 'canvas' || richTyping)
-        resetTypingForUserSelection(
-          { ...next, unit: affinity === 'backward' ? endUnit : startUnit },
-          { ...next, unit: affinity === 'backward' ? startUnit : endUnit },
-        );
-      setSelection(
-        { ...next, unit: affinity === 'backward' ? endUnit : startUnit },
-        { ...next, unit: affinity === 'backward' ? startUnit : endUnit },
-        null,
-        origin,
-      );
-      if (focusInput) input.focus({ preventScroll: true });
-      paint();
-      reveal();
-      return true;
+    selectTextRange(range, options) {
+      return selectTextRangeInternal(range, options);
     },
+    selectDocumentReadRange(range, token) {
+      return selectTextRangeInternal(
+        range,
+        { focusInput: false, selectionOrigin: 'document-read' },
+        token,
+      );
+    },
+    isDocumentReadSelectionCurrent: () => documentReadSelectionCurrent(anchor, focus),
     replaceSelection,
     replaceSelectedText,
     selectedRange,
@@ -4557,7 +4963,7 @@ export function createCanvasEditor({
     message(message) {
       if (events.signal.aborted) return;
       const ackSequence = ++ackProjectionSequence;
-      let retiredPlainDraft = false;
+      let retiredAckPublication = false;
       deferredTypingCheck = null;
       const pendingFormattingReply =
         formattingPaint &&
@@ -5141,6 +5547,10 @@ export function createCanvasEditor({
         }
         const acknowledgedTarget = target,
           paragraph = renderer.paragraph(acknowledgedTarget);
+        // This branch owns cell ACK publication, including fail-closed exits.
+        // Its outer finally must never overwrite a nested ACK or a reset.
+        const cellAck = previous.kind === 'created-cell-splice';
+        if (cellAck) retiredAckPublication = true;
         if (!selectableText(paragraph)) {
           this.reset();
           report(
@@ -5149,6 +5559,29 @@ export function createCanvasEditor({
           return;
         }
         committed = paragraph.text;
+        if (cellAck) {
+          const after = previous.afterSelection;
+          const nativeOwner = renderer.createdCellTypingOwner?.(acknowledgedTarget);
+          if (
+            !versioned ||
+            !matchesCreatedCellAck({
+              previous,
+              target: acknowledgedTarget,
+              paragraph,
+              nativeOwner,
+              revision,
+              current: () => ackProjectionSequence === ackSequence,
+            })
+          ) {
+            this.reset();
+            report('셀 입력 응답의 현재 소유자와 범위를 확인할 수 없어 대기 입력을 중단했습니다.');
+            return;
+          }
+          // Semantic Native ACK authority, before any presentation callbacks.
+          // A later nested ACK may decrease the revision through undo/redo.
+          historyRevision = revision;
+          historySelections.remember(revision, after);
+        }
         if (inputIntents.size) {
           try {
             inputIntents.peek(committed);
@@ -5246,7 +5679,7 @@ export function createCanvasEditor({
         if (acknowledgedPlainDraftCurrent()) {
           // Publish the confirmed revision/bookmark before presentation callbacks:
           // a nested input must not remember its pre-edit caret under the old revision.
-          retiredPlainDraft = true;
+          retiredAckPublication = true;
           historyRevision = revision;
           if (revisionChanged && !travelMessage)
             historySelections.remember(revision, anchor && focus ? { anchor, focus } : null);
@@ -5272,7 +5705,7 @@ export function createCanvasEditor({
         } else pump();
       } finally {
         reconcilePreviewPolicy?.();
-        if (versioned && !message.error && !retiredPlainDraft) {
+        if (versioned && !message.error && !retiredAckPublication) {
           historyRevision = revision;
           if (revisionChanged && !travelMessage)
             historySelections.remember(revision, anchor && focus ? { anchor, focus } : null);
@@ -5317,7 +5750,12 @@ export function createCanvasEditor({
   };
   let resettingPreview = false;
   reconcilePreviewPolicy = () => {
-    if (resettingPreview || !target || (viewAllowsPoint(target) && viewAllowsRange(anchor, focus)))
+    if (
+      resettingPreview ||
+      !target ||
+      documentReadSelectionCurrent(anchor, focus) ||
+      (viewAllowsPoint(target) && viewAllowsRange(anchor, focus))
+    )
       return false;
     resettingPreview = true;
     try {
@@ -5354,6 +5792,24 @@ export function createCanvasEditor({
       !event.altKey &&
       ['z', 'y'].includes(event.key?.toLowerCase());
     if (historyKey) return true;
+    if (
+      node === input &&
+      documentReadSelectionCurrent(anchor, focus) &&
+      ([
+        'beforeinput',
+        'compositionstart',
+        'compositionupdate',
+        'compositionend',
+        'paste',
+        'cut',
+      ].includes(type) ||
+        (type === 'keydown' &&
+          !['Tab', 'Escape'].includes(event.key) &&
+          !((event.metaKey || event.ctrlKey) && !event.altKey && event.key?.toLowerCase() === 'c')))
+    ) {
+      event.preventDefault?.();
+      return false;
+    }
     if (denied || (viewActive() && !target)) {
       event.preventDefault?.();
       if (type === 'copy' || type === 'cut') event.clipboardData?.clearData?.();

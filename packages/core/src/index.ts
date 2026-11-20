@@ -1,5 +1,17 @@
 export { createEditor } from './editor/create-editor.ts';
 export type {
+  CreatedCellTextTarget,
+  CreatedCellTextSelector,
+  CreatedCellTextRange,
+  CreatedCellSplicePayload,
+} from './commands/created-cell-text.ts';
+export type { NativeEditOutcome } from './contracts/native-edit-outcome.ts';
+export type {
+  CreatedCellTypingRequest,
+  CreatedCellTypingCapabilities,
+  CreatedCellTypingApi,
+} from './commands/created-cell-typing-dto.ts';
+export type {
   HeadlessEditor,
   CreateEditorOptions,
   CommandResult,
@@ -97,6 +109,13 @@ export type {
 export type { CompiledKeymap, NormalizedShortcutEvent } from './keymap/resolve.ts';
 
 export type { FindTextOptions } from './state/text-tools.ts';
+export { findDocumentTextMatch, documentTextMatches } from './state/document-text-search.ts';
+export type {
+  DocumentTextIndex,
+  DocumentTextSnapshot,
+  DocumentTextRow,
+  DocumentTextMatch,
+} from './state/document-text-search.ts';
 
 export type {
   HistoryOptions,
@@ -255,6 +274,7 @@ export { planCellAppearanceSelection } from './commands/cell-appearance-selectio
 export {
   INSERT_EQUATION_COMMAND,
   CREATE_CHART_COMMAND,
+  hwp5ChartCreatePreviewMessage,
   getInlineObjectInsertAvailability,
 } from './commands/inline-object-insert.ts';
 export type {
@@ -264,6 +284,7 @@ export type {
   CreateChartPayload,
   EquationInsertOptions,
   ChartCreateOptions,
+  Hwp5ChartCreateOptions,
   ChartCreateProfile,
   ChartCategoryProfile,
   ChartScatterProfile,
@@ -277,6 +298,17 @@ export type {
   ChartStockSeries,
 } from './commands/inline-object-insert.ts';
 
+export type { InlineObjectCreateTarget } from './commands/inline-object-owner.ts';
+export type {
+  InlineObjectSelector,
+  InlineObjectOwner,
+} from './commands/inline-object-placement-dto.ts';
+
+export type {
+  DocumentTextSelectionObservation,
+  DocumentTextReadTarget,
+} from './state/document-text-selection.ts';
+
 export { SET_OBJECT_GEOMETRY_COMMAND } from './commands/object-geometry.ts';
 export type {
   ObjectGeometryTarget,
@@ -287,3 +319,31 @@ export type {
   ObjectGeometryPatch,
   SetObjectGeometryPayload,
 } from './commands/object-geometry.ts';
+
+export type {
+  ControlTextCoverage,
+  ControlTextKind,
+  ControlTextUnit,
+  ControlTextIssue,
+  ControlTextRow,
+  ControlTextSnapshot,
+  ControlTextReadApi,
+  ControlTextReadIdentity,
+} from './contracts/control-text-read.ts';
+
+export type { DocumentTextCaretPoint, DocumentTextAnchor } from './state/document-text-anchor.ts';
+
+export { DELETE_NOTE_COMMAND, getNoteDeleteAvailability } from './commands/note-delete.ts';
+export type { DeleteNotePayload } from './commands/note-delete.ts';
+export {
+  INSERT_FOOTNOTE_COMMAND,
+  INSERT_ENDNOTE_COMMAND,
+  getNoteInsertAvailability,
+} from './commands/note-insert.ts';
+export type {
+  InsertNotePayload,
+  NoteInsertOptions,
+  NoteFormat,
+  NotePolicyShape,
+  NoteKind,
+} from './commands/note-insert.ts';

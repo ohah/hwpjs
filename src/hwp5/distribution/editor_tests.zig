@@ -95,7 +95,7 @@ test "distribution native editor save allocation failures preserve model and sou
             try std.testing.expectEqualSlices(u8, expected, saved.bytes);
         }
     };
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ session, @as([]const u8, expected_save.bytes) });
+    try @import("../../testing/allocation_failures.zig").check(Probe.run, .{ session, @as([]const u8, expected_save.bytes) });
     const actual_text = try session.copyText(a, 0, 0);
     defer a.free(actual_text);
     try std.testing.expectEqualSlices(u8, expected_text, actual_text);

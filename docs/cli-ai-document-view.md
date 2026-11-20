@@ -58,7 +58,7 @@ hwpjs-object:<SHA>/<hwp5|hwpx>/s<section>/<kind>/<node>
 
 실제 그림이 관측됐지만 추출 inventory와 연결되는 참조를 확인하지 못하면 `[이미지: 추출 참조 확인 불가]`로 표시합니다. 이는 그림이 없다는 뜻이 아니며, 가짜 조회 URI를 만들지 않습니다.
 
-CLI는 `object INPUT --ref REF --format text|markdown`, MCP는 `get_document_object(inputPath, reference, format?)`로 연결합니다. inspector는 원문 SHA·실제 형식·종류·inventory 멤버를 확인한 뒤 관측 메타데이터·내용·사유를 텍스트로 반환합니다. JS 반환 객체는 `status: available|unavailable` 필드를 가지며 CLI/MCP는 그 객체의 `text`를 출력합니다. 표시 줄은 `상태: available`·`상태: unavailable`이며 별도 MCP 상태 필드와 구분합니다. 이를 완전한 렌더링이나 파일 추출 성공으로 확대하지 않습니다. 이미지 조회에서 바이트를 디코딩하지 않습니다. HWP5의 전용 차트·수식 source API 미노출은 미분류·참조 미확정으로 표시하며 전수 열거 완료로 간주하지 않습니다.
+CLI는 `object INPUT --ref REF --format text|markdown`, MCP는 `get_document_object(inputPath, reference, format?)`로 연결합니다. inspector는 원문 SHA·실제 형식·종류·inventory 멤버를 확인한 뒤 관측 메타데이터·내용·사유를 텍스트로 반환합니다. JS 반환 객체는 `status: available|unavailable` 필드를 가지며 CLI/MCP는 그 객체의 `text`를 출력합니다. 표시 줄은 `상태: available`·`상태: unavailable`이며 별도 MCP 상태 필드와 구분합니다. 이를 완전한 렌더링이나 파일 추출 성공으로 확대하지 않습니다. 이미지 조회에서 바이트를 디코딩하지 않습니다. HWP5 차트는 기존 drawing 참조에서 검증된 OLE 소유자만 선택 상세 조회합니다. 그 밖의 미관측 차트·수식은 미분류·참조 미확정으로 남기며 전수 열거 완료로 간주하지 않습니다.
 
 이미지 참조는 CLI `extract-images INPUT --ref REF --output NEWDIR` 또는 MCP `extract_document_image(inputPath, outputPath, reference)`로 별도 추출합니다. 기존 `id`·`expectedSha256` 선택 방식도 유지하지만 참조 방식과 혼용하지 않습니다. 두 방식 모두 같은 원본 스냅샷·이미지 inventory 검증·예산·신규 출력 보호를 적용합니다. 결과는 호스트의 새 파일 경로·SHA이며 자동 OCR이나 MCP 이미지 Content가 아닙니다.
 
@@ -171,3 +171,32 @@ SDK 계약은 js/atomic-formatting-api.mjs 및 기존 character-property/color/u
 ## 폼 현재 상태 CLI·MCP
 
 기존 apply/apply_document_changes의 폼 연산과 읽기용 참조·수명·형식별 제한은 [폼 상태 연결 계약](cli-form-state.md)이 소유합니다. read --view structure 및 info가 발급한 같은 원본의 form reference를 사용합니다.
+
+## HWPX 제어 문자를 보존하는 읽기
+
+HWPX의 읽기용 문단은 선택적 Native 묶음 조회가 제공되는 엔진에서 탭·개행·개체 앵커를 포함한 UTF-16 표시 축을 관측합니다. 기존 plain 문단 조회의 계약이나 편집 허가·저장 모델은 변경하지 않습니다. 각 구역의 묶음 결과를 실제 현재 문단 번호·원본 노드·plain 내용과 대조하며, 알 수 없는 제어·소유권 불일치·부분 관측을 완전한 문자열로 꾸미지 않습니다. 문단마다 `anchorText`를 반복 호출하는 fallback은 사용하지 않습니다.
+
+차트·수식은 같은 Native 문단의 실제 control 노드와 단위 위치가 검증됐을 때만 기존 논리 참조로 인라인 표시합니다. 일반 리터럴 U+FFFC, 복사한 모델이나 getter가 바꾼 문자열에는 그 권한이 없습니다. 텍스트 출력은 실제 개행을, Markdown은 `<br>`와 탭의 `&#9;`를 유지합니다. 그림은 기존 독립 이미지 참조·추출 inventory를 사용하며 표시 순번이나 반복된 XML 문단 ID로 Native owner·인라인 위치를 추정하지 않습니다.
+
+묶음 API가 없는 기존 엔진이나 관측 실패에서는 보존된 plain 내용과 기존 독립 개체 표시를 유지합니다. 누락된 제어 축의 원인 code·구역·영향 문단 범위/개수·대표 Native 번호를 묶어 부분 읽기로 알리며, 문단 수만큼 같은 경고를 나열하지 않습니다. 보존된 plain 자체를 모두 잘못된 내용이라고 판정하지 않습니다.
+
+`readStamp`·문단 번호·source/control 노드는 공개 읽기 metadata이며 편집 대상이나 장수명 Core 권한이 아닙니다. ABI 지원 조회도 함수 존재를 알릴 뿐 모듈 출처를 인증하거나 strictMap에 등록하지 않습니다. 정상 내장 SDK는 동기 Native 응답의 JSON 바이트를 복사·검사한 뒤 공유 출력 버퍼를 해제합니다. 반환 DTO는 그 시점의 읽기 스냅샷이며 원본 문서의 미래 상태를 추적하지 않습니다.
+
+collector의 비공개 WeakMap witness는 캡처한 문단·문자열·control 위치와 같은 모델 객체의 표시 일관성을 확인합니다. getter나 복사본에 임의로 권한을 붙이지 않으며 편집 명령으로 전달하지 않습니다. 모델 객체가 남아 있으면 SDK를 닫은 뒤에도 당시 스냅샷을 렌더할 수 있지만, 이를 현재 Native 상태라고 보증하지 않습니다. 외부에서 제공한 ObservationSdk의 형식 검사가 내장 Native 모듈의 출처 인증을 대신하지도 않습니다.
+
+외부 NoHistory 변이로 값이 바뀌었다가 같아지는 ABA를 이 stamp나 witness가 일반적으로 검출한다고 보장하지 않습니다. 장수명 Core·외부 generation·선택 run 및 검색 현재성은 별도 Native 현재성 후속과 새 통합 검증이 필요합니다.
+
+이 읽기 축은 동기 호출 내부의 Session stamp와 owner를 검사하는 계약입니다. 외부 문서 generation, 다른 시점의 편집 가능 SDK·캐시 모델 재사용, 검색의 현재성이나 HWP5 읽기 전용 자격을 보증하지 않습니다. MCP 보관 세션도 열린 파일 스냅샷이며 디스크 변경을 보려면 새로 열어야 합니다.
+
+독립 정규 패키지의 기본 선언 bin에서 생성 HWPX 표 셀의 개행·차트/수식 읽기, 공개 Noori HWPX의 네 이미지 참조와 ZIP 자산, 기존 HWP5 Noori 회귀를 실제로 확인했습니다. 이 결과는 해당 엔진과 패키지의 증거이며, 새 소스 합본·새 엔진·사용자 배포에 자동 승계하지 않습니다. 설치 패키지는 `hwpjs read 문서.hwpx`처럼 인접 번들을 기본 사용하고, 소스 진입점의 명시 `--wasm` 실행과 구분합니다.
+
+
+## HWP5 차트의 기존 drawing 참조 상세 조회
+
+공통 재고의 HWP5 OLE component는 `drawing/N` 참조를 유지한다. `nativeKind`가 `0x246f6c65`인 재고에서 검증된 소유자만 chart 상세 후보가 된다. 참조를 `chart/N`으로 바꾸거나 N을 control node로 해석하지 않는다. 예를 들어 component10의 현재 chart candidate가 control9를 증명하면 `hwp5ChartDisplay(section, 9)`를 조회한다. 파일 SHA·포맷·구역·재고 참조 전체 검사는 기존 inspector가 먼저 수행한다.
+
+공통 문서 helper는 optional chart read capability를 확인하고 공개 candidates/display decoder를 재사용한다. 같은 section/component의 유일한 modern chart candidate만 선택하며 후보와 상세의 epoch/history·전체 owner·physical ID·resource digest·stream/presentation/backup witness가 일치해야 한다. section source digest와 전체 파일 SHA는 서로 다른 근거이므로 비교 대상으로 섞지 않는다. 소유권 미확정 재고, 일반 drawing, 기존 Contents OLE, 후보 부재 및 구 ABI는 unavailable로 남는다. 잘못된 응답·중복 소유자·stale witness는 거부하며 fallback 또는 자동 재시도를 하지 않는다.
+
+ObjectInspection v1과 `kind: drawing`은 불변이고 차트 상세는 bounded text에 출력한다. 기존 HWPX와 같은 rich text/series/point/role 표시와 escaping/64KiB 누적 출력 한도를 공유한다. 저장·편집·이미지 추출·외부 다운로드를 수행하지 않는다. MCP get_document_object도 같은 CLI object 경로를 사용하므로 별도 참조 분류나 host API는 추가하지 않는다. 시각 frame guard와 Native/module registry는 이 조회 정책과 별개다.
+
+이 후보의 Node 검사는 신규15와 기존32, 총47개가 통과했고 focused strict TypeScript도 통과했다. 별도 실제 입력 cohort에서 기존633 WASM과 승인 own681855 파일로 source CLI 및 공식 MCP protocol을 실행해 값10/20/40과 기존 drawing/10 참조·종류, control9/component10/spec24를 정확히 확인했다. stale 참조는 양쪽 모두 Native 추가 open 전에 거부됐고 정상 문서2개는 모두 close됐다. 원본과 WASM 해시는 불변이다. 이 결과는 새 설치 패키지 빌드 검증이나 UI 표시 증거가 아니다. 최초 unavailable 반례와 격리 의존성 누락 오류를 보존했으며 새 Native/WASM 빌드 및 browser 실행은 없다.

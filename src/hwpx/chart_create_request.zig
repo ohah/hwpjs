@@ -27,9 +27,9 @@ pub fn parseRequest(a: std.mem.Allocator, bytes: []const u8, before_sha256: [32]
     try object(root, if (chart != null) 4 else 3);
     if (chart) |value| try @import("chart_create_wire.zig").profile(value);
     const target = try field(root, "target");
-    try object(target, 4);
-    try unsigned(try field(target, "section"), std.math.maxInt(u32));
-    try unsigned(try field(target, "paragraph"), std.math.maxInt(u32));
+    const owner_kind = @import("inline_object_placement.zig").wireAddress(target) catch return error.InvalidChartCreateRequest;
+    const target_fields: usize = if (owner_kind == .createdCell) 4 else if (owner_kind != null) 5 else 4;
+    try object(target, target_fields + @as(usize, if (target.object.contains("affinity")) 1 else 0));
     try unsigned(try field(target, "unit"), std.math.maxInt(u32));
     try string(try field(target, "expected_text"));
     const size = try field(root, "size");
@@ -53,8 +53,7 @@ pub fn parseRequest(a: std.mem.Allocator, bytes: []const u8, before_sha256: [32]
     const parsed = try std.json.parseFromSlice(Wire, a, bytes, .{ .allocate = .alloc_always, .ignore_unknown_fields = false, .duplicate_field_behavior = .@"error" });
     errdefer parsed.deinit();
     const wire = parsed.value;
-    if (wire.target.section != 0) return error.UnsupportedInsertSections;
-    if (wire.target.paragraph == 0) return error.InvalidParagraphIndex;
+    if (wire.target.paragraph == 0 and (wire.target.owner == null or wire.target.owner.?.kind != .createdCell)) return error.InvalidParagraphIndex;
     _ = try @import("../image/image_insertion.zig").byteOffset(wire.target.expected_text, wire.target.unit);
     try @import("chart_create_host.zig").validateSize(wire.size);
     try @import("chart_create_data.zig").validateFor(wire.data, wire.chart);

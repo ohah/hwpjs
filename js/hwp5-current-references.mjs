@@ -1,3 +1,7 @@
+import { createHwp5ChartCreateApi } from './hwp5-chart-create.mjs';
+import { inlineInsertRecord } from './hwpx-inline-object-record.mjs';
+import { checkedHwp5EquationInsertOptions } from './hwp5-equation-insert.mjs';
+import { applyNativeEdit } from './native-edit-outcome.mjs';
 import { createHwp5ExclusiveTextApi } from './hwp5-exclusive-text-delta.mjs';
 const utf8 = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
 const utf16 = new TextDecoder('utf-16le', { fatal: true, ignoreBOM: true });
@@ -134,6 +138,54 @@ export function createHwp5CurrentReferenceApi({
   });
   return {
     ...exclusive,
+    ...createHwp5ChartCreateApi({ wasm, memory, ready, check, encode, copyCurrentText, output, u32 }),
+    supportsEquationInsertionAbi() {
+      check();
+      return (
+        available() &&
+        typeof wasm.hwp5_edit_insert_equation === 'function' &&
+        typeof wasm.hwp5_edit_equation_insert_profile_version === 'function' &&
+        wasm.hwp5_edit_equation_insert_profile_version() === 1
+      );
+    },
+    insertEquation(input) {
+      ready();
+      if (!this.supportsEquationInsertionAbi()) throw Error('InlineObjectInsertionUnavailable');
+      const { reference, start, ...options } = inlineInsertRecord(input, [
+        'reference',
+        'start',
+        'script',
+        'width',
+        'height',
+        'baseLine',
+        'baseUnit',
+        'version',
+        'font',
+        'colorRgb',
+        'lineMode',
+      ]);
+      const refBytes = encode(reference); // checks this editor's scope, never strips it blindly
+      if (!['original', 'generated'].includes(reference.kind))
+        throw Error('UnsupportedEquationInsertOwner');
+      const values = checkedHwp5EquationInsertOptions(options);
+      u32(start, 'start');
+      const bytes = encoder.encode(JSON.stringify({ start, ...values }));
+      let outcome;
+      try {
+        return memory.withBytes(refBytes, (refPtr, refSize) => {
+          outcome = applyNativeEdit(
+            memory,
+            bytes,
+            (ptr, size) => wasm.hwp5_edit_insert_equation(refPtr, refSize, ptr, size),
+            'InvalidHwp5EquationInsertResult',
+          );
+          return outcome;
+        });
+      } catch (error) {
+        if (!outcome) throw error;
+        return { ...outcome, cleanupError: error?.message || String(error), refreshRequired: true };
+      }
+    },
     supportsCurrentReferences() {
       check();
       return available();

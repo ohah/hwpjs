@@ -6,6 +6,17 @@ pub fn free(a: std.mem.Allocator, rows: []Row) void {
     for (rows) |row| a.free(row.text);
     a.free(rows);
 }
+/// Current model plain text. No source policy/writability filter or ownership
+/// grant; callers retain their own model and complete-coverage proof.
+pub fn copyCurrentText(a: std.mem.Allocator, paragraph: *const @import("paragraph_structure_values.zig").Paragraph, max_bytes: usize) ![]u8 {
+    var bytes: std.ArrayList(u8) = .empty;
+    defer bytes.deinit(a);
+    for (paragraph.sites.items) |site| {
+        if (site.text.len > max_bytes -| bytes.items.len) return error.LimitExceeded;
+        try bytes.appendSlice(a, site.text);
+    }
+    return bytes.toOwnedSlice(a);
+}
 pub fn read(a: std.mem.Allocator, session: *const editor.Session, section_index: usize) ![]Row {
     if (section_index >= session.sections.len) return error.InvalidSectionIndex;
     if (try @import("formula_section_save.zig").hasFormula(a, &session.sections[section_index].tree)) {
@@ -31,17 +42,13 @@ fn readOwned(a: std.mem.Allocator, session: *const editor.Session, section_index
     }
     var used: usize = 0;
     for (current.paragraphs, rows, 0..) |paragraph, *row, index| {
-        var bytes: std.ArrayList(u8) = .empty;
-        defer bytes.deinit(a);
-        for (paragraph.sites.items) |site| {
-            if (site.text.len > session.options.max_text_bytes -| used) return error.LimitExceeded;
-            used += site.text.len;
-            try bytes.appendSlice(a, site.text);
-        }
+        const bytes = try copyCurrentText(a, &paragraph, session.options.max_text_bytes -| used);
+        errdefer a.free(bytes);
+        used += bytes.len;
         const parent = section.tree.elements[paragraph.template_element].parent;
         const nested = if (parent) |node| !section.tree.elements[node].is(@import("document_xml.zig").section_uri, "sec") else true;
         const ordinal = std.math.add(usize, section.first_paragraph, index) catch return error.LimitExceeded;
-        row.* = .{ .paragraph = ordinal, .nested = nested, .text = try bytes.toOwnedSlice(a) };
+        row.* = .{ .paragraph = ordinal, .nested = nested, .text = bytes };
         initialized += 1;
     }
     return rows;

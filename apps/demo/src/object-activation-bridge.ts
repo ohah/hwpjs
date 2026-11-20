@@ -1,4 +1,5 @@
 import { createDrawingObservationQuery } from '../../../web/preview/drawing-observation.mjs';
+import { currentHwp5ChartTarget } from '../../../web/preview/hwp5-chart-resources.mjs';
 import type { CanvasObjectActivation, CanvasObjectPropertiesRequest } from '@hwpjs/vanilla';
 import type { HeadlessEditor } from '@hwpjs/core';
 
@@ -13,6 +14,7 @@ export function connectObjectActivation(
   editor: Pick<HeadlessEditor, 'getEditorState'>,
   tools: {
     picture: { open(): void };
+    hwp5Chart?: { open(target: { section: number; controlNode: number }): void };
     chart: { open(target: { section: number; wrapper: number }): void };
     drawing: { open(target: { section: number; drawingNode: number }): void };
   },
@@ -30,7 +32,9 @@ export function connectObjectActivation(
     )
       return;
     const content = state.content as any;
-    if (target.kind === 'drawing') {
+    if (target.kind === 'hwp5-chart') {
+      if (!currentHwp5ChartTarget(content, target)) return;
+    } else if (target.kind === 'drawing') {
       const observed = createDrawingObservationQuery(content).get(
         target.section,
         target.drawingNode,
@@ -50,7 +54,9 @@ export function connectObjectActivation(
         return;
     }
     if (editor.getEditorState() !== state) return;
-    if (target.kind === 'chart')
+    if (target.kind === 'hwp5-chart')
+      tools.hwp5Chart?.open({ section: target.section, controlNode: target.controlNode });
+    else if (target.kind === 'chart')
       tools.chart.open({ section: target.section, wrapper: target.wrapper });
     else if (target.kind === 'picture') tools.picture.open();
     else if (target.kind === 'drawing')

@@ -1,4 +1,56 @@
 import {
+  bindStrictLayoutSaveBridge,
+  type StrictLayoutLease,
+} from '../internal/strict-layout-save.ts';
+import {
+  DELETE_NOTE_COMMAND,
+  captureNoteDeletePayload,
+  noteDeleteMessage,
+  type DeleteNotePayload,
+} from '../commands/note-delete.ts';
+import {
+  INSERT_FOOTNOTE_COMMAND,
+  INSERT_ENDNOTE_COMMAND,
+  captureNoteInsertPayload,
+  noteInsertMessage,
+  type InsertNotePayload,
+} from '../commands/note-insert.ts';
+import { checkedNoteCaret } from '../../../../js/hwpx-note-create.mjs';
+import { createParagraphSelection } from '../state/paragraph-selection.ts';
+import {
+  checkedInlineObjectSelector,
+  matchInlineObjectObservation,
+  checkedInlineObjectTarget,
+} from '../../../../js/hwpx-inline-object-placement.mjs';
+import {
+  checkedCreatedCellTextSelector,
+  checkedCreatedCellTextRange,
+  checkedCreatedCellTextObservation,
+  captureCreatedCellSplicePayload,
+  type CreatedCellTextTarget,
+  type CreatedCellTextSelector,
+  type CreatedCellTextRange,
+  type CreatedCellTextObservation,
+  type CreatedCellSplicePayload,
+} from '../commands/created-cell-text.ts';
+import type { InlineObjectSelector } from '../commands/inline-object-placement-dto.ts';
+import {
+  captureInlineObjectCreateTarget,
+  type InlineObjectCreateTarget,
+} from '../commands/inline-object-owner.ts';
+import { reobserveReadViewSelection } from '../state/read-view-selection.ts';
+import { consumeNativeReadSourceOrigin } from '../internal/native-read-source-origin.ts';
+import type { NativeReadSourceOrigin } from '../internal/native-read-source-origin.ts';
+import {
+  observeNativeReadSource,
+  inheritNativeReadSource,
+} from '../internal/native-read-source-evidence.ts';
+import {
+  documentTextAnchorRequest,
+  documentTextAnchorObservation,
+} from '../state/document-text-anchor.ts';
+import type { DocumentTextCaretPoint, DocumentTextAnchor } from '../state/document-text-anchor.ts';
+import {
   SET_OBJECT_GEOMETRY_COMMAND,
   captureObjectGeometryPayload,
   type ObjectGeometryTarget,
@@ -83,7 +135,16 @@ import type {
   InsertDocumentPayload,
 } from '../commands/document-insert.ts';
 import { planReplaceAll } from '../commands/replace-all.ts';
+import { planDocumentReplaceAll } from '../commands/document-replace-all.ts';
+import { validateLiteralQuery } from '../state/literal-matches.ts';
 import type { ReplaceAllPlanRequest, ReplaceAllCapabilities } from '../commands/replace-all.ts';
+import { createDocumentTextIndex } from '../state/document-text-search.ts';
+import type { DocumentTextIndex, DocumentTextMatch } from '../state/document-text-search.ts';
+import {
+  documentTextSelectionRequest,
+  documentTextSelectionObservation,
+} from '../state/document-text-selection.ts';
+import type { DocumentTextSelectionObservation } from '../state/document-text-selection.ts';
 import { mergeExclusiveOwnerWindow, isPlainOwnerBaseline } from '../internal/owner-window-cow.ts';
 import {
   hasRuntimeAdmission,
@@ -449,6 +510,8 @@ export function createEditor(options: CreateEditorOptions) {
     ctx?: RuntimeRequestContext,
     origin?: NativeRuntimeOrigin,
     transition?: { kind: string; capture?: object },
+    readSource?: NativeReadSourceOrigin,
+    readSourceCandidate?: RuntimeRequestContext,
   ) {
     if (terminal) return;
     // Capture both sets before any callback changes registrations.
@@ -478,6 +541,9 @@ export function createEditor(options: CreateEditorOptions) {
     else if (!mutation && Object.keys(patch).length === 1 && Object.hasOwn(patch, 'selection'))
       geometry.inherit(previousState, state);
     else geometry.invalidate();
+    if (readSource) observeNativeReadSource(state, readSource, readSourceCandidate);
+    else if (!mutation && Object.keys(patch).length === 1 && Object.hasOwn(patch, 'selection'))
+      inheritNativeReadSource(previousState, state);
     selectionHistory.observe(state);
     const snapshot = state;
     notify(states, snapshot, ctx, mutation);
@@ -603,6 +669,7 @@ export function createEditor(options: CreateEditorOptions) {
                 'historyRevisions',
                 'historyStats',
                 'nativeTextDelta',
+                'noteCaret',
                 'historyPoisoned',
               ].includes(key),
           ),
@@ -715,7 +782,15 @@ export function createEditor(options: CreateEditorOptions) {
     writePolicy.publish(editable, () => {
       active = runtime;
       try {
-        install(nextData, true, ctx, takeGeometryOrigin(runtime, reply, publicationContext));
+        install(
+          nextData,
+          true,
+          ctx,
+          takeGeometryOrigin(runtime, reply, publicationContext),
+          undefined,
+          consumeNativeReadSourceOrigin(runtime, reply, publicationContext),
+          publicationContext,
+        );
       } catch (error) {
         active = previous;
         throw error;
@@ -1025,6 +1100,9 @@ export function createEditor(options: CreateEditorOptions) {
           [
             'insert-equation',
             'create-chart',
+            'delete-note',
+            'insert-footnote',
+            'insert-endnote',
             'insert-document',
             'source-table-grid',
             'source-table-cell-merge',
@@ -1072,9 +1150,13 @@ export function createEditor(options: CreateEditorOptions) {
           [
             'formatting-patch',
             'independent-text',
+            'replace-document-text',
             'splice-rich-character',
             'insert-equation',
             'create-chart',
+            'delete-note',
+            'insert-footnote',
+            'insert-endnote',
             'insert-document',
           ].includes(message.kind) &&
           reply.formattingRefreshRequired === true
@@ -1084,9 +1166,13 @@ export function createEditor(options: CreateEditorOptions) {
           [
             'formatting-patch',
             'independent-text',
+            'replace-document-text',
             'splice-rich-character',
             'insert-equation',
             'create-chart',
+            'delete-note',
+            'insert-footnote',
+            'insert-endnote',
             'insert-document',
           ].includes(message.kind) &&
           reply.formattingNativeCode === 2
@@ -1098,9 +1184,13 @@ export function createEditor(options: CreateEditorOptions) {
           [
             'formatting-patch',
             'independent-text',
+            'replace-document-text',
             'splice-rich-character',
             'insert-equation',
             'create-chart',
+            'delete-note',
+            'insert-footnote',
+            'insert-endnote',
             'insert-document',
           ].includes(message.kind) &&
           reply.error
@@ -1182,6 +1272,24 @@ export function createEditor(options: CreateEditorOptions) {
         let selection: SelectionTarget | null | undefined = preserveFormattingSelection
           ? formattingSelection(state, patch, reserved)
           : undefined;
+        if (message.kind === 'insert-footnote' || message.kind === 'insert-endnote') {
+          const caret = checkedNoteCaret({ schemaVersion: 1, caret: reply.noteCaret });
+          const provisional = new EditorState(
+            {
+              ...state.token,
+              ...patch,
+              operationRevision: reserved,
+              stateVersion: state.stateVersion + 1,
+              status: 'ready',
+            },
+            runRead,
+          );
+          selection = createParagraphSelection(provisional, {
+            section: caret.section,
+            paragraph: caret.paragraph - 1,
+            startUnit: caret.unit,
+          });
+        }
         if (message.kind === 'undo' || message.kind === 'redo') {
           const provisional = new EditorState(
             {
@@ -1266,6 +1374,10 @@ export function createEditor(options: CreateEditorOptions) {
     PageSettingsTarget,
     { state: EditorState; native: PageSettingsCapabilities; section: number | null }
   >();
+  const createdCellTextTargets = new WeakMap<
+    CreatedCellTextTarget,
+    { state: EditorState; observation: CreatedCellTextObservation }
+  >();
   function capture<T>(
     command: EditorCommand<T>,
     payload: T,
@@ -1285,21 +1397,40 @@ export function createEditor(options: CreateEditorOptions) {
         : command.id === CREATE_CHART_COMMAND.id
           ? 'chart'
           : undefined;
-    const owned = objectGeometry
-      ? captureObjectGeometryPayload(payload)
-      : inlineKind
-        ? captureInlineObjectInsertPayload(payload, inlineKind)
-        : pageSettings
-          ? capturePageSettingsPayload(payload)
-          : split
-            ? captureSourceTableCellSplitPayload(payload)
-            : merge || width || height
-              ? payload
-              : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
-                ? captureSourceTableGridRequest(payload, (snapshot.content as any)?.format)
-                : command.id === INSERT_DOCUMENT_COMMAND.id
-                  ? captureDocumentInsertPayload(payload)
-                  : copyOwned(payload);
+    const logicalSplice =
+      command.id === SPLICE_TEXT_COMMAND.id &&
+      Object.getOwnPropertyDescriptor(
+        Object.getOwnPropertyDescriptor(payload ?? {}, 'target')?.value ?? {},
+        'coordinateSpace',
+      )?.value === 'created-cell-utf16';
+    const noteKind =
+      command.id === INSERT_FOOTNOTE_COMMAND.id
+        ? 'foot'
+        : command.id === INSERT_ENDNOTE_COMMAND.id
+          ? 'end'
+          : undefined;
+    const owned =
+      command.id === DELETE_NOTE_COMMAND.id
+        ? captureNoteDeletePayload(payload)
+        : noteKind
+          ? captureNoteInsertPayload(payload)
+          : logicalSplice
+            ? captureCreatedCellSplicePayload(payload)
+            : objectGeometry
+              ? captureObjectGeometryPayload(payload)
+              : inlineKind
+                ? captureInlineObjectInsertPayload(payload, inlineKind)
+                : pageSettings
+                  ? capturePageSettingsPayload(payload)
+                  : split
+                    ? captureSourceTableCellSplitPayload(payload)
+                    : merge || width || height
+                      ? payload
+                      : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
+                        ? captureSourceTableGridRequest(payload, (snapshot.content as any)?.format)
+                        : command.id === INSERT_DOCUMENT_COMMAND.id
+                          ? captureDocumentInsertPayload(payload)
+                          : copyOwned(payload);
     return {
       command: command as EditorCommand<unknown>,
       payload: owned,
@@ -1342,6 +1473,29 @@ export function createEditor(options: CreateEditorOptions) {
           false,
           guard,
         );
+      }
+      if (pending.command.id === DELETE_NOTE_COMMAND.id) {
+        const payload = pending.payload as DeleteNotePayload;
+        const guard = () => {
+          requireReady(payload.target, true);
+          noteDeleteMessage(payload, state);
+        };
+        guard();
+        // Full refresh intentionally clears the deleted reference/body selection.
+        return await mutate(noteDeleteMessage(payload, state), payload.target, false, guard);
+      }
+      if (
+        pending.command.id === INSERT_FOOTNOTE_COMMAND.id ||
+        pending.command.id === INSERT_ENDNOTE_COMMAND.id
+      ) {
+        const payload = pending.payload as InsertNotePayload;
+        const kind = pending.command.id === INSERT_FOOTNOTE_COMMAND.id ? 'foot' : 'end';
+        const guard = () => {
+          requireReady(payload.target, true);
+          noteInsertMessage(payload, state, kind);
+        };
+        guard();
+        return await mutate(noteInsertMessage(payload, state, kind), payload.target, false, guard);
       }
       if (pending.command.id === SET_OBJECT_GEOMETRY_COMMAND.id) {
         const payload = pending.payload as SetObjectGeometryPayload;
@@ -1386,6 +1540,73 @@ export function createEditor(options: CreateEditorOptions) {
           if (state.stateVersion !== payload.stateVersion) throw Error('StaleReplaceAllPlan');
         };
         guard();
+        if (
+          payload.schemaVersion !== 1 ||
+          Object.keys(payload).some(
+            (key) =>
+              ![
+                'schemaVersion',
+                'query',
+                'replacement',
+                'layoutToken',
+                'stateVersion',
+                'limits',
+              ].includes(key),
+          )
+        )
+          throw Error('InvalidReplaceAllPlanRequest');
+        validateLiteralQuery(payload.query);
+        if (typeof payload.replacement !== 'string' || !isWellFormedText(payload.replacement))
+          throw Error('InvalidReplacementText');
+        const capabilities = await readRequest(
+          { kind: 'text-transaction-capabilities' },
+          payload.layoutToken,
+          guard,
+          true,
+        );
+        guard();
+        const capability = capabilities.textTransactionCapabilities as ReplaceAllCapabilities;
+        if (
+          !capability ||
+          typeof capability.available !== 'boolean' ||
+          typeof capability.supportsNewlines !== 'boolean' ||
+          (capability.documentScope !== undefined && typeof capability.documentScope !== 'boolean')
+        )
+          throw Error('MalformedTextTransactionCapabilities');
+        if (capability.documentScope === true) {
+          if (!capability.available)
+            throw Error(capability.reason ?? 'DocumentReplaceAllUnavailable');
+          const observed = await readRequest(
+            { kind: 'document-text-snapshot' },
+            payload.layoutToken,
+            guard,
+            true,
+          );
+          guard();
+          const index = createDocumentTextIndex(state, observed.documentText);
+          const plan = planDocumentReplaceAll(state, index, {
+            query: payload.query,
+            replacement: payload.replacement,
+            ...(payload.limits !== undefined ? { limits: payload.limits } : {}),
+          });
+          // Native derives the complete match set again. A client edit subset,
+          // logical read coordinate or read ref never becomes a write grant.
+          return await mutate(
+            {
+              kind: 'replace-document-text',
+              request: {
+                schemaVersion: 1,
+                scope: plan.scope,
+                binding: plan.binding,
+                query: plan.query,
+                replacement: plan.replacement,
+              },
+            },
+            payload.layoutToken,
+            false,
+            guard,
+          );
+        }
         const plan = planReplaceAll(state, payload);
         const prepared = await readRequest(
           { kind: 'prepare-replace-all', plan },
@@ -1718,6 +1939,42 @@ export function createEditor(options: CreateEditorOptions) {
           throw Error('StaleClipboardSelection');
         if (typeof payload.text !== 'string' || !isWellFormed(payload.text))
           throw Error('InvalidText');
+        if (payload.target.coordinateSpace === 'created-cell-utf16') {
+          const logical = payload as CreatedCellSplicePayload;
+          const found = createdCellTextTargets.get(logical.target);
+          if (!found) throw Error('ForeignCreatedCellTextTarget');
+          const guard = () => {
+            requireReady(logical.target, true);
+            if (
+              state !== found.state ||
+              state.nativeHistoryRevision !== found.observation.binding.revision
+            )
+              throw Error('StaleCreatedCellTextTarget');
+            if (!hasRuntimeAdmission(active, 'created-cell-splice'))
+              throw Error('UnsupportedAtomicRuntime');
+          };
+          guard();
+          const { observation } = found;
+          return await mutate(
+            {
+              kind: 'created-cell-splice',
+              ...observation.selector,
+              startUnit: logical.target.startUnit,
+              endUnit: logical.target.endUnit,
+              text: logical.text,
+              insertion: logical.insertion,
+              createdCellTypingScope: observation.scope,
+              expectedHistoryRevision: observation.binding.revision,
+              headlessBinding: observation.binding,
+              expectedText: observation.text,
+              ...(observation.reference === undefined ? {} : { reference: observation.reference }),
+            },
+            logical.target,
+            false,
+            guard,
+          );
+        }
+        if (Object.hasOwn(payload, 'insertion')) throw Error('SourceSpliceInsertionUnsupported');
         const position = selectionMessage(payload.target, state);
         return await mutate({ kind: 'splice', ...position, text: payload.text }, payload.target);
       }
@@ -2051,6 +2308,195 @@ export function createEditor(options: CreateEditorOptions) {
       })
       .finally(() => signal?.removeEventListener('abort', cancel));
   }
+  type OwnedStrictLease = StrictLayoutLease & {
+    readonly runtime: EditorRuntime;
+    readonly captured: EditorState;
+    readonly surface: typeof surface;
+    readonly surfaceEpoch: number;
+    readonly ticket: string;
+    readonly requestId: string;
+    readonly allowUnprotectedOutput: boolean;
+    readonly signal?: AbortSignal;
+    released: boolean;
+    published?: boolean;
+    result?: SaveResult;
+  };
+  let strictPending: OwnedStrictLease | undefined;
+  let strictSequence = 0;
+  function strictAvailable() {
+    return (
+      !terminal &&
+      !!active &&
+      state.status === 'ready' &&
+      !state.historyRecoveryRequired &&
+      state.nativeHistoryStats?.protocolVersion === 2 &&
+      state.nativeHistoryStats.poisoned !== true &&
+      (state.content as { format?: string; strictMeasuredSaveAvailable?: boolean } | undefined)
+        ?.format === 'hwp5' &&
+      (state.content as { strictMeasuredSaveAvailable?: boolean }).strictMeasuredSaveAvailable ===
+        true
+    );
+  }
+  function strictCheck(lease: StrictLayoutLease): asserts lease is OwnedStrictLease {
+    const owned = strictPending;
+    if (!owned || owned !== lease) throw Error('StrictLayoutMeasurementExpired');
+    owned.signal?.throwIfAborted();
+    const captured = owned.captured;
+    if (
+      !strictAvailable() ||
+      active !== owned.runtime ||
+      surface !== owned.surface ||
+      surfaceEpoch !== owned.surfaceEpoch ||
+      state.content !== captured.content ||
+      state.documentId !== captured.documentId ||
+      state.generation !== captured.generation ||
+      state.operationRevision !== captured.operationRevision ||
+      state.viewRevision !== captured.viewRevision ||
+      (surface && surface.hooks.isOutputInputSettled?.() !== true)
+    )
+      throw Error('StrictLayoutMeasurementExpired');
+  }
+  async function strictCancel(lease: StrictLayoutLease) {
+    const owned = strictPending;
+    if (!owned || owned !== lease || owned.released) return;
+    owned.released = true;
+    // Retired runtimes release their own pending snapshot during close.
+    if (terminal || active !== owned.runtime) return;
+    await enqueue(async () => {
+      if (active !== owned.runtime) return;
+      const ctx = context(owned.captured.token);
+      const reply = await owned.runtime.request(
+        {
+          kind: 'strict-layout-cancel',
+          ticket: owned.ticket,
+          prepareRequestId: owned.requestId,
+        },
+        ctx,
+      );
+      verifyReply(reply, ctx);
+      if (reply.error) throw Error(reply.error);
+    });
+  }
+  function strictPrepare(settings: { allowUnprotectedOutput: boolean; signal?: AbortSignal }) {
+    assertPublicMutation();
+    return admit(async () => {
+      settings.signal?.throwIfAborted();
+      if (!strictAvailable() || !active) throw Error('StrictMeasuredSaveUnavailable');
+      if (strictPending) throw Error('StrictLayoutMeasurementInProgress');
+      if (strictSequence >= Number.MAX_SAFE_INTEGER) throw Error('StrictLayoutSequenceExhausted');
+      const runtime = active,
+        captured = state,
+        input = surface,
+        inputEpoch = surfaceEpoch;
+      const requestId = `strict-core-${++strictSequence}`,
+        ctx = context(captured.token);
+      let owned: OwnedStrictLease | undefined;
+      try {
+        const reply = await runtime.request(
+          {
+            kind: 'strict-layout-prepare',
+            requestId,
+            allowUnprotectedOutput: settings.allowUnprotectedOutput,
+          },
+          ctx,
+        );
+        verifyReply(reply, ctx);
+        if (reply.error) throw Error(reply.error);
+        if (
+          reply.kind !== 'strict-layout-prepare' ||
+          typeof reply.ticket !== 'string' ||
+          !reply.snapshot ||
+          typeof reply.snapshot !== 'object'
+        )
+          throw Error('InvalidStrictLayoutSnapshot');
+        owned = {
+          runtime,
+          captured,
+          surface: input,
+          surfaceEpoch: inputEpoch,
+          requestId,
+          snapshot: freezeDTO(copyOwned(reply.snapshot, true)),
+          ticket: reply.ticket,
+          allowUnprotectedOutput: settings.allowUnprotectedOutput,
+          signal: settings.signal,
+          released: false,
+        };
+        strictPending = owned;
+        strictCheck(owned);
+        return owned;
+      } catch (error) {
+        // Keep the first error even if transport cleanup also fails.
+        try {
+          await runtime.request({ kind: 'strict-layout-cancel', prepareRequestId: requestId }, ctx);
+        } catch {
+          /* Retirement/dispose also releases the Native snapshot. */
+        }
+        if (strictPending === owned) strictPending = undefined;
+        throw error;
+      }
+    });
+  }
+  function strictCommit(lease: StrictLayoutLease, lines: unknown): Promise<SaveResult> {
+    assertPublicMutation();
+    const ownedLines = copyOwned(lines);
+    return admit(async () => {
+      strictCheck(lease);
+      if (lease.released || lease.result) throw Error('StrictLayoutMeasurementExpired');
+      const ctx = context(lease.captured.token);
+      const reply = await lease.runtime.request(
+        {
+          kind: 'strict-layout-commit',
+          ticket: lease.ticket,
+          lines: ownedLines,
+          allowUnprotectedOutput: lease.allowUnprotectedOutput,
+        },
+        ctx,
+      );
+      verifyReply(reply, ctx);
+      strictCheck(lease);
+      if (reply.error) throw Error(reply.error);
+      if (
+        reply.kind !== 'strict-layout-commit' ||
+        !(reply.bytes instanceof Uint8Array) ||
+        !reply.bytes.length ||
+        reply.format !== 'hwp5' ||
+        reply.layoutRequiresReflow !== false
+      )
+        throw Error('InvalidStrictMeasuredSave');
+      const token = lease.captured.token;
+      const result: SaveResult = Object.freeze({
+        bytes: reply.bytes.slice(),
+        documentId: token.documentId!,
+        generation: token.generation,
+        operationRevision: token.operationRevision,
+        nativeHistoryRevision: history(reply) ?? state.nativeHistoryRevision,
+        format: 'hwp5',
+        staleSnapshot: false,
+        layoutRequiresReflow: false,
+        reply: freezeDTO(copyOwned(reply, true)),
+      });
+      lease.result = result;
+      return result;
+    });
+  }
+  function strictPublish(
+    lease: StrictLayoutLease,
+    result: SaveResult,
+    publish: (result: SaveResult) => void,
+  ) {
+    assertPublicMutation();
+    strictCheck(lease);
+    if (lease.result !== result || !lease.released || lease.published)
+      throw Error('InvalidStrictMeasuredSave');
+    lease.published = true;
+    const returned: unknown = publish(result);
+    if (returned && typeof (returned as { then?: unknown }).then === 'function') {
+      void Promise.resolve(returned).catch(() => {});
+      throw Error('SynchronousStrictPublicationRequired');
+    }
+    strictCheck(lease);
+    install({ savedOperationRevision: lease.captured.operationRevision });
+  }
   function save(saveOptions: SaveOptions = {}): Promise<SaveResult> {
     assertPublicMutation();
     const owned = copyOwned(saveOptions);
@@ -2110,10 +2556,18 @@ export function createEditor(options: CreateEditorOptions) {
     const kind = Object.getOwnPropertyDescriptor(message ?? {}, 'kind')?.value;
     if (
       [
+        'strict-layout-prepare',
+        'strict-layout-commit',
+        'strict-layout-cancel',
         'insert-equation',
         'create-chart',
+        'delete-note',
+        'insert-footnote',
+        'insert-endnote',
         'insert-document',
         'document-insert-capabilities',
+        'inline-object-owner',
+        'created-cell-text-target',
         'object-geometry-query',
         'object-geometry-set',
         'page-settings-capabilities',
@@ -2217,6 +2671,127 @@ export function createEditor(options: CreateEditorOptions) {
     )
       throw Error('InvalidNamedFieldOptions');
     return copyOwned(settings.token ?? state.token);
+  }
+  /** Native owner query for headless or UI callers. Selector paragraph is the
+   * document-global one-based ordinal; generated cells have no paragraph.
+   * Affinity selects before/after pending table anchors at the same point. */
+  function getCreatedCellTextTarget(
+    selector: CreatedCellTextSelector,
+    range: CreatedCellTextRange,
+    options: { token?: StateToken } = {},
+  ): Promise<CreatedCellTextTarget> {
+    assertPublicMutation();
+    const owned = checkedCreatedCellTextSelector(selector);
+    const units = checkedCreatedCellTextRange(range);
+    const settings = copyOwned(options);
+    if (
+      !settings ||
+      typeof settings !== 'object' ||
+      Array.isArray(settings) ||
+      Object.keys(settings).some((k) => k !== 'token')
+    )
+      throw Error('InvalidCreatedCellTextOptions');
+    const token = copyOwned(settings.token ?? state.token);
+    return enqueue(async () => {
+      requireReady(token, true);
+      writePolicy.assertWritable();
+      const before = state;
+      if (
+        (before.content as { readOnly?: unknown })?.readOnly === true ||
+        (before.capabilities as { readOnly?: unknown })?.readOnly === true
+      )
+        throw Error('ReadOnlyDocument');
+      const format = (before.content as { format?: unknown })?.format;
+      if (format !== 'hwp5' && format !== 'hwpx') throw Error('CreatedCellTypingUnavailable');
+      const guard = () => {
+        requireReady(token, true);
+        if (state !== before) throw Error('StaleCreatedCellTextTarget');
+        writePolicy.assertWritable();
+      };
+      if (!hasRuntimeAdmission(active, 'created-cell-text-target'))
+        throw Error('UnsupportedAtomicRuntime');
+      const reply = await readRequest(
+        { kind: 'created-cell-text-target', selector: owned },
+        token,
+        guard,
+        true,
+      );
+      guard();
+      if (reply.kind !== 'created-cell-text-target') throw Error('MismatchedRuntimeReply');
+      const observation = checkedCreatedCellTextObservation(
+        reply.createdCellText,
+        owned,
+        units,
+        format,
+        before.nativeHistoryRevision,
+      );
+      const target = Object.freeze({
+        ...before.token,
+        coordinateSpace: 'created-cell-utf16',
+        format,
+        text: observation.text,
+        ...units,
+      }) as CreatedCellTextTarget;
+      createdCellTextTargets.set(target, { state: before, observation });
+      return target;
+    });
+  }
+  function getInlineObjectInsertTarget(
+    selector: InlineObjectSelector,
+    unit: number,
+    options: { token?: StateToken; affinity?: 'forward' | 'backward' } = {},
+  ): Promise<InlineObjectCreateTarget> {
+    assertPublicMutation();
+    const owned = checkedInlineObjectSelector(selector);
+    if (!Number.isSafeInteger(unit) || unit < 0 || unit > 0xffffffff || Object.is(unit, -0))
+      throw Error('InvalidInlineObjectInteger');
+    const settings = copyOwned(options);
+    if (
+      !settings ||
+      Object.keys(settings).some((k) => !['token', 'affinity'].includes(k)) ||
+      settings.token === null ||
+      (settings.affinity !== undefined && !['forward', 'backward'].includes(settings.affinity))
+    )
+      throw Error('InvalidInlineObjectOwner');
+    const token = copyOwned(settings.token ?? state.token);
+    return enqueue(async () => {
+      requireReady(token, true);
+      if (
+        (state.content as any)?.format !== 'hwpx' ||
+        (state.content as any)?.inlineObjectPlacementVersion !== 1
+      )
+        throw Error('InlineObjectPlacementUnavailable');
+      const before = state;
+      const guard = () => {
+        requireReady(token, true);
+        if (state !== before) throw Error('StaleInlineObjectOwner');
+      };
+      if (!hasRuntimeAdmission(active, 'inline-object-owner'))
+        throw Error('UnsupportedAtomicRuntime');
+      const reply = await readRequest(
+        { kind: 'inline-object-owner', selector: owned },
+        token,
+        guard,
+        true,
+      );
+      guard();
+      const observation = matchInlineObjectObservation(owned, reply.inlineObjectOwner);
+      if (observation.owner?.binding.revision !== state.nativeHistoryRevision)
+        throw Error('StaleInlineObjectOwner');
+      const { schemaVersion: _schemaVersion, ...address } = observation;
+      return Object.freeze(
+        captureInlineObjectCreateTarget({
+          ...state.token,
+          coordinateSpace: 'inline-object',
+          format: 'hwpx',
+          address: checkedInlineObjectTarget({
+            ...address,
+            unit,
+            affinity: settings.affinity ?? 'forward',
+          }),
+        }),
+      );
+    });
   }
   function getObjectGeometry(
     selector: ObjectGeometrySelector,
@@ -2751,6 +3326,91 @@ export function createEditor(options: CreateEditorOptions) {
       return 'reason' in result ? Object.freeze(result) : result.capabilities;
     });
   }
+  function getDocumentTextSnapshot(
+    options: { readonly token?: StateToken } = {},
+  ): Promise<DocumentTextIndex> {
+    assertPublicMutation();
+    const settings = copyOwned(options);
+    if (
+      !settings ||
+      typeof settings !== 'object' ||
+      Array.isArray(settings) ||
+      Object.keys(settings).some((key) => key !== 'token') ||
+      settings.token === null
+    )
+      throw Error('InvalidDocumentTextSnapshotOptions');
+    const token = copyOwned(settings.token ?? state.token);
+    return enqueue(async () => {
+      requireReady(token, true);
+      const observed = state;
+      const guard = () => {
+        requireReady(token, true);
+        if (state !== observed) throw Error('StaleDocumentTextSnapshot');
+      };
+      // Read permission is independent of the host's write policy. The same
+      // Runtime admission fence covers the complete Native observation.
+      const reply = await readRequest({ kind: 'document-text-snapshot' }, token, guard, true);
+      guard();
+      return createDocumentTextIndex(observed, reply.documentText);
+    });
+  }
+  function getDocumentTextAnchor(
+    index: DocumentTextIndex,
+    point: DocumentTextCaretPoint,
+  ): Promise<DocumentTextAnchor> {
+    assertPublicMutation();
+    const captured = copyOwned(point);
+    const token = copyOwned(state.token);
+    return enqueue(async () => {
+      requireReady(token, true);
+      const observed = state;
+      const request = documentTextAnchorRequest(index, captured, observed);
+      const guard = () => {
+        requireReady(token, true);
+        if (state !== observed) throw Error('StaleDocumentTextSnapshot');
+        documentTextAnchorRequest(index, captured, state);
+      };
+      const reply = await readRequest(
+        { kind: 'document-text-anchor', request },
+        token,
+        guard,
+        true,
+      );
+      guard();
+      return documentTextAnchorObservation(index, request, reply.documentTextAnchor, observed);
+    });
+  }
+  function getDocumentTextSelection(
+    index: DocumentTextIndex,
+    match: DocumentTextMatch,
+  ): Promise<DocumentTextSelectionObservation> {
+    assertPublicMutation();
+    const captured = copyOwned(match);
+    const token = copyOwned(state.token);
+    return enqueue(async () => {
+      requireReady(token, true);
+      const observed = state;
+      const request = documentTextSelectionRequest(index, captured, observed);
+      const guard = () => {
+        requireReady(token, true);
+        if (state !== observed) throw Error('StaleDocumentTextSnapshot');
+        documentTextSelectionRequest(index, captured, state);
+      };
+      const reply = await readRequest(
+        { kind: 'document-text-selection', request },
+        token,
+        guard,
+        true,
+      );
+      guard();
+      return documentTextSelectionObservation(
+        observed,
+        request,
+        reply.documentTextSelection,
+        captured.section,
+      );
+    });
+  }
   function getReplaceAllCapabilities(
     options: { readonly token?: StateToken } = {},
   ): Promise<ReplaceAllCapabilities> {
@@ -2773,19 +3433,6 @@ export function createEditor(options: CreateEditorOptions) {
           reason: 'ReadOnlyDocument',
           supportsNewlines: false,
         });
-      const content = state.content as any;
-      if (
-        !content ||
-        !Array.isArray(content.paragraphs) ||
-        content.totalParagraphs !== content.paragraphs.length ||
-        content.limited === true ||
-        content.window
-      )
-        return Object.freeze({
-          available: false,
-          reason: 'IncompleteReplaceAllSnapshot',
-          supportsNewlines: false,
-        });
       if (!hasRuntimeAdmission(active))
         return Object.freeze({
           available: false,
@@ -2803,9 +3450,24 @@ export function createEditor(options: CreateEditorOptions) {
         !cap ||
         typeof cap.available !== 'boolean' ||
         typeof cap.supportsNewlines !== 'boolean' ||
+        (cap.documentScope !== undefined && typeof cap.documentScope !== 'boolean') ||
         (cap.reason !== undefined && typeof cap.reason !== 'string')
       )
         throw Error('MalformedTextTransactionCapabilities');
+      const content = state.content as any;
+      if (
+        cap.documentScope !== true &&
+        (!content ||
+          !Array.isArray(content.paragraphs) ||
+          content.totalParagraphs !== content.paragraphs.length ||
+          content.limited === true ||
+          content.window)
+      )
+        return Object.freeze({
+          available: false,
+          reason: 'IncompleteReplaceAllSnapshot',
+          supportsNewlines: false,
+        });
       return freezeDTO(copyOwned(cap));
     });
   }
@@ -2969,7 +3631,20 @@ export function createEditor(options: CreateEditorOptions) {
             const reply = await active!.request(owned, ctx);
             verifyReply(reply, ctx);
             if (reply.error) throw Error(reply.error);
-            install(contentPatch(reply), false, ctx, takeGeometryOrigin(active!, reply, ctx));
+            assertSurface(record);
+            const content = contentPatch(reply);
+            const patch =
+              owned.kind === 'refresh-document-text-view'
+                ? { ...content, selection: reobserveReadViewSelection(state, content) }
+                : content;
+            install(
+              patch,
+              false,
+              ctx,
+              takeGeometryOrigin(active!, reply, ctx),
+              undefined,
+              consumeNativeReadSourceOrigin(active!, reply, ctx),
+            );
             assertSurface(record);
             return freezeDTO(copyOwned(reply, true));
           }
@@ -3194,7 +3869,7 @@ export function createEditor(options: CreateEditorOptions) {
       }
     }) as F;
   }
-  return Object.freeze({
+  const publicEditor = Object.freeze({
     getEditorState: () => state,
     read: <T>(callback: SynchronousCallback<[EditorState], T>): T => runRead(callback, state),
     load: geometryGuard(load),
@@ -3210,7 +3885,12 @@ export function createEditor(options: CreateEditorOptions) {
     readResource: geometryGuard(readResource),
     getFormattingCapabilities: geometryGuard(getFormattingCapabilities),
     getReplaceAllCapabilities: geometryGuard(getReplaceAllCapabilities),
+    getDocumentTextSnapshot: geometryGuard(getDocumentTextSnapshot),
+    getDocumentTextAnchor: geometryGuard(getDocumentTextAnchor),
+    getDocumentTextSelection: geometryGuard(getDocumentTextSelection),
     getDocumentInsertionCapabilities: geometryGuard(getDocumentInsertionCapabilities),
+    getInlineObjectInsertTarget: geometryGuard(getInlineObjectInsertTarget),
+    getCreatedCellTextTarget: geometryGuard(getCreatedCellTextTarget),
     getObjectGeometry: geometryGuard(getObjectGeometry),
     getPageSettings: geometryGuard(getPageSettings),
     getSourceTableCellSplitCapabilities: geometryGuard(getSourceTableCellSplitCapabilities),
@@ -3240,5 +3920,17 @@ export function createEditor(options: CreateEditorOptions) {
       return registry.register(command, callback, priority);
     },
   });
+  bindStrictLayoutSaveBridge(publicEditor, {
+    available: () => !strictPending && strictAvailable(),
+    prepare: strictPrepare,
+    check: strictCheck,
+    commit: strictCommit,
+    cancel: strictCancel,
+    publish: strictPublish,
+    finish(lease) {
+      if (strictPending === lease) strictPending = undefined;
+    },
+  });
+  return publicEditor;
 }
 export type HeadlessEditor = ReturnType<typeof createEditor>;

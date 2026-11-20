@@ -88,7 +88,7 @@ test "HWPX formula field snapshot rejects ambiguous scalar source and owns failu
     var tree = try trees.parse(a, good, .section, 0, 0, .{});
     defer tree.deinit(a);
     const inputs = [_]trees.Tree{tree};
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parts: []const trees.Tree) !void {
             var result = try read(allocator, parts, 0);
             defer result.deinit(allocator);

@@ -72,6 +72,7 @@ const toolGroups: readonly (readonly [string, readonly Tool[]])[] = [
     [
       ['insert-footnote', '각주', 'insert-footnote'],
       ['insert-endnote', '미주', 'insert-endnote'],
+      ['delete-note', '현재 주석 삭제', 'delete-note'],
     ],
   ],
   [

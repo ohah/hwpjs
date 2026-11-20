@@ -82,9 +82,24 @@ test "source grid multipara independent full XML all commands and future blank t
 }
 
 fn allocationCase(alloc: std.mem.Allocator, source: []const u8, req: grid.Request, expected: []const u8) !void {
+    const baseline = try alloc.dupe(u8, source);
+    defer alloc.free(baseline);
+    defer std.testing.expectEqualStrings(baseline, source) catch @panic("source mutated");
     const result = try grid.prepare(alloc, source, req);
     defer alloc.free(result);
     try std.testing.expectEqualStrings(expected, result);
+}
+
+// A refusal oracle still owns an unexpected success; keep its full diagnostic
+// while releasing returned bytes on the TestExpectedError path.
+fn expectRefusal(expected: anyerror, source: []const u8, req: grid.Request) !void {
+    const result = grid.prepare(a, source, req);
+    defer {
+        if (result) |owned| {
+            a.free(owned);
+        } else |_| {}
+    }
+    try std.testing.expectError(expected, result);
 }
 
 test "source grid multipara validates unsafe later paragraphs even in non-template and removed cells" {
@@ -94,7 +109,9 @@ test "source grid multipara validates unsafe later paragraphs even in non-templa
     // first row/column; deletions remove the last row/column in this test.
     const marker = "id='20004' paraPrIDRef='18' styleIDRef='6'>";
     const cases_bad = [_]struct { replacement: []const u8, err: anyerror }{
-        .{ .replacement = "id='20004' paraPrIDRef='18' styleIDRef='6'><z:linesegarray/>", .err = error.UnsupportedSourceTableStructure },
+        .{ .replacement = "id='20004' paraPrIDRef='18' styleIDRef='6'><z:linesegarray opaque='unsafe'/>", .err = error.UnsupportedSourceLineCache },
+        .{ .replacement = "id='20004' paraPrIDRef='18' styleIDRef='6'><z:linesegarray><z:lineseg/></z:linesegarray>", .err = error.UnsupportedSourceLineCache },
+        .{ .replacement = "id='20004' paraPrIDRef='18' styleIDRef='6'><z:linesegarray><z:lineseg><z:t/></z:lineseg></z:linesegarray>", .err = error.UnsupportedSourceLineCache },
         .{ .replacement = "id='20004' paraPrIDRef='18' styleIDRef='6'><z:run><z:tbl/></z:run>", .err = error.UnsupportedSourceTableStructure },
         .{ .replacement = "id='20004' paraPrIDRef='18' styleIDRef='6'><z:run><z:fieldBegin/></z:run>", .err = error.ProtectedFieldRange },
         .{ .replacement = "id='20004' paraPrIDRef='18' styleIDRef='6' pageBreak='1'>", .err = error.ProtectedSourceTable },
@@ -112,8 +129,36 @@ test "source grid multipara validates unsafe later paragraphs even in non-templa
                 .insert_row, .insert_column => true,
                 else => false,
             };
-            try std.testing.expectError(bad.err, grid.prepare(a, input, try request(input, 2, 2, cmd, if (insert) &.{ 100, 101 } else &.{})));
+            try expectRefusal(bad.err, input, try request(input, 2, 2, cmd, if (insert) &.{ 100, 101 } else &.{}));
         }
+    }
+}
+
+test "source grid multipara known empty later cache validates removes and preserves independent XML all commands OOM" {
+    const source = try document(a, 2, 2, &original);
+    defer a.free(source);
+    const marker = "id='20004' paraPrIDRef='18' styleIDRef='6'>";
+    const cached = try std.mem.replaceOwned(u8, a, source, marker, "id='20004' paraPrIDRef='18' styleIDRef='6'><z:linesegarray/>");
+    defer a.free(cached);
+    const front_column = [_]Spec{ original[0], .{ .id = 3, .r = 1, .c = 0 } };
+    for (cases, 0..) |case, action| {
+        const command: grid.Command = switch (action) {
+            2 => .{ .delete_row = 1 },
+            3 => .{ .delete_column = 1 },
+            else => case.cmd,
+        };
+        const specs: []const Spec = switch (action) {
+            2 => original[0..2],
+            3 => &front_column,
+            else => case.specs,
+        };
+        // Complete independent fixture output proves cache removal, surviving
+        // paragraphs/styles/comments/owners, dimensions and fresh blank shells.
+        const expected = try document(a, case.rows, case.cols, specs);
+        defer a.free(expected);
+        const req = try request(cached, 2, 2, command, case.ids);
+        try allocationCase(a, cached, req, expected);
+        try @import("../testing/allocation_failures.zig").check(allocationCase, .{ cached, req, expected });
     }
 }
 
@@ -121,11 +166,17 @@ test "source grid multipara fresh ID inventory includes all later paragraphs" {
     const source = try document(a, 2, 2, &original);
     defer a.free(source);
     for ([_][]const u32{ &.{ 10001, 101 }, &.{ 20004, 101 }, &.{ 100, 100 }, &.{ 0, 101 }, &.{100}, &.{ 100, 101, 102, 103, 104, 105 } }) |ids| {
-        try std.testing.expectError(error.InvalidTableParagraphIds, grid.prepare(a, source, try request(source, 2, 2, .{ .insert_row = 1 }, ids)));
+        try expectRefusal(error.InvalidTableParagraphIds, source, try request(source, 2, 2, .{ .insert_row = 1 }, ids));
     }
     const duplicate = try std.mem.replaceOwned(u8, a, source, "id='20004'", "id='10001'");
     defer a.free(duplicate);
-    try std.testing.expectError(error.InvalidTableParagraphIds, grid.prepare(a, duplicate, try request(duplicate, 2, 2, .{ .delete_row = 1 }, &.{})));
+    // Pre-existing IDs are metadata, not unique physical owners. The duplicate
+    // in the removed final row disappears; all six fresh-ID refusals above stay.
+    const req = try request(duplicate, 2, 2, .{ .delete_row = 1 }, &.{});
+    const expected = try document(a, 1, 2, original[0..2]);
+    defer a.free(expected);
+    try allocationCase(a, duplicate, req, expected);
+    try @import("../testing/allocation_failures.zig").check(allocationCase, .{ duplicate, req, expected });
 }
 
 test "source grid multipara explicit bare paragraph refusal first and later positions" {
@@ -142,7 +193,7 @@ test "source grid multipara explicit bare paragraph refusal first and later posi
         for ([_][]const u8{ "<q:p id='700'/>", "<q:p id='700'> \n<!--empty--></q:p>" }) |empty| {
             const input = try std.mem.replaceOwned(u8, a, source, tree.sourceOf(i), empty);
             defer a.free(input);
-            try std.testing.expectError(error.UnsupportedSourceTableStructure, grid.prepare(a, input, try request(input, 2, 2, .{ .insert_row = 1 }, &.{ 100, 101 })));
+            try expectRefusal(error.UnsupportedSourceTableStructure, input, try request(input, 2, 2, .{ .insert_row = 1 }, &.{ 100, 101 }));
         }
     }
     const no_p = try document(a, 1, 1, &.{.{ .id = 1, .r = 0, .c = 0, .later_count = 0 }});
@@ -154,7 +205,7 @@ test "source grid multipara explicit bare paragraph refusal first and later posi
         if ((try fields.optionalUnsigned(a, &one, i, "id", 4096)).? != 1) continue;
         const input = try std.mem.replaceOwned(u8, a, no_p, one.sourceOf(i), "");
         defer a.free(input);
-        try std.testing.expectError(error.UnsupportedSourceTableStructure, grid.prepare(a, input, try request(input, 1, 1, .{ .insert_row = 1 }, &.{100})));
+        try expectRefusal(error.UnsupportedSourceTableStructure, input, try request(input, 1, 1, .{ .insert_row = 1 }, &.{100}));
     }
 }
 test "source grid multipara full shared allocation failure sweep all commands" {

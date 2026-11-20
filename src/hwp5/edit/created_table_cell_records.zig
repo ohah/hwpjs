@@ -29,8 +29,13 @@ pub fn append(a: std.mem.Allocator, out: *std.ArrayList(u8), table: *const Table
     const style = std.math.cast(u8, table.resources.style) orelse return error.InvalidStyleReference;
     if (references.resolve(.zero_based, paragraph, resources.para_shapes) == .invalid) return error.InvalidParagraphShapeReference;
     if (references.resolve(.zero_based, style, resources.styles) == .invalid) return error.InvalidStyleReference;
-    if (references.resolve(.zero_based, table.resources.character, resources.char_shapes) == .invalid) return error.InvalidCharacterShapeReference;
-    const content_units = std.unicode.calcUtf16LeLen(cell.text) catch return error.InvalidTableCellText;
+    const content_units = cell.validate(table.resources.character) catch |err| switch (err) {
+        error.InvalidUnicodeEncoding => return error.InvalidTableCellText,
+        else => return err,
+    };
+    var run_scratch: [1]@import("../../model/document.zig").CharacterRun = undefined;
+    const character_runs = cell.runs(table.resources.character, &run_scratch);
+    for (character_runs) |run| if (references.resolve(.zero_based, run.char_shape_id, resources.char_shapes) == .invalid) return error.InvalidCharacterShapeReference;
     const units = std.math.add(usize, content_units, 1) catch return error.LimitExceeded;
     if (units > 0x7fffffff) return error.LimitExceeded;
     const length = std.math.mul(usize, units, 2) catch return error.LimitExceeded;
@@ -47,7 +52,7 @@ pub fn append(a: std.mem.Allocator, out: *std.ArrayList(u8), table: *const Table
 
     var header: [24]u8 = @splat(0);
     const header_len: usize = if (version.raw >= 0x05000302) 24 else 22;
-    Header.writeTextCounts(header[0..header_len], @intCast(units), 1, 0);
+    Header.writeTextCounts(header[0..header_len], @intCast(units), @intCast(character_runs.len), 0);
     std.mem.writeInt(u32, header[0..4], @as(u32, @intCast(units)) | 0x80000000, .little);
     std.mem.writeInt(u16, header[Header.para_shape_id_offset..][0..2], paragraph, .little);
     header[Header.style_id_offset] = style;
@@ -63,8 +68,14 @@ pub fn append(a: std.mem.Allocator, out: *std.ArrayList(u8), table: *const Table
         }
     }
     try @import("line_break_mask.zig").write(header[0..header_len], line_token[0..line_count]);
-    var runs: [8]u8 = @splat(0);
-    std.mem.writeInt(u32, runs[4..8], table.resources.character, .little);
+    const run_bytes = try std.math.mul(usize, character_runs.len, 8);
+    if (run_bytes > remaining) return error.LimitExceeded;
+    const runs = try a.alloc(u8, run_bytes);
+    defer a.free(runs);
+    for (character_runs, 0..) |run, i| {
+        std.mem.writeInt(u32, runs[i * 8 ..][0..4], run.start_unit, .little);
+        std.mem.writeInt(u32, runs[i * 8 + 4 ..][0..4], run.char_shape_id, .little);
+    }
     var cell_list: [34]u8 = @splat(0);
     std.mem.writeInt(u16, cell_list[0..2], 1, .little);
     const list_len: usize = if (options.layout == .observed8) 8 else 6;
@@ -77,6 +88,6 @@ pub fn append(a: std.mem.Allocator, out: *std.ArrayList(u8), table: *const Table
     try framing.append(a, &draft, 72, level, cell_list[0 .. list_len + 26], remaining);
     try framing.append(a, &draft, 66, level, header[0..header_len], remaining);
     try framing.append(a, &draft, 67, level + 1, text, remaining);
-    try framing.append(a, &draft, 68, level + 1, &runs, remaining);
+    try framing.append(a, &draft, 68, level + 1, runs, remaining);
     try out.appendSlice(a, draft.items);
 }

@@ -1,4 +1,5 @@
 import { createDrawingObservationQuery } from './drawing-observation.mjs';
+import { currentHwp5ChartTarget, sameHwp5ChartOwner } from './hwp5-chart-resources.mjs';
 const uint = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 0xffffffff;
 const contains = (r, x, y) =>
   r &&
@@ -23,9 +24,11 @@ export function objectActivationTarget(
     const node =
       target.kind === 'chart'
         ? target.wrapper
-        : target.kind === 'picture'
-          ? target.pictureNode
-          : target.drawingNode;
+        : target.kind === 'hwp5-chart'
+          ? target.controlNode
+          : target.kind === 'picture'
+            ? target.pictureNode
+            : target.drawingNode;
     if (uint(node)) hits.set(`${target.kind}:${target.section}:${node}`, Object.freeze(target));
   };
   if (picture?.picture)
@@ -36,9 +39,14 @@ export function objectActivationTarget(
     });
   // Match direct input's existing picture selection, including pictures inside text boxes.
   if (hits.size === 1) return hits.values().next().value;
-  for (const item of charts ?? [])
-    if (contains(item, x, y))
-      add({ kind: 'chart', section: item.target.section, wrapper: item.target.wrapper });
+  for (const item of charts ?? []) {
+    if (!contains(item, x, y)) continue;
+    if (item.target?.kind === 'hwp5-chart') {
+      const row = currentHwp5ChartTarget(content, item.target);
+      if (!item.provisional && row && sameHwp5ChartOwner(row.owner, item.target.owner))
+        add({ kind: 'hwp5-chart', section: row.section, controlNode: row.controlNode });
+    } else add({ kind: 'chart', section: item.target.section, wrapper: item.target.wrapper });
+  }
   if (hits.size) return hits.size === 1 ? hits.values().next().value : null;
   const query = createDrawingObservationQuery(content);
   const border = (rectangle) =>

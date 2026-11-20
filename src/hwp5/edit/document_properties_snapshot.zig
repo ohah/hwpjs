@@ -58,7 +58,7 @@ test "HWP5 document properties snapshot actual source and getter allocation fail
     try std.testing.expectEqual(@as(u16, 1), expected.section_count);
     try std.testing.expectEqual(@as(u16, 1), expected.page_start);
     try std.testing.expectEqual(@as(usize, 0), expected.extra_bytes);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: *const @import("style_preservation.zig").Session, values: Snapshot) !void {
             try std.testing.expectEqualDeep(values, try source.documentProperties(allocator));
         }

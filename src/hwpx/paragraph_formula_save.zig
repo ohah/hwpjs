@@ -62,7 +62,7 @@ test "HWPX composed formula save derives current cells and cleans every allocati
         }
     };
     try Probe.run(a, &trees, composed);
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &trees, composed });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &trees, composed });
     try std.testing.expectEqualSlices(u8, source, tree.source);
     const invalid = try std.mem.concat(a, u8, &.{ source[0..offset], "<p:t>bad</p:t>", source[offset + target.len ..] });
     defer a.free(invalid);

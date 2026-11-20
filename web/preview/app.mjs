@@ -1,3 +1,4 @@
+import { createStrictLayoutSaveControls } from './strict-layout-save-controls.mjs';
 import { createRenderer } from './renderer.mjs';
 import { createPreviewWasmModuleLoader } from './wasm-module-loader.mjs';
 const loadPreviewWasmModule = createPreviewWasmModuleLoader();
@@ -127,6 +128,8 @@ pageStatusControls = createPageStatusControls({
 window.addEventListener('pagehide', (event) => {
   if (!event.persisted) pageStatusControls.close();
 });
+let strictSave,
+  strictDocumentName = 'document.hwp';
 let worker,
   generation = 0,
   openedFormat = null,
@@ -163,6 +166,7 @@ window.addEventListener('pagehide', (event) => {
 });
 const pictureRequests = createPictureRequests((message) => {
   if (!worker) throw new Error('PictureReadUnavailable');
+  strictSave?.beforeSend(message);
   worker.postMessage(message);
 });
 renderer.pictureReader((section, node) => pictureRequests.read(section, node));
@@ -176,6 +180,7 @@ function updateSave() {
   const enabled = Boolean(worker) && controls.ready() && !controls.busy() && direct.settled();
   download.disabled = !enabled || passwordControls?.allowed() === false;
   updateHwp5Consent(staleLayout, openedFormat, enabled);
+  strictSave?.update();
   historyControls?.update();
   cellSizeControls?.update();
   pictureSizeControls?.update();
@@ -193,6 +198,7 @@ function updateSave() {
 const controls = createEditorControls(
   (message) => {
     direct.external(message);
+    strictSave?.beforeSend(message);
     worker?.postMessage(message);
     updateSave();
   },
@@ -209,8 +215,14 @@ direct = createCanvasEditor({
   renderer,
   controls,
   note: document.querySelector('#canvas-edit-status'),
-  queryEditRange: (message) => worker?.postMessage(message),
-  querySplitRange: (message) => worker?.postMessage(message),
+  queryEditRange: (message) => {
+    strictSave?.beforeSend(message);
+    worker?.postMessage(message);
+  },
+  querySplitRange: (message) => {
+    strictSave?.beforeSend(message);
+    worker?.postMessage(message);
+  },
 });
 tableCreationControls = createTableCreationControls({
   form: document.querySelector('#table-creation-form'),
@@ -542,6 +554,20 @@ const saveControls = createSaveControls({
         : '편집 세션과 입력 처리가 준비된 뒤 저장하세요.';
   },
 });
+strictSave = createStrictLayoutSaveControls({
+  button: document.querySelector('#download-measured'),
+  fontInput: document.querySelector('#strict-save-font'),
+  note: document.querySelector('#strict-save-status'),
+  current: () => ({ worker, generation, format: openedFormat, name: strictDocumentName }),
+  canRequest: () =>
+    Boolean(worker) &&
+    controls.ready() &&
+    !controls.busy() &&
+    direct.settled() &&
+    passwordControls?.allowed() !== false,
+  consent: () => document.querySelector('#allow-unprotected-output').checked,
+  publish: (snapshot, name) => downloadDocument(snapshot, name),
+});
 passwordControls = createPasswordControls({
   form: document.querySelector('#password-form'),
   input: document.querySelector('#document-password'),
@@ -554,6 +580,7 @@ passwordControls = createPasswordControls({
   request: (message) => {
     try {
       if (!worker) throw new Error('PasswordDocumentNotLoaded');
+      strictSave?.beforeSend(message);
       worker.postMessage(message);
     } finally {
       delete message.password;
@@ -562,6 +589,7 @@ passwordControls = createPasswordControls({
   onCancel: () => {
     generation++;
     pictureRequests.reset();
+    strictSave?.reset();
     worker?.terminate();
     worker = null;
     input.value = '';
@@ -594,6 +622,7 @@ async function openSelectedFile(
   findControls.reset();
   dutmalControls.reset();
   pictureRequests.reset();
+  strictSave?.reset();
   worker?.terminate();
   worker = null;
   openedFormat = null;
@@ -634,6 +663,7 @@ async function openSelectedFile(
     const wasmModule = await loadPreviewWasmModule();
     if (epoch !== generation) return;
     openedFormat = format;
+    strictDocumentName = selected.name;
     const job = new Worker(new URL('./reader-worker.mjs', import.meta.url), { type: 'module' });
     worker = job;
     const fail = (message) => {
@@ -668,6 +698,7 @@ async function openSelectedFile(
       () => generation,
       epoch,
       (event) => {
+        if (strictSave.message(event.data)) return;
         // Window queries are not full editable document responses.
         // Navigation must consume them explicitly before replacing Canvas state.
         if (['query-window', 'query-edit-window'].includes(event.data.kind)) return;
@@ -814,10 +845,12 @@ window.addEventListener('pagehide', (event) => {
   if (!event.persisted) {
     fixtureControls.close();
     generation++;
+    strictSave?.reset();
     worker?.terminate();
     inspector.close();
     passwordControls.close();
     saveControls.close();
+    strictSave.close();
     historyControls.close();
     cellSizeControls.close();
     cellResizeControls.close();

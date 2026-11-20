@@ -30,6 +30,8 @@ export function documentFixture() {
   };
   const create = doc.createElement;
   doc.createElement = (tag: string) => decorate(create(tag));
+  doc.createElementNS = (namespaceURI: string, tag: string) =>
+    Object.assign(doc.createElement(tag), { namespaceURI });
   decorate(root);
   return fixture;
 }

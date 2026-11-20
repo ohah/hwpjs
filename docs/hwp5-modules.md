@@ -284,6 +284,7 @@
 현재 모듈별 책임·소유권·미지원 경계는 주제 문서에서 관리합니다. 구현 변경 시 해당 문서를 갱신하고 AGENTS.md에 상세를 누적하지 않습니다.
 
 - [HWPX 새 차트·수식 생성과 공통 caret](hwpx-inline-object-creation.md)
+- [HWPX 각주 및 미주 생성 후보](hwpx-note-creation.md)
 - [HWP5 수식 조회와 Canvas 표시](hwp5-equation-rendering.md)
 - [공통 수식 장식 명령의 대상 구조](equation-decorations.md)
 - [적분 명령의 측정·곡선 배치](equation-integrals.md)
@@ -429,6 +430,7 @@
   - [그림 행렬·축 resize·Canvas 연결 검증](hwp5-drawing-matrix-edit.md)
   - [OLE 내부 컨테이너](hwp5-ole-container.md)
   - [BinData OLE 검사 연결](hwp5-ole-binaries.md)
+  - [기존 HWP5 OOXML 차트 읽기·미리보기](hwp5-modern-chart-readonly.md)
   - [차트 Contents 명세·실측](hwp5-chart-contents-evidence.md)
   - [차트 타입 선언](hwp5-chart-type-declaration.md)
   - [차트 타입 목록·재등장](hwp5-chart-type-table.md)
@@ -583,3 +585,14 @@
 
 - [문단 끝의 입력 서식 상속](caret-eof-inheritance.md) — 실제 문단 종료 문자와 보이는 입력 위치의 서식·실행 취소 계약.
 - [개체 위치·크기 편집](object-geometry-editing.md) — 현재 물리 소유자·형식별 원자적 저장과 조판 경계.
+
+- [새 HWP5 구역 하위정보 생성](hwp5-new-section-children.md)
+
+- [HWP5 새 차트 생성의 자원 준비와 증명 계약](hwp5-chart-creation-foundation.md)
+- [HWP5 현재 caret의 optional ABI·JS·SDK 차트 생성](hwp5-chart-current-create.md)
+
+- [HWP5 차트 생성 UI](hwp5-chart-create-ui.md): 명시 profile, 현재 caret와 비동기 미리보기 경계.
+
+- [HWP5 조판 저장 후보 계약](hwp5-layout-save-contract.md)
+
+- [HWP5 strict plain 조판 저장 연결 후보](hwp5-strict-layout-integration.md) — Session·History·ABI·브라우저 소유 측정, 아직 통합 Native/브라우저 미실행.

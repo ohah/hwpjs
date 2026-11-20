@@ -49,6 +49,12 @@ export type HwpxOpenedDocument = DocumentBase & {
 export type OpenedDocument = Hwp5OpenedDocument | HwpxOpenedDocument;
 
 type SharedMutationMethods =
+  | 'supportsCreatedCellTypingAbi'
+  | 'createdCellTypingCapabilities'
+  | 'spliceCreatedCell'
+  | 'createdTables'
+  | 'historyRevision'
+  | 'historyV2Available'
   | 'supportsAtomicFormatting'
   | 'atomicFormattingCapabilities'
   | 'queryFormatting'
@@ -82,6 +88,8 @@ type Hwp5MutationSdk = Pick<
   | SharedMutationMethods
   | 'text'
   | 'supportsCurrentSourceReferences'
+  | 'currentReferences'
+  | 'currentText'
   | 'currentSourceReferences'
   | 'validateTextSourcePolicy'
   | 'writeParagraphBulletDefinition'
@@ -89,6 +97,13 @@ type Hwp5MutationSdk = Pick<
 >;
 type HwpxMutationSdk = Pick<
   HwpxSdk,
+  | 'inlineObjectOwner'
+  | 'inlineObjectPlacementVersion'
+  | 'supportsChartCreationAbi'
+  | 'supportsEquationInsertionAbi'
+  | 'chartCreateProfileVersion'
+  | 'createChart'
+  | 'insertEquation'
   | SharedMutationMethods
   | 'anchorText'
   | 'writeParagraphBulletDefinition'

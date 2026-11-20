@@ -7,10 +7,13 @@ const Session = edit.Session;
 const History = @import("../hwp5/edit/editor_history.zig").History;
 const ReceiptMarker = struct { before_epoch: u64, epoch: u64, before_revision: u32, revision: u32 };
 var last_delta: ?ReceiptMarker = null;
+const StrictLayout = @import("../hwp5/edit/strict_plain_layout.zig");
+var strict_layout: ?StrictLayout.Snapshot = null;
 var active: ?*Session = null;
 var history: ?History = null;
 var output: ?[]u8 = null;
 var formatting_lifetime: @import("../model/formatting_binding.zig").State = .{};
+var document_text_generation: @import("../model/document_text_read_generation.zig").State = .{};
 var reflow: bool = false;
 var normalization: ?@import("../cfb/observed_repairs.zig").Deviations = null;
 var available_section_copy: ?@import("../hwp5/edit/available_section_copy.zig").Report = null;
@@ -51,6 +54,8 @@ export fn hwp5_edit_reflow() u32 {
     return @intFromBool(reflow);
 }
 export fn hwp5_edit_close() void {
+    document_text_generation.invalidate();
+    hwp5_edit_strict_layout_cancel();
     formatting_lifetime.close();
     last_delta = null;
     view_epoch.invalidate();
@@ -168,6 +173,7 @@ export fn hwp5_edit_history_enable_options(ptr: [*]const u8, size: usize) u32 {
     const s = session() catch |err| return fail(err);
     if (history != null) return fail(error.HistoryAlreadyEnabled);
     const options = @import("../model/history_policy.zig").parse(a, ptr[0..size]) catch |err| return fail(err);
+    document_text_generation.enterMutation() catch |err| return fail(err);
     history = History.initV2(a, s, options) catch |err| return fail(err);
     return 1;
 }
@@ -181,6 +187,7 @@ export fn hwp5_edit_history_enable(entries: u32, checkpoint_bytes: u32) u32 {
     const s = session() catch |err| return fail(err);
     if (history != null) return fail(error.HistoryAlreadyEnabled);
     if (@as(u64, entries) * checkpoint_bytes > 128 * 1024 * 1024) return fail(error.LimitExceeded);
+    document_text_generation.enterMutation() catch |err| return fail(err);
     history = History.init(a, s, entries, checkpoint_bytes) catch |err| return fail(err);
     return 1;
 }
@@ -203,6 +210,10 @@ export fn hwp5_edit_history_revision_at(index: u32) u32 {
     return std.math.maxInt(u32);
 }
 fn travel(redo: bool) u32 {
+    document_text_generation.enterMutation() catch |err| {
+        _ = fail(err);
+        return 2;
+    };
     last_delta = null;
     const s = session() catch |err| {
         _ = fail(err);
@@ -230,6 +241,7 @@ export fn hwp5_edit_redo() u32 {
     return travel(true);
 }
 fn apply(command: edit.Command) !void {
+    try document_text_generation.enterMutation();
     last_delta = null;
     const s = try session();
     const before_epoch = try view_epoch.current();
@@ -389,6 +401,7 @@ export fn hwp5_edit_split_source_table_cells(section: u32, table_node: u32, rows
     const next_view_epoch = view_epoch.next() catch |err| return fail(err);
     const target = service.captureWithSpans(a, section, table_node, top, left) catch |err| return fail(err);
     if (target.expected_rows != rows or target.expected_columns != columns or target.row_span != bottom - top or target.column_span != right - left) return fail(error.SourceBindingMismatch);
+    document_text_generation.enterMutation() catch |err| return fail(err);
     const changed = service.apply(a, target, split_rows, split_columns) catch |err| {
         const poisoned = service.history.stats().poisoned;
         _ = fail(err);
@@ -1262,6 +1275,7 @@ export fn hwp5_edit_set_character_properties_ranges(ptr: [*]const u8, length: us
     return 1;
 }
 fn applyBatch(s: *Session, commands: []const edit.Command) !void {
+    try document_text_generation.enterMutation();
     last_delta = null;
     const next_epoch = try view_epoch.next();
     if (history) |*value| {
@@ -1492,6 +1506,41 @@ export fn hwp5_edit_merge(section: u32, paragraph: u32) u32 {
     apply(.{ .merge_paragraph = .{ .section = section, .paragraph = paragraph } }) catch |err| return fail(err);
     return 1;
 }
+/// Trusted browser host ABI, not a certificate for arbitrary client JSON.
+/// Only one owned snapshot exists; close/cancel/reprepare destroys it.
+export fn hwp5_edit_strict_layout_cancel() void {
+    if (strict_layout) |*snapshot| snapshot.deinit();
+    strict_layout = null;
+}
+export fn hwp5_edit_strict_layout_prepare() u32 {
+    hwp5_edit_output_free();
+    hwp5_edit_strict_layout_cancel();
+    const s = session() catch |err| return fail(err);
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    var snapshot = h.prepareStrictLayout(s, a) catch |err| return fail(err);
+    const wire = std.json.Stringify.valueAlloc(a, snapshot.wire, .{}) catch |err| {
+        snapshot.deinit();
+        return fail(err);
+    };
+    strict_layout = snapshot;
+    output = wire;
+    return 1;
+}
+export fn hwp5_edit_strict_layout_save(ptr: [*]const u8, size: usize) u32 {
+    hwp5_edit_output_free();
+    // Every commit attempt consumes its snapshot, including malformed packets.
+    defer hwp5_edit_strict_layout_cancel();
+    if (size > 16 * 1024 * 1024) return fail(error.LayoutLimitExceeded);
+    const snapshot = if (strict_layout) |*value| value else return fail(error.LayoutSourceChanged);
+    const parsed = std.json.parseFromSlice([]StrictLayout.Line, a, ptr[0..size], .{ .allocate = .alloc_always, .ignore_unknown_fields = false, .duplicate_field_behavior = .@"error", .max_value_len = 16 * 1024 * 1024 }) catch |err| return fail(err);
+    defer parsed.deinit();
+    const s = session() catch |err| return fail(err);
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    const saved = h.saveStrictLayout(s, a, .{ .snapshot = snapshot, .lines = parsed.value }) catch |err| return fail(err);
+    output = saved.bytes;
+    reflow = saved.layout_requires_reflow;
+    return 1;
+}
 export fn hwp5_edit_save(allow_stale_layout: u32) u32 {
     hwp5_edit_output_free();
     if (allow_stale_layout > 1) return fail(error.InvalidSavePolicy);
@@ -1530,6 +1579,7 @@ export fn hwp5_edit_apply_formatting_patch(ptr: [*]const u8, size: usize) u32 {
     defer request.deinit();
     // Reserve before mutation; update transport epoch only on commit.
     const next_view_epoch = view_epoch.next() catch |err| return fail(err);
+    document_text_generation.enterMutation() catch |err| return fail(err);
     const changed = service.apply(a, request.value) catch |err| {
         const poisoned = if (history) |*h| h.stats().poisoned else false;
         if (poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) {
@@ -1546,10 +1596,91 @@ export fn hwp5_edit_apply_formatting_patch(ptr: [*]const u8, size: usize) u32 {
 }
 
 const TextTransaction = @import("../hwp5/edit/text_transaction.zig").Service;
+export fn hwp5_edit_document_text_read_binding() u32 {
+    hwp5_edit_output_free();
+    _ = session() catch |err| return fail(err);
+    const serial = document_text_generation.current() catch |err| return fail(err);
+    output = @import("../model/document_text_read_binding.zig").encode(a, .hwp5, formatting_lifetime, serial) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_document_text_anchor(ptr: [*]const u8, size: usize) u32 {
+    hwp5_edit_output_free();
+    if (size > @import("../model/text_transaction.zig").limits.request_bytes) return fail(error.LimitExceeded);
+    const current = session() catch |err| return fail(err);
+    const observed_read_generation = document_text_generation.current() catch |err| return fail(err);
+    var request = @import("document_text_anchor_request.zig").decode(a, ptr[0..size]) catch |err| return fail(err);
+    defer request.deinit();
+    const revision: ?u32 = if (history) |*h| revision: {
+        const service: TextTransaction = .{ .session = current, .history = h, .lifetime = &formatting_lifetime };
+        break :revision service.currentRevision() catch |err| return fail(err);
+    } else null;
+    @import("../model/document_text_read_binding.zig").assertCurrent(request.read_binding, formatting_lifetime, observed_read_generation, revision) catch |err| return fail(err);
+    var response = current.documentTextAnchor(a, formatting_lifetime, revision, request.value) catch |err| return fail(err);
+    defer response.deinit();
+    document_text_generation.assertCurrent(observed_read_generation) catch |err| return fail(err);
+    output = response.encode(a) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_document_text_selection(ptr: [*]const u8, size: usize) u32 {
+    hwp5_edit_output_free();
+    if (size > @import("../model/text_transaction.zig").limits.request_bytes) return fail(error.LimitExceeded);
+    const current = session() catch |err| return fail(err);
+    const observed_read_generation = document_text_generation.current() catch |err| return fail(err);
+    var request = @import("document_text_selection_request.zig").decode(a, ptr[0..size]) catch |err| return fail(err);
+    defer request.deinit();
+    const revision: ?u32 = if (history) |*h| revision: {
+        const service: TextTransaction = .{ .session = current, .history = h, .lifetime = &formatting_lifetime };
+        break :revision service.currentRevision() catch |err| return fail(err);
+    } else null;
+    @import("../model/document_text_read_binding.zig").assertCurrent(request.read_binding, formatting_lifetime, observed_read_generation, revision) catch |err| return fail(err);
+    var response = current.documentTextSelection(a, formatting_lifetime, revision, request.value) catch |err| return fail(err);
+    defer response.deinit();
+    document_text_generation.assertCurrent(observed_read_generation) catch |err| return fail(err);
+    output = response.encode(a) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_document_text_snapshot() u32 {
+    hwp5_edit_output_free();
+    const current = session() catch |err| return fail(err);
+    const observed_read_generation = document_text_generation.current() catch |err| return fail(err);
+    const revision: ?u32 = if (history) |*h| revision: {
+        const service: TextTransaction = .{ .session = current, .history = h, .lifetime = &formatting_lifetime };
+        break :revision service.currentRevision() catch |err| return fail(err);
+    } else null;
+    var snapshot = current.documentTextSnapshot(a, formatting_lifetime, revision) catch |err| return fail(err);
+    defer snapshot.deinit();
+    document_text_generation.assertCurrent(observed_read_generation) catch |err| return fail(err);
+    snapshot.bindReadStamp(.{ .epoch = formatting_lifetime.epoch, .serial = observed_read_generation }) catch |err| return fail(err);
+    output = snapshot.encode(a) catch |err| return fail(err);
+    return 1;
+}
 fn textTransactionService() !TextTransaction {
     const current = try session();
     const h = if (history) |*value| value else return error.HistoryNotEnabled;
     return .{ .session = current, .history = h, .lifetime = &formatting_lifetime };
+}
+export fn hwp5_edit_replace_document_text(ptr: [*]const u8, size: usize) u32 {
+    hwp5_edit_output_free();
+    if (size > @import("../model/text_transaction.zig").limits.request_bytes) return fail(error.LimitExceeded);
+    const base = textTransactionService() catch |err| return fail(err);
+    const service: @import("../hwp5/edit/document_replace_all.zig").Service = .{ .session = base.session, .history = base.history, .lifetime = base.lifetime };
+    var request = @import("document_replace_all_request.zig").decode(a, ptr[0..size]) catch |err| return fail(err);
+    defer request.deinit();
+    const next_view_epoch = view_epoch.next() catch |err| return fail(err);
+    document_text_generation.enterMutation() catch |err| return fail(err);
+    const changed = service.apply(a, request.value) catch |err| {
+        const poisoned = if (history) |*h| h.stats().poisoned else false;
+        if (poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) {
+            _ = fail(error.MutationUncertain);
+            return 3;
+        }
+        return fail(err);
+    };
+    if (changed) {
+        view_epoch.value = next_view_epoch;
+        reflow = true;
+    }
+    return if (changed) 1 else 2;
 }
 export fn hwp5_edit_text_transaction_capabilities() u32 {
     hwp5_edit_output_free();
@@ -1579,6 +1710,7 @@ export fn hwp5_edit_apply_text_transaction(ptr: [*]const u8, size: usize) u32 {
     defer request.deinit();
     // Reserve before mutation. A normal rejection/no-op cannot consume viewEpoch.
     const next_view_epoch = view_epoch.next() catch |err| return fail(err);
+    document_text_generation.enterMutation() catch |err| return fail(err);
     const changed = service.apply(a, request.value) catch |err| {
         const poisoned = if (history) |*h| h.stats().poisoned else false;
         if (poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) {
@@ -1611,6 +1743,7 @@ export fn hwp5_edit_splice_rich_character(section: u32, paragraph: u32, start: u
 }
 
 fn applyRichCharacter(input: @import("text_transaction_commands.zig").Input, request: @import("rich_typing_request.zig").Request) !bool {
+    try document_text_generation.enterMutation();
     const service = try textTransactionService();
     const revision = try service.currentRevision();
     try formatting_lifetime.check(request.binding, revision);
@@ -1699,6 +1832,44 @@ export fn hwp5_edit_write_page_settings(ptr: [*]const u8, len: usize) u32 {
     return if (h.revision() == before) 2 else 1;
 }
 
+// Optional generated-cell typing contract v1. All state lives in the existing
+// canonical paragraph/resources and the same owned Native History transaction.
+export fn hwp5_edit_created_cell_typing_version() u32 {
+    return 1;
+}
+export fn hwp5_edit_splice_created_cell(section: u32, low: u32, high: u32, row: u32, column: u32, start: u32, end: u32, text_ptr: [*]const u8, text_size: usize, request_ptr: [*]const u8, request_size: usize) u32 {
+    const wire = @import("rich_typing_request.zig");
+    if (text_size > @import("../model/text_transaction.zig").limits.inserted_bytes or request_size > wire.max_bytes) return fail(error.LimitExceeded);
+    var request = wire.decodeCreatedCell(a, request_ptr[0..request_size]) catch |err| return fail(err);
+    defer request.deinit();
+    const changed = applyCreatedCellTyping(.{ .section = section, .identity = (@as(u64, high) << 32) | low, .row = row, .column = column, .start = start, .end = end, .text = text_ptr[0..text_size], .insertion = request.patch }, request.binding) catch |err| {
+        const poisoned = if (history) |*h| h.stats().poisoned else false;
+        if (poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) {
+            _ = fail(error.MutationUncertain);
+            return 3;
+        }
+        return fail(err);
+    };
+    return if (changed) 1 else 2;
+}
+fn applyCreatedCellTyping(edit_value: @import("../model/created_cell_typing.zig").Edit, binding: @import("../model/formatting_patch.zig").Binding) !bool {
+    try @import("../model/created_cell_typing.zig").validate(edit_value);
+    const service = try textTransactionService();
+    if (service.history.stats().protocolVersion != 2) return error.HistoryProtocol2Required;
+    try formatting_lifetime.check(binding, try service.currentRevision());
+    const next_epoch = try view_epoch.next();
+    var batch: edit.FormattingBatch = .{};
+    try service.session.beginFormattingBatch(&batch);
+    defer service.session.endFormattingBatch(&batch);
+    const changed = try service.history.apply(service.session, .{ .splice_created_cell = edit_value });
+    if (changed) {
+        last_delta = null;
+        view_epoch.value = next_epoch;
+        reflow = true;
+    }
+    return changed;
+}
+
 export fn hwp5_edit_object_geometry(section: u32, node: u32, kind: u32) u32 {
     hwp5_edit_output_free();
     const s = session() catch |err| return fail(err);
@@ -1738,4 +1909,146 @@ export fn hwp5_edit_set_object_geometry(ptr: [*]const u8, len: usize) u32 {
         return if (err == error.MutationUncertain or err == error.HistoryMutationUncertain or h.stats().poisoned) 3 else 0;
     };
     return if (h.revision() == before) 2 else 1;
+}
+
+// Optional physical HWP5 chart queries. No existing required ABI or owner fence changes.
+export fn hwp5_edit_chart_display_profile_version() u32 {
+    return @import("../hwp5/chart/display_wire.zig").version;
+}
+export fn hwp5_edit_chart_candidates() u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    const epoch = view_epoch.current() catch |err| return fail(err);
+    const rows = s.hwp5ChartCandidates(a) catch |err| return fail(err);
+    defer a.free(rows);
+    const revision: ?u32 = if (history) |*h| h.revision() else null;
+    output = @import("../hwp5/chart/display_wire.zig").candidates(a, epoch, revision, rows, 16 * 1024 * 1024) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_chart_display(section: u32, control: u32) u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    const epoch = view_epoch.current() catch |err| return fail(err);
+    var snapshot = s.hwp5ChartDisplay(a, section, control) catch |err| return fail(err);
+    defer snapshot.deinit(a);
+    const revision: ?u32 = if (history) |*h| h.revision() else null;
+    output = @import("../hwp5/chart/display_wire.zig").display(a, epoch, revision, &snapshot, 16 * 1024 * 1024) catch |err| return fail(err);
+    return 1;
+}
+
+// Optional authoring profile; absence keeps older engines unavailable.
+export fn hwp5_edit_equation_insert_profile_version() u32 {
+    return 1;
+}
+export fn hwp5_edit_insert_equation(ref_ptr: [*]const u8, ref_size: usize, ptr: [*]const u8, size: usize) u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    if (h.owned == null) return fail(error.HistoryV2Required);
+    if (size == 0 or size > 1024 * 1024) return fail(error.LimitExceeded);
+    const epoch = view_epoch.current() catch |err| return fail(err);
+    const reference = @import("hwp5_current_reference.zig").decode(a, ref_ptr[0..ref_size], epoch) catch |err| return fail(err);
+    const source = switch (reference) {
+        .source => |value| value,
+        else => return fail(error.UnsupportedEquationInsertOwner),
+    };
+    const Wire = struct { start: u32, script: []const u8, width: u32, height: u32, baseLine: i16, baseUnit: u32, version: []const u8, font: []const u8, colorRgb: u32, lineMode: bool };
+    const parsed = std.json.parseFromSlice(Wire, a, ptr[0..size], .{ .allocate = .alloc_always, .ignore_unknown_fields = false, .duplicate_field_behavior = .@"error" }) catch |err| return fail(err);
+    defer parsed.deinit();
+    const w = parsed.value;
+    const profile = @import("../hwp5/edit/equation_create_profile.zig");
+    const tail = profile.tail(.observed_eq60_hyhwpEQ_zero_word);
+    if (!std.mem.eql(u8, w.version, tail.version) or !std.mem.eql(u8, w.font, tail.font)) return fail(error.UnsupportedEquationCreateProfile);
+    const request: @import("../hwp5/edit/equation_create_request.zig").Request = .{
+        .target = .{ .section = source.section, .anchor = .{ .host = source.host, .unit = w.start }, .binding = s.historyTicket() catch |err| return fail(err) },
+        .script = w.script,
+        .font_size = w.baseUnit,
+        .box = .{ .width = w.width, .height = w.height },
+        .color_rgb = w.colorRgb,
+        .baseline = w.baseLine,
+        .line_mode = w.lineMode,
+        .profile = .observed_eq60_hyhwpEQ_zero_word,
+    };
+    _ = @import("../hwp5/edit/equation_create_request.zig").validate(request) catch |err| return fail(err);
+    apply(.{ .insert_equation = request }) catch |err| {
+        _ = fail(err);
+        return if (h.owned.?.poisoned) 3 else 0;
+    };
+    return 1;
+}
+
+// Optional current-caret authoring. Explicit experimental carrier; no inferred profile.
+const chart_create_profile = "spec24-registered-png-presentation-v1";
+export fn hwp5_edit_chart_create_profile_version() u32 {
+    return 1;
+}
+export fn hwp5_edit_chart_create_preview(ref_ptr: [*]const u8, ref_size: usize, ptr: [*]const u8, size: usize) u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    const h = if (history) |*v| v else return fail(error.HistoryNotEnabled);
+    if (h.owned == null) return fail(error.HistoryV2Required);
+    if (h.owned.?.poisoned) return fail(error.HistoryMutationUncertain);
+    if (ref_size > 1024 or size == 0 or size > 4 * 1024 * 1024) return fail(error.LimitExceeded);
+    const reference = @import("hwp5_current_reference.zig").decode(a, ref_ptr[0..ref_size], view_epoch.current() catch |err| return fail(err)) catch |err| return fail(err);
+    if (reference != .source) return fail(error.UnsupportedChartInsertOwner);
+    const witness = s.copyCurrentParagraphTextUtf16(a, reference.source.section, reference) catch |err| return fail(err);
+    defer a.free(witness);
+    const Wire = struct { start: u32, profile: []const u8, data: @import("../hwpx/chart_create_data.zig").Data };
+    const parsed = std.json.parseFromSlice(Wire, a, ptr[0..size], .{ .allocate = .alloc_always, .ignore_unknown_fields = false, .duplicate_field_behavior = .@"error" }) catch |err| return fail(err);
+    defer parsed.deinit();
+    if (!std.mem.eql(u8, parsed.value.profile, chart_create_profile)) return fail(error.UnsupportedChartCreateProfile);
+    if (parsed.value.start >= witness.len / 2) return fail(error.InvalidChartCreateCaret);
+    output = @import("../hwp5/chart/create_preview.zig").write(a, parsed.value.data, 16 * 1024 * 1024) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_create_chart_current(ref_ptr: [*]const u8, ref_size: usize, ptr: [*]const u8, size: usize, image_ptr: [*]const u8, image_size: usize) u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    const h = if (history) |*v| v else return fail(error.HistoryNotEnabled);
+    if (h.owned == null) return fail(error.HistoryV2Required);
+    if (h.owned.?.poisoned) {
+        _ = fail(error.HistoryMutationUncertain);
+        return 3;
+    }
+    if (ref_size > 1024 or size == 0 or size > 16 * 1024 * 1024 or image_size == 0 or image_size > 8 * 1024 * 1024) return fail(error.LimitExceeded);
+    const reference = @import("hwp5_current_reference.zig").decode(a, ref_ptr[0..ref_size], view_epoch.current() catch |err| return fail(err)) catch |err| return fail(err);
+    const source = switch (reference) {
+        .source => |v| v,
+        else => return fail(error.UnsupportedChartInsertOwner),
+    };
+    const Wire = struct {
+        start: u32,
+        profile: []const u8,
+        width: u32,
+        height: u32,
+        expected_text_utf16le: []const u8,
+        data: @import("../hwpx/chart_create_data.zig").Data,
+        source_xml_sha256: [32]u8,
+        pixel_width: u32,
+        pixel_height: u32,
+    };
+    const parsed = std.json.parseFromSlice(Wire, a, ptr[0..size], .{ .allocate = .alloc_always, .ignore_unknown_fields = false, .duplicate_field_behavior = .@"error" }) catch |err| return fail(err);
+    defer parsed.deinit();
+    const w = parsed.value;
+    if (!std.mem.eql(u8, w.profile, chart_create_profile)) return fail(error.UnsupportedChartCreateProfile);
+    if (w.expected_text_utf16le.len > 1024 * 1024) return fail(error.ChartCreateExpectedTextLimit);
+    if (w.width == 0 or w.height == 0 or w.width > std.math.maxInt(i32) or w.height > std.math.maxInt(i32)) return fail(error.InvalidChartCreateBox);
+    const aspect_matches = if (w.width >= w.height)
+        @as(u64, w.pixel_height) == (@as(u64, w.pixel_width) * w.height + w.width / 2) / w.width
+    else
+        @as(u64, w.pixel_width) == (@as(u64, w.pixel_height) * w.width + w.height / 2) / w.height;
+    if (!aspect_matches) return fail(error.InvalidHwp5ChartPreviewAspect);
+    const request: @import("../hwp5/chart/create_request.zig").Request = .{
+        .target = .{ .section = source.section, .anchor = .{ .host = source.host, .unit = w.start }, .binding = s.historyTicket() catch |err| return fail(err) },
+        .expected_text_utf16le = w.expected_text_utf16le,
+        .box = .{ .width = w.width, .height = w.height },
+        .data = w.data,
+        .rendered = .{ .source_xml_sha256 = w.source_xml_sha256, .pixel_width = w.pixel_width, .pixel_height = w.pixel_height, .bytes = image_ptr[0..image_size] },
+        .profile = .spec24_registered_png_presentation_v1,
+    };
+    apply(.{ .insert_chart = request }) catch |err| {
+        _ = fail(err);
+        return if (h.owned.?.poisoned or err == error.HistoryMutationUncertain or err == error.MutationUncertain) 3 else 0;
+    };
+    return 1;
 }

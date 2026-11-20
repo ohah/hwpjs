@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": false,
+    "types": ["node"]
+  },
+  "include": [
+    "../../packages/core/src/**/*.ts",
+    "../../packages/core/tests/commands/created-cell-headless-text.test.ts",
+    "../../packages/core/tests/types/created-cell-headless-text-contract.ts"
+  ],
+  "exclude": []
+}

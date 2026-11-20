@@ -22,6 +22,12 @@ pub fn document(left: model.Document, right: model.Document) bool {
 fn equal(comptime T: type, left: T, right: T) bool {
     if (T == @import("shade_color.zig").Intent) return std.meta.eql(left, right);
     if (T == @import("border_fill_patch.zig").Background) return std.meta.eql(left, right);
+    // Only this reviewed canonical owner is admitted. Different ownership tags
+    // remain distinct; explicit runs compare their values, never slice identity.
+    if (T == @import("authored_paragraph.zig").Styles) return switch (left) {
+        .inherit => right == .inherit,
+        .runs => |rows| if (right == .runs) equal([]@import("authored_paragraph.zig").Run, rows, right.runs) else false,
+    };
     return switch (@typeInfo(T)) {
         .@"struct" => result: {
             inline for (@import("../reflection.zig").fields(T)) |field| {
@@ -65,4 +71,23 @@ test "model equality distinguishes font array language values null and zero" {
         try std.testing.expect(!equal(Values, empty, changed));
         try std.testing.expect(equal(Values, changed, changed));
     }
+}
+
+test "generated cell rich model equality distinguishes inherited ownership and deep run values" {
+    const Paragraph = @import("authored_paragraph.zig");
+    const a = std.testing.allocator;
+    const left = try a.dupe(Paragraph.Run, &.{ .{ .start_unit = 0, .char_shape_id = 0 }, .{ .start_unit = 2, .char_shape_id = 7 } });
+    defer a.free(left);
+    const right = try a.dupe(Paragraph.Run, left);
+    defer a.free(right);
+    try std.testing.expect(equal(Paragraph.Styles, .inherit, .inherit));
+    try std.testing.expect(!equal(Paragraph.Styles, .inherit, .{ .runs = left }));
+    try std.testing.expect(!equal(Paragraph.Styles, .{ .runs = left }, .inherit));
+    try std.testing.expect(equal(Paragraph.Styles, .{ .runs = left }, .{ .runs = right }));
+    right[1].char_shape_id = 8;
+    try std.testing.expect(!equal(Paragraph.Styles, .{ .runs = left }, .{ .runs = right }));
+    right[1] = left[1];
+    right[1].start_unit = 3;
+    try std.testing.expect(!equal(Paragraph.Styles, .{ .runs = left }, .{ .runs = right }));
+    try std.testing.expect(!equal(Paragraph.Styles, .{ .runs = left }, .{ .runs = right[0..1] }));
 }

@@ -1,3 +1,8 @@
+import {
+  HWP5_CHART_PLAIN_ROOT_KEYS,
+  hasPlainHwp5ChartMetadata,
+  plainHwp5ChartStampTransition,
+} from './hwp5-chart-plain-metadata.ts';
 import { isOwnedImmutableObservation, ownObservation } from '../state/owned.ts';
 import { validateFullSnapshotTextDelta, exactDisplayValue } from './full-snapshot-text-delta.ts';
 
@@ -5,6 +10,7 @@ import { validateFullSnapshotTextDelta, exactDisplayValue } from './full-snapsho
 
 // 명시 producer schema의 plain body/table/picture 부분집합. 문서 식별자나 SHA로 선택하지 않는다.
 const ROOT_KEYS = new Set([
+  ...HWP5_CHART_PLAIN_ROOT_KEYS,
   'format',
   'version',
   'paragraphs',
@@ -55,6 +61,7 @@ const ROOT_KEYS = new Set([
   'characterPropertyTextAvailable',
   'namedFontPropertyTextAvailable',
   'richTypingScope',
+  'createdCellTypingScope',
   'namedFontReplacementAvailable',
   'characterPropertyReplacementAvailable',
   'namedFontPropertyReplacementAvailable',
@@ -220,10 +227,23 @@ const OWNER_KEYS = new Set([
   'equations',
   'equationPaint',
 ]);
+// Reader runtime uses the same positive load request ticket for both ports.
+// Null is its explicit unavailable value (including an older Native ABI), not
+// a default generation. A populated scope must match this reply's body port.
+function hasCanonicalCreatedCellTypingScope(content: any): boolean {
+  if (!Object.hasOwn(content, 'createdCellTypingScope')) return true;
+  const scope = content.createdCellTypingScope;
+  return (
+    scope === null ||
+    (Number.isSafeInteger(scope) && scope >= 1 && scope === content.richTypingScope)
+  );
+}
+
 export function isPlainOwnerBaseline(content: any, section: number, paragraph: number): boolean {
   try {
     if (
       !isOwnedImmutableObservation(content as unknown) ||
+      !hasPlainHwp5ChartMetadata(content) ||
       content.format !== 'hwp5' ||
       content.readOnly ||
       content.limited !== false ||
@@ -243,6 +263,7 @@ export function isPlainOwnerBaseline(content: any, section: number, paragraph: n
       (Object.hasOwn(content, 'sourceTableCellSplitProfile') &&
         content.sourceTableCellSplitProfile !== 'single-unmerged-source-cell' &&
         content.sourceTableCellSplitProfile !== 'single-source-cell-with-spans') ||
+      !hasCanonicalCreatedCellTypingScope(content) ||
       Object.keys(content).some((k) => !ROOT_KEYS.has(k))
     )
       return false;
@@ -422,7 +443,14 @@ export function mergeExclusiveOwnerWindow(
       return { ...row, currentReference: reference, text, characterRanges };
     });
     if (owners !== 1) return null;
-    const next = ownObservation({ ...baseline, paragraphs })();
+    const chartStamps = plainHwp5ChartStampTransition(baseline, {
+      beforeEpoch: expected.epoch,
+      beforeRevision: expected.revision,
+      epoch: r.epoch,
+      revision: r.revision,
+    });
+    if (chartStamps === null) return null;
+    const next = ownObservation({ ...baseline, ...chartStamps, paragraphs })();
     if (!validateFullSnapshotTextDelta(baseline, next, packet)) return null;
     return next;
   } catch {

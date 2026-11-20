@@ -1,3 +1,6 @@
+import { registerStrictLayoutTransport } from './hwp5-strict-layout-transport.mjs';
+import { createBrowserStrictLayoutSaver } from './hwp5-browser-strict-layout.mjs';
+import { createHwp5ChartDisplayApi } from './hwp5-chart-display-api.mjs';
 import { createHwp5EquationApi } from './hwp5-equation-sources.mjs';
 import { createEquationEngine } from './equation-engine.mjs';
 import { createObjectGeometryApi } from './object-geometry-api.mjs';
@@ -43,6 +46,7 @@ import { decodeHwp5DrawingListSources } from './hwp5-drawing-list-sources.mjs';
 import { decodeHwp5DrawingMatrixSources } from './hwp5-drawing-matrix-sources.mjs';
 import { decodeHwp5DrawingLocalTransforms } from './hwp5-drawing-local-transforms.mjs';
 import { decodeHwp5DrawingRectangleCorners } from './hwp5-drawing-rectangle-corners.mjs';
+import { createDocumentTextApi } from './document-text-api.mjs';
 import {
   decodeHwp5DrawingPolygonPoints,
   polygonLayoutArg,
@@ -211,7 +215,42 @@ export async function createExperimentalHwp5Editor(
       wasm.hwp5_edit_copy_text(u32(section, 'section'), u32(paragraph, 'paragraph')),
     ).bytes;
   };
-  return {
+  const strictTransport = {
+    check,
+    supported() {
+      return (
+        !closed &&
+        [
+          'hwp5_edit_strict_layout_prepare',
+          'hwp5_edit_strict_layout_save',
+          'hwp5_edit_strict_layout_cancel',
+        ].every((name) => typeof wasm[name] === 'function')
+      );
+    },
+    prepare() {
+      check();
+      if (
+        typeof wasm.hwp5_edit_strict_layout_prepare !== 'function' ||
+        typeof wasm.hwp5_edit_strict_layout_save !== 'function' ||
+        typeof wasm.hwp5_edit_strict_layout_cancel !== 'function'
+      )
+        throw Error('Hwp5StrictLayoutAbiUnavailable');
+      return JSON.parse(
+        new TextDecoder().decode(output(() => wasm.hwp5_edit_strict_layout_prepare()).bytes),
+      );
+    },
+    commit(lines) {
+      check();
+      const bytes = new TextEncoder().encode(JSON.stringify(lines));
+      return memory.withBytes(bytes, (ptr, size) =>
+        output(() => wasm.hwp5_edit_strict_layout_save(ptr, size)),
+      );
+    },
+    cancel() {
+      if (!closed) wasm.hwp5_edit_strict_layout_cancel?.();
+    },
+  };
+  const api = {
     ...createHwp5EquationApi({ wasm, check, output, u32 }),
     measureEquation(source, settings) {
       check();
@@ -233,6 +272,7 @@ export async function createExperimentalHwp5Editor(
     ...createHwp5SourceTableCellSplitApi({ wasm, memory, check }),
     ...createAtomicFormattingApi({ wasm, memory, check: check, prefix: 'hwp5_edit' }),
     ...createIndependentTextApi({ wasm, memory, check: check, prefix: 'hwp5_edit' }),
+    ...createDocumentTextApi({ wasm, memory, check, prefix: 'hwp5_edit' }),
     observedDocInfoDiagnostics() {
       check();
       if (typeof wasm.hwp5_edit_observed_docinfo_diagnostics !== 'function')
@@ -305,6 +345,7 @@ export async function createExperimentalHwp5Editor(
       unavailable: 'Hwp5HistoryAbiUnavailable',
     }),
     ...createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u32, referenceScope }),
+    ...createHwp5ChartDisplayApi({ wasm, check, output, u32 }),
     ...createHwp5TableCreationApi({ wasm, memory, check, output, u32 }),
     supportsCurrentTextPreview() {
       check();
@@ -1537,6 +1578,7 @@ export async function createExperimentalHwp5Editor(
         );
       success(action(...positions, value));
     },
+    saveMeasuredPlainLayout: createBrowserStrictLayoutSaver(strictTransport),
     save({ allowStaleLayout = false } = {}) {
       check();
       if (typeof allowStaleLayout !== 'boolean')
@@ -1548,4 +1590,6 @@ export async function createExperimentalHwp5Editor(
       closed = true;
     },
   };
+  registerStrictLayoutTransport(api, strictTransport);
+  return api;
 }

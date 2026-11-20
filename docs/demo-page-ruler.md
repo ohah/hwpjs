@@ -34,7 +34,7 @@ node --test apps/demo/tests/page-ruler.test.mjs apps/demo/tests/page-ruler-surfa
 bun x --no-install tsc -p tools/tsconfig.page-ruler.json
 ```
 
-successor의 35개 집중 검사는 50~200% 물리 눈금, 비대칭 여백, 혼합 방향, 가로 이동, 숨김 host 복귀, 폐기·stale 거부 및 구독 정리를 다룬다. Surface/Core 경계는 통제된 mock이며 실제 Native/브라우저 근거와 구분한다. 기존 `page-status-surface.test.mjs`와 `page-status-controller.test.mjs`는 동일 HEAD에서도 각각 누락된 renderer 출력 export와 `AtomicFormattingApiRequired`로 실패한다. 이 두 실패를 복구 성공으로 계산하지 않는다.
+집중 검사는 50~200% 물리 눈금, 비대칭 여백, 혼합 방향, 가로 이동, 숨김 host 복귀, 폐기·stale 거부 및 구독 정리를 다룬다. Surface/Core 경계는 통제된 mock이다. `page-status-surface.test.mjs`는 실제 Surface를 사용해 중복 통지를 거르고 폐기 시 마지막 `null`을 한 번 전달하는지 확인한다.
 
 실제 로컬 producer는 공개 a66a15318385b04e0c3f150f8882d0598396918e0e160d43c939698dd424efe9 WASM을 재사용한다. 원본 Noori HWP/HWPX 및 사용자가 승인한 자산관리규정 HWPX의 로컬 브라우저 증거는 별도 OWN 패킷의 기록을 따른다. 새 Native 빌드, 루트 WIP 변경, 공개 배포와 npm 게시 증거가 아니다.
 
@@ -42,4 +42,8 @@ successor의 35개 집중 검사는 50~200% 물리 눈금, 비대칭 여백, 혼
 
 frozen ruler17/HEAD `65e3706`에서 소유 17파일을 이어받고 통합 수명 회귀와 공개 API 타입 검사 파일을 추가했다. 소스 통제 검사는 실제 Surface/ruler/relay와 통제된 renderer/Core/DOM을 사용한다. 50~200%의 혼합 방향 2D 교차, 가로 cache 변경, 양 축의 공백/경계, 부분 범위, repaint 없는 무효화와 Core detach hook, Surface만 폐기/교체/교체 실패, observer 오류와 재진입 dispose를 포함한다. 타입 검사는 후보 Vanilla 공개 source entry에 직접 연결하며 nullable·불변·React/Svelte 전파와 any 누출을 검사한다. noEmit 및 패키지 선언 빌드와 같은 allowJs=false 경계를 사용하고 새 패키지를 빌드하지 않는다.
 
-기존 17개 통과는 새 회귀 18개와 구분한다. 이전 공개 a66 bundle이나 owner의 브라우저 관측은 이 successor와 Main `e41e7aece` renderer 변경의 최종 결합 증거가 아니다. Native·SDK 빌드·브라우저·공개 배포는 이 successor에서 실행하지 않았다. Main은 소유 파일 patch만 통합하고 새 결합 소스/패키지 검증을 별도로 수행한다.
+## 로컬 브라우저 실측
+
+공식 데모 빌드에서 세로·가로 용지가 섞이고 좌우 여백이 다른 HWPX를 열어, 50~200% 확대와 좁은 뷰포트의 가로 이동을 확인했다. 눈금자의 시작점은 Canvas에 그린 용지 왼쪽과 일치했고, 눈금 간격·여백 폭·용지 크기 표시는 원본 치수에 맞았다. 표시 쪽을 바꾸면 방향과 눈금 길이도 바뀌었다.
+
+검증은 스크롤 위치를 직접 설정한 뒤 실제 스크롤 이벤트와 화면 갱신을 관찰했다. 물리 휠 입력과 공개 배포의 확인은 별도 범위다.

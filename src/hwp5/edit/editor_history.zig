@@ -19,6 +19,19 @@ pub const History = struct {
         errdefer value.deinit();
         return .{ .owner = session, .max_checkpoint_bytes = value.stack.policy.max_checkpoint_bytes, .stack = try Stacks.init(a, 1), .owned = value };
     }
+    /// Saving layout does not create an undo revision or modify the live model.
+    pub fn prepareStrictLayout(self: *const History, session: *edit.Session, a: std.mem.Allocator) !@import("strict_plain_layout.zig").Snapshot {
+        try self.bind(session);
+        if (self.stats().poisoned) return error.HistoryMutationUncertain;
+        if (self.owned) |h| try h.validateCurrentForLayout(session);
+        return session.prepareStrictLayout(a);
+    }
+    pub fn saveStrictLayout(self: *const History, session: *edit.Session, a: std.mem.Allocator, request: @import("strict_plain_layout.zig").Request) !edit.Saved {
+        try self.bind(session);
+        if (self.stats().poisoned) return error.HistoryMutationUncertain;
+        if (self.owned) |h| try h.validateCurrentForLayout(session);
+        return session.save(a, .{ .strict_layout = request });
+    }
     pub fn revision(self: *const History) u32 {
         return if (self.owned) |h| h.stack.current.revision else self.stack.revision;
     }
@@ -44,6 +57,8 @@ pub const History = struct {
         return self.applyBatch(session, &.{command});
     }
     pub fn applyBatch(self: *History, session: *edit.Session, commands: []const edit.Command) !bool {
+        try self.bind(session);
+        session.invalidateStrictLayout();
         if (self.owned) |h| return h.applyBatch(session, commands);
         try self.bind(session);
         const before = try session.createCheckpoint(self.max_checkpoint_bytes);
@@ -56,11 +71,15 @@ pub const History = struct {
         return true;
     }
     pub fn undo(self: *History, session: *edit.Session) !bool {
+        try self.bind(session);
+        session.invalidateStrictLayout();
         if (self.owned) |h| return h.undo(session);
         try self.bind(session);
         return self.stack.move(false, session, exchange);
     }
     pub fn redo(self: *History, session: *edit.Session) !bool {
+        try self.bind(session);
+        session.invalidateStrictLayout();
         if (self.owned) |h| return h.redo(session);
         try self.bind(session);
         return self.stack.move(true, session, exchange);

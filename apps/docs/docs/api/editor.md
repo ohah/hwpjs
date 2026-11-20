@@ -284,6 +284,14 @@ export async function createChartDocument(editor: HeadlessEditor) {
 
 생성·저장·실행 취소는 기존 Native 거래를 사용합니다. 세부 제한은 [생성 계약](https://github.com/ohah/hwpjs/blob/main/docs/hwpx-inline-object-creation.md), 화면 사용법은 [데모 안내](../guide/demo.md#새-차트수식-만들기)를 확인하세요.
 
+## 새 HWP5 차트 생성
+
+`CREATE_CHART_COMMAND`는 HWP5 본문의 편집 가능한 커서에서도 사용할 수 있습니다. 현재 `EditorState`의 `selection`과 `stateVersion`을 각각 `target`과 `selectionVersion`으로 전달하고, 먼저 `getInlineObjectInsertAvailability(state, 'chart')`로 편집 가능 여부를 확인합니다.
+
+HWP5의 `options`에는 `profile: 'spec24-registered-png-presentation-v1'`, HWPUNIT 단위의 `width`와 `height`, `categories`, `series`, 그리고 픽셀 단위의 `preview.width`와 `preview.height`를 지정합니다. 현재 프로필은 2D 묶은 세로 막대형을 생성합니다. 내장 Worker에서 미리보기 PNG를 만들 수 있어야 차트 생성이 활성화됩니다.
+
+일반 저장이 `LayoutReflowRequired`를 반환하면 레이아웃 변경 가능성을 확인하고 `save({ allowStaleLayout: true })`로 저장할 수 있습니다. [HWP5 차트 데모](../guide/demo.md#새-차트수식-만들기)에서 생성과 재열기 절차를 확인할 수 있습니다.
+
 ## 차트·글상자의 크기와 위치 {#object-geometry}
 
 최신 소스의 `getObjectGeometry(selector)`는 현재 Native 소유자와 크기·위치를 조회하고 불투명한 편집 대상을 반환합니다. 선택자에는 현재 문서에서 관측한 `kind`, `section`, `node`를 사용합니다. 이전 파일의 번호나 Canvas 사각형을 수정 권한으로 사용하지 않습니다. npm 게시 상태는 소스 지원과 별도로 확인하세요.
@@ -308,3 +316,47 @@ export async function resizeObject(editor: HeadlessEditor, selector: ObjectGeome
 단위는 HWPUNIT이며 위치 간격은 음수를 허용합니다. 바꾸지 않을 필드는 생략합니다. `target`은 같은 편집기의 현재 상태에만 유효하며 JSON으로 저장·복원할 수 없습니다. 조회와 명령 사이에 저장·선택 변경·undo/redo를 수행했다면 다시 조회하세요.
 
 현재 경로는 지원하는 원본 HWPX 차트·글상자와 HWP5 글상자를 대상으로 합니다. 크기·위치 편집, 저장·다시 열기, 실행 취소·다시 실행을 별도로 검증했습니다. HWP5 변경 뒤 일반 저장이 `LayoutReflowRequired`로 거부되면 레이아웃 제한을 확인한 뒤 `save({ allowStaleLayout: true })`로 명시 동의할 수 있습니다. 완전 재조판이나 그룹·회전·임의 OLE 편집을 뜻하지 않습니다.
+
+## 생성 셀을 DOM 없이 편집하기
+
+새 정상 엔진을 포함한 공개 패키지 소스에서는 `getCreatedCellTextTarget`으로 현재 논리 셀의 입력 권한을 발급받습니다. 셀의 십진 u64 `identity`와 구역·행·열은 실제 표 생성 결과에서 가져옵니다. 임의 Native 문단 번호나 Surface 선택을 만들지 않습니다. 구형 엔진이나 사용할 수 없는 셀은 명시적인 오류로 거부합니다.
+
+```ts
+import {
+  SPLICE_TEXT_COMMAND,
+  type CreatedCellTextSelector,
+  type HeadlessEditor,
+} from '@ohah/hwpjs';
+
+export async function typeInCreatedCell(
+  editor: HeadlessEditor,
+  cell: CreatedCellTextSelector,
+  unit: number,
+  text: string,
+) {
+  const target = await editor.getCreatedCellTextTarget(cell, {
+    startUnit: unit,
+    endUnit: unit,
+  });
+  const result = await editor.dispatchCommand(SPLICE_TEXT_COMMAND, {
+    target,
+    text,
+    insertion: {
+      character: {
+        underline: { kind: 'bottom' },
+        strike: { enabled: true },
+        textColor: 0x000000,
+      },
+    },
+  });
+  if (result.status !== 'committed-with-snapshot') {
+    // 반영 후 재관측이 필요한 결과에도 같은 편집을 자동 재전송하지 않습니다.
+    throw Error(result.error ?? result.status);
+  }
+  return result.state;
+}
+```
+
+일반 입력은 `insertion`을 생략하면 현재 Native run에서 서식을 상속합니다. 이력 이동·재열기·상태 변경 뒤에는 현재 셀을 다시 조회해 새 target을 발급받습니다. target을 복사하거나 다른 editor에서 재사용할 수 없습니다. `insertion.character`는 새로 삽입한 텍스트에만 적용하며 기존 범위의 서식 변경을 같은 텍스트의 삭제·재삽입으로 대신하지 않습니다. `openReadOnlyDocument.sdk`는 읽기 수명이므로 이 쓰기 경로에 사용하지 않습니다.
+
+정상 공개 Core에서 H5/HX의 일곱 언어 글꼴·밑줄·취소선·검정 글자색과 일반 D 입력을 저장·독립 CFB/XML 조회·cold reopen·전체 저장 바이트 undo/redo로 확인했습니다. HX 생성 셀의 현재 Native owner를 통한 수식 삽입과 rich D 보존도 확인했습니다. 새 셀의 Canvas/IME, CLI/MCP 전체 행렬, H5 직접 참조 조회의 선형 비용 후속, 텍스트를 보존하는 범위서식은 별도 검증·구현 대상입니다. 이 예제는 npm의 새 버전 게시를 의미하지 않습니다.

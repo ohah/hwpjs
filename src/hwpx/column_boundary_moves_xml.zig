@@ -51,7 +51,7 @@ test "column group moves enforce both source and destination owner domains" {
         }
     };
     try Probe.run(a, &tree, &sites, locations, owners[0..2], request);
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &tree, &sites, locations, owners[0..2], request });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &tree, &sites, locations, owners[0..2], request });
     try std.testing.expectError(error.CrossParagraphOwner, writeGroupSources(a, &tree, &sites, locations, owners[0..1], &.{request}, 10000));
     var outside = request;
     outside.paragraph = 3;

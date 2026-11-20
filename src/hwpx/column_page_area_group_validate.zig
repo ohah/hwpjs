@@ -26,7 +26,7 @@ pub fn validate(a: std.mem.Allocator, tree: *const Tree, rows: []const Paragraph
         const segments = try @import("paragraph_joined_positions.zig").build(a, tree, &joined);
         defer a.free(segments);
         for (segments) |segment| if (segment.kind != .text) return error.UnsupportedMixedMetadataPlan;
-        try @import("page_area_current_validate.zig").validatePositions(row, segments, inventory.items, true, true);
+        try @import("page_area_current_validate.zig").validatePositions(a, row, segments, inventory.items, true, true);
         for (row.page_area_positions.?) |area| {
             if (cursor >= inventory.items.len or area.source_element != inventory.items[cursor].source_element or area.source_control != inventory.items[cursor].source_control) return error.SourceBindingMismatch;
             cursor += 1;
@@ -55,7 +55,7 @@ test "mixed declaration group validates original and generated ownership without
         candidate.paragraphs[1].page_area_positions = try a.dupe(@import("page_area_position.zig").Position, draft.metadata.areas.right);
         const rows = candidate.paragraphs[0..2];
         try validate(a, &section.tree, rows);
-        try std.testing.checkAllAllocationFailures(a, validate, .{ &section.tree, @as([]const Paragraph, rows) });
+        try @import("../testing/allocation_failures.zig").check(validate, .{ &section.tree, @as([]const Paragraph, rows) });
         const area = rows[1].page_area_positions.?[1];
         rows[1].page_area_positions.?[1] = rows[1].page_area_positions.?[0];
         try std.testing.expectError(error.SourceBindingMismatch, validate(a, &section.tree, rows));

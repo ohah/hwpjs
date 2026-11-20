@@ -13,7 +13,7 @@ test "HWPX chart kinds legacy three-field wire has fixed byte oracle" {
     try std.testing.expectEqualStrings(@embedFile("chart_create_legacy_golden.xml"), xml);
 }
 
-fn profileFor(kind: Kind) api.Profile {
+pub fn profileFor(kind: Kind) api.Profile {
     var p: api.Profile = .{ .kind = kind };
     if (profiles.isBar(kind)) p.bar_direction = .col;
     if (profiles.isGrouped(kind)) p.grouping = if (profiles.isBar(kind)) .clustered else .standard;
@@ -24,7 +24,7 @@ fn profileFor(kind: Kind) api.Profile {
     if (profiles.isSurface(kind)) p.wireframe = false;
     return p;
 }
-fn dataFor(kind: Kind) api.Data {
+pub fn dataFor(kind: Kind) api.Data {
     if (profiles.isXY(kind)) return .{
         .categories = &.{},
         .series = if (kind == .bubbleChart) &.{.{ .name = "X&Y", .values = &.{ "-0", "1.25e2" }, .x_values = &.{ "-3.0", "7e1" }, .bubble_sizes = &.{ "0", "4.50" } }} else &.{.{ .name = "X&Y", .values = &.{ "-0", "1.25e2" }, .x_values = &.{ "-3.0", "7e1" } }},
@@ -43,7 +43,7 @@ fn dataFor(kind: Kind) api.Data {
 
 /// Positive oracle binds exact reopened values to the exact series and roles.
 /// It intentionally does not call the new serializer to obtain expectations.
-fn reopen(allocator: std.mem.Allocator, xml: []const u8, p: api.Profile, data: api.Data) !void {
+pub fn reopen(allocator: std.mem.Allocator, xml: []const u8, p: api.Profile, data: api.Data) !void {
     var tree = try @import("chart_tree.zig").parse(allocator, xml, 0, .{});
     defer tree.deinit(allocator);
     var plots = try @import("chart_plot_values.zig").collect(allocator, &tree, .{});

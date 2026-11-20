@@ -14,6 +14,13 @@ pub fn supported(tree: *const Tree, index: usize) bool {
     const run = control.parent orelse return false;
     const paragraph = tree.elements[run].parent orelse return false;
     if (!tree.elements[run].is(uri, "run") or !tree.elements[paragraph].is(uri, "p")) return false;
+    return readControlSettings(tree, index);
+}
+/// Query facts only; supported() keeps its direct-run placement guard.
+pub fn readControlSettings(tree: *const Tree, index: usize) bool {
+    if (index >= tree.elements.len) return false;
+    const control = tree.elements[index];
+    if (!control.is(uri, "ctrl") or !empty(tree, index)) return false;
     var child = control.first_child;
     var found = false;
     while (child) |node| : (child = tree.elements[node].next_sibling) {

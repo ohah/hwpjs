@@ -9,6 +9,7 @@ export function createRenderer() {
     pictureReader() {},
     tableBackgroundReader() {},
     chartReader() {},
+    hwp5ChartReader() {},
     paragraph: () => ({ selectionOwner: 'section:0:body' }),
     setViewScale: () => true,
   };

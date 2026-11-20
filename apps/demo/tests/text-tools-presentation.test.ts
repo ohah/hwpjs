@@ -1,5 +1,8 @@
 import { test, expect } from 'bun:test';
-import { createEditor } from '@hwpjs/core';
+import {
+  createTextToolsFixtureEditor,
+  textToolsFixtureSelection,
+} from './text-tools-native-fixture.ts';
 import { createDemoShell } from '../src/shell.ts';
 import { createTextToolsBridge } from '../src/text-tools-bridge.ts';
 import { documentFixture, all, fire } from './text-tools-presentation-dom.ts';
@@ -9,27 +12,35 @@ function deferred() {
   const promise = new Promise<void>((r) => (resolve = r));
   return { promise, resolve };
 }
-async function setup({ observerThrows = false, inline = false } = {}) {
+async function setup({
+  observerThrows = false,
+  inline = false,
+  readError,
+  offscreenFirst = false,
+}: {
+  observerThrows?: boolean;
+  inline?: boolean;
+  readError?: string;
+  offscreenFirst?: boolean;
+} = {}) {
   const content = {
     format: 'hwpx',
     paragraphs: [
       { section: 0, paragraph: 0, text: 'AB AB', editable: true, selectionOwner: 'section:0:body' },
     ],
   };
-  const editor = createEditor({
-    runtimeFactory: () => ({
-      async request(m: any) {
-        return {
-          kind: m.kind,
-          content,
-          ...(!['load', 'enable'].includes(m.kind)
-            ? { meta: { application: 'applied', changed: true } }
-            : {}),
-        };
-      },
-      dispose() {},
-    }),
+  const { editor, calls } = createTextToolsFixtureEditor(content, {
+    readError,
+    ...(offscreenFirst
+      ? {
+          nativeParagraphs: [
+            { section: 0, paragraph: 99, text: 'AB header' },
+            ...content.paragraphs,
+          ],
+        }
+      : {}),
   });
+
   await editor.load(new Uint8Array([1]), { format: 'hwpx' });
   const { root: node } = documentFixture();
   const root = node as any;
@@ -52,6 +63,7 @@ async function setup({ observerThrows = false, inline = false } = {}) {
   };
   const bridge = createTextToolsBridge({
     editor: port,
+    selectDocumentText: textToolsFixtureSelection(editor),
     root,
     onStatus: () => shell?.update(),
     onClose: () => {
@@ -90,6 +102,7 @@ async function setup({ observerThrows = false, inline = false } = {}) {
   };
   return {
     editor,
+    calls,
     bridge,
     root,
     role,
@@ -175,7 +188,9 @@ test('검색 오류 후 pending 해제와 presentation 갱신', async () => {
     fire(f.role('find-next'), 'click');
     await f.finish();
     f.assertReady();
-    expect(f.role('search-status').textContent).toBe('InjectedSearchFailure');
+    expect(f.role('search-status').textContent).toBe(
+      '찾기·바꾸기를 완료하지 못했습니다. 문서 상태를 확인한 뒤 다시 시도해주세요.',
+    );
   } finally {
     await f.cleanup();
   }
@@ -254,6 +269,41 @@ test('생성 중 동기 구독은 shell 준비 전 표시 콜백을 호출하지
     await f.open();
     fire(f.role('find-next'), 'click');
     await f.finish();
+    f.assertReady();
+  } finally {
+    await f.cleanup();
+  }
+});
+
+test('전체 Native 읽기 부재를 표시 문단 검색 성공으로 대체하지 않음', async () => {
+  const f = await setup({ readError: 'DocumentTextSnapshotUnavailable' });
+  try {
+    await f.open();
+    fire(f.role('find-next'), 'click');
+    await f.finish();
+    expect(f.role('search-status').textContent).toBe(
+      '현재 문서에서는 전체 검색을 준비할 수 없습니다.',
+    );
+    expect(f.editor.getEditorState().selection).toBeUndefined();
+    expect(f.calls.filter((v: any) => v.kind === 'document-text-selection').length).toBe(0);
+    f.assertReady();
+  } finally {
+    await f.cleanup();
+  }
+});
+test('화면 밖 Native 일치를 선택하지 못하면 보이는 같은 문자열로 갈아타지 않음', async () => {
+  const f = await setup({ offscreenFirst: true });
+  try {
+    await f.open();
+    fire(f.role('find-next'), 'click');
+    await f.finish();
+    expect(f.role('search-status').textContent).toBe(
+      '일치하는 내용은 찾았지만 현재 화면에서 선택할 수 없습니다.',
+    );
+    expect(f.editor.getEditorState().selection).toBeUndefined();
+    const query = f.calls.find((v: any) => v.kind === 'document-text-selection');
+    expect(query.request.ref).toBe('synthetic-0');
+    expect(f.calls.filter((v: any) => v.kind === 'document-text-selection').length).toBe(1);
     f.assertReady();
   } finally {
     await f.cleanup();

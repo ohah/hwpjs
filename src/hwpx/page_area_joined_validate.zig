@@ -27,5 +27,5 @@ fn validateMode(a: std.mem.Allocator, tree: *const Tree, paragraph: *const Parag
     for (segments) |segment| if (segment.kind != .text) return error.UnsupportedPageAreaOwnership;
     const inventory = try @import("page_area_source_positions.zig").collect(a, tree, paragraph.template_element, &.{}, tree.elements.len);
     defer a.free(inventory);
-    try @import("page_area_current_validate.zig").validatePositions(paragraph, segments, inventory, true, partition);
+    try @import("page_area_current_validate.zig").validatePositions(a, paragraph, segments, inventory, true, partition);
 }

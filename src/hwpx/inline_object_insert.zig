@@ -9,7 +9,13 @@ const picture = @import("../image/image_insertion.zig");
 
 pub const Target = struct {
     section: usize,
-    paragraph: usize,
+    paragraph: usize = 0,
+    owner: ?@import("inline_object_placement.zig").Owner = null,
+    affinity: enum { forward, backward } = .forward,
+    /// Internal saved-tree binding. Public wire schemas reject this property.
+    physical_paragraph: ?usize = null,
+    /// Opt-in internal path after current Native owner proof, never public wire.
+    anchor_insertion: bool = false,
     unit: u32,
     expected_text: []const u8,
 };
@@ -20,8 +26,16 @@ pub fn verifySource(input: []const u8, expected: [32]u8) !void {
     if (!std.mem.eql(u8, &actual, &expected)) return error.SourceHashMismatch;
 }
 
+/// The scanner prefix is captured by the package traversal, never inferred
+/// from a section-local paragraph number or a caller's display owner label.
+pub const Binding = struct { element: usize, paragraph_base: usize };
+
 pub fn locate(a: std.mem.Allocator, tree: *const Tree, target: Target, counters: *scanner.Report) !?usize {
-    if (tree.section_ordinal != target.section) return null;
+    return if (try bind(a, tree, target, counters)) |binding| binding.element else null;
+}
+
+pub fn bind(a: std.mem.Allocator, tree: *const Tree, target: Target, counters: *scanner.Report) !?Binding {
+    const paragraph_base = counters.paragraphs;
     const Context = struct {
         tree: *const Tree,
         target: Target,
@@ -30,14 +44,19 @@ pub fn locate(a: std.mem.Allocator, tree: *const Tree, target: Target, counters:
             const self: *@This() = @ptrCast(@alignCast(raw));
             if (value != .paragraph_start) return;
             const boundary = value.paragraph_start;
-            if (boundary.location.section_ordinal != self.target.section or boundary.location.paragraph_ordinal != self.target.paragraph) return;
+            if (boundary.location.section_ordinal != self.target.section) return;
+            if (self.target.physical_paragraph) |node| {
+                if (node >= self.tree.elements.len) return error.SourceBindingMismatch;
+                const candidate = try self.tree.startTagIndex(boundary.tag.raw);
+                if (candidate != node) return;
+            } else if (boundary.location.paragraph_ordinal != self.target.paragraph) return;
             if (self.found != null) return error.SourceBindingMismatch;
             self.found = try self.tree.startTagIndex(boundary.tag.raw);
         }
     };
     var context: Context = .{ .tree = tree, .target = target };
     try scanner.scanSource(a, tree.source, tree.section_ordinal orelse return error.InvalidSectionIndex, tree.item_index, .{}, counters, .{ .context = &context, .on_event = Context.event });
-    return context.found;
+    return if (context.found) |element| .{ .element = element, .paragraph_base = paragraph_base } else null;
 }
 
 /// Conservative namespace: every unprefixed id and instid in supplied trees.
@@ -107,18 +126,19 @@ fn allocateIds(a: std.mem.Allocator, used: *const std.AutoHashMapUnmanaged(u32, 
     return result;
 }
 
-/// General body caret only. No owner inference from a display string.
+/// Plain paragraph in a verified body or table cell. No display-owner inference.
 /// Reuses the established typed t-split serializer, including XML escaping,
 /// UTF-16 scalar boundaries and paragraph-local line cache invalidation.
 pub fn write(a: std.mem.Allocator, tree: *const Tree, paragraph: usize, target: Target, fragment: []const u8, limit: usize) ![]u8 {
-    // R1 addresses the first section; later sections need a document-global
-    // scanner offset in this common contract, never a guessed local ordinal.
-    if (target.section != 0) return error.UnsupportedInsertSections;
+    return writeBound(a, tree, .{ .element = paragraph, .paragraph_base = 0 }, target, fragment, limit);
+}
+
+pub fn writeBound(a: std.mem.Allocator, tree: *const Tree, binding: Binding, target: Target, fragment: []const u8, limit: usize) ![]u8 {
+    const paragraph = binding.element;
     if (tree.part_kind != .section or tree.section_ordinal != target.section) return error.InvalidSectionIndex;
     if (tree.elements.len == 0 or tree.elements[0].name.local.encoding != .utf8) return error.UnsupportedEditEncoding;
     if (paragraph >= tree.elements.len or !tree.elements[paragraph].is(names.paragraph_uri, "p")) return error.InvalidParagraphIndex;
-    const parent = tree.elements[paragraph].parent orelse return error.UnsupportedInlineObjectOwner;
-    if (!tree.elements[parent].is(names.section_uri, "sec")) return error.UnsupportedInlineObjectOwner;
+    try @import("inline_object_owner.zig").validate(a, tree, paragraph);
     try @import("field_free_section.zig").validate(a, tree, limit);
     // Validate only the target's physical cache before choosing its deletion
     // span. The shared whole-section cache writer is deliberately not used.
@@ -126,9 +146,10 @@ pub fn write(a: std.mem.Allocator, tree: *const Tree, paragraph: usize, target: 
     if (target.expected_text.len > picture.max_text_bytes or fragment.len > limit) return error.LimitExceeded;
     _ = try picture.byteOffset(target.expected_text, target.unit);
     // The locator and caller-provided source node must agree.
-    var counters: scanner.Report = .{};
+    var counters: scanner.Report = .{ .paragraphs = binding.paragraph_base };
     const resolved = (try locate(a, tree, target, &counters)) orelse return error.InvalidParagraphIndex;
     if (resolved != paragraph) return error.SourceBindingMismatch;
+    if (target.anchor_insertion) return @import("inline_object_anchor_insert.zig").write(a, tree, paragraph, target.unit, target.expected_text, fragment, limit);
 
     // Plain host profile shared by equation/chart. Preserve a leading section
     // definition and column declaration, but never accept other controls.

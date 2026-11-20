@@ -23,7 +23,7 @@ test "HWPX joined section preserves opaque gaps and all allocation failure input
     defer a.free(xml);
     for ([_][]const u8{ "<!--before-->", "<!--between--><?keep value?>", "<!--after-->", tree.sourceOf(values.paragraphs[2].template_element) }) |untouched| try std.testing.expect(std.mem.indexOf(u8, xml, untouched) != null);
     try std.testing.expectError(error.LimitExceeded, @import("paragraph_joined_section.zig").write(a, &tree, &joined, .{}, 1));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, original: *const @import("xml_part_tree.zig").Tree, current: *const model.Joined) !void {
             const output = try @import("paragraph_joined_section.zig").write(allocator, original, current, .{}, 10000);
             defer allocator.free(output);

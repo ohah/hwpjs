@@ -17,6 +17,14 @@ pub const Request = struct {
 };
 
 pub fn decode(a: std.mem.Allocator, bytes: []const u8) !Request {
+    return decodeMode(a, bytes, false);
+}
+/// Exact created-cell splice also supports deletion/plain text without an
+/// insertion patch. The source rich-typing entry retains its nonempty contract.
+pub fn decodeCreatedCell(a: std.mem.Allocator, bytes: []const u8) !Request {
+    return decodeMode(a, bytes, true);
+}
+fn decodeMode(a: std.mem.Allocator, bytes: []const u8, allow_plain: bool) !Request {
     if (bytes.len > max_bytes) return error.LimitExceeded;
     try @import("text_transaction_request.zig").checkBudget(bytes);
     var arena = std.heap.ArenaAllocator.init(a);
@@ -30,6 +38,6 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8) !Request {
     if (try fields.uint(try fields.required(root, "schemaVersion"), 0xffffffff) != 1) return error.InvalidTextTransactionSchema;
     const binding = try fields.decodeBinding(try fields.required(root, "binding"), false);
     const patch = try fields.decodeCharacterInsertion(try fields.required(root, "insertion"));
-    if (!patch.hasCharacter()) return error.UnsupportedTextInsertionFormatting;
+    if (!allow_plain and !patch.hasCharacter()) return error.UnsupportedTextInsertionFormatting;
     return .{ .arena = arena, .binding = binding, .patch = patch };
 }

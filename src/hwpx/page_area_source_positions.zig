@@ -30,6 +30,7 @@ fn isArea(element: @import("xml_part_tree.zig").Element) bool {
 pub fn collect(a: std.mem.Allocator, tree: *const Tree, paragraph: usize, segments: []const Segment, limit: usize) ![]Position {
     const coordinates = @import("source_metadata_coordinates.zig");
     try coordinates.validate(tree, paragraph, segments);
+    var cursor: coordinates.Cursor = .{ .segments = segments };
     var output: std.ArrayList(Position) = .empty;
     defer output.deinit(a);
     const uri = @import("document_xml.zig").paragraph_uri;
@@ -45,7 +46,7 @@ pub fn collect(a: std.mem.Allocator, tree: *const Tree, paragraph: usize, segmen
                 if (!isArea(area)) continue;
                 if (!@import("retained_run_metadata.zig").supported(tree, control)) return error.UnsupportedParagraphControl;
                 if (output.items.len >= limit) return error.LimitExceeded;
-                const unit = std.math.cast(u32, coordinates.before(segments, tree.elements[control].start_tag.start)) orelse return error.LimitExceeded;
+                const unit = std.math.cast(u32, try cursor.before(tree.elements[control].start_tag.start)) orelse return error.LimitExceeded;
                 try output.append(a, .{ .source_element = setting, .source_control = control, .unit = unit, .affinity = @import("page_area_position.zig").canonicalAffinity(unit) });
             }
         }

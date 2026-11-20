@@ -119,6 +119,59 @@ function setup(version = 1) {
     view: () => fixture,
   };
 }
+test('real Runtime placement query publishes only exact optional v1 with managed history and returns owner without mutation', async () => {
+  const f = setup();
+  let queries = 0;
+  const selector = { section: 2, created_cell: { identity: '7', row: 0, column: 1 } };
+  const owner = {
+    kind: 'createdCell',
+    binding: { session: 's7', revision: 0, serial: '1' },
+    ...selector.created_cell,
+  };
+  f.view().editor.inlineObjectPlacementVersion = () => 1;
+  f.view().editor.inlineObjectOwner = (selected) => {
+    queries++;
+    assert.deepEqual(selected, selector);
+    return { schemaVersion: 1, section: 2, expected_text: 'CELL', owner };
+  };
+  try {
+    const loaded = await f.runtime.request({
+      kind: 'load',
+      format: 'hwpx',
+      bytes: new Uint8Array([1]),
+    });
+    assert.equal(loaded.content.inlineObjectPlacementVersion, 0);
+    assert.equal(
+      (await f.runtime.request({ kind: 'inline-object-owner', selector })).error,
+      'InlineObjectPlacementUnavailable',
+    );
+    const enabled = await f.runtime.request({ kind: 'enable' });
+    assert.equal(enabled.content.inlineObjectPlacementVersion, 1);
+    const result = await f.runtime.request({ kind: 'inline-object-owner', selector });
+    assert.equal(result.error, undefined);
+    assert.deepEqual(result.inlineObjectOwner.owner, owner);
+    assert.equal(queries, 1);
+    assert.equal(f.counts().calls, 0);
+    f.view().editor.inlineObjectPlacementVersion = () => true;
+    assert.equal(
+      (await f.runtime.request({ kind: 'refresh' })).content.inlineObjectPlacementVersion,
+      0,
+    );
+    assert.equal(
+      (await f.runtime.request({ kind: 'inline-object-owner', selector })).error,
+      'InlineObjectPlacementUnavailable',
+    );
+    f.view().editor.inlineObjectPlacementVersion = () => 1;
+    f.poison();
+    assert.equal(
+      (await f.runtime.request({ kind: 'inline-object-owner', selector })).error,
+      'InlineObjectPlacementUnavailable',
+    );
+    assert.equal(queries, 1);
+  } finally {
+    await f.runtime.dispose();
+  }
+});
 test('real Runtime publication observes version on load/enable/reused projection and rechecks mutation', async () => {
   const f = setup();
   try {

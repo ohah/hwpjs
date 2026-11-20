@@ -15,6 +15,15 @@ pub fn supported(tree: *const Tree, index: usize) bool {
     const run = wrapper.parent orelse return false;
     const paragraph = tree.elements[run].parent orelse return false;
     if (!tree.elements[run].is(uri, "run") or !tree.elements[paragraph].is(uri, "p")) return false;
+    return readShapeSupported(tree, index);
+}
+
+/// Read-only shape facts; no physical placement, selected branch or edit lease.
+/// supported()/resolve() retain their strict original direct-run guards.
+pub fn readShapeSupported(tree: *const Tree, index: usize) bool {
+    if (index >= tree.elements.len) return false;
+    const wrapper = tree.elements[index];
+    if (!wrapper.is(uri, "switch")) return false;
     if (!gaps.empty(tree, index)) return false;
     var shape: @import("switch_shape.zig").State = .{};
     var child = wrapper.first_child;

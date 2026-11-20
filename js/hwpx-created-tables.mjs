@@ -1,3 +1,4 @@
+import { validateCreatedCellCharacterRuns } from './created-cell-character-runs.mjs';
 import { createdTableIdentity } from './created-table-identity.mjs';
 export function decodeCreatedTables(bytes) {
   const fail = () => {
@@ -85,8 +86,19 @@ export function validateCreatedTables(rows, { hostBase = 1 } = {}) {
     let x = 0;
     for (let index = 0; index < count; index++) {
       const cell = row.cells[index];
+      const rich = Object.hasOwn(cell ?? {}, 'character_runs');
       if (
-        !keys(cell, ['paragraph_id', 'row', 'column', 'x', 'y', 'width', 'height', 'text']) ||
+        !keys(cell, [
+          'paragraph_id',
+          'row',
+          'column',
+          'x',
+          'y',
+          'width',
+          'height',
+          'text',
+          ...(rich ? ['character_runs'] : []),
+        ]) ||
         ![cell.paragraph_id, cell.row, cell.column, cell.x, cell.y, cell.width, cell.height].every(
           uint,
         )
@@ -105,6 +117,13 @@ export function validateCreatedTables(rows, { hostBase = 1 } = {}) {
         !cell.text.isWellFormed()
       )
         return fail();
+      if (rich) {
+        try {
+          validateCreatedCellCharacterRuns(cell.text, cell.character_runs);
+        } catch {
+          return fail();
+        }
+      }
       paragraphs.add(cell.paragraph_id);
       x += cell.width;
       if (x > row.width) return fail();

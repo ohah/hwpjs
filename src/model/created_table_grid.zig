@@ -15,7 +15,7 @@ const edit_plan = @import("table_grid_edit_plan.zig");
 pub const Command = edit_plan.Command;
 pub const Limits = struct {
     max_cells: usize,
-    /// Total source UTF-8 bytes, including cells that will be deleted.
+    /// Total dynamic paragraph bytes (UTF-8 + explicit runs), including deleted cells.
     /// Zero is a valid budget for empty text; max_cells must be positive.
     max_text_bytes: usize,
 };
@@ -47,9 +47,12 @@ pub fn edit(a: std.mem.Allocator, source: *const Table, command: Command, new_pa
     for (source.cells) |cell| {
         if (cell.paragraph_id == 0) return error.InvalidTableParagraphIds;
         if ((try ids.getOrPut(cell.paragraph_id)).found_existing) return error.InvalidTableParagraphIds;
-        bytes = try std.math.add(usize, bytes, cell.text.len);
+        _ = cell.validate(source.resources.character) catch |err| switch (err) {
+            error.InvalidUnicodeEncoding => return error.InvalidTableCellText,
+            else => return err,
+        };
+        bytes = try std.math.add(usize, bytes, try cell.dynamicBytes());
         if (bytes > limits.max_text_bytes) return error.LimitExceeded;
-        if (!std.unicode.utf8ValidateSlice(cell.text)) return error.InvalidTableCellText;
     }
     for (new_paragraph_ids) |id| {
         if (id == 0) return error.InvalidTableParagraphIds;
@@ -59,7 +62,7 @@ pub fn edit(a: std.mem.Allocator, source: *const Table, command: Command, new_pa
     const cells = try a.alloc(created.Cell, count);
     var initialized: usize = 0;
     errdefer {
-        for (cells[0..initialized]) |cell| a.free(cell.text);
+        for (cells[0..initialized]) |*cell| cell.deinit(a);
         a.free(cells);
     }
     var inserted: usize = 0;
@@ -68,7 +71,7 @@ pub fn edit(a: std.mem.Allocator, source: *const Table, command: Command, new_pa
         const column = offset % plan.columns;
         if (try mapping.sourceIndex(@intCast(row), @intCast(column))) |source_offset| {
             const cell = source.cells[source_offset];
-            target.* = .{ .paragraph_id = cell.paragraph_id, .text = try a.dupe(u8, cell.text) };
+            target.* = try cell.clone(a);
         } else {
             target.* = .{ .paragraph_id = new_paragraph_ids[inserted], .text = &.{} };
             inserted += 1;

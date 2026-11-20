@@ -4,7 +4,9 @@ const Position = @import("title_mark_position.zig").Position;
 pub fn read(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, paragraph: *const @import("paragraph_structure_values.zig").Paragraph) ![]Position {
     if (paragraph.title_positions) |items| return a.dupe(Position, items);
     var found = false;
-    for (tree.elements, 0..) |element, index| {
+    var nodes = try @import("paragraph_owned_elements.zig").Iterator.init(tree, paragraph.template_element);
+    while (try nodes.next()) |index| {
+        const element = tree.elements[index];
         if (!@import("title_mark_axis.zig").retained(tree, index)) continue;
         const text = element.parent.?;
         const run = tree.elements[text].parent.?;

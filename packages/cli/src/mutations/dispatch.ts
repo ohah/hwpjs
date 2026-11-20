@@ -1,3 +1,9 @@
+import {
+  isCreatedCellSpliceOperation,
+  requireCreatedCellSplice,
+  requireCreatedCellSpliceStatic,
+} from './created-cell-splice.ts';
+import { isInlineObjectOperation, requireInlineObjectOperation } from './inline-object-create.ts';
 import { isFormOperation, requireFormOperation } from './form-state.ts';
 import {
   basicCharacterProperties,
@@ -30,6 +36,9 @@ function replaceParagraphRanges(
 }
 
 const METHODS = Object.freeze({
+  'created-cell-splice': 'spliceCreatedCell',
+  'chart-create': 'createChart',
+  'equation-insert': 'insertEquation',
   'page-settings': 'writePageSettings',
   'form-checkbox-state': 'setCheckBoxState',
   'form-radio-select': 'selectRadioButton',
@@ -62,6 +71,8 @@ interface Target {
   readonly paragraph?: number;
 }
 function targets(operation: DocumentOperation): readonly Target[] {
+  if (isInlineObjectOperation(operation) || isCreatedCellSpliceOperation(operation))
+    return [{ section: operation.selector.section }];
   if (operation.kind === 'page-settings')
     return operation.scope === 'section' ? [{ section: operation.section! }] : [];
   if (isFormOperation(operation))
@@ -100,6 +111,8 @@ export function prepareOperationSession(
     throw new Error('InvalidOperationSession');
   const protectedSections = new Set<number>();
   for (const operation of operations) {
+    if (isCreatedCellSpliceOperation(operation)) requireCreatedCellSpliceStatic(document);
+    if (isInlineObjectOperation(operation)) requireInlineObjectOperation(document, operation);
     if (isFormOperation(operation)) requireFormOperation(document, operation);
     if (hasCharacterExtensions(operation)) requireCharacterExtensions(document, operation);
     if (operation.kind === 'page-settings') requirePageSettingsWrite(document);
@@ -149,9 +162,11 @@ export function prepareOperationSession(
         protectedSections.add(target.section);
     }
     const needsText =
-      Object.hasOwn(operation, 'expectedText') ||
-      Object.hasOwn(operation, 'expectedRangeText') ||
-      operation.kind === 'replace-paragraph-ranges';
+      !isInlineObjectOperation(operation) &&
+      !isCreatedCellSpliceOperation(operation) &&
+      (Object.hasOwn(operation, 'expectedText') ||
+        Object.hasOwn(operation, 'expectedRangeText') ||
+        operation.kind === 'replace-paragraph-ranges');
     if (
       needsText &&
       typeof (document.format === 'hwp5' ? document.sdk.text : document.sdk.anchorText) !==
@@ -162,6 +177,8 @@ export function prepareOperationSession(
   if (
     operations.some(
       (operation) =>
+        isInlineObjectOperation(operation) ||
+        isCreatedCellSpliceOperation(operation) ||
         isFormOperation(operation) ||
         hasCharacterExtensions(operation) ||
         operation.kind === 'page-settings' ||
@@ -173,6 +190,8 @@ export function prepareOperationSession(
     // Enable after synchronous ABI/coordinate checks, before reference capture or mutation.
     document.sdk.enableHistoryV2();
   }
+  // 전체 정적 검사가 끝나 이력이 활성화된 뒤, 첫 문서 변경 전에 현재 binding을 확인합니다.
+  if (operations.some(isCreatedCellSpliceOperation)) requireCreatedCellSplice(document);
   for (const operation of operations)
     if (operation.kind === 'page-settings') admitPageSettings(document, operation);
   if (document.format === 'hwp5') {
@@ -182,6 +201,9 @@ export function prepareOperationSession(
   }
 }
 export function applyOperation(document: OperationDocument, operation: DocumentOperation): unknown {
+  if (isCreatedCellSpliceOperation(operation))
+    throw new Error('PreparedCreatedCellOperationRequired');
+  if (isInlineObjectOperation(operation)) throw new Error('PreparedInlineObjectOperationRequired');
   if (isFormOperation(operation)) throw new Error('PreparedFormStateRequired');
   const textCache = new Map<string, string>();
   let observedUnits = 0;

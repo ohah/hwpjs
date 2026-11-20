@@ -4,6 +4,10 @@ export const SURFACE_READ_KINDS = Object.freeze([
   'query-formatting',
   'prepare-replace-all',
   'text-transaction-capabilities',
+  'document-text-snapshot',
+  'document-text-selection',
+  'document-text-anchor',
+  'document-text-read-binding',
   'query-window',
   'query-edit-window',
   'query-edit-range',
@@ -15,6 +19,8 @@ export const SURFACE_READ_KINDS = Object.freeze([
   'picture-bytes',
   'table-background-bytes',
   'chart-display',
+  'hwp5-chart-display',
+  'hwp5-chart-create-preview',
   'chart-points',
   'chart-series-text',
   'chart-rich-text',
@@ -26,14 +32,19 @@ export const SURFACE_READ_KINDS = Object.freeze([
 export const SURFACE_MUTATION_KINDS = Object.freeze([
   'insert-equation',
   'create-chart',
+  'delete-note',
+  'insert-footnote',
+  'insert-endnote',
   'formatting-patch',
   'independent-text',
+  'replace-document-text',
   'splice',
   'splice-current',
   'splice-font-name',
   'splice-character-properties',
   'splice-rich-character',
   'created-cell-text',
+  'created-cell-splice',
   'insert-table',
   'created-table-grid',
   'source-table-grid',
@@ -90,7 +101,12 @@ export const SURFACE_MUTATION_KINDS = Object.freeze([
   'cell-appearance',
   'cell-styles',
 ] as const);
-export const SURFACE_VIEW_KINDS = Object.freeze(['enable', 'set-edit-window'] as const);
+export const SURFACE_VIEW_KINDS = Object.freeze([
+  'enable',
+  'set-edit-window',
+  'reveal-document-text',
+  'refresh-document-text-view',
+] as const);
 const reads = new Set<string>(SURFACE_READ_KINDS);
 const mutations = new Set<string>(SURFACE_MUTATION_KINDS);
 const views = new Set<string>(SURFACE_VIEW_KINDS);

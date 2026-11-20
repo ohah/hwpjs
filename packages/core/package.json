@@ -22,6 +22,10 @@
     "./_internal/native-geometry": {
       "types": "./dist/_internal/native-geometry.d.ts",
       "import": "./dist/_internal/native-geometry.js"
+    },
+    "./_internal/native-read-source": {
+      "types": "./dist/_internal/native-read-source.d.ts",
+      "import": "./dist/_internal/native-read-source.js"
     }
   },
   "types": "./dist/index.d.ts",

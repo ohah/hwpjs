@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='utf-8'?>
+<s:sec xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph" xmlns:s="http://www.hancom.co.kr/hwpml/2011/section" xmlns:x="urn:future">
+  <p:p id="1" paraPrIDRef="0" styleIDRef="0">
+    <p:run charPrIDRef="0">
+      <p:t>LEFT_NEEDLE</p:t>
+      <p:ctrl>
+        <p:fieldBegin id="7" type="HYPERLINK">
+          <p:subList id="10" textDirection="HORIZONTAL" lineWrap="BREAK" vertAlign="CENTER" linkListIDRef="0" linkListNextIDRef="0" textWidth="0" textHeight="0" hasTextRef="0" hasNumRef="0">
+            <p:p id="4" paraPrIDRef="0" styleIDRef="0">
+              <p:run charPrIDRef="0"><p:t>BEGIN_NEEDLE</p:t></p:run>
+            </p:p>
+          </p:subList>
+        </p:fieldBegin>
+      </p:ctrl>
+      <p:t>LABEL_NEEDLE</p:t>
+      <p:ctrl>
+        <p:fieldEnd beginIDRef="7">
+          <p:subList id="12" textDirection="HORIZONTAL" lineWrap="BREAK" vertAlign="CENTER" linkListIDRef="0" linkListNextIDRef="0" textWidth="0" textHeight="0" hasTextRef="0" hasNumRef="0">
+            <p:p id="5" paraPrIDRef="0" styleIDRef="0">
+              <p:run charPrIDRef="0"><p:t>END_NEEDLE</p:t></p:run>
+            </p:p>
+          </p:subList>
+        </p:fieldEnd>
+      </p:ctrl>
+      <p:t>RIGHT_NEEDLE</p:t>
+    </p:run>
+  </p:p>
+  <p:p id="2" paraPrIDRef="0" styleIDRef="0">
+    <p:run charPrIDRef="0">
+      <p:switch>
+        <p:case p:required-namespace="urn:unsupported">
+          <p:ctrl>
+            <p:fieldBegin id="11" type="HYPERLINK">
+              <p:subList id="9" textDirection="HORIZONTAL" lineWrap="BREAK" vertAlign="CENTER" linkListIDRef="0" linkListNextIDRef="0" textWidth="0" textHeight="0" hasTextRef="0" hasNumRef="0">
+                <p:p id="3" paraPrIDRef="0" styleIDRef="0">
+                  <p:run charPrIDRef="0">
+                    <p:ctrl>
+                      <p:fieldBegin id="7" type="HYPERLINK" />
+                    </p:ctrl>
+                    <p:t>DECOY</p:t>
+                    <p:ctrl>
+                      <p:fieldEnd beginIDRef="7" />
+                    </p:ctrl>
+                  </p:run>
+                </p:p>
+              </p:subList>
+            </p:fieldBegin>
+          </p:ctrl>
+          <p:ctrl>
+            <p:fieldEnd beginIDRef="11" />
+          </p:ctrl>
+          <x:futureControl />
+        </p:case>
+        <p:default>
+          <p:t>KEEP</p:t>
+        </p:default>
+      </p:switch>
+    </p:run>
+  </p:p>
+</s:sec>

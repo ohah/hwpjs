@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createEditor } from '@hwpjs/core';
+import {
+  createTextToolsFixtureEditor,
+  textToolsFixtureSelection,
+} from './text-tools-native-fixture.ts';
 import { createTextToolsBridge } from '../src/text-tools-bridge.ts';
 // Minimal event/ownership fixture, not browser focus, layout or trusted-input evidence.
 class Element extends EventTarget {
@@ -13,6 +16,14 @@ class Element extends EventTarget {
   hidden = false;
   open = false;
   textContent = '';
+  className = '';
+  classList = {
+    add: (...names: string[]) => {
+      this.className = [
+        ...new Set([...this.className.split(/\s+/).filter(Boolean), ...names]),
+      ].join(' ');
+    },
+  };
   constructor(readonly ownerDocument: any) {
     super();
   }
@@ -69,20 +80,8 @@ async function fixture() {
         },
       ],
     },
-    e = createEditor({
-      runtimeFactory: () => ({
-        async request(m: any) {
-          return {
-            kind: m.kind,
-            content,
-            ...(['load', 'enable'].includes(m.kind)
-              ? {}
-              : { meta: { application: 'applied' as const, changed: true } }),
-          };
-        },
-        dispose() {},
-      }),
-    });
+    { editor: e } = createTextToolsFixtureEditor(content);
+
   await e.load(new Uint8Array([1]), { format: 'hwpx' });
   const doc: any = { activeElement: null };
   doc.createElement = () => new Element(doc);
@@ -95,6 +94,7 @@ async function fixture() {
   let focuses = 0;
   const bridge = createTextToolsBridge({
       editor: e,
+      selectDocumentText: textToolsFixtureSelection(e),
       root: root as any,
       onStatus() {},
       onClose: () => {

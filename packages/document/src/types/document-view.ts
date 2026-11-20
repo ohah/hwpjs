@@ -40,6 +40,7 @@ type Hwp5ObservationMethods =
 type HwpxObservationMethods =
   | CommonObservationMethods
   | 'paragraphTextSnapshot'
+  | 'paragraphControlTextSnapshot'
   | 'anchorText'
   | 'tableBorderSources'
   | 'pageAreaDeclarations'

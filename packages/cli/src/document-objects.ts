@@ -1,3 +1,4 @@
+import { readHwp5ChartObjectDetail } from '../../document/src/hwp5-chart-object-detail.ts';
 import { readFormInventory, resolveFormReference } from './document-forms.ts';
 import type {
   DocumentView,
@@ -204,6 +205,28 @@ export async function inspectDocumentObject(
         if (!value.every(record)) throw new Error('InvalidObjectDetail');
         return value;
       };
+      const chartFields = (detail: Record<string, unknown>) => {
+        for (const row of rows(detail.rich_text))
+          scalarFields(row, ['owner_role', 'owner_node', 'text', 'plain_text_complete']);
+        for (const row of rows(detail.series_text)) scalarFields(row, ['series_node', 'text']);
+        const bindings = new Map<number, Record<string, unknown>>();
+        if (detail.bindings !== undefined)
+          for (const binding of rows(detail.bindings)) {
+            if (!record(binding) || !uint(binding.point) || bindings.has(binding.point))
+              throw new Error('InvalidObjectDetail');
+            bindings.set(binding.point, binding);
+          }
+        let pointOrdinal = 0;
+        for (const row of rows(detail.points)) {
+          line(`값 순번: ${pointOrdinal}`);
+          scalarFields(row, ['kind', 'index', 'value']);
+          const binding = bindings.get(pointOrdinal++);
+          if (binding) scalarFields(binding, ['series_node', 'plot_node', 'role_node', 'role']);
+          else line('계열과 역할 관계 미관측');
+        }
+        for (const ordinal of bindings.keys())
+          if (ordinal >= pointOrdinal) throw new Error('InvalidObjectDetail');
+      };
       const query = (
         method: 'chartDisplay' | 'equationScript' | 'oleSource',
         ...args: number[]
@@ -274,26 +297,35 @@ export async function inspectDocumentObject(
           )
             throw new Error('InvalidObjectDetail');
           scalarFields(detail.pair, ['chart_path', 'ole_path', 'declared_external']);
-          for (const row of rows(detail.rich_text))
-            scalarFields(row, ['owner_role', 'owner_node', 'text', 'plain_text_complete']);
-          for (const row of rows(detail.series_text)) scalarFields(row, ['series_node', 'text']);
-          const bindings = new Map<number, Record<string, unknown>>();
-          if (detail.bindings !== undefined)
-            for (const binding of rows(detail.bindings)) {
-              if (!record(binding) || !uint(binding.point) || bindings.has(binding.point))
-                throw new Error('InvalidObjectDetail');
-              bindings.set(binding.point, binding);
-            }
-          let pointOrdinal = 0;
-          for (const row of rows(detail.points)) {
-            line(`값 순번: ${pointOrdinal}`);
-            scalarFields(row, ['kind', 'index', 'value']);
-            const binding = bindings.get(pointOrdinal++);
-            if (binding) scalarFields(binding, ['series_node', 'plot_node', 'role_node', 'role']);
-            else line('계열과 역할 관계 미관측');
-          }
-          for (const ordinal of bindings.keys())
-            if (ordinal >= pointOrdinal) throw new Error('InvalidObjectDetail');
+          chartFields(detail);
+          line('차트 메타데이터 조회이며 외부 자원 다운로드나 바이너리 추출은 하지 않았습니다.');
+        }
+      } else if (
+        document.format === 'hwp5' &&
+        target.kind === 'drawing' &&
+        block.type === 'unknown' &&
+        block.nativeKind === 0x246f6c65
+      ) {
+        scalarFields(block, ['nativeKind']);
+        const result = readHwp5ChartObjectDetail(document.sdk, target, block);
+        if (result.state === 'unavailable') unavailable(result.reason);
+        else {
+          line('차트 상세: hwp5_chart');
+          scalarFields(result.detail.owner, [
+            'control_node',
+            'component_node',
+            'ole_node',
+            'ole_layout',
+            'ordinal',
+            'opaque_tail_bytes',
+          ]);
+          scalarFields(result.detail, [
+            'physical_id',
+            'stream_entry',
+            'legacy_backup_present',
+            'presentation_streams',
+          ]);
+          chartFields(result.detail.data as unknown as Record<string, unknown>);
           line('차트 메타데이터 조회이며 외부 자원 다운로드나 바이너리 추출은 하지 않았습니다.');
         }
       } else if (target.kind === 'equation' && document.format === 'hwpx') {

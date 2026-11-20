@@ -5,6 +5,7 @@ import type {
   SetNamedFieldValuePayload,
 } from '../editor/named-fields.ts';
 import type { StateToken } from '../state/editor-state.ts';
+import type { CreatedCellSplicePayload } from './created-cell-text.ts';
 export interface EditorCommand<T> {
   readonly name: string;
   readonly id: symbol;
@@ -24,11 +25,12 @@ export interface SelectionTarget extends StateToken {
   readonly endUnit: number;
   readonly affinity: 'forward' | 'backward';
 }
-export interface SpliceTextPayload {
+export interface SourceSpliceTextPayload {
   readonly target: SelectionTarget;
   readonly text: string;
   /** Optional exact selection observation fence for asynchronous clipboard operations. */ readonly selectionVersion?: number;
 }
+export type SpliceTextPayload = SourceSpliceTextPayload | CreatedCellSplicePayload;
 export interface HistoryPayload {
   readonly token: StateToken;
 }

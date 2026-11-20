@@ -58,7 +58,7 @@ export function insertionFormattingObservation(content, paragraph, unit) {
     return null;
   return observeFormattingIds(content, [span.charShapeId], [paragraph]);
 }
-function observeFormattingIds(content, ids, paragraphs) {
+export function observeFormattingIds(content, ids, paragraphs) {
   const resources = Object.fromEntries(
     [
       ['shapes', 'characterShapes'],

@@ -21,10 +21,14 @@ export interface SurfaceClipboardPort {
   captureTransferSelection?(options: {
     cut?: boolean;
     clipboard?: PlainTextClipboard | null;
+    onStatus?: (message: string) => void;
+    onResult?: (result: CommandResult) => void;
   }): (() => Promise<boolean>) | null;
   transferSelection?(options: {
     cut?: boolean;
     clipboard?: PlainTextClipboard | null;
+    onStatus?: (message: string) => void;
+    onResult?: (result: CommandResult) => void;
   }): Promise<boolean>;
 }
 export interface ClipboardBridgeOptions {
@@ -99,11 +103,19 @@ export function createClipboardBridge(options: ClipboardBridgeOptions) {
   async function action(action: DemoAction): Promise<boolean> {
     if (!supported(action.command)) return false;
     const command = action.command;
+    let statusReported = false;
+    const reportStatus = (message: string) => {
+      if (closed || statusReported) return;
+      statusReported = true;
+      onStatus(message);
+    };
+    let surfaceMessage: string | undefined;
+    let surfaceResult: CommandResult | undefined;
     const selection = getSelectionClipboard(editor.getEditorState());
     const surface = !pending && surfaceLane(command, selection);
     const initial = surface ? null : reason(command, selection);
     if (initial) {
-      if (!closed) onStatus(initial);
+      if (!closed) reportStatus(initial);
       return true;
     }
     // 외부 콜백이나 Core 갱신 전에 최초 Canvas 범위의 일회용 클로저를 확보한다.
@@ -111,9 +123,18 @@ export function createClipboardBridge(options: ClipboardBridgeOptions) {
       ? surface.captureTransferSelection?.({
           cut: command === 'cut',
           clipboard: platform(),
+          onStatus: (message) => {
+            surfaceMessage ??= message;
+          },
+          onResult: (result) => {
+            surfaceResult = result;
+          },
         })
       : undefined;
-    if (surface && !transfer) return true;
+    if (surface && !transfer) {
+      reportStatus('SurfaceClipboardSelectionStale');
+      return true;
+    }
     pending = true;
     let phase: 'read' | 'write' | 'editor' = 'editor';
     try {
@@ -125,7 +146,17 @@ export function createClipboardBridge(options: ClipboardBridgeOptions) {
         if (options.getSurface?.() !== surface) return true;
         phase = 'write';
         const transferred = await transfer!();
-        if (!closed && !transferred) onStatus('SurfaceClipboardNotApplied');
+        if (!closed) {
+          if (surfaceResult) {
+            reportStatus(
+              surfaceResult.error
+                ? `${surfaceResult.status}: ${surfaceResult.error}`
+                : (surfaceMessage ?? surfaceResult.status),
+            );
+            onResult?.(surfaceResult);
+          } else if (surfaceMessage !== undefined) reportStatus(surfaceMessage);
+          else if (!transferred) reportStatus('SurfaceClipboardNotApplied');
+        }
         return true;
       }
       const captured = getSelectionClipboard(editor.getEditorState());
@@ -147,7 +178,7 @@ export function createClipboardBridge(options: ClipboardBridgeOptions) {
         phase = 'editor';
         if (!fresh(captured)) throw Error('ClipboardWrittenSelectionChanged');
         if (command === 'copy') {
-          onStatus('Copied');
+          reportStatus('Copied');
           return true;
         }
       }
@@ -158,7 +189,7 @@ export function createClipboardBridge(options: ClipboardBridgeOptions) {
         selectionVersion: captured.stateVersion,
       });
       if (closed) return true;
-      onStatus(result.error ? `${result.status}: ${result.error}` : result.status);
+      reportStatus(result.error ? `${result.status}: ${result.error}` : result.status);
       onResult?.(result);
     } catch (error) {
       if (!closed) {
@@ -166,7 +197,7 @@ export function createClipboardBridge(options: ClipboardBridgeOptions) {
         const message = error instanceof Error ? error.message : String(error);
         const denied =
           (name === 'NotAllowedError' || name === 'SecurityError') && phase !== 'editor';
-        onStatus(
+        reportStatus(
           denied ? `Clipboard${phase === 'read' ? 'Read' : 'Write'}PermissionDenied` : message,
         );
         if (denied && phase === 'read') options.onReadDenied?.();

@@ -32,6 +32,7 @@ async function pair(paragraph) {
       assert.equal(r.error, undefined);
       initial.push(r);
     }
+    for (const r of initial) assert.equal(r.historyRevision, 0);
     assert.deepEqual(initial[0].content, initial[1].content);
     const original = cloneData(initial[0].content),
       flow = original.currentParagraphFlows.find(
@@ -104,12 +105,14 @@ for (const paragraph of [4, 15, 18])
       const full = await s.b.send(splice(paragraph, at, '가'));
       assert.equal(thin.content.viewKind, 'owner-window-patch');
       assert.equal(full.content.viewKind, undefined);
-      assertFullSnapshot(full.content, next, s.original);
+      assert.equal(thin.historyRevision, 1);
+      assert.equal(full.historyRevision, 1);
+      assertFullSnapshot(full.content, next, s.original, { revision: 1, beforeRevision: 0 });
       let epoch = thin.content.receipt.epoch,
         rev = thin.historyRevision,
         beforeFull = full.content;
-      const parent = s.initial.historyRevision,
-        child = rev;
+      const parent = 0,
+        child = 1;
       for (const [operation, expectedRevision, expected] of [
         ['undo', parent, s.original],
         ['redo', child, next],
@@ -120,7 +123,11 @@ for (const paragraph of [4, 15, 18])
           f = await s.b.send({ kind: operation });
         packet(r, s, expected, pref, epoch);
         assert.equal(f.content.viewKind, undefined);
-        assertFullSnapshot(f.content, expected, beforeFull);
+        assert.equal(f.historyRevision, expectedRevision);
+        assertFullSnapshot(f.content, expected, beforeFull, {
+          revision: expectedRevision,
+          beforeRevision: operation === 'undo' ? 1 : 0,
+        });
         assert.equal(
           s.a.counts[`hwp5_edit_${operation}`] - (before[`hwp5_edit_${operation}`] ?? 0),
           1,
@@ -137,7 +144,8 @@ for (const paragraph of [4, 15, 18])
       }
       const count = s.a.counts.hwp5_edit_current_text_preview ?? 0;
       const fresh = await s.a.send({ kind: 'refresh' });
-      assertFullSnapshot(fresh.content, next, s.original);
+      assert.equal(fresh.historyRevision, 1);
+      assertFullSnapshot(fresh.content, next, s.original, { revision: 1, beforeRevision: 0 });
       assert.deepEqual(
         fresh.content,
         beforeFull,
@@ -151,16 +159,21 @@ for (const paragraph of [4, 15, 18])
 test('Worker history hint stale epoch: full fallback, one mutation, before-derived original DTO', async () => {
   const s = await pair(15);
   try {
-    const next = insertExpected(s.original, 15, 0, '가');
     const thin = await s.a.send(splice(15, 0, '가'), 'owner-window-v1');
-    await s.b.send(splice(15, 0, '가'));
+    const editedFull = await s.b.send(splice(15, 0, '가'));
+    assert.equal(thin.historyRevision, 1);
+    assert.equal(editedFull.historyRevision, 1);
     const before = { ...s.a.counts },
-      pref = hint(s, 'undo', thin.historyRevision, s.initial.historyRevision, '999999999');
+      pref = hint(s, 'undo', 1, 0, '999999999');
     const actual = await s.a.send({ kind: 'undo' }, pref),
       full = await s.b.send({ kind: 'undo' });
     assert.equal(actual.error, undefined);
     assert.equal(actual.content.viewKind, undefined);
-    assertFullSnapshot(actual.content, s.original, next);
+    assert.equal(actual.historyRevision, 0);
+    assertFullSnapshot(actual.content, s.original, editedFull.content, {
+      revision: 0,
+      beforeRevision: 1,
+    });
     assert.deepEqual(actual.content, full.content);
     assert.equal(s.a.counts.hwp5_edit_undo - (before.hwp5_edit_undo ?? 0), 1);
     assert(
@@ -177,11 +190,13 @@ test('Worker public undo/redo ignores message-body history hints and keeps full 
   try {
     const next = insertExpected(s.original, 15, 0, '가');
     const thin = await s.a.send(splice(15, 0, '가'), 'owner-window-v1');
-    await s.b.send(splice(15, 0, '가'));
-    let prior = next;
+    const editedFull = await s.b.send(splice(15, 0, '가'));
+    assert.equal(thin.historyRevision, 1);
+    assert.equal(editedFull.historyRevision, 1);
+    let prior = editedFull.content;
     for (const [kind, expected, revision] of [
-      ['undo', s.original, s.initial.historyRevision],
-      ['redo', next, thin.historyRevision],
+      ['undo', s.original, 0],
+      ['redo', next, 1],
     ]) {
       const preference = hint(s, kind, thin.historyRevision, revision, thin.content.receipt.epoch),
         before = { ...s.a.counts };
@@ -193,10 +208,14 @@ test('Worker public undo/redo ignores message-body history hints and keeps full 
       const full = await s.b.send({ kind });
       assert.equal(r.error, undefined);
       assert.equal(r.content.viewKind, undefined);
-      assertFullSnapshot(r.content, expected, prior);
+      assert.equal(r.historyRevision, revision);
+      assertFullSnapshot(r.content, expected, prior, {
+        revision,
+        beforeRevision: kind === 'undo' ? 1 : 0,
+      });
       assert.deepEqual(r.content, full.content);
       assert.equal(s.a.counts[`hwp5_edit_${kind}`] - (before[`hwp5_edit_${kind}`] ?? 0), 1);
-      prior = expected;
+      prior = full.content;
     }
   } finally {
     await s.close();
@@ -206,20 +225,19 @@ test('Worker public undo/redo ignores message-body history hints and keeps full 
 test('Worker history dirty reads: both request-specific shapes before DTO/caps/save equality', async () => {
   const s = await pair(15);
   try {
-    const next = insertExpected(s.original, 15, 0, '가');
     const thin = await s.a.send(splice(15, 0, '가'), 'owner-window-v1');
-    await s.b.send(splice(15, 0, '가'));
-    const pref = hint(
-      s,
-      'undo',
-      thin.historyRevision,
-      s.initial.historyRevision,
-      thin.content.receipt.epoch,
-    );
+    const editedFull = await s.b.send(splice(15, 0, '가'));
+    assert.equal(thin.historyRevision, 1);
+    assert.equal(editedFull.historyRevision, 1);
+    const pref = hint(s, 'undo', 1, 0, thin.content.receipt.epoch);
     const u = await s.a.send({ kind: 'undo' }, pref);
     packet(u, s, s.original, pref, thin.content.receipt.epoch);
     const bu = await s.b.send({ kind: 'undo' });
-    assertFullSnapshot(bu.content, s.original, next);
+    assert.equal(bu.historyRevision, 0);
+    assertFullSnapshot(bu.content, s.original, editedFull.content, {
+      revision: 0,
+      beforeRevision: 1,
+    });
     for (const request of [
       { kind: 'query-window', offset: 14, count: 3 },
       { kind: 'set-edit-window', offset: null, count: null },

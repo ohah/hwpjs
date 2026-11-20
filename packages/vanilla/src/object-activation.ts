@@ -4,6 +4,7 @@ import { canvasDocumentPoint } from '../../../web/preview/canvas-pointer-coordin
 
 export type CanvasObjectTarget = Readonly<
   | { kind: 'chart'; section: number; wrapper: number }
+  | { kind: 'hwp5-chart'; section: number; controlNode: number }
   | { kind: 'picture'; section: number; pictureNode: number }
   | { kind: 'drawing'; section: number; drawingNode: number }
 >;

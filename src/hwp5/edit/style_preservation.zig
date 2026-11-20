@@ -16,8 +16,11 @@ const created_table_limits: @import("created_table_records.zig").Limits = .{ .ma
 
 pub const ParagraphInfo = struct { source_node: ?u32, parent_node: ?u32, style_id: u8 };
 pub const Command = union(enum) {
+    insert_chart: @import("../chart/create_request.zig").Request,
+    insert_equation: @import("equation_create_request.zig").Request,
     stage_table: @import("created_table_stage.zig").Edit,
     set_created_cell_text: @import("created_cell_text.zig").Edit,
+    splice_created_cell: @import("../../model/created_cell_typing.zig").Edit,
     edit_created_table_grid: @import("created_table_grid_session.zig").Edit,
     split_source_table_cell: @import("source_table_cell_split_service.zig").Edit,
     edit_source_table_grid: @import("source_table_grid_session.zig").Edit,
@@ -27,6 +30,7 @@ pub const Command = union(enum) {
     delete_paragraph: struct { section: usize, paragraph: usize },
     splice_text: TextSplice,
     splice_independent_text: []const @import("independent_text_session.zig").Group,
+    splice_document_text: []const @import("document_text_session.zig").Group,
     set_character_format: CharacterFormat,
     set_character_properties: @import("character_property_apply.zig").Edit,
     set_character_grouped_insertion: @import("character_property_apply.zig").GroupEdit,
@@ -60,6 +64,8 @@ pub const Command = union(enum) {
 pub const SaveOptions = struct {
     /// Byte-preservation experiments only; does not certify Hancom layout.
     allow_stale_layout: bool = false,
+    /// Trusted internal host measurement. Never a public caller certification.
+    strict_layout: ?@import("strict_plain_layout.zig").Request = null,
     max_output_bytes: usize = max_bytes,
 };
 pub const Saved = struct { bytes: []u8, layout_requires_reflow: bool };
@@ -67,11 +73,14 @@ pub const Checkpoint = @import("table_checkpoint.zig").Checkpoint;
 
 // Allocated once; the public opaque pointer prevents direct model/sidecar writes.
 const State = struct {
+    chart_resources: @import("../chart/created_resources.zig").Values = .{},
     cell_backgrounds: @import("cell_background_values.zig").Values = .{},
     formatting_batch: ?*FormattingBatch = null,
     live_text: ?@import("live_text_backing.zig").Backing = null,
     live_incarnation: u64 = 0,
     live_totals: @import("live_text_backing.zig").Counters = .{},
+    strict_layout_serial: u64 = 0,
+    strict_layout_lease: ?*@import("strict_plain_layout.zig").Lease = null,
     history_epoch: ?@import("../../model/history_mutation_epoch.zig").Barrier = null,
     history_poison_observer: ?*bool = null,
     allocator: std.mem.Allocator,
@@ -102,11 +111,13 @@ const State = struct {
 
     fn deinit(self: *State) void {
         const a = self.allocator;
+        if (self.strict_layout_lease) |lease| lease.close();
         if (self.live_text) |*backing| backing.deinit();
         for (self.original_style_offsets) |offsets| a.free(offsets);
         a.free(self.original_style_offsets);
         a.free(self.style_offsets);
         self.cell_backgrounds.deinit(a);
+        self.chart_resources.deinit(a);
         self.document.deinit(a);
         for (self.created_tables) |*tables| tables.deinit(a);
         a.free(self.created_tables);
@@ -166,12 +177,12 @@ pub const Session = opaque {
         const state = self.getState();
         if (state.formatting_batch) |context| {
             if (context.original_info == null) {
-                context.original_info = try state.source.decodeDocInfo(state.allocator, max_stream);
+                context.original_info = if (state.chart_resources.docinfo) |bytes| try state.allocator.dupe(u8, bytes) else try state.source.decodeDocInfo(state.allocator, max_stream);
                 context.docinfo_decodes += 1;
             }
             return .{ .bytes = context.original_info.?, .owned = false };
         }
-        return .{ .bytes = try state.source.decodeDocInfo(state.allocator, max_stream), .owned = true };
+        return .{ .bytes = if (state.chart_resources.docinfo) |bytes| try state.allocator.dupe(u8, bytes) else try state.source.decodeDocInfo(state.allocator, max_stream), .owned = true };
     }
 
     /// 기존 WASM open 내부 전용 관리 연결. 모델/포인터를 외부에 내보내지 않는다.
@@ -190,6 +201,7 @@ pub const Session = opaque {
         return b.ticket();
     }
     pub fn beginHistoryTransaction(self: *Session, ticket: @import("../../model/history_mutation_epoch.zig").Ticket) !void {
+        self.invalidateStrictLayout();
         const b = &self.getState().history_epoch.?;
         try b.begin(ticket);
     }
@@ -199,6 +211,7 @@ pub const Session = opaque {
     }
     /// Session이 poison 권위다. 등록된 History의 기존 stats flag도 즉시 sticky 전파한다.
     pub fn poisonHistoryTransaction(self: *Session) void {
+        self.invalidateStrictLayout();
         const state = self.getState();
         state.history_epoch.?.uncertain();
         if (state.history_poison_observer) |flag| flag.* = true;
@@ -487,6 +500,33 @@ pub const Session = opaque {
         return @import("created_table_snapshot.zig").read(allocator, &state.document.sections[section], &state.created_tables[section]);
     }
 
+    pub fn documentTextAnchor(self: *const Session, allocator: std.mem.Allocator, binding: @import("../../model/formatting_binding.zig").State, revision: ?u32, request: @import("../../model/document_text_anchor.zig").Request) !@import("../../model/document_text_anchor.zig").Response {
+        var snapshot = try self.documentTextSnapshot(allocator, binding, revision);
+        defer snapshot.deinit();
+        if (request.read_stamp) |stamp| try snapshot.bindReadStamp(stamp);
+        const state = self.stateConst();
+        return @import("document_text_anchor.zig").query(allocator, &state.document, state.created_tables, &snapshot, request);
+    }
+
+    pub fn documentTextSelection(self: *const Session, allocator: std.mem.Allocator, binding: @import("../../model/formatting_binding.zig").State, revision: ?u32, request: @import("../../model/document_text_selection.zig").Request) !@import("../../model/document_text_selection.zig").Response {
+        var snapshot = try self.documentTextSnapshot(allocator, binding, revision);
+        defer snapshot.deinit();
+        if (request.read_stamp) |stamp| try snapshot.bindReadStamp(stamp);
+        const state = self.stateConst();
+        return @import("document_text_selection.zig").query(allocator, &state.document, state.created_tables, &snapshot, request);
+    }
+
+    pub fn documentTextSnapshot(self: *const Session, allocator: std.mem.Allocator, binding: @import("../../model/formatting_binding.zig").State, revision: ?u32) !@import("../../model/document_text_snapshot.zig").Snapshot {
+        try self.materializeLiveText();
+        const state = self.stateConst();
+        const coverage = try self.independentTextCoverage(allocator);
+        defer allocator.free(coverage.sections);
+        return @import("document_text_snapshot.zig").read(allocator, &state.document, state.created_tables, state.decoded, state.source.header.version(), binding, revision, coverage);
+    }
+    pub fn prepareDocumentTextPlan(self: *const Session, allocator: std.mem.Allocator, input: @import("../../model/document_replace_all.zig").Plan) !@import("document_text_plan.zig").Plan {
+        try self.materializeLiveText();
+        return @import("document_text_plan.zig").prepare(allocator, &self.stateConst().document, input);
+    }
     pub fn currentTextPreview(self: *const Session, allocator: std.mem.Allocator) ![]u8 {
         try self.materializeLiveText();
         return @import("current_text_preview.zig").encode(allocator, &self.stateConst().document, self.fileVersion());
@@ -561,20 +601,20 @@ pub const Session = opaque {
         var font_cache: @import("../../model/batch_font_lookup.zig").Cache = .{};
         for (commands) |command| self.applyWithFontCache(command, &font_cache) catch |err| {
             const state = self.getState();
-            try @import("table_checkpoint.zig").rollbackWithCells(checkpoint, state.allocator, self, &state.document, &state.created_tables, &state.cell_backgrounds);
+            try @import("table_checkpoint.zig").rollbackWithCharts(checkpoint, state.allocator, self, &state.document, &state.created_tables, &state.cell_backgrounds, &state.chart_resources);
             state.refreshSourceViews();
             return err;
         };
         self.finishFormattingBatch() catch |err| {
             const state = self.getState();
-            try @import("table_checkpoint.zig").rollbackWithCells(checkpoint, state.allocator, self, &state.document, &state.created_tables, &state.cell_backgrounds);
+            try @import("table_checkpoint.zig").rollbackWithCharts(checkpoint, state.allocator, self, &state.document, &state.created_tables, &state.cell_backgrounds, &state.chart_resources);
             state.refreshSourceViews();
             return err;
         };
         if (try self.matchesCheckpoint(checkpoint)) return false;
         _ = self.checkpointSize(limit) catch |err| {
             const state = self.getState();
-            try @import("table_checkpoint.zig").rollbackWithCells(checkpoint, state.allocator, self, &state.document, &state.created_tables, &state.cell_backgrounds);
+            try @import("table_checkpoint.zig").rollbackWithCharts(checkpoint, state.allocator, self, &state.document, &state.created_tables, &state.cell_backgrounds, &state.chart_resources);
             state.refreshSourceViews();
             return err;
         };
@@ -584,25 +624,25 @@ pub const Session = opaque {
     pub fn matchesCheckpoint(self: *const Session, checkpoint: *const Checkpoint) !bool {
         try self.materializeLiveText();
         const state = self.stateConst();
-        return @import("table_checkpoint.zig").matchesWithCells(checkpoint, state.allocator, self, &state.document, state.created_tables, state.cell_backgrounds);
+        return @import("table_checkpoint.zig").matchesWithCharts(checkpoint, state.allocator, self, &state.document, state.created_tables, state.cell_backgrounds, state.chart_resources);
     }
 
     pub fn checkpointSize(self: *const Session, limit: usize) !usize {
         try self.materializeLiveText();
-        return @import("table_checkpoint.zig").sizeWithCells(&self.stateConst().document, self.stateConst().created_tables, self.stateConst().cell_backgrounds, limit);
+        return @import("table_checkpoint.zig").sizeWithCharts(&self.stateConst().document, self.stateConst().created_tables, self.stateConst().cell_backgrounds, self.stateConst().chart_resources, limit);
     }
 
     pub fn createCheckpoint(self: *const Session, max_checkpoint_bytes: usize) !*Checkpoint {
         try self.materializeLiveText();
         const state = self.stateConst();
-        return @import("table_checkpoint.zig").captureWithCells(state.allocator, self, &state.document, state.created_tables, state.cell_backgrounds, max_checkpoint_bytes);
+        return @import("table_checkpoint.zig").captureWithCharts(state.allocator, self, &state.document, state.created_tables, state.cell_backgrounds, state.chart_resources, max_checkpoint_bytes);
     }
 
     /// V2 history storage only. The returned values may not be exchanged into live state.
     pub fn createHistoryCheckpointIn(self: *const Session, storage: std.mem.Allocator, limit: usize) !*Checkpoint {
         try self.materializeLiveText();
         const state = self.stateConst();
-        return @import("table_checkpoint.zig").captureWithCells(storage, self, &state.document, state.created_tables, state.cell_backgrounds, limit);
+        return @import("table_checkpoint.zig").captureWithCharts(storage, self, &state.document, state.created_tables, state.cell_backgrounds, state.chart_resources, limit);
     }
     pub fn cloneHistoryCheckpointForRestore(self: *const Session, checkpoint: *const Checkpoint, limit: usize) !*Checkpoint {
         try self.materializeLiveText();
@@ -630,7 +670,7 @@ pub const Session = opaque {
         if (barrier.poisoned) return error.HistoryMutationUncertain;
         // 이 함수는 bind/목적지 size 검증을 모두 끝낸 뒤에만 swap한다. 실패 전 gap 폐기 금지.
         // 현재 canonical tokens는 이때 checkpoint로 이동하며 즉시 deinit될 소비값이다.
-        try @import("table_checkpoint.zig").rollbackWithCells(checkpoint, state.allocator, self, &state.document, &state.created_tables, &state.cell_backgrounds);
+        try @import("table_checkpoint.zig").rollbackWithCharts(checkpoint, state.allocator, self, &state.document, &state.created_tables, &state.cell_backgrounds, &state.chart_resources);
         state.refreshSourceViews();
         // checkpoint 검증/교환 성공 이후에는 오류·할당·model 역참조가 없다.
         if (state.live_text) |*backing| {
@@ -646,11 +686,12 @@ pub const Session = opaque {
     fn rollbackHistoryCheckpointBody(self: *Session, checkpoint: *Checkpoint) !void {
         try self.materializeLiveText();
         const state = self.getState();
-        try @import("table_checkpoint.zig").rollbackWithCells(checkpoint, state.allocator, self, &state.document, &state.created_tables, &state.cell_backgrounds);
+        try @import("table_checkpoint.zig").rollbackWithCharts(checkpoint, state.allocator, self, &state.document, &state.created_tables, &state.cell_backgrounds, &state.chart_resources);
         state.refreshSourceViews();
     }
 
     pub fn restoreCheckpoint(self: *Session, checkpoint: *Checkpoint) !void {
+        self.invalidateStrictLayout();
         try self.materializeLiveText();
         const before = try self.externalHistoryBegin();
         self.restoreCheckpointBody(checkpoint) catch |err| {
@@ -662,7 +703,7 @@ pub const Session = opaque {
     fn restoreCheckpointBody(self: *Session, checkpoint: *Checkpoint) !void {
         try self.materializeLiveText();
         const state = self.getState();
-        try @import("table_checkpoint.zig").exchangeWithCells(checkpoint, state.allocator, self, &state.document, &state.created_tables, &state.cell_backgrounds);
+        try @import("table_checkpoint.zig").exchangeWithCharts(checkpoint, state.allocator, self, &state.document, &state.created_tables, &state.cell_backgrounds, &state.chart_resources);
         state.refreshSourceViews();
     }
 
@@ -801,7 +842,7 @@ pub const Session = opaque {
         _ = try pending.add(a, language, count, name, 4096);
         var candidate = self.formattingDocument();
         candidate.font_resources = pending;
-        const decoded = try state.source.decodeDocInfo(a, max_stream);
+        const decoded = if (state.chart_resources.docinfo) |bytes| try a.dupe(u8, bytes) else try state.source.decodeDocInfo(a, max_stream);
         defer a.free(decoded);
         const verified = try @import("resource_docinfo.zig").write(a, decoded, state.source.header.version(), &candidate, state.para_count, state.char_count, max_stream);
         defer a.free(verified);
@@ -1003,6 +1044,59 @@ pub const Session = opaque {
         defer if (current) |bytes| a.free(bytes);
         return @import("drawing_line_endpoints.zig").read(a, current orelse state.decoded[section], state.source.header.version());
     }
+    /// Owned, per-object observations. One DocInfo/name/resource index for all sections.
+    pub fn hwp5ChartCandidates(self: *const Session, a: std.mem.Allocator) ![]@import("../chart/candidate_snapshot.zig").Candidate {
+        return self.hwp5ChartCandidatesSelected(a, .structural);
+    }
+    pub fn hwp5ChartCandidatesWithLayout(self: *const Session, a: std.mem.Allocator, layout: @import("../body/ole.zig").Layout) ![]@import("../chart/candidate_snapshot.zig").Candidate {
+        return self.hwp5ChartCandidatesSelected(a, .{ .explicit = layout });
+    }
+    fn hwp5ChartCandidatesSelected(self: *const Session, a: std.mem.Allocator, selection: @import("../body/ole.zig").Selection) ![]@import("../chart/candidate_snapshot.zig").Candidate {
+        try self.materializeLiveText();
+        const state = self.stateConst();
+        var resource_source = try @import("../chart/created_resource_read.zig").prepare(a, self, !state.chart_resources.empty());
+        defer resource_source.deinit(a);
+        var index = try @import("binary_resource_index.zig").Index.init(a, resource_source.get(&state.source));
+        defer index.deinit(a);
+        var batch: @import("../chart/candidate_snapshot.zig").Batch = .{ .index = &index };
+        defer batch.deinit(a);
+        var rows: std.ArrayList(@import("../chart/candidate_snapshot.zig").Candidate) = .empty;
+        errdefer rows.deinit(a);
+        for (state.document.sections, 0..) |part, section| {
+            const current = try self.currentDrawingSection(a, section);
+            defer if (current) |bytes| a.free(bytes);
+            const observations = try @import("../chart/ole_sites.zig").observeSelected(a, current orelse state.decoded[section], state.source.header.version(), part.paragraphs, selection);
+            defer a.free(observations);
+            try batch.append(a, &rows, @intCast(section), observations);
+        }
+        return rows.toOwnedSlice(a);
+    }
+    pub fn hwp5ChartDisplay(self: *const Session, a: std.mem.Allocator, section: usize, control: usize) !@import("../chart/display_snapshot.zig").Snapshot {
+        return self.hwp5ChartDisplaySelected(a, section, control, .structural);
+    }
+    pub fn hwp5ChartDisplayWithLayout(self: *const Session, a: std.mem.Allocator, section: usize, control: usize, layout: @import("../body/ole.zig").Layout) !@import("../chart/display_snapshot.zig").Snapshot {
+        return self.hwp5ChartDisplaySelected(a, section, control, .{ .explicit = layout });
+    }
+    fn hwp5ChartDisplaySelected(self: *const Session, a: std.mem.Allocator, section: usize, control: usize, selection: @import("../body/ole.zig").Selection) !@import("../chart/display_snapshot.zig").Snapshot {
+        try self.materializeLiveText();
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        const current = try self.currentDrawingSection(a, section);
+        defer if (current) |bytes| a.free(bytes);
+        const sites = try @import("../chart/ole_sites.zig").readSelectedForOwner(a, current orelse state.decoded[section], state.source.header.version(), state.document.sections[section].paragraphs, selection, control);
+        defer a.free(sites);
+        if (sites.len != 1) return error.SourceBindingMismatch;
+        var resource_source = try @import("../chart/created_resource_read.zig").prepare(a, self, !state.chart_resources.empty());
+        defer resource_source.deinit(a);
+        var index = try @import("binary_resource_index.zig").Index.init(a, resource_source.get(&state.source));
+        defer index.deinit(a);
+        const bytes = try index.read(a, sites[0].ordinal, 32 * 1024 * 1024);
+        defer a.free(bytes);
+        var snapshot = try @import("../chart/display_snapshot.zig").read(a, @intCast(section), sites[0], bytes, .observed_size_prefix);
+        errdefer snapshot.deinit(a);
+        snapshot.physical_id = try index.physicalId(sites[0].ordinal);
+        return snapshot;
+    }
     fn currentDrawingSection(self: *const Session, a: std.mem.Allocator, section: usize) !?[]u8 {
         const state = self.stateConst();
         if (section >= state.document.sections.len) return error.InvalidSection;
@@ -1028,6 +1122,7 @@ pub const Session = opaque {
     /// Decoded internal resource bytes; caller frees them. Never resolves external paths.
     pub fn binaryResource(self: *const Session, a: std.mem.Allocator, ordinal: u16, limit: usize) ![]u8 {
         try self.materializeLiveText();
+        if (try self.stateConst().chart_resources.read(a, ordinal, limit)) |bytes| return bytes;
         return @import("binary_resource.zig").read(a, &self.stateConst().source, ordinal, limit);
     }
     pub fn pictureTailSources(self: *const Session, a: std.mem.Allocator, section: usize, additional: ?@import("../body/picture_additional.zig").Layout) ![]@import("picture_tail_sources.zig").Source {
@@ -1090,7 +1185,7 @@ pub const Session = opaque {
     pub fn documentProperties(self: *const Session, a: std.mem.Allocator) !@import("document_properties_snapshot.zig").Snapshot {
         try self.materializeLiveText();
         const state = self.stateConst();
-        const decoded = try state.source.decodeDocInfo(a, max_stream);
+        const decoded = if (state.chart_resources.docinfo) |bytes| try a.dupe(u8, bytes) else try state.source.decodeDocInfo(a, max_stream);
         defer a.free(decoded);
         return @import("document_properties_snapshot.zig").read(decoded, state.source.header.version());
     }
@@ -1275,7 +1370,7 @@ pub const Session = opaque {
 
     fn cellResources(self: *const Session, a: std.mem.Allocator) !@import("cell_background_write.zig").Prepared {
         const state = self.stateConst();
-        const decoded = try state.source.decodeDocInfo(a, max_stream);
+        const decoded = if (state.chart_resources.docinfo) |bytes| try a.dupe(u8, bytes) else try state.source.decodeDocInfo(a, max_stream);
         defer a.free(decoded);
         const effective = self.formattingDocument();
         const current = try @import("resource_docinfo.zig").write(a, decoded, state.source.header.version(), &effective, state.para_count, state.char_count, max_stream);
@@ -1288,7 +1383,7 @@ pub const Session = opaque {
 
     fn fontSnapshot(self: *const Session, a: std.mem.Allocator, comptime metadata: bool) ![]if (metadata) @import("font_face_snapshot.zig").Metadata else @import("../../model/font_face_value.zig").Value {
         const state = self.stateConst();
-        const decoded = try state.source.decodeDocInfo(a, max_stream);
+        const decoded = if (state.chart_resources.docinfo) |bytes| try a.dupe(u8, bytes) else try state.source.decodeDocInfo(a, max_stream);
         defer a.free(decoded);
         const effective = self.formattingDocument();
         const current = try @import("resource_docinfo.zig").write(a, decoded, state.source.header.version(), &effective, state.para_count, state.char_count, max_stream);
@@ -1301,7 +1396,7 @@ pub const Session = opaque {
     pub fn characterShapes(self: *const Session, a: std.mem.Allocator) ![]@import("character_display_shapes.zig").Shape {
         try self.materializeLiveText();
         const state = self.stateConst();
-        const decoded = try state.source.decodeDocInfo(a, max_stream);
+        const decoded = if (state.chart_resources.docinfo) |bytes| try a.dupe(u8, bytes) else try state.source.decodeDocInfo(a, max_stream);
         defer a.free(decoded);
         const effective = self.formattingDocument();
         const current = try @import("resource_docinfo.zig").write(a, decoded, state.source.header.version(), &effective, state.para_count, state.char_count, max_stream);
@@ -1322,7 +1417,7 @@ pub const Session = opaque {
     pub fn paragraphShapes(self: *const Session, a: std.mem.Allocator) ![]@import("paragraph_display_shapes.zig").Shape {
         try self.materializeLiveText();
         const state = self.stateConst();
-        const decoded = try state.source.decodeDocInfo(a, max_stream);
+        const decoded = if (state.chart_resources.docinfo) |bytes| try a.dupe(u8, bytes) else try state.source.decodeDocInfo(a, max_stream);
         defer a.free(decoded);
         const effective = self.formattingDocument();
         const current = try @import("resource_docinfo.zig").write(a, decoded, state.source.header.version(), &effective, state.para_count, state.char_count, max_stream);
@@ -1480,6 +1575,7 @@ pub const Session = opaque {
         return self.applyWithFontCache(command, null);
     }
     pub fn applyWithFontCache(self: *Session, command: Command, font_cache: ?*@import("../../model/batch_font_lookup.zig").Cache) !void {
+        self.invalidateStrictLayout();
         // Helpers may replace a whole Section clone. Refresh borrowed bases before returning.
         defer if (self.getState().has_source_rebases) self.getState().refreshSourceViews();
         errdefer if (font_cache) |cache| cache.clear();
@@ -1523,13 +1619,67 @@ pub const Session = opaque {
                     },
                     .created_cell => |point| {
                         if (point.section != edit.section) return error.SourceBindingMismatch;
-                        const before = try self.copyCreatedCellUtf8(state.allocator, point);
-                        defer state.allocator.free(before);
-                        const next = try @import("../../text/utf8_utf16_splice.zig").replace(state.allocator, before, edit.start_unit, edit.end_unit, edit.utf8, max_stream);
-                        defer state.allocator.free(next);
-                        return self.apply(.{ .set_created_cell_text = .{ .point = point, .utf8 = next } });
+                        return @import("created_cell_text.zig").applySplice(state.allocator, state.decoded, &state.document, state.created_tables, state.source.header.version(), .{ .point = point, .start = edit.start_unit, .end = edit.end_unit, .utf8 = edit.utf8 }, self.createdTableResources(), created_table_limits);
                     },
                 }
+            },
+            .insert_chart => |request| {
+                const state = self.getState();
+                if (state.formatting_batch != null) return error.MutationInProgress;
+                if (state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview)) return error.UnsupportedChartSaveFeatures;
+                try @import("../chart/create_request.zig").validate(request);
+                const ticket = try self.historyTicket();
+                if (!std.meta.eql(request.target.binding.?.binding, ticket.binding)) return error.SourceBindingMismatch;
+                if (request.target.binding.?.epoch != ticket.epoch) return error.StaleMutationEpoch;
+                const info = if (state.chart_resources.docinfo) |bytes| try state.allocator.dupe(u8, bytes) else try state.source.decodeDocInfo(state.allocator, max_stream);
+                defer state.allocator.free(info);
+                var assets = try @import("../chart/create_single_asset.zig").prepare(state.allocator, &state.source.file, state.chart_resources, info, state.source.header.version(), request, max_bytes);
+                defer assets.deinit(state.allocator);
+                var prepared = try @import("../chart/create_session.zig").prepare(state.allocator, state.decoded, &state.document, state.created_tables, state.cell_backgrounds, state.source.header.version(), request, assets.ordinal, self.createdTableResources(), created_table_limits);
+                defer prepared.deinit(state.allocator);
+                // Validate a borrowed prospective State through the actual save
+                // path. Only pointer arrays are copied; no live value is written.
+                var prospective = state.*;
+                const sections = try state.allocator.dupe(model.Section, state.document.sections);
+                defer state.allocator.free(sections);
+                sections[request.target.section] = prepared.section;
+                prospective.document.sections = sections;
+                const tables = try state.allocator.dupe(@import("created_table_values.zig").Values, state.created_tables);
+                defer state.allocator.free(tables);
+                tables[request.target.section] = prepared.tables;
+                prospective.created_tables = tables;
+                const decoded = try state.allocator.dupe([]u8, state.decoded);
+                defer state.allocator.free(decoded);
+                const offsets = try state.allocator.dupe([]usize, state.style_offsets);
+                defer state.allocator.free(offsets);
+                prospective.decoded = decoded;
+                prospective.style_offsets = offsets;
+                prospective.cell_backgrounds = prepared.backgrounds;
+                prospective.chart_resources = assets.values;
+                prospective.refreshSourceViews();
+                const draft: *const Session = @ptrCast(&prospective);
+                const saved = try draft.save(state.allocator, .{ .allow_stale_layout = true, .max_output_bytes = max_bytes });
+                defer state.allocator.free(saved.bytes);
+                try @import("../chart/create_verify_file.zig").verify(state.allocator, saved.bytes, request, assets.ordinal, assets.values.entries[assets.values.entries.len - 1]);
+                // All validation and allocation precede the single publication.
+                std.mem.swap(model.Section, &state.document.sections[request.target.section], &prepared.section);
+                std.mem.swap(@import("created_table_values.zig").Values, &state.created_tables[request.target.section], &prepared.tables);
+                std.mem.swap(@import("cell_background_values.zig").Values, &state.cell_backgrounds, &prepared.backgrounds);
+                std.mem.swap(@import("../chart/created_resources.zig").Values, &state.chart_resources, &assets.values);
+                state.refreshSourceViews();
+            },
+            .insert_equation => |request| {
+                const state = self.getState();
+                if (state.formatting_batch != null) return error.MutationInProgress;
+                if (state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview)) return error.UnsupportedEquationSaveFeatures;
+                var prepared = try @import("equation_create_session.zig").prepare(state.allocator, state.decoded, &state.document, state.created_tables, state.cell_backgrounds, state.source.header.version(), request, self.createdTableResources(), created_table_limits);
+                defer prepared.deinit(state.allocator);
+                // All fallible work precedes this publication. The existing
+                // History/table checkpoint owns the three values as one commit.
+                std.mem.swap(model.Section, &state.document.sections[request.target.section], &prepared.section);
+                std.mem.swap(@import("created_table_values.zig").Values, &state.created_tables[request.target.section], &prepared.tables);
+                std.mem.swap(@import("cell_background_values.zig").Values, &state.cell_backgrounds, &prepared.backgrounds);
+                state.refreshSourceViews();
             },
             .stage_table => |edit| {
                 const state = self.getState();
@@ -1539,6 +1689,7 @@ pub const Session = opaque {
                 const state = self.getState();
                 try @import("created_cell_text.zig").apply(state.allocator, state.decoded, &state.document, state.created_tables, state.source.header.version(), edit, self.createdTableResources(), created_table_limits);
             },
+            .splice_created_cell => |edit| try self.applyCreatedCellTyping(edit),
             .edit_created_table_grid => |edit| {
                 const state = self.getState();
                 try @import("created_table_grid_session.zig").apply(state.allocator, state.decoded, &state.document, state.created_tables, state.source.header.version(), edit, self.createdTableResources(), created_table_limits);
@@ -1591,7 +1742,7 @@ pub const Session = opaque {
                 const checkpoint = if (state.formatting_batch == null) try self.createCheckpoint(max_bytes) else null;
                 defer if (checkpoint) |value| value.deinit();
                 errdefer if (checkpoint) |value| {
-                    @import("table_checkpoint.zig").rollbackWithCells(value, state.allocator, self, &state.document, &state.created_tables, &state.cell_backgrounds) catch unreachable;
+                    @import("table_checkpoint.zig").rollbackWithCharts(value, state.allocator, self, &state.document, &state.created_tables, &state.cell_backgrounds, &state.chart_resources) catch unreachable;
                     state.refreshSourceViews();
                 };
                 const cached = if (font_cache) |cache| cache.get(@backingInt(edit.language), edit.name) else null;
@@ -1804,6 +1955,10 @@ pub const Session = opaque {
                 const state = self.getState();
                 _ = try @import("independent_text_session.zig").apply(state.allocator, state.decoded, state.source.header.version(), &state.document, state.created_tables, groups, self.characterShapeCount());
             },
+            .splice_document_text => |groups| {
+                const state = self.getState();
+                _ = try @import("document_text_session.zig").apply(state.allocator, state.decoded, state.source.header.version(), &state.document, state.created_tables, groups, self.createdTableResources(), created_table_limits);
+            },
             .splice_text => |edit| {
                 if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;
                 const state = self.getState();
@@ -1839,6 +1994,53 @@ pub const Session = opaque {
             // No promise to relocate unknown cross-references after structure edits.
             .insert_text, .delete_paragraph => return error.UnsupportedStructuralEdit,
         }
+    }
+
+    /// Native-owned created paragraph; resources and exact splice share History.
+    fn applyCreatedCellTyping(self: *Session, edit: @import("../../model/created_cell_typing.zig").Edit) !void {
+        try @import("../../model/created_cell_typing.zig").validate(edit);
+        const state = self.getState();
+        const a = state.allocator;
+        const batch = state.formatting_batch orelse return error.FormattingBatchNotPrepared;
+        if (!self.historyTransactionActive()) return error.HistoryProtocolRequired;
+        if (edit.section >= state.created_tables.len) return error.InvalidSection;
+        var index: ?usize = null;
+        for (state.created_tables[edit.section].entries, 0..) |entry, i| if (entry.value.table.identity == edit.identity) {
+            if (index != null) return error.InvalidCreatedTableIdentity;
+            index = i;
+        };
+        const at = index orelse return error.InvalidCreatedTableIdentity;
+        const original = &state.created_tables[edit.section].entries[at].value.table;
+        _ = try original.plan.cell(edit.row, edit.column);
+        const cell = @as(usize, edit.row) * original.plan.columns + edit.column;
+        if (cell >= original.cells.len) return error.InvalidTableCell;
+        const source_id = try original.cells[cell].typingResourceId(original.resources.character, edit.start, edit.end, .at_start);
+        var candidate = try state.created_tables[edit.section].clone(a, created_table_limits.max_bytes);
+        defer candidate.deinit(a);
+        var inserted_id: ?u32 = null;
+        if (edit.text.len != 0) {
+            var properties = @import("../../model/formatting_patch.zig").CharacterIntent.init(edit.insertion).properties orelse model.CharacterPropertyPatch{};
+            var ids = properties.font_ids orelse @as(@import("../../model/character_fonts.zig").Values, @splat(null));
+            var has_ids = properties.font_ids != null;
+            for (edit.insertion.fonts, 0..) |font, language| if (font) |value| switch (value) {
+                .id => {},
+                .name => |name| {
+                    ids[language] = try self.ensureFont(@fromBackingInt(@intCast(language)), name);
+                    has_ids = true;
+                },
+            };
+            if (has_ids) properties.font_ids = ids;
+            const info = try self.originalInfo();
+            defer if (info.owned) a.free(info.bytes);
+            inserted_id = try @import("character_property_apply.zig").resolveInsertedResource(a, info.bytes, state.source.header.version(), &state.document, state.char_count, max_stream, source_id, properties, &batch.characters);
+        }
+        const table = &candidate.entries[at].value.table;
+        if (!try table.cells[cell].splice(a, table.resources.character, edit.start, edit.end, edit.text, inserted_id, created_table_limits.max_bytes)) return;
+        _ = try candidate.byteSize(created_table_limits.max_bytes);
+        try self.finishFormattingBatch();
+        const verified = try @import("created_table_section.zig").write(a, state.decoded[edit.section], state.document.sections[edit.section], &candidate, state.source.header.version(), self.createdTableResources(), created_table_limits);
+        defer a.free(verified);
+        std.mem.swap(@import("created_table_values.zig").Values, &state.created_tables[edit.section], &candidate);
     }
 
     /// Rich-only group. Source policy and resource allocation remain inside
@@ -1906,11 +2108,60 @@ pub const Session = opaque {
         try writer.applyGrouped(a, state.decoded[edit.section], prepared.bytes, version, &state.document, edit.section, edit.paragraph, properties, edit.ranges, state.char_count, max_stream, &batch.characters, if (@import("builtin").is_test) &batch.grouped_work else {});
     }
 
+    /// Conservative invalidation also covers rejected mutations. Never restored by undo.
+    pub fn invalidateStrictLayout(self: *Session) void {
+        self.getState().strict_layout_serial +|= 1;
+    }
+    fn strictLayoutReady(self: *const Session) !void {
+        const state = self.stateConst();
+        if (state.strict_layout_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        if (self.historyTransactionActive() or state.formatting_batch != null) return error.MutationInProgress;
+        _ = try self.historyTicket();
+        if (state.observed_docinfo != null or state.source.header.has(.distribution) or state.document.sections.len != 1 or state.created_tables[0].entries.len != 0) return error.UnsupportedStrictBody;
+        if (!state.chart_resources.empty() or state.document.bullet_resources.len != 0 or state.cell_backgrounds.entries.len != 0) return error.UnsupportedStrictResources;
+        const section = state.document.sections[0];
+        if (section.form_values != null or section.picture_current_sizes != null or section.table_cell_sizes != null) return error.UnsupportedStrictBody;
+    }
+    fn strictCurrentSection(self: *const Session, a: std.mem.Allocator) ![]u8 {
+        const state = self.stateConst();
+        const section = state.document.sections[0];
+        var structural = section.paragraphs.len != state.style_offsets[0].len;
+        for (section.paragraphs) |p| if (p.source_node == null) {
+            structural = true;
+            break;
+        };
+        return if (structural)
+            @import("structure_section_writer.zig").writeWithDeletions(a, state.decoded[0], section, state.source.header.version(), self.characterShapeCount(), max_stream, true)
+        else
+            @import("text_section_writer.zig").write(a, state.decoded[0], section, state.source.header.version(), max_stream);
+    }
+    pub fn prepareStrictLayout(self: *const Session, a: std.mem.Allocator) !@import("strict_plain_layout.zig").Snapshot {
+        try self.materializeLiveText();
+        try self.strictLayoutReady();
+        const state = self.stateConst();
+        const draft = try self.strictCurrentSection(a);
+        defer a.free(draft);
+        var resources = try self.cellResources(a);
+        defer resources.deinit(a);
+        const docinfo = resources.bytes;
+        const mutable = @constCast(self).getState();
+        if (mutable.strict_layout_lease == null) mutable.strict_layout_lease = try @import("strict_plain_layout.zig").Lease.create(state.allocator);
+        return @import("strict_plain_layout.zig").prepare(a, draft, docinfo, state.source.header.version(), @intFromPtr(self), state.strict_layout_serial, try self.historyTicket(), mutable.strict_layout_lease.?);
+    }
+    fn validateStrictLayoutOwner(self: *const Session, request: @import("strict_plain_layout.zig").Request) !void {
+        try self.strictLayoutReady();
+        const snapshot = request.snapshot;
+        if (snapshot.lease.closed or self.stateConst().strict_layout_lease != snapshot.lease or snapshot.owner != @intFromPtr(self) or snapshot.serial != self.stateConst().strict_layout_serial or !std.meta.eql(snapshot.ticket, try self.historyTicket())) return error.LayoutSourceChanged;
+    }
     pub fn save(self: *const Session, a: std.mem.Allocator, options: SaveOptions) !Saved {
         try self.materializeLiveText();
+        if (options.strict_layout) |request| {
+            if (options.allow_stale_layout) return error.InvalidSavePolicy;
+            try self.validateStrictLayoutOwner(request);
+        }
         const state = self.stateConst();
-        const resource_changed = state.document.bullet_resources.len != 0 or state.cell_backgrounds.entries.len != 0 or state.document.paragraph_resources.len != 0 or state.document.character_resources.len != 0 or state.document.font_resources.entries.items.len != 0;
-        var changed = resource_changed;
+        const resource_changed = !state.chart_resources.empty() or state.document.bullet_resources.len != 0 or state.cell_backgrounds.entries.len != 0 or state.document.paragraph_resources.len != 0 or state.document.character_resources.len != 0 or state.document.font_resources.entries.items.len != 0;
+        var changed = resource_changed or options.strict_layout != null;
         for (state.document.sections, 0..) |section, index| {
             changed = changed or sectionChanged(state, index, section);
         }
@@ -1918,18 +2169,21 @@ pub const Session = opaque {
             if (state.source.file.bytes.len > options.max_output_bytes) return error.LimitExceeded;
             return .{ .bytes = try a.dupe(u8, state.source.file.bytes), .layout_requires_reflow = false };
         }
-        if (!options.allow_stale_layout) return error.LayoutReflowRequired;
+        if (!options.allow_stale_layout and options.strict_layout == null) return error.LayoutReflowRequired;
         var arena = std.heap.ArenaAllocator.init(a);
         defer arena.deinit();
         const scratch = arena.allocator();
         var replacements: std.ArrayList(cfb.stream_replace.Replacement) = .empty;
         const cells = try self.cellResources(scratch);
+        if (options.strict_layout) |request| {
+            if (!std.mem.eql(u8, request.snapshot.docinfo, cells.bytes)) return error.LayoutSourceChanged;
+        }
         if (resource_changed) {
             const encoded = if (state.source.header.has(.compressed)) try @import("../../compression/raw_deflate.zig").encodeStored(scratch, cells.bytes, max_stream) else cells.bytes;
             try replacements.append(scratch, .{ .path = "/DocInfo", .content = encoded });
         }
         for (state.document.sections, 0..) |section, index| {
-            if (!cells.hasSection(index) and !sectionChanged(state, index, section)) continue;
+            if (options.strict_layout == null and !cells.hasSection(index) and !sectionChanged(state, index, section)) continue;
             var structural = section.paragraphs.len != state.style_offsets[index].len;
             if (section.table_cell_sizes) |sizes| if (sizes.len != 0) {
                 structural = true;
@@ -1956,19 +2210,23 @@ pub const Session = opaque {
                 try @import("structure_section_writer.zig").writeWithDeletions(scratch, cell_source, section, state.source.header.version(), self.characterShapeCount(), max_stream, true)
             else
                 try @import("text_section_writer.zig").write(scratch, cell_source, section, state.source.header.version(), max_stream);
+            const laid_out = if (options.strict_layout) |request|
+                try @import("strict_plain_layout.zig").apply(scratch, request, decoded, state.source.header.version(), max_stream)
+            else
+                decoded;
             const distribution = state.source.header.has(.distribution);
             const path = try std.fmt.allocPrint(scratch, "/{s}/Section{d}", .{ if (distribution) "ViewText" else "BodyText", index });
             const encoded = if (distribution)
-                try @import("../distribution/encode.zig").encodeCompressedLike(scratch, try state.source.file.readStream(scratch, path), decoded, .{ .max_plaintext_bytes = max_stream, .max_output_bytes = options.max_output_bytes })
+                try @import("../distribution/encode.zig").encodeCompressedLike(scratch, try state.source.file.readStream(scratch, path), laid_out, .{ .max_plaintext_bytes = max_stream, .max_output_bytes = options.max_output_bytes })
             else if (state.source.header.has(.compressed))
-                try @import("../../compression/raw_deflate.zig").encodeStored(scratch, decoded, max_stream)
+                try @import("../../compression/raw_deflate.zig").encodeStored(scratch, laid_out, max_stream)
             else
-                decoded;
+                laid_out;
             try replacements.append(scratch, .{ .path = path, .content = encoded });
         }
         return .{
-            .bytes = try cfb.stream_replace.rebuildManyExact(a, &state.source.file, replacements.items, .{ .max_output_bytes = options.max_output_bytes }),
-            .layout_requires_reflow = true,
+            .bytes = try @import("../chart/created_resource_write.zig").rebuild(a, &state.source.file, replacements.items, state.chart_resources.entries, .{ .max_output_bytes = options.max_output_bytes }),
+            .layout_requires_reflow = options.strict_layout == null,
         };
     }
 

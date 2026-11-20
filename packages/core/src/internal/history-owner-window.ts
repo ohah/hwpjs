@@ -1,3 +1,4 @@
+import { plainHwp5ChartStampTransition } from './hwp5-chart-plain-metadata.ts';
 import { isPlainOwnerBaseline } from './owner-window-cow.ts';
 import { exactDisplayValue } from './full-snapshot-text-delta.ts';
 import { isOwnedImmutableObservation, ownObservation } from '../state/owned.ts';
@@ -107,7 +108,21 @@ export function mergeHistoryOwnerWindow(
       return { ...row, currentReference, text, characterRanges };
     });
     if (owners !== 1 || !origin.authority()) return null;
-    const next = ownObservation({ ...baseline, paragraphs })();
+    const chartStamps = plainHwp5ChartStampTransition(baseline, {
+      beforeEpoch: expected.epoch,
+      beforeRevision: expected.revision,
+      epoch: packet.epoch,
+      revision: packet.revision,
+    });
+    if (chartStamps === null) return null;
+    if (
+      Object.hasOwn(chartStamps, 'hwp5ChartSourceEpoch') &&
+      (origin.beforeEpoch !== expected.epoch ||
+        origin.beforeRevision !== expected.revision ||
+        origin.nativeRevision !== packet.revision)
+    )
+      return null;
+    const next = ownObservation({ ...baseline, ...chartStamps, paragraphs })();
     return isPlainOwnerBaseline(next, owner.section, owner.paragraph) && origin.authority()
       ? next
       : null;

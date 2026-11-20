@@ -6,6 +6,11 @@ pub const Anchor = struct { section: usize, paragraph: refs.Reference, unit: u32
 pub const Resolved = struct { paragraph: usize, unit: u32 };
 
 fn boundary(a: std.mem.Allocator, section: *const editor.Section, paragraph: *const @import("paragraph_structure_values.zig").Paragraph, unit: u32) !void {
+    const positions = try currentPositions(a, section, paragraph);
+    defer a.free(positions);
+    try @import("paragraph_text_positions.zig").validateBoundary(&paragraph.sites, positions, unit);
+}
+fn currentPositions(a: std.mem.Allocator, section: *const editor.Section, paragraph: *const @import("paragraph_structure_values.zig").Paragraph) ![]@import("paragraph_text_positions.zig").Segment {
     const positions = if (paragraph.field_positions != null)
         try @import("field_owned_positions.zig").build(a, &section.tree, paragraph)
     else if (paragraph.protected_positions != null)
@@ -17,8 +22,61 @@ fn boundary(a: std.mem.Allocator, section: *const editor.Section, paragraph: *co
         defer a.free(locations);
         break :block try @import("anchor_text_positions.zig").build(a, &section.tree, &paragraph.sites, locations, 1);
     };
+    return positions;
+}
+/// Unordered pending tables can share one host. Measure its actual Native
+/// axis once, then reuse the scalar/control boundary SSOT in a forward cursor.
+/// max_units is the remaining whole-read budget, never a submitted coordinate.
+pub fn boundaryMap(a: std.mem.Allocator, section: *const editor.Section, paragraph: *const @import("paragraph_structure_values.zig").Paragraph, max_units: usize) ![]bool {
+    const positions = try currentPositions(a, section, paragraph);
     defer a.free(positions);
-    try @import("paragraph_text_positions.zig").validateBoundary(&paragraph.sites, positions, unit);
+    return @import("paragraph_scalar_boundaries.zig").build(a, &paragraph.sites, positions, max_units);
+}
+/// Read inventory may already hold a uniquely resolved current model paragraph.
+/// Reuse the same source/control/scalar boundary validator without a per-entry
+/// paragraph scan. This does not authorize insertion, rebasing or mutation.
+pub fn validateCurrentBoundary(a: std.mem.Allocator, section: *const editor.Section, paragraph: *const @import("paragraph_structure_values.zig").Paragraph, unit: u32) !void {
+    return boundary(a, section, paragraph, unit);
+}
+
+test "document text HX pending host boundary map reuses scalar control oracle once per actual owner" {
+    const a = std.testing.allocator;
+    var tree = try @import("xml_part_tree.zig").parse(a, "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run><p:t>한😀</p:t><p:pic/><p:t>A</p:t></p:run></p:p></s:sec>", .section, 0, 0, .{});
+    defer tree.deinit(a);
+    const bytes = try @import("../new_document/root.zig").hwpx(a);
+    defer a.free(bytes);
+    var session = try editor.open(a, bytes, .{});
+    defer session.deinit();
+    // The boundary adapter needs immutable tree/paragraph provenance only.
+    // Borrow the generated Session section and substitute this synthetic tree.
+    var section = session.sections[0];
+    section.tree = tree;
+    var sites = try @import("text_sites.zig").collect(a, &tree, .{});
+    defer sites.deinit(a);
+    const paragraph: @import("paragraph_structure_values.zig").Paragraph = .{
+        .template_element = 1,
+        .source_ordinal = 1,
+        .sites = sites,
+    };
+    const valid = try boundaryMap(a, &section, &paragraph, 100);
+    defer a.free(valid);
+    for (valid, 0..) |value, point| {
+        validateCurrentBoundary(a, &section, &paragraph, @intCast(point)) catch |err| {
+            try std.testing.expectEqual(error.SplitSurrogatePair, err);
+            try std.testing.expect(!value);
+            continue;
+        };
+        try std.testing.expect(value);
+    }
+    try std.testing.expectError(error.LimitExceeded, boundaryMap(a, &section, &paragraph, valid.len - 2));
+    try std.testing.expectError(error.InvalidTextPosition, validateCurrentBoundary(a, &section, &paragraph, 0xfffffffe));
+    try @import("../testing/allocation_failures.zig").check(struct {
+        fn run(allocator: std.mem.Allocator, source: *const editor.Section, owner: *const @import("paragraph_structure_values.zig").Paragraph) !void {
+            const map = try boundaryMap(allocator, source, owner, 100);
+            defer allocator.free(map);
+            try std.testing.expect(!map[2]);
+        }
+    }.run, .{ @as(*const editor.Section, &section), &paragraph });
 }
 
 pub fn capture(a: std.mem.Allocator, session: *const editor.Session, section_index: usize, ordinal: usize, unit: u32) !Anchor {

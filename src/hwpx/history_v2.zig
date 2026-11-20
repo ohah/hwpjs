@@ -195,7 +195,7 @@ pub const History = struct {
         s.history_transaction_active = true;
         defer s.history_transaction_active = false;
         try self.stack.prepare();
-        for (commands) |command| if (command.kind == .insert_document or command.kind == .equation_insert or command.kind == .chart_create or command.kind == .bullet_definition or command.kind == .page_settings or command.kind == .object_geometry) {
+        for (commands) |command| if (command.kind == .note_delete or command.kind == .note_create or command.kind == .insert_document or command.kind == .equation_insert or command.kind == .chart_create or command.kind == .bullet_definition or command.kind == .page_settings or command.kind == .object_geometry) {
             if (commands.len != 1 or command.break_before != null or command.deleted != 0)
                 return error.InvalidInsertDocumentBatch;
             if (!self.managed) return error.HistoryProtocol2Required;
@@ -209,32 +209,76 @@ pub const History = struct {
     }
     fn insertDocument(self: *Self, command: commands_mod.Command) !bool {
         const s = self.owner;
-        if (command.section != 0) return error.UnsupportedInsertSections;
-        // Reopening the composed package must not replace pending table owner identities.
-        if (command.kind != .object_geometry) for (s.sections) |section| {
+        const inline_creation = command.kind == .equation_insert or command.kind == .chart_create or command.kind == .note_create;
+        if (!inline_creation and command.kind != .note_delete and command.section != 0) return error.UnsupportedInsertSections;
+        // Inline creation proves logical-to-physical owners using serializer
+        // receipts. Geometry keeps its separately validated source-frame path.
+        // Every other document transaction retains the pending-owner refusal.
+        if (!inline_creation and command.kind != .object_geometry) for (s.sections) |section| {
             if (section.created_tables.entries.items.len != 0) return error.UnsupportedInsertPendingTable;
         };
         const policy_limit = self.stack.policy;
         try document.validateParkable(s, policy_limit.max_checkpoint_bytes);
 
+        if (command.kind == .note_delete) {
+            const request = command.note_delete orelse return error.InvalidNoteDeleteRequest;
+            if (command.inserted.len != 0) return error.InvalidNoteDeleteRequest;
+            if (request.selector.section != command.section or request.paragraph != command.paragraph or request.anchor_unit != command.start) return error.SourceBindingMismatch;
+            try @import("note_delete_owner.zig").validate(s.allocator, s, request.*, self.stack.current.revision);
+        }
+        if (command.kind == .note_create) {
+            const request = command.note_create orelse return error.InvalidNoteCreateRequest;
+            if (command.inserted.len != 0 or command.deleted != 0 or request.target.section != command.section or request.target.paragraph != command.paragraph or request.target.unit != command.start) return error.SourceBindingMismatch;
+            try @import("note_create_owner.zig").validate(s, request.lease, request.target, self.stack.current.revision);
+        }
         if (command.kind == .object_geometry) {
             const request = command.object_geometry orelse return error.InvalidObjectGeometryRequest;
             if (request.historyRevision != self.stack.current.revision) return error.StaleObjectGeometryBinding;
             try @import("object_geometry_owner.zig").validate(s.allocator, s, request.*);
         }
         if (command.kind == .page_settings) try @import("page_settings_edit_owners.zig").validateTargets(s.allocator, s, (command.page_settings orelse return error.InvalidPageSettingsRequest).*);
-        const before = try s.save();
+        var placements: @import("created_table_placement_receipts.zig").Receipts = .{};
+        defer placements.deinit(s.allocator);
+        const before = if (inline_creation) try s.saveWithTablePlacements(&placements) else try s.save();
         defer s.allocator.free(before);
-        var candidate = if (command.kind == .equation_insert) blk: {
+        var saved_owner: ?editor.Session = if (inline_creation) try editor.open(s.allocator, before, s.options) else null;
+        defer if (saved_owner) |*saved| saved.deinit();
+        const transfer = @import("inline_object_table_transfer.zig");
+        var owner_proof: ?transfer.Proof = if (saved_owner) |*saved| try transfer.verify(s, saved, &placements) else null;
+        defer if (owner_proof) |*proof| proof.deinit();
+        var physical_target: ?struct { section: usize, paragraph: usize } = null;
+        var note_receipt: ?@import("note_create_caret.zig").Receipt = null;
+        var candidate = if (command.kind == .note_delete) blk: {
+            break :blk try @import("note_delete.zig").prepare(s.allocator, before, command.note_delete.?.*, s.options);
+        } else if (command.kind == .note_create) blk: {
+            const request = command.note_create.?;
+            var placement = try @import("inline_object_target_resolve.zig").resolve(s, &saved_owner.?, &owner_proof.?, request.target);
+            defer placement.deinit(s.allocator);
+            physical_target = .{ .section = placement.target.section, .paragraph = placement.target.paragraph };
+            var result = try @import("note_create.zig").prepare(s.allocator, before, placement.target, request.*, s.options);
+            defer result.deinit(s.allocator);
+            note_receipt = result.receipt;
+            break :blk try editor.open(s.allocator, result.bytes, s.options);
+        } else if (command.kind == .equation_insert) blk: {
             const request = command.equation_insert orelse return error.InvalidEquationInsertRequest;
             if (request.target.section != command.section or request.target.paragraph != command.paragraph or request.target.unit != command.start) return error.SourceBindingMismatch;
-            var prepared = try @import("equation_insert.zig").prepare(s.allocator, before, request.*, .{});
+            var resolved = request.*;
+            var placement = try @import("inline_object_target_resolve.zig").resolve(s, &saved_owner.?, &owner_proof.?, request.target);
+            defer placement.deinit(s.allocator);
+            resolved.target = placement.target;
+            physical_target = .{ .section = resolved.target.section, .paragraph = resolved.target.paragraph };
+            var prepared = try @import("equation_insert.zig").prepare(s.allocator, before, resolved, .{});
             defer prepared.deinit(s.allocator);
             break :blk try editor.open(s.allocator, prepared.bytes, s.options);
         } else if (command.kind == .chart_create) blk: {
             const request = command.chart_create orelse return error.InvalidChartCreateRequest;
             if (request.target.section != command.section or request.target.paragraph != command.paragraph or request.target.unit != command.start) return error.SourceBindingMismatch;
-            var prepared = try @import("chart_create.zig").prepare(s.allocator, before, request.*);
+            var resolved = request.*;
+            var placement = try @import("inline_object_target_resolve.zig").resolve(s, &saved_owner.?, &owner_proof.?, request.target);
+            defer placement.deinit(s.allocator);
+            resolved.target = placement.target;
+            physical_target = .{ .section = resolved.target.section, .paragraph = resolved.target.paragraph };
+            var prepared = try @import("chart_create.zig").prepare(s.allocator, before, resolved);
             defer prepared.deinit(s.allocator);
             break :blk try editor.open(s.allocator, prepared.bytes, s.options);
         } else if (command.kind == .object_geometry) blk: {
@@ -251,6 +295,15 @@ pub const History = struct {
         };
         var adopted = false;
         defer if (!adopted) candidate.deinit();
+        if (physical_target) |target| {
+            if (note_receipt) |receipt| {
+                const prefix = try @import("note_create_caret.zig").observe(&candidate, receipt, self.stack.current.revision);
+                var view = try @import("display_current_paragraphs.zig").read(s.allocator, &candidate.sections[target.section], candidate.options);
+                defer view.deinit(s.allocator);
+                const node = view.paragraphs[prefix.paragraph - candidate.sections[target.section].first_paragraph].template_element;
+                try transfer.verifyNoteCandidate(&saved_owner.?, &candidate, &owner_proof.?, target.section, target.paragraph, node);
+            } else try transfer.verifyCandidate(&saved_owner.?, &candidate, &owner_proof.?, target.section, target.paragraph);
+        }
         candidate.history_delta_managed = true;
         try document.validateParkable(&candidate, policy_limit.max_checkpoint_bytes);
         const payload = try cp.size(&candidate, policy_limit.max_checkpoint_bytes);
@@ -275,6 +328,9 @@ pub const History = struct {
 
         resource_receipt.openOwned(&edge.parked);
         edge.exchange(s, &self.total_text_bytes);
+        if (note_receipt) |receipt| if (command.note_create.?.receipt_out) |output| {
+            output.* = receipt;
+        };
         self.source = s.source.ptr;
         self.lane = null;
         self.installWatches();

@@ -21,14 +21,14 @@ pub fn writeSitesWithOptions(a: std.mem.Allocator, tree: *const Tree, paragraph_
     return writeMode(a, tree, paragraph_element, sites, options, continuation, id, max_bytes, null);
 }
 pub fn writeCurrentTitles(a: std.mem.Allocator, tree: *const Tree, paragraph: *const @import("paragraph_structure_values.zig").Paragraph, options: @import("text_sites.zig").Options, max_bytes: usize) ![]u8 {
-    return writeModePolicyTitles(a, tree, paragraph.template_element, &paragraph.sites, options, paragraph.generated_id != null, paragraph.generated_id orelse 0, max_bytes, null, false, false, null, &.{}, paragraph.title_positions);
+    return writeModePolicyTitles(a, tree, paragraph.template_element, &paragraph.sites, options, paragraph.generated_id != null, paragraph.generated_id orelse 0, max_bytes, null, false, false, null, &.{}, paragraph.title_positions, paragraph);
 }
 
 pub fn writeSitesWithTabs(a: std.mem.Allocator, tree: *const Tree, paragraph: *const @import("paragraph_structure_values.zig").Paragraph, options: @import("text_sites.zig").Options, max_bytes: usize) ![]u8 {
     const locations = try @import("paragraph_structure_locations.zig").build(a, tree, paragraph);
     defer a.free(locations);
     try @import("plain_paragraph_policy.zig").validateWithTabs(tree, &paragraph.sites, locations, 1, true);
-    return writeModePolicyTitles(a, tree, paragraph.template_element, &paragraph.sites, options, paragraph.generated_id != null, paragraph.generated_id orelse 0, max_bytes, &.{}, false, false, null, &.{}, paragraph.title_positions);
+    return writeModePolicyTitles(a, tree, paragraph.template_element, &paragraph.sites, options, paragraph.generated_id != null, paragraph.generated_id orelse 0, max_bytes, &.{}, false, false, null, &.{}, paragraph.title_positions, paragraph);
 }
 
 /// Serialize an original paragraph with all source anchors retained in place.
@@ -71,7 +71,7 @@ pub fn writeProtected(a: std.mem.Allocator, tree: *const Tree, paragraph: *const
         const keep = retained.contains(segment.index);
         try moves.append(a, .{ .element_index = segment.index, .kind = if (segment.kind == .anchor) .anchor else .tab, .side = if (keep == continuation) .right else .left, .unit = segment.start_unit });
     }
-    return writeModePolicyTitles(a, tree, paragraph.template_element, &paragraph.sites, options, continuation, paragraph.generated_id orelse 0, max_bytes, moves.items, false, false, null, &.{}, paragraph.title_positions);
+    return writeModePolicyTitles(a, tree, paragraph.template_element, &paragraph.sites, options, continuation, paragraph.generated_id orelse 0, max_bytes, moves.items, false, false, null, &.{}, paragraph.title_positions, paragraph);
 }
 
 fn writeMode(a: std.mem.Allocator, tree: *const Tree, paragraph_element: usize, sites: *const @import("text_sites.zig").Sites, options: @import("text_sites.zig").Options, continuation: bool, id: u32, max_bytes: usize, moves: ?[]const @import("anchor_split_plan.zig").Move) ![]u8 {
@@ -89,9 +89,9 @@ pub fn writeFieldsDirty(a: std.mem.Allocator, tree: *const Tree, paragraph_eleme
 }
 
 fn writeModePolicy(a: std.mem.Allocator, tree: *const Tree, paragraph_element: usize, sites: *const @import("text_sites.zig").Sites, options: @import("text_sites.zig").Options, continuation: bool, id: u32, max_bytes: usize, moves: ?[]const @import("anchor_split_plan.zig").Move, retain_geometry: bool, allow_column_sites: bool, field_moves: ?[]const @import("field_split_plan.zig").Move, fields: []const @import("text_sites_save.zig").FieldDirty) ![]u8 {
-    return writeModePolicyTitles(a, tree, paragraph_element, sites, options, continuation, id, max_bytes, moves, retain_geometry, allow_column_sites, field_moves, fields, null);
+    return writeModePolicyTitles(a, tree, paragraph_element, sites, options, continuation, id, max_bytes, moves, retain_geometry, allow_column_sites, field_moves, fields, null, null);
 }
-fn writeModePolicyTitles(a: std.mem.Allocator, tree: *const Tree, paragraph_element: usize, sites: *const @import("text_sites.zig").Sites, options: @import("text_sites.zig").Options, continuation: bool, id: u32, max_bytes: usize, moves: ?[]const @import("anchor_split_plan.zig").Move, retain_geometry: bool, allow_column_sites: bool, field_moves: ?[]const @import("field_split_plan.zig").Move, fields: []const @import("text_sites_save.zig").FieldDirty, titles: ?[]const @import("title_mark_position.zig").Position) ![]u8 {
+fn writeModePolicyTitles(a: std.mem.Allocator, tree: *const Tree, paragraph_element: usize, sites: *const @import("text_sites.zig").Sites, options: @import("text_sites.zig").Options, continuation: bool, id: u32, max_bytes: usize, moves: ?[]const @import("anchor_split_plan.zig").Move, retain_geometry: bool, allow_column_sites: bool, field_moves: ?[]const @import("field_split_plan.zig").Move, fields: []const @import("text_sites_save.zig").FieldDirty, titles: ?[]const @import("title_mark_position.zig").Position, title_paragraph: ?*const @import("paragraph_structure_values.zig").Paragraph) ![]u8 {
     if (paragraph_element >= tree.elements.len) return error.InvalidParagraphElement;
     const paragraph = tree.elements[paragraph_element];
     if (!paragraph.is(uri, "p") or paragraph.end_tag == null) return error.InvalidParagraphElement;
@@ -165,7 +165,15 @@ fn writeModePolicyTitles(a: std.mem.Allocator, tree: *const Tree, paragraph_elem
         selected_count += 1;
     }
     if (selected_count != sites.items.len) return error.InvalidTextSites;
-    for (sites.items) |site| {
+    var emission: ?@import("title_mark_emission_plan.zig").Plan = null;
+    defer if (emission) |*plan| plan.deinit(a);
+    if (titles != null) {
+        const current = title_paragraph orelse return error.SourceBindingMismatch;
+        if (current.template_element != paragraph_element) return error.SourceBindingMismatch;
+        emission = try @import("title_mark_emission_plan.zig").prepare(a, tree, current, max_bytes);
+    }
+    for (sites.items, 0..) |site, site_index| {
+        const body = if (emission) |plan| plan.bodies[site_index] else null;
         if (retain_geometry) {
             var unchanged = false;
             var matched = false;
@@ -177,25 +185,30 @@ fn writeModePolicyTitles(a: std.mem.Allocator, tree: *const Tree, paragraph_elem
                 }
             }
             if (!matched) return error.SourceBindingMismatch;
-            if (unchanged) continue;
+            if (unchanged and body == null) continue;
         }
         if (site.element_index >= tree.elements.len or site.start < paragraph.start_tag.end or site.end > paragraph.end_tag.?.start or site.start > site.end) return error.InvalidTextSites;
         const element = tree.elements[site.element_index];
         if (element.start_tag.start < base or element.end > paragraph.end) return error.SourceBindingMismatch;
         // 아직 입력하지 않은 가상 경계는 XML 수정이 아닙니다.
         // 실제 빈 hp:t와 같은 위치일 수 있으므로 빈 삽입 patch를 만들지 않습니다.
-        if (site.anchor_boundary and site.text.len == 0) continue;
-        if (site.start == site.end and site.text.len == 0 and !site.missing_text and !site.empty_element) continue;
-        if (moves != null and site.missing_text and site.text.len == 0) continue;
-        if (moves != null and site.start == site.end and site.text.len == 0) continue;
+        if (body == null and site.anchor_boundary and site.text.len == 0) continue;
+        if (body == null and site.start == site.end and site.text.len == 0 and !site.missing_text and !site.empty_element) continue;
+        if (body == null and moves != null and site.missing_text and site.text.len == 0) continue;
+        if (body == null and moves != null and site.start == site.end and site.text.len == 0) continue;
         try changes.append(a, .{
             .start = site.start - base,
             .end = site.end - base,
-            .text = site.text,
+            .text = if (body != null) "" else site.text,
+            .serialized_content = body,
             .expand_empty_element = site.empty_element,
             .run_opening = if (site.missing_text) .{ .start = element.start_tag.start - base, .end = element.start_tag.end - base } else null,
         });
     }
+    if (emission) |plan| for (plan.removals) |removed| {
+        const element = tree.elements[removed];
+        try changes.append(a, .{ .start = element.start_tag.start - base, .end = element.end - base, .text = "" });
+    };
     if (moves) |planned| for (planned) |move| {
         if ((move.side == .right) == continuation) continue;
         const element = tree.elements[move.element_index];

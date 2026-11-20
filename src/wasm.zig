@@ -12,6 +12,7 @@ comptime {
     _ = @import("wasm/hwp5_password.zig");
     _ = @import("wasm/hwpx_edit.zig");
     _ = @import("wasm/hwp5_edit.zig");
+    _ = @import("wasm/hwp5_document_text_read.zig");
     _ = @import("wasm/equation.zig");
     _ = @import("wasm/pcx.zig");
     _ = @import("wasm/new_document.zig");

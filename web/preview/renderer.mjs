@@ -1,4 +1,10 @@
 import {
+  createHwp5ChartResources,
+  compatibleHwp5ChartPreviewKeys,
+  readHwp5ChartPaintResource,
+} from './hwp5-chart-resources.mjs';
+import { inlineHwp5ChartIndex, previewHwp5ChartLayers } from './hwp5-chart-layers.mjs';
+import {
   objectSelectionRectangle,
   paintObjectSelection,
   sameObjectSelection,
@@ -13,6 +19,12 @@ import { getScenePageText, pageTextUnavailable } from './page-text-scene.mjs';
 import { indexPrintPageScene } from './print-page-scene.mjs';
 import { attachHwpxPageNumbers } from './hwpx-page-number-layout.mjs';
 import { richTypingOwnerAllowed } from './caret-formatting-intent.mjs';
+import {
+  createdCellClipboardSource,
+  createdCellTypingOwner,
+  createdCellTypingObservation,
+  createdCellTypingDraftRanges,
+} from './created-cell-typing-observation.mjs';
 import { retainOverflowPreviewBarrier } from './overflow-preview-barrier.mjs';
 import { projectVisibleOverflowCells } from './visible-overflow-cell-edit.mjs';
 import { createPreviewEditPolicy } from './preview-edit-policy.mjs';
@@ -285,6 +297,7 @@ export function createRenderer(
   let pictureReader = null,
     pictures = new Map();
   let chartReader = null;
+  let hwp5ChartReader = null;
   let chartLayers = {
       items: [],
       unavailable: [],
@@ -310,9 +323,25 @@ export function createRenderer(
       reflow();
     },
   });
+  const hwp5ChartResources = createHwp5ChartResources({
+    current: () => content,
+    read: (section, control) =>
+      hwp5ChartReader
+        ? hwp5ChartReader(section, control)
+        : Promise.reject(new Error('Hwp5ChartReaderUnavailable')),
+    onChange: () => {
+      measurementEpoch++;
+      paragraphFlowReuse.clear();
+      reflow();
+    },
+  });
   let chartPreviewRead = (section, wrapper) => chartResources.status(section, wrapper);
   const beginChartReads = () => {
     const pending = [];
+    if (!closed && content.hwp5ChartDisplayAvailable === true && hwp5ChartReader)
+      for (const target of content.hwp5ChartTargets ?? [])
+        if (!target.error_name)
+          pending.push(hwp5ChartResources.load(target.section, target.controlNode).catch(() => {}));
     if (closed || content.chartDisplayAvailable !== true || !chartReader) return pending;
     for (const target of content.chartTargets ?? []) {
       if (
@@ -576,7 +605,12 @@ export function createRenderer(
         const entry = chartResources.status(target.section, target.wrapper);
         return entry && !entry.value && !entry.error;
       });
-      const resourcesPending = picturesPending || chartsPending;
+      const hwp5ChartsPending = (content.hwp5ChartTargets ?? []).some((target) => {
+        if (target.error_name) return false;
+        const entry = hwp5ChartResources.status(target.section, target.controlNode);
+        return entry && !entry.value && !entry.previewValue && !entry.error;
+      });
+      const resourcesPending = picturesPending || chartsPending || hwp5ChartsPending;
       canvas.dataset.chartPending = String(chartsPending);
       // Keep the last complete frame until the visible sources have been checked.
       // In particular, never erase a picture while an unchanged payload is read
@@ -1709,6 +1743,16 @@ export function createRenderer(
       ...(Array.isArray(content.chartTargets)
         ? { chartTargets: projectDraftChartTargets(content, draft) }
         : {}),
+      ...(Array.isArray(content.hwp5ChartTargets)
+        ? {
+            hwp5ChartTargets: projectDraftAnchoredObjects(
+              content,
+              content.hwp5ChartTargets,
+              draft,
+              (target) => !target.error_name,
+            ),
+          }
+        : {}),
       ...(Array.isArray(content.oles)
         ? { oles: projectDraftAnchoredObjects(content, content.oles, draft) }
         : {}),
@@ -1722,6 +1766,8 @@ export function createRenderer(
     });
     pictures = inlinePictureIndex(pictureDisplay);
     const inlineCharts = inlineChartIndex(pictureDisplay, chartPreviewRead);
+    for (const [key, item] of inlineHwp5ChartIndex(pictureDisplay))
+      inlineCharts.set(key, inlineCharts.has(key) ? null : item);
     const formOwners = [
       ...new Set([
         ...(pictureDisplay.checkBoxes ?? []),
@@ -1855,6 +1901,17 @@ export function createRenderer(
     overflowPreviewDocument = resourceDocument;
     pictureLayers = previewPictureLayers(pictureDisplay, layout, logicalWidth);
     chartLayers = previewChartLayers(pictureDisplay, layout, logicalWidth, chartPreviewRead);
+    const hwp5Layers = previewHwp5ChartLayers(pictureDisplay, layout, logicalWidth, (target) =>
+      readHwp5ChartPaintResource(hwp5ChartResources, target),
+    );
+    chartLayers = {
+      ...chartLayers,
+      items: [...chartLayers.items, ...hwp5Layers.items],
+      unavailable: [...chartLayers.unavailable, ...hwp5Layers.unavailable],
+      total: chartLayers.total + hwp5Layers.total,
+      pending: chartLayers.pending + hwp5Layers.pending,
+      height: Math.max(chartLayers.height, hwp5Layers.height),
+    };
     lineLayers = previewLineLayers(pictureDisplay, layout, logicalWidth);
     drawingOutlineLayers = previewDrawingOutlineLayers(pictureDisplay, layout);
     layout.drawingOutlineCoverage = {
@@ -2152,6 +2209,15 @@ export function createRenderer(
       pictureResources.clear();
       decodedResourceGeometry.clear();
     },
+    hwp5ChartReader(read) {
+      queuedTypingHold = null;
+      if (hwp5ChartReader !== read) {
+        hwp5ChartReader = read;
+        resourceGeneration++;
+        hwp5ChartResources.clear();
+        if (content.hwp5ChartDisplayAvailable) reflow();
+      }
+    },
     chartReader(read) {
       queuedTypingHold = null;
       if (chartReader !== read) {
@@ -2350,6 +2416,17 @@ export function createRenderer(
         chartResources.clear();
       else if (nextResourceEpoch !== resourceEpoch)
         chartResources.refresh(value.chartTargets, compatibleChartPreviewKeys(content, value));
+      if (
+        changedResourceDocument ||
+        providerEpochChanged ||
+        !Object.hasOwn(options, 'resourceEpoch')
+      )
+        hwp5ChartResources.clear();
+      else if (nextResourceEpoch !== resourceEpoch)
+        hwp5ChartResources.refresh(
+          value.hwp5ChartTargets,
+          compatibleHwp5ChartPreviewKeys(value, hwp5ChartResources),
+        );
       resourceProviderEpoch = nextProviderEpoch;
       resourceEpoch = nextResourceEpoch;
       resourceDocument = nextResourceDocument;
@@ -2392,6 +2469,20 @@ export function createRenderer(
           },
           generations: () => [layoutGeneration, resourceGeneration, measurementEpoch],
           async settleResources() {
+            if (content.hwp5ChartDisplayAvailable === true) {
+              await Promise.all(
+                (content.hwp5ChartTargets ?? [])
+                  .filter((target) => !target.error_name)
+                  .map((target) => hwp5ChartResources.load(target.section, target.controlNode)),
+              );
+              for (const target of content.hwp5ChartTargets ?? [])
+                if (
+                  target.error_name ||
+                  !hwp5ChartResources.get(target.section, target.controlNode)?.value
+                )
+                  throw Error('PrintHwp5ChartResourceUnavailable');
+            }
+
             const backgroundTargets = tableBackgroundTargets(
               [...(layout.boxes ?? []), ...(layout.repeatedTableHeaderBoxes ?? [])],
               tableBorders,
@@ -2587,6 +2678,7 @@ export function createRenderer(
       paintedFrame = null;
       canvas.dataset.paintedCaret = '';
       chartResources.clear();
+      hwp5ChartResources.clear();
       pictureResizeGuide = null;
       selectedPicture = null;
       canvas.dataset.selectedPicture = '';
@@ -2757,14 +2849,41 @@ export function createRenderer(
     characterStrikeColorAvailable: () => content.characterStrikeColorAvailable === true,
     characterFontAvailable: () => content.characterFontAvailable === true,
     characterFontNameAvailable: () => content.characterFontNameAvailable === true,
+    createdCellClipboardSource(point) {
+      const policy = viewPolicy();
+      return policy.allowsPoint(point)
+        ? createdCellClipboardSource(content, createdCellParagraph(layout, point), point)
+        : null;
+    },
+    createdCellTypingOwner(point) {
+      const policy = viewPolicy();
+      return policy.allowsPoint(point)
+        ? createdCellTypingOwner(content, createdCellParagraph(layout, point), point)
+        : null;
+    },
+    createdCellTypingObservation(point) {
+      const policy = viewPolicy();
+      return policy.allowsPoint(point)
+        ? createdCellTypingObservation(content, createdCellParagraph(layout, point), point)
+        : null;
+    },
+    createdCellCanonicalRuns(point) {
+      return createdCellParagraph(layout, point)?.hasCanonicalCharacterRuns === true;
+    },
+    createdCellTypingDraftRanges(point, text, selection, baseText) {
+      return createdCellTypingDraftRanges(
+        content,
+        createdCellParagraph(layout, point),
+        point,
+        text,
+        selection,
+        baseText,
+      );
+    },
     richTypingScope(point) {
       const policy = viewPolicy();
-      if (
-        point?.createdCell ||
-        !policy.allowsPoint(point) ||
-        !Number.isSafeInteger(content.richTypingScope)
-      )
-        return null;
+      if (point?.createdCell) return this.createdCellTypingOwner(point)?.scope ?? null;
+      if (!policy.allowsPoint(point) || !Number.isSafeInteger(content.richTypingScope)) return null;
       const row = paragraphLookup.find(policy.content.paragraphs, point);
       return richTypingOwnerAllowed(content.format, row) ? content.richTypingScope : null;
     },
@@ -2949,6 +3068,7 @@ export function createRenderer(
       paragraphLookup.clear();
       stopPictureWait();
       chartResources.close();
+      hwp5ChartResources.close();
       pictureResources.close();
       decodedResourceGeometry.clear();
       stopBlink();

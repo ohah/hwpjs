@@ -12,6 +12,9 @@ import {
   excludedPath,
   runQuality as rawRunQuality,
 } from './quality.mjs';
+// Temporary Git repositories must use their own index and worktree.
+for (const name of ['GIT_INDEX_FILE', 'GIT_DIR', 'GIT_WORK_TREE']) delete process.env[name];
+
 const runQuality = (options) => rawRunQuality({ filesystem: true, ...options });
 function fixture() {
   mkdirSync(resolve('zig-out/verification/quality-runner-tests'), { recursive: true });

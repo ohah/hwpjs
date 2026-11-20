@@ -1,0 +1,212 @@
+{
+  "kind": "own actual 07603 official633 Worker create observations; no Native run in source test",
+  "inputSHA256": "0575ccd81df33a576e8308fdd9131f5f93c20edcf7dbe5c0cbf2a5370d39d574",
+  "NativeSHA256": "6332809503366628a8dfaf56df6c790203ebbd17839e331dabbde6afaec6b22e",
+  "row": {
+    "owner": {
+      "attributes": 1,
+      "component_node": 10,
+      "control_node": 9,
+      "current_unit": 29,
+      "extent_x": 20000,
+      "extent_y": 12000,
+      "geometry": {
+        "component_attributes": 0,
+        "component_extra_bytes": 0,
+        "component_node": 10,
+        "component_offset_x": 0,
+        "component_offset_y": 0,
+        "control_node": 9,
+        "current_height": 12000,
+        "current_width": 20000,
+        "description_bytes": 0,
+        "flags": 656149,
+        "height": 12000,
+        "instance_id": 1,
+        "kind_id": 611282021,
+        "matrix_pairs": 1,
+        "object_extra_bytes": 0,
+        "offset_x": 0,
+        "offset_y": 0,
+        "original_height": 12000,
+        "original_width": 20000,
+        "outer_margins": [0, 0, 0, 0],
+        "paragraph_node": 0,
+        "prevent_page_break": 0,
+        "rotation_angle": 0,
+        "width": 20000,
+        "z_order": 0
+      },
+      "ole_layout": "spec24",
+      "ole_node": 11,
+      "opaque_tail_bytes": 0,
+      "ordinal": 1,
+      "paragraph": 0,
+      "paragraph_node": 0,
+      "section_source_sha256": [
+        18, 191, 22, 45, 15, 13, 10, 123, 237, 240, 139, 207, 49, 142, 174, 241, 167, 27, 24, 72, 0,
+        209, 0, 109, 94, 191, 131, 60, 204, 44, 148, 114
+      ],
+      "source_unit": 29
+    },
+    "resource": {
+      "error_name": null,
+      "legacy_backup_present": false,
+      "physical_id": 1,
+      "presentation_streams": 1,
+      "resource_sha256": [
+        21, 159, 67, 150, 246, 127, 126, 233, 63, 58, 7, 148, 109, 90, 42, 89, 129, 18, 215, 210,
+        184, 96, 190, 177, 235, 244, 189, 203, 239, 152, 142, 96
+      ],
+      "state": "modern_chart",
+      "stream_entry": 1
+    }
+  },
+  "local": {
+    "component_node": 10,
+    "matrix": [1, 0, 0, 0, 1, 0],
+    "owner_node": 9,
+    "section": 0
+  },
+  "host": {
+    "paragraphs": [
+      {
+        "section": 0,
+        "paragraph": 0,
+        "selectionOwner": "section:0:body",
+        "text": "￼￼H5_CHART_6330￼",
+        "sourceOffsets": [
+          {
+            "at": 0,
+            "source": 0
+          },
+          {
+            "at": 1,
+            "source": 8
+          },
+          {
+            "at": 2,
+            "source": 16
+          },
+          {
+            "at": 16,
+            "source": 37
+          }
+        ]
+      }
+    ],
+    "hwp5DrawingLocalTransforms": [
+      {
+        "component_node": 10,
+        "matrix": [1, 0, 0, 0, 1, 0],
+        "owner_node": 9,
+        "section": 0
+      }
+    ]
+  },
+  "packet": {
+    "format": "hwp5",
+    "version": 1,
+    "kind": "hwp5_chart_candidates",
+    "source_epoch": "16",
+    "history_revision": 14,
+    "candidates": [
+      {
+        "section": 0,
+        "owner": {
+          "attributes": 1,
+          "component_node": 10,
+          "control_node": 9,
+          "current_unit": 29,
+          "extent_x": 20000,
+          "extent_y": 12000,
+          "geometry": {
+            "component_attributes": 0,
+            "component_extra_bytes": 0,
+            "component_node": 10,
+            "component_offset_x": 0,
+            "component_offset_y": 0,
+            "control_node": 9,
+            "current_height": 12000,
+            "current_width": 20000,
+            "description_bytes": 0,
+            "flags": 656149,
+            "height": 12000,
+            "instance_id": 1,
+            "kind_id": 611282021,
+            "matrix_pairs": 1,
+            "object_extra_bytes": 0,
+            "offset_x": 0,
+            "offset_y": 0,
+            "original_height": 12000,
+            "original_width": 20000,
+            "outer_margins": [0, 0, 0, 0],
+            "paragraph_node": 0,
+            "prevent_page_break": 0,
+            "rotation_angle": 0,
+            "width": 20000,
+            "z_order": 0
+          },
+          "ole_layout": "spec24",
+          "ole_node": 11,
+          "opaque_tail_bytes": 0,
+          "ordinal": 1,
+          "paragraph": 0,
+          "paragraph_node": 0,
+          "section_source_sha256": [
+            18, 191, 22, 45, 15, 13, 10, 123, 237, 240, 139, 207, 49, 142, 174, 241, 167, 27, 24,
+            72, 0, 209, 0, 109, 94, 191, 131, 60, 204, 44, 148, 114
+          ],
+          "source_unit": 29
+        },
+        "resource": {
+          "error_name": null,
+          "legacy_backup_present": false,
+          "physical_id": 1,
+          "presentation_streams": 1,
+          "resource_sha256": [
+            21, 159, 67, 150, 246, 127, 126, 233, 63, 58, 7, 148, 109, 90, 42, 89, 129, 18, 215,
+            210, 184, 96, 190, 177, 235, 244, 189, 203, 239, 152, 142, 96
+          ],
+          "state": "modern_chart",
+          "stream_entry": 1
+        }
+      }
+    ]
+  },
+  "observed30Baseline": {
+    "fixtureSHA256": "55c94cd2ce3d6f6b977535f635c584765ed1349d53ae3c94f0458c01dd0f5ac4",
+    "moduleSHA256": "8e4cbababc5c88a54124ca6923a4b1a487efa9167a93cfefb06ce3ef930489cd",
+    "frame": {
+      "size_protected": false,
+      "geometry": {
+        "width": 20000,
+        "height": 12000,
+        "width_relative": 4,
+        "height_relative": 2,
+        "treat_as_character": true,
+        "horizontal_offset": 0,
+        "vertical_offset": 0
+      },
+      "position": {
+        "relations": [2, 3, 0, 0],
+        "flags": [true, true, false, null]
+      },
+      "flow": {
+        "text_wrap": 0,
+        "text_flow": 0,
+        "z_order": 0,
+        "outside_margins": [0, 0, 0, 0]
+      },
+      "text_wrap": 0,
+      "text_flow": 0,
+      "flow_with_text": true,
+      "allow_overlap": false,
+      "affect_line_spacing": true,
+      "hold_anchor": null,
+      "has_caption": false,
+      "out_margin": [0, 0, 0, 0],
+      "z_order": 0
+    }
+  }
+}

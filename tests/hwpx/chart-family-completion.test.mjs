@@ -467,3 +467,23 @@ test('sphere and wireframe approximation disclosures reach the public Canvas pai
     ),
   );
 });
+
+test('radar with fewer than three categories renders markers or a single edge without polygon fill', () => {
+  for (const style of ['standard', 'marker', 'filled']) {
+    const one = proposed(model('radarChart', [[2]]));
+    one.plot_settings[0].radar_style.value = style;
+    const point = ready(one);
+    assert.equal(point.family_geometry.circles.length, 1);
+    assert.equal(point.family_geometry.strokes.length, 0);
+    assert.equal(point.family_geometry.polygons.length, 0);
+    paint(point);
+
+    const two = proposed(model('radarChart', [[2, 3]]));
+    two.plot_settings[0].radar_style.value = style;
+    const edge = ready(two);
+    assert.equal(edge.family_geometry.circles.length, style === 'marker' ? 2 : 0);
+    assert.equal(edge.family_geometry.strokes.length, 1);
+    assert.equal(edge.family_geometry.polygons.length, 0);
+    paint(edge);
+  }
+});

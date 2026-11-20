@@ -158,7 +158,7 @@ test "HWPX cell background reference writer allocation failures preserve other c
     const changed = prefix ++ "<p:tbl><p:tr><p:tc borderFillIDRef='3'><p:cellSz width='9' height='2'/><p:subList><p:p><p:run><p:t>긴😀</p:t></p:run></p:p></p:subList></p:tc><p:tc borderFillIDRef='3'><p:subList/></p:tc></p:tr></p:tbl></s:sec>";
     var tree = try @import("section_tree.zig").parse(a, original, 0, 0, .{});
     defer tree.deinit(a);
-    try t.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: *const @import("xml_part_tree.zig").Tree, xml: []const u8) !void {
             const bytes = try @import("table_cell_background_save.zig").section(allocator, source, xml, &.{.{ .section = 0, .table_node = 1, .cell_node = 3, .list_node = 5, .source_id = 3, .color = 0x123456 }}, &.{20}, &.{0}, 0, 4096);
             defer allocator.free(bytes);

@@ -1,6 +1,8 @@
 import { createDrawingObservationQuery } from '../../../web/preview/drawing-observation.mjs';
 import type { StateToken } from '@hwpjs/core';
 import type { CanvasObjectTarget } from './object-activation.ts';
+// @ts-ignore Shared current Native read-only membership.
+import { currentHwp5ChartTarget } from '../../../web/preview/hwp5-chart-resources.mjs';
 
 export interface ObjectSelectionState {
   readonly token: StateToken;
@@ -61,9 +63,11 @@ const equalTarget = (a: CanvasObjectTarget | null, b: CanvasObjectTarget | null)
   a.section === b.section &&
   (a.kind === 'chart' && b.kind === 'chart'
     ? a.wrapper === b.wrapper
-    : a.kind === 'picture' && b.kind === 'picture'
-      ? a.pictureNode === b.pictureNode
-      : a.kind === 'drawing' && b.kind === 'drawing' && a.drawingNode === b.drawingNode);
+    : a.kind === 'hwp5-chart' && b.kind === 'hwp5-chart'
+      ? a.controlNode === b.controlNode
+      : a.kind === 'picture' && b.kind === 'picture'
+        ? a.pictureNode === b.pictureNode
+        : a.kind === 'drawing' && b.kind === 'drawing' && a.drawingNode === b.drawingNode);
 function ownTarget(value: CanvasObjectTarget | null): CanvasObjectTarget | null {
   if (!value || ![Object.prototype, null].includes(Object.getPrototypeOf(value))) return null;
   const d = Object.getOwnPropertyDescriptors(value);
@@ -79,11 +83,13 @@ function ownTarget(value: CanvasObjectTarget | null): CanvasObjectTarget | null 
   const field =
     d.kind.value === 'chart'
       ? 'wrapper'
-      : d.kind.value === 'picture'
-        ? 'pictureNode'
-        : d.kind.value === 'drawing'
-          ? 'drawingNode'
-          : null;
+      : d.kind.value === 'hwp5-chart'
+        ? 'controlNode'
+        : d.kind.value === 'picture'
+          ? 'pictureNode'
+          : d.kind.value === 'drawing'
+            ? 'drawingNode'
+            : null;
   if (!field || !d[field] || !('value' in d[field]) || !uint(d[field].value)) return null;
   return Object.freeze({
     kind: d.kind.value,
@@ -93,6 +99,7 @@ function ownTarget(value: CanvasObjectTarget | null): CanvasObjectTarget | null 
 }
 /** Native metadata membership only; this deliberately issues no editable target. */
 export function objectSelectionOwner(source: any, target: CanvasObjectTarget): boolean {
+  if (target.kind === 'hwp5-chart') return currentHwp5ChartTarget(source, target) !== null;
   if (target.kind === 'drawing') {
     const observed = createDrawingObservationQuery(source).get(target.section, target.drawingNode);
     const row = observed?.row as any;

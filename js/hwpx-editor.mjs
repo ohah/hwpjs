@@ -1,3 +1,6 @@
+import { createHwpxNoteDeleteApi } from './hwpx-note-delete.mjs';
+import { createHwpxNoteCreateApi } from './hwpx-note-create.mjs';
+import { createHwpxControlTextBatchApi } from './hwpx-control-text-batch.mjs';
 import { createObjectGeometryApi } from './object-geometry-api.mjs';
 import { createPageSettingsEditApi } from './page-settings-edit.mjs';
 import {
@@ -20,6 +23,7 @@ import {
 } from './source-table-cell-merge.mjs';
 import { createAtomicFormattingApi } from './atomic-formatting-api.mjs';
 import { createIndependentTextApi } from './independent-text-api.mjs';
+import { createDocumentTextApi } from './document-text-api.mjs';
 import { createHwpxReadScopeApi } from './hwpx-read-scope.mjs';
 import { drawingTextRequest, decodeDrawingTextRequested } from './hwpx-drawing-text-requested.mjs';
 import { encodeLineDisplayNodes, decodeLineDisplayBatch } from './hwpx-line-display-batch.mjs';
@@ -243,8 +247,11 @@ export async function createHwpxEditor(source) {
     }),
     ...createAtomicFormattingApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
     ...createIndependentTextApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
+    ...createDocumentTextApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
     ...documentInsert,
     ...createHwpxInlineObjectInsertApi({ wasm, memory, check: ready }),
+    ...createHwpxNoteCreateApi({ wasm, memory, check: ready }),
+    ...createHwpxNoteDeleteApi({ wasm, memory, check: ready }),
     ...createSourceTableCellMergeApi({ wasm, memory, check: ready, documentInsert }),
     ...createSourceTableCellSplitApi({ wasm, memory, check: ready, documentInsert }),
     ...createParagraphBreakApi({
@@ -2109,6 +2116,7 @@ export async function createHwpxEditor(source) {
         wasm.hwpx_edit_output_free();
       }
     },
+    ...createHwpxControlTextBatchApi({ wasm, memory, check: ready }),
     paragraphTextSnapshot(section) {
       ready();
       uint(section);

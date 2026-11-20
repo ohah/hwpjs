@@ -58,6 +58,40 @@ pub const Context = struct {
     }
 };
 pub const Edit = struct { section: usize, paragraph: usize, start_unit: u32, end_unit: u32, properties: model.CharacterPropertyPatch };
+/// Resolve an inserted run through the same request-local character resource
+/// owner used by source paragraphs. The outer History owns rollback/publication.
+pub fn resolveInsertedResource(a: std.mem.Allocator, original_info: []const u8, version: @import("../version.zig").Version, document: *model.Document, original_count: usize, limit: usize, source_id: u32, patch: model.CharacterPropertyPatch, context: *Context) !u32 {
+    try @import("character_property_payload.zig").validate(patch);
+    try validateFontIds(a, original_info, version, document, patch, context);
+    var raw = context.disabled or context.installed or patch.border_fill != null;
+    if (context.pending == null) for (document.character_resources) |entry| {
+        raw = raw or entry.properties.border_fill != null;
+    };
+    if (raw) {
+        // Same complete-resource fallback as paragraph property painting; a
+        // border intent must never be resolved with a missing DocInfo basis.
+        if (!context.installed) if (context.pending) |*pending| {
+            const verified = try pending.writeBatch(a, original_info, version, original_count, limit);
+            defer a.free(verified);
+            try context.install(a, document);
+        };
+        context.disabled = true;
+        const borrowed: Values = .{ .entries = .{ .items = document.character_resources, .capacity = document.character_resources.len, .pointer_stability = .{} } };
+        const current = try borrowed.write(a, original_info, version, original_count, limit);
+        defer a.free(current);
+        const shapes = try @import("character_display_shapes.zig").read(a, current, version, original_count + document.character_resources.len);
+        defer a.free(shapes);
+        var pending = try borrowed.clone(a);
+        defer pending.deinit(a);
+        const id = (try patchedId(a, version, original_count, current, shapes, &pending, null, source_id, patch)) orelse return source_id;
+        try installResources(a, original_info, version, document, original_count, limit, &pending, null);
+        return id;
+    }
+    try context.prepare(a, original_info, version, original_count, document, limit);
+    const id = (try patchedId(a, version, original_count, null, null, &context.pending.?, context, source_id, patch)) orelse source_id;
+    context.changed = context.changed or context.pending.?.entries.items.len != document.character_resources.len;
+    return id;
+}
 pub fn apply(a: std.mem.Allocator, source: []const u8, original_info: []const u8, version: @import("../version.zig").Version, document: *model.Document, edit: Edit, original_count: usize, limit: usize) !void {
     return applyScoped(a, source, original_info, version, document, edit, original_count, limit, null);
 }

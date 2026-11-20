@@ -3,6 +3,16 @@ import { paragraphSelectionOwner } from './paragraph-selection.mjs';
 // View eligibility only. Native observations and source identities stay immutable.
 const uint = (n) => Number.isInteger(n) && n >= 0 && n <= 0xffffffff && !Object.is(n, -0);
 const key = (section, node) => `${section}:${node}`;
+// Native-owned read/view operations have no edit target. Selection still needs
+// its own current owner/geometry admission; edit barriers below remain separate.
+const documentReads = new Set([
+  'document-text-snapshot',
+  'document-text-selection',
+  'document-text-anchor',
+  'document-text-read-binding',
+  'reveal-document-text',
+  'refresh-document-text-view',
+]);
 const independent = new Set([
   'undo',
   'redo',
@@ -265,8 +275,49 @@ export function createPreviewEditPolicy(content, layout) {
       return null;
     return i;
   };
-  const allowsPoint = (point) => index(point) !== null;
+  // Generated cells have logical identities, never source paragraph ordinals.
+  // Bind them to their actual unblocked body host while this view mask is active.
+  const generated = new Map();
+  for (const table of content?.createdTables ?? []) {
+    if (!uint(table?.section) || typeof table.identity !== 'string') continue;
+    const hostIndex = index({ section: table.section, paragraph: table.hostParagraph });
+    const host = hostIndex === null ? null : source[hostIndex];
+    for (const cell of table.cells ?? []) {
+      if (!uint(cell?.row) || !uint(cell.column)) continue;
+      const id = `${table.section}:${table.identity}:${cell.row}:${cell.column}`;
+      const eligible =
+        host &&
+        host.editable === true &&
+        !host.tableCell &&
+        !host.drawingText &&
+        !host.drawingCaption &&
+        !host.clipped;
+      if (generated.has(id)) generated.set(id, false);
+      else generated.set(id, Boolean(eligible));
+    }
+  }
+  const generatedKey = (point) => {
+    const cell = point?.createdCell;
+    if (
+      !valid ||
+      !uint(point?.section) ||
+      !cell ||
+      typeof cell.identity !== 'string' ||
+      !uint(cell.row) ||
+      !uint(cell.column) ||
+      (point.unit !== undefined && !uint(point.unit))
+    )
+      return null;
+    const id = `${point.section}:${cell.identity}:${cell.row}:${cell.column}`;
+    return generated.get(id) === true ? id : null;
+  };
+  const allowsPoint = (point) =>
+    point?.createdCell ? generatedKey(point) !== null : index(point) !== null;
   const allowsRange = (anchor, focus) => {
+    if (anchor?.createdCell || focus?.createdCell) {
+      const first = generatedKey(anchor);
+      return first !== null && first === generatedKey(focus);
+    }
     const first = index(anchor),
       last = index(focus);
     if (first === null || last === null || anchor.section !== focus.section) return false;
@@ -295,8 +346,12 @@ export function createPreviewEditPolicy(content, layout) {
     );
   const allowsRequest = (message) => {
     if (!message || typeof message.kind !== 'string') return false;
-    if (independent.has(message.kind)) return true;
+    if (documentReads.has(message.kind) || independent.has(message.kind)) return true;
     if (!valid) return false;
+    if (message.kind === 'created-cell-splice') {
+      if (Object.hasOwn(message, 'paragraph')) return false;
+      return generatedKey({ section: message.section, createdCell: message }) !== null;
+    }
     if (paragraphs.has(message.kind)) {
       if (!allowsPoint(message)) return false;
       if (admitted.has(key(message.section, message.paragraph)) && !visibleText.has(message.kind))

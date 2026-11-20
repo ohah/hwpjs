@@ -1,3 +1,12 @@
+import { validateCreatedOperationReferences } from './created-operation-selector.ts';
+import {
+  validateCreatedCellSpliceOperation,
+  type CreatedCellSpliceOperation,
+} from './created-cell-splice.ts';
+import {
+  validateInlineObjectOperation,
+  type InlineObjectOperation,
+} from './inline-object-create.ts';
 import type { FormStateOperation } from './form-state.ts';
 import {
   checkedCharacterExtensions,
@@ -64,6 +73,8 @@ interface WholeTextCondition {
 type AtParagraph = OperationPosition & WholeTextCondition;
 export type DocumentOperation = OperationBase &
   (
+    | InlineObjectOperation
+    | CreatedCellSpliceOperation
     | PageSettingsOperation
     | FormStateOperation
     | SourceTableCellSplitOperation
@@ -146,6 +157,12 @@ const spec = (required: readonly string[], optional: readonly string[] = []): Op
   Object.freeze({ required: Object.freeze(required), optional: Object.freeze(optional) });
 // CLI와 MCP가 공유하는 필수 및 선택 키의 단일 출처입니다.
 export const DOCUMENT_OPERATION_SPECS = Object.freeze({
+  'created-cell-splice': spec(
+    [...common, 'selector', 'startUnit', 'endUnit', 'expectedText', 'text'],
+    ['insertion'],
+  ),
+  'chart-create': spec([...common, 'selector', 'unit', 'expectedText', 'payload'], ['affinity']),
+  'equation-insert': spec([...common, 'selector', 'unit', 'expectedText', 'payload'], ['affinity']),
   'page-settings': spec([...common, 'scope', 'values'], ['section']),
   'form-checkbox-state': spec([...common, 'reference', 'expectedState', 'state']),
   'form-radio-select': spec([...common, 'reference', 'expectedState', 'expectedGroupName']),
@@ -305,6 +322,13 @@ export function validateDocumentOperations(input: unknown): readonly DocumentOpe
     const shape = DOCUMENT_OPERATION_SPECS[operation.kind as DocumentOperationKind];
     fields(operation, shape.required, shape.optional);
     switch (operation.kind) {
+      case 'created-cell-splice':
+        validateCreatedCellSpliceOperation(operation);
+        break;
+      case 'chart-create':
+      case 'equation-insert':
+        validateInlineObjectOperation(operation);
+        break;
       case 'page-settings': {
         if (operation.scope === 'section') uint(operation.section);
         else if (operation.scope !== 'document' || Object.hasOwn(operation, 'section'))
@@ -510,5 +534,6 @@ export function validateDocumentOperations(input: unknown): readonly DocumentOpe
     if (Object.hasOwn(operation, 'expectedText')) string(operation.expectedText);
   }
   // 위 분기에서 모든 필수 값과 기존 Native 요청 codec 검사를 마친 소유 스냅샷입니다.
+  validateCreatedOperationReferences(operations as readonly DocumentOperation[]);
   return operations as readonly DocumentOperation[];
 }

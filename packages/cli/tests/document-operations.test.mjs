@@ -145,7 +145,32 @@ test('요청 getter와 순환과 숨은 키 및 희소 배열은 실행 전에 �
 });
 
 test('MCP 필드 명세와 공통 검증은 같은 불변 필수 및 선택 키를 사용한다', () => {
-  assert.equal(Object.keys(DOCUMENT_OPERATION_SPECS).length, 21);
+  assert.deepEqual(Object.keys(DOCUMENT_OPERATION_SPECS).sort(), [
+    'cell-sizes',
+    'cell-styles',
+    'character-format',
+    'character-properties',
+    'chart-create',
+    'created-cell-splice',
+    'created-table-grid',
+    'equation-insert',
+    'form-checkbox-state',
+    'form-radio-select',
+    'form-text',
+    'merge-paragraph',
+    'page-settings',
+    'paragraph-alignment',
+    'paragraph-bullet-definition',
+    'paragraph-format',
+    'paragraph-margins',
+    'paragraph-spacing',
+    'picture-resize',
+    'replace-paragraph-ranges',
+    'source-table-cell-split',
+    'splice',
+    'split-paragraph',
+    'table-insert',
+  ]);
   const valid = splice();
   for (const name of DOCUMENT_OPERATION_SPECS.splice.required) {
     const missing = { ...valid };

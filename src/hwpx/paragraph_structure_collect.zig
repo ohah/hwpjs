@@ -50,10 +50,12 @@ pub fn collect(a: std.mem.Allocator, tree: *const Tree, current: *const sites_mo
         if (entry.found_existing) return error.SourceBindingMismatch;
         entry.value_ptr.* = index;
     }
-    for (current.items, locations, 0..) |site, location, site_index| {
+    const ancestors = try @import("paragraph_site_owner.zig").indexAncestors(a, tree);
+    defer a.free(ancestors);
+    for (current.items, locations) |site, location| {
         const index = indices.get(location.paragraph_ordinal) orelse return error.SourceBindingMismatch;
-        const single: sites_mod.Sites = .{ .items = current.items[site_index .. site_index + 1] };
-        if (try @import("paragraph_site_owner.zig").resolve(tree, &single, locations[site_index .. site_index + 1], location.paragraph_ordinal) != context.paragraphs.items[index].template_element) return error.SourceBindingMismatch;
+        if (site.element_index >= ancestors.len) return error.InvalidTextSites;
+        if (ancestors[site.element_index] != context.paragraphs.items[index].template_element) return error.SourceBindingMismatch;
         var copy = site;
         copy.text = try a.dupe(u8, site.text);
         errdefer a.free(copy.text);

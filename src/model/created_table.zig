@@ -2,7 +2,7 @@
 const std = @import("std");
 const creation = @import("table_creation_plan.zig");
 pub const Resources = struct { paragraph: u32, character: u32, style: u32, border_fill: u32 };
-pub const Cell = struct { paragraph_id: u32, text: []u8 };
+pub const Cell = @import("authored_paragraph.zig").Paragraph;
 pub const Table = struct {
     identity: u64,
     instance_id: u32,
@@ -11,7 +11,7 @@ pub const Table = struct {
     cells: []Cell,
 
     pub fn deinit(self: *Table, a: std.mem.Allocator) void {
-        for (self.cells) |cell| a.free(cell.text);
+        for (self.cells) |*cell| cell.deinit(a);
         a.free(self.cells);
         self.* = undefined;
     }
@@ -20,11 +20,11 @@ pub const Table = struct {
         const cells = try a.alloc(Cell, self.cells.len);
         var initialized: usize = 0;
         errdefer {
-            for (cells[0..initialized]) |cell| a.free(cell.text);
+            for (cells[0..initialized]) |*cell| cell.deinit(a);
             a.free(cells);
         }
         for (self.cells, cells) |source, *target| {
-            target.* = .{ .paragraph_id = source.paragraph_id, .text = try a.dupe(u8, source.text) };
+            target.* = try source.clone(a);
             initialized += 1;
         }
         var result = self.*;
@@ -38,11 +38,7 @@ pub const Table = struct {
         if (index >= self.cells.len) return error.InvalidTableCell;
         if (text.len > max_bytes) return error.LimitExceeded;
         if (!std.unicode.utf8ValidateSlice(text)) return error.InvalidTableCellText;
-        if (std.mem.eql(u8, self.cells[index].text, text)) return false;
-        const next = try a.dupe(u8, text);
-        a.free(self.cells[index].text);
-        self.cells[index].text = next;
-        return true;
+        return self.cells[index].replaceAll(a, self.resources.character, text, max_bytes);
     }
 };
 

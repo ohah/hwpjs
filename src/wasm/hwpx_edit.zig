@@ -40,6 +40,7 @@ var active: ?editor.Session = null;
 var history: ?histories.History = null;
 var output: ?[]u8 = null;
 var formatting_lifetime: @import("../model/formatting_binding.zig").State = .{};
+var document_text_generation: @import("../model/document_text_read_generation.zig").State = .{};
 
 // Optional capability: generated LF is serialized as hp:lineBreak.
 export fn hwpx_edit_created_cell_soft_line_breaks() u32 {
@@ -75,6 +76,7 @@ export fn hwpx_edit_table_creation_resources() u32 {
     return 1;
 }
 export fn hwpx_edit_close() void {
+    document_text_generation.invalidate();
     closeReadScope();
     formatting_lifetime.close();
     hwpx_edit_output_free();
@@ -345,6 +347,7 @@ export fn hwpx_edit_merge_source_table_cells(section: u32, table_node: u32, rows
         return fail(error.StaleSourceTableMergeBinding);
     const rectangle: @import("../hwpx/source_table_grid_session.zig").Rectangle = .{ .top = top, .left = left, .bottom = bottom, .right = right };
     rectangle.validate(rows, columns, 4096) catch |err| return fail(err);
+    document_text_generation.enterMutation() catch |err| return fail(err);
     const changed = @import("../hwpx/display_resource_generation.zig").applyOwned(h, session, &.{.{
         .kind = .source_table_cell_merge,
         .section = section,
@@ -384,6 +387,7 @@ export fn hwpx_edit_split_source_table_cells(section: u32, table_node: u32, rows
         .equalize_rows = equalize == 1,
     };
     settings.validate(rows, columns, 4096) catch |err| return fail(err);
+    document_text_generation.enterMutation() catch |err| return fail(err);
     const changed = @import("../hwpx/display_resource_generation.zig").applyOwned(h, session, &.{.{
         .kind = .source_table_cell_split,
         .section = section,
@@ -836,6 +840,87 @@ export fn hwpx_edit_note_reference_sites(section: u32) u32 {
     output = std.json.Stringify.valueAlloc(a, sites, .{}) catch |err| return fail(err);
     return 1;
 }
+// Optional read-only control-axis batch. Plain snapshot below retains its
+// original contract. No edit admission, enableHistory, save or normalization.
+export fn hwpx_edit_paragraph_control_text_snapshot(section: u32) u32 {
+    return controlTextSnapshot(section, false);
+}
+export fn hwpx_edit_paragraph_control_text_snapshot_current(section: u32) u32 {
+    return controlTextSnapshot(section, true);
+}
+fn controlTextSnapshot(section: u32, current_wire: bool) u32 {
+    hwpx_edit_output_free();
+    const live = if (active) |*value| value else return fail(error.EditorNotOpen);
+    if (section >= live.sections.len) return fail(error.InvalidSectionIndex);
+    const epoch = formatting_lifetime.epoch;
+    const read_generation: ?u64 = if (current_wire) (document_text_generation.current() catch |err| return fail(err)) else null;
+    const serial = live.mutation_serial;
+    const source_pointer = live.source.ptr;
+    const sections_pointer = live.sections.ptr;
+    const transaction_active = live.history_transaction_active;
+    var current = @import("../hwpx/display_current_paragraphs.zig").read(a, &live.sections[section], live.options) catch |err| return fail(err);
+    defer current.deinit(a);
+    const read_options = @import("../hwpx/editor_session.zig").siteOptions(live.options);
+    const limits: @import("../hwpx/control_text_read_context.zig").Limits = .{
+        .max_bytes = live.options.max_output_bytes,
+        .max_attribute_bytes = read_options.max_attribute_bytes,
+        .branch_policy = read_options.branch_policy,
+    };
+    var context = @import("../hwpx/control_text_read_context.zig").Context.init(a, &live.sections[section].tree, current.paragraphs, limits) catch |err| return fail(err);
+    defer context.deinit();
+    const session_id = formatting_lifetime.session(a) catch |err| return fail(err);
+    defer a.free(session_id);
+    var serial_buffer: [32]u8 = undefined;
+    const serial_text = std.fmt.bufPrint(&serial_buffer, "{d}", .{read_generation orelse serial}) catch unreachable;
+    // Native current ordinals are assigned here by the Session, not by the
+    // pure projection kernel or a JS category/display index.
+    const rows = @import("control_text_read_reply.zig").rows(a, live.sections[section].first_paragraph, &context) catch |err| return fail(err);
+    defer a.free(rows);
+    if (!formatting_lifetime.opened or formatting_lifetime.epoch != epoch or live.mutation_serial != serial or
+        live.source.ptr != source_pointer or live.sections.ptr != sections_pointer or live.history_transaction_active != transaction_active)
+        return fail(error.StaleParagraphReadScope);
+    if (read_generation) |captured| document_text_generation.assertCurrent(captured) catch |err| return fail(err);
+    output = (if (current_wire)
+        @import("control_text_read_reply.zig").writeCurrent(a, section, session_id, serial_text, rows, @min(live.options.max_output_bytes, 128 * 1024 * 1024))
+    else
+        @import("control_text_read_reply.zig").write(a, section, session_id, serial_text, rows, @min(live.options.max_output_bytes, 128 * 1024 * 1024))) catch |err| return fail(err);
+    return 1;
+}
+
+export fn hwpx_edit_control_text_read_identity(section: u32) u32 {
+    hwpx_edit_output_free();
+    const live = if (active) |*value| value else return fail(error.EditorNotOpen);
+    if (section >= live.sections.len) return fail(error.InvalidSectionIndex);
+    const epoch = formatting_lifetime.epoch;
+    const captured = document_text_generation.current() catch |err| return fail(err);
+    const source_pointer = live.source.ptr;
+    const sections_pointer = live.sections.ptr;
+    var physical = @import("../hwpx/display_current_paragraphs.zig").read(a, &live.sections[section], live.options) catch |err| return fail(err);
+    defer physical.deinit(a);
+    const first = live.sections[section].first_paragraph;
+    if (first == 0 or first > std.math.maxInt(u32) or physical.paragraphs.len > 100000 or
+        physical.paragraphs.len > std.math.maxInt(u32) - first + 1) return fail(error.SourceBindingMismatch);
+    if (!formatting_lifetime.opened or formatting_lifetime.epoch != epoch or live.source.ptr != source_pointer or live.sections.ptr != sections_pointer)
+        return fail(error.StaleParagraphReadScope);
+    document_text_generation.assertCurrent(captured) catch |err| return fail(err);
+    const id = formatting_lifetime.session(a) catch |err| return fail(err);
+    defer a.free(id);
+    var epoch_buffer: [20]u8 = undefined;
+    var serial_buffer: [20]u8 = undefined;
+    const epoch_text = std.fmt.bufPrint(&epoch_buffer, "{d}", .{epoch}) catch unreachable;
+    const serial_text = std.fmt.bufPrint(&serial_buffer, "{d}", .{captured}) catch unreachable;
+    output = @import("../json/bounded_stringify.zig").encode(a, .{
+        .schemaVersion = @as(u32, 1),
+        .scope = "native-control-text-identity",
+        .executionAuthority = false,
+        .section = section,
+        .firstParagraph = @as(u32, @intCast(first)),
+        .paragraphCount = @as(u32, @intCast(physical.paragraphs.len)),
+        .readBinding = .{ .session = id, .epoch = epoch_text, .serial = serial_text },
+    }, 2048) catch |err| return fail(err);
+    return 1;
+}
+
 export fn hwpx_edit_paragraph_text_snapshot(section: u32) u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
@@ -1013,6 +1098,7 @@ export fn hwpx_edit_history_enable_options(ptr: [*]const u8, size: usize) u32 {
     const options = @import("../model/history_policy.zig").parse(a, ptr[0..size]) catch |err| return fail(err);
     // Protocol2 owns the live Native serial/watch ticket used by atomic services.
     // Legacy history_enable stays on its existing V1 path.
+    document_text_generation.enterMutation() catch |err| return fail(err);
     const previous_managed = s.history_delta_managed;
     s.history_delta_managed = true;
     history = histories.History.initV2(s, options) catch |err| {
@@ -1032,10 +1118,15 @@ export fn hwpx_edit_history_enable(entries: u32, checkpoint_bytes: u32) u32 {
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
     if (history != null) return fail(error.HistoryAlreadyEnabled);
     if (@as(u64, entries) * checkpoint_bytes > 128 * 1024 * 1024) return fail(error.LimitExceeded);
+    document_text_generation.enterMutation() catch |err| return fail(err);
     history = histories.History.init(session, entries, checkpoint_bytes) catch |err| return fail(err);
     return 1;
 }
 fn travel(redo: bool) u32 {
+    document_text_generation.enterMutation() catch |err| {
+        _ = fail(err);
+        return 2;
+    };
     requireNoReadScope() catch |err| {
         _ = fail(err);
         return 2;
@@ -1063,6 +1154,7 @@ export fn hwpx_edit_redo() u32 {
     return travel(true);
 }
 fn apply(command: histories.Command) !void {
+    try document_text_generation.enterMutation();
     try requireNoReadScope();
     const session = if (active) |*value| value else return error.EditorNotOpen;
     errdefer @import("../hwpx/display_resource_generation.zig").pauseReceipt(session);
@@ -1071,7 +1163,7 @@ fn apply(command: histories.Command) !void {
         _ = try @import("../hwpx/display_resource_generation.zig").applyOwned(value, session, &.{command});
     } else switch (command.kind) {
         // Independent source-axis batches require the existing owned History.
-        .page_settings, .object_geometry, .bullet_definition, .paragraph_bullet, .independent_text, .insert_document, .equation_insert, .chart_create, .named_field_rename, .named_field_create, .named_field_parameters, .source_table_cell_merge, .source_table_cell_split => return error.HistoryNotEnabled,
+        .page_settings, .object_geometry, .bullet_definition, .paragraph_bullet, .independent_text, .document_text, .insert_document, .equation_insert, .chart_create, .note_delete, .note_create, .named_field_rename, .named_field_create, .named_field_parameters, .source_table_cell_merge, .source_table_cell_split, .splice_created_cell => return error.HistoryNotEnabled,
         .source_table_grid => {
             _ = try @import("../hwpx/source_table_grid_session.zig").apply(session, .{ .section = command.section, .node = command.source_grid_node, .expected_rows = command.source_grid_expected_rows, .expected_columns = command.source_grid_expected_columns, .action = command.source_grid_action });
         },
@@ -1325,6 +1417,7 @@ export fn hwpx_edit_set_character_properties_ranges(ptr: [*]const u8, length: us
     return 1;
 }
 fn applyBatch(s: *editor.Session, commands: []const histories.Command) !void {
+    try document_text_generation.enterMutation();
     try requireNoReadScope();
     errdefer @import("../hwpx/display_resource_generation.zig").pauseReceipt(s);
     if (history == null) @import("../hwpx/display_resource_generation.zig").block(s);
@@ -2127,6 +2220,7 @@ export fn hwpx_edit_set_named_field_parameters(ptr: [*]const u8, len: usize) u32
     if (value.expectedName.len == 0 or value.expectedName.len > @import("../hwpx/named_field_rename.zig").max_name_bytes)
         return fail(error.InvalidNamedFieldName);
     const update: parameters.Update = .{ .expected = value.expected, .direction = value.direction, .memo = value.memo };
+    document_text_generation.enterMutation() catch |err| return fail(err);
     const changed = @import("../hwpx/display_resource_generation.zig").applyOwned(h, session, &.{.{
         .kind = .named_field_parameters,
         .section = value.section,
@@ -2150,6 +2244,7 @@ export fn hwpx_edit_create_named_field(section: u32, paragraph: u32, start: u32,
     if (expected_len > session.options.max_text_bytes or name_len > creation.max_name_bytes or
         direction_len > creation.max_parameter_bytes or memo_len > creation.max_parameter_bytes)
         return fail(error.LimitExceeded);
+    document_text_generation.enterMutation() catch |err| return fail(err);
     const changed = @import("../hwpx/display_resource_generation.zig").applyOwned(h, session, &.{.{
         .kind = .named_field_create,
         .section = section,
@@ -2169,6 +2264,7 @@ export fn hwpx_edit_rename_named_field(section: u32, paragraph: u32, begin_eleme
     const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
     const limit = @import("../hwpx/named_field_rename.zig").max_name_bytes;
     if (expected_len > limit or name_len > limit) return fail(error.LimitExceeded);
+    document_text_generation.enterMutation() catch |err| return fail(err);
     const changed = @import("../hwpx/display_resource_generation.zig").applyOwned(h, session, &.{.{
         .kind = .named_field_rename,
         .section = section,
@@ -2287,6 +2383,7 @@ export fn hwpx_edit_apply_formatting_patch(ptr: [*]const u8, size: usize) u32 {
     const service = formattingService() catch |err| return fail(err);
     var request = @import("formatting_patch_request.zig").decode(a, ptr[0..size]) catch |err| return fail(err);
     defer request.deinit();
+    document_text_generation.enterMutation() catch |err| return fail(err);
     const changed = service.apply(a, request.value) catch |err| {
         const poisoned = if (history) |*h| h.stats().poisoned else false;
         if (poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) {
@@ -2300,10 +2397,91 @@ export fn hwpx_edit_apply_formatting_patch(ptr: [*]const u8, size: usize) u32 {
 }
 
 const TextTransaction = @import("../hwpx/text_transaction.zig").Service;
+export fn hwpx_edit_document_text_read_binding() u32 {
+    hwpx_edit_output_free();
+    _ = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const serial = document_text_generation.current() catch |err| return fail(err);
+    output = @import("../model/document_text_read_binding.zig").encode(a, .hwpx, formatting_lifetime, serial) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_document_text_anchor(ptr: [*]const u8, size: usize) u32 {
+    hwpx_edit_output_free();
+    if (size > @import("../model/text_transaction.zig").limits.request_bytes) return fail(error.LimitExceeded);
+    const current = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const observed_read_generation = document_text_generation.current() catch |err| return fail(err);
+    var request = @import("document_text_anchor_request.zig").decode(a, ptr[0..size]) catch |err| return fail(err);
+    defer request.deinit();
+    const revision: ?u32 = if (history) |*h| revision: {
+        const service: TextTransaction = .{ .session = current, .history = h, .lifetime = &formatting_lifetime };
+        break :revision service.currentRevision() catch |err| return fail(err);
+    } else null;
+    @import("../model/document_text_read_binding.zig").assertCurrent(request.read_binding, formatting_lifetime, observed_read_generation, revision) catch |err| return fail(err);
+    var response = @import("../hwpx/document_text_anchor.zig").query(a, current, formatting_lifetime, revision, request.value) catch |err| return fail(err);
+    defer response.deinit();
+    document_text_generation.assertCurrent(observed_read_generation) catch |err| return fail(err);
+    output = response.encode(a) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_document_text_selection(ptr: [*]const u8, size: usize) u32 {
+    hwpx_edit_output_free();
+    if (size > @import("../model/text_transaction.zig").limits.request_bytes) return fail(error.LimitExceeded);
+    const current = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const observed_read_generation = document_text_generation.current() catch |err| return fail(err);
+    var request = @import("document_text_selection_request.zig").decode(a, ptr[0..size]) catch |err| return fail(err);
+    defer request.deinit();
+    const revision: ?u32 = if (history) |*h| revision: {
+        const service: TextTransaction = .{ .session = current, .history = h, .lifetime = &formatting_lifetime };
+        break :revision service.currentRevision() catch |err| return fail(err);
+    } else null;
+    @import("../model/document_text_read_binding.zig").assertCurrent(request.read_binding, formatting_lifetime, observed_read_generation, revision) catch |err| return fail(err);
+    var response = @import("../hwpx/document_text_selection.zig").query(a, current, formatting_lifetime, revision, request.value) catch |err| return fail(err);
+    defer response.deinit();
+    document_text_generation.assertCurrent(observed_read_generation) catch |err| return fail(err);
+    output = response.encode(a) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_document_text_snapshot() u32 {
+    hwpx_edit_output_free();
+    const current = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const observed_read_generation = document_text_generation.current() catch |err| return fail(err);
+    const revision: ?u32 = if (history) |*h| revision: {
+        const service: TextTransaction = .{ .session = current, .history = h, .lifetime = &formatting_lifetime };
+        break :revision service.currentRevision() catch |err| return fail(err);
+    } else null;
+    var snapshot = current.documentTextSnapshot(a, formatting_lifetime, revision) catch |err| return fail(err);
+    defer snapshot.deinit();
+    document_text_generation.assertCurrent(observed_read_generation) catch |err| return fail(err);
+    snapshot.bindReadStamp(.{ .epoch = formatting_lifetime.epoch, .serial = observed_read_generation }) catch |err| return fail(err);
+    output = snapshot.encode(a) catch |err| return fail(err);
+    return 1;
+}
 fn textTransactionService() !TextTransaction {
     const current = if (active) |*value| value else return error.EditorNotOpen;
     const h = if (history) |*value| value else return error.HistoryNotEnabled;
     return .{ .session = current, .history = h, .lifetime = &formatting_lifetime };
+}
+export fn hwpx_edit_replace_document_text(ptr: [*]const u8, size: usize) u32 {
+    hwpx_edit_output_free();
+    requireNoReadScope() catch |err| return fail(err);
+    if (size > @import("../model/text_transaction.zig").limits.request_bytes) return fail(error.LimitExceeded);
+    const base = textTransactionService() catch |err| return fail(err);
+    const service: @import("../hwpx/document_replace_all.zig").Service = .{
+        .session = base.session,
+        .history = base.history,
+        .lifetime = base.lifetime,
+    };
+    var request = @import("document_replace_all_request.zig").decode(a, ptr[0..size]) catch |err| return fail(err);
+    defer request.deinit();
+    document_text_generation.enterMutation() catch |err| return fail(err);
+    const changed = service.apply(a, request.value) catch |err| {
+        const poisoned = if (history) |*h| h.stats().poisoned else false;
+        if (poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) {
+            _ = fail(error.MutationUncertain);
+            return 3;
+        }
+        return fail(err);
+    };
+    return if (changed) 1 else 2;
 }
 export fn hwpx_edit_text_transaction_capabilities() u32 {
     hwpx_edit_output_free();
@@ -2335,6 +2513,7 @@ export fn hwpx_edit_apply_text_transaction(ptr: [*]const u8, size: usize) u32 {
     // Hx uses the existing owned Native mutation serial, not a transport epoch.
     // Check exhaustion before write; History reserves/bump-checks it again.
     _ = service.currentRevision() catch |err| return fail(err);
+    document_text_generation.enterMutation() catch |err| return fail(err);
     const changed = service.apply(a, request.value) catch |err| {
         const poisoned = if (history) |*h| h.stats().poisoned else false;
         if (poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) {
@@ -2373,6 +2552,7 @@ fn applyRichCharacter(input: @import("text_transaction_commands.zig").Input, req
     var batch: @import("../hwpx/formatting_batch_context.zig").Context = .{};
     try service.session.beginFormattingBatch(&batch);
     defer service.session.endFormattingBatch(&batch);
+    try document_text_generation.enterMutation();
     return @import("../hwpx/display_resource_generation.zig").applyOwned(service.history, service.session, commands);
 }
 
@@ -2418,6 +2598,7 @@ export fn hwpx_edit_insert_document(section: u32, paragraph: u32, unit: u32, rev
     if (!formatting_lifetime.opened or formatting_lifetime.epoch != epoch or
         h.revision() != revision or session.mutation_serial != serial)
         return fail(error.StaleDocumentInsertBinding);
+    document_text_generation.enterMutation() catch |err| return fail(err);
     const changed = h.apply(session, .{
         .kind = .insert_document,
         .section = section,
@@ -2441,6 +2622,7 @@ export fn hwpx_edit_bullet_definition_write(ptr: [*]const u8, len: usize) u32 {
     if (len > 4096) return fail(error.LimitExceeded);
     const parsed = std.json.parseFromSlice(@import("../hwpx/bullet_definition_write.zig").Request, a, ptr[0..len], .{ .allocate = .alloc_always, .ignore_unknown_fields = false }) catch |err| return fail(err);
     defer parsed.deinit();
+    document_text_generation.enterMutation() catch |err| return fail(err);
     const changed = @import("../hwpx/display_resource_generation.zig").applyOwned(h, session, &.{.{ .kind = .bullet_definition, .bullet_definition = &parsed.value, .section = 0, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "" }}) catch |err| return fail(err);
     return if (changed) 1 else 2;
 }
@@ -2474,6 +2656,7 @@ export fn hwpx_edit_write_page_settings(ptr: [*]const u8, len: usize) u32 {
     formatting_lifetime.check(.{ .session = request.binding.session, .revision = request.binding.revision }, h.revision()) catch return fail(error.StalePageSettingsBinding);
     const serial = @import("../model/formatting_binding.zig").decimal(request.binding.serial) catch |err| return fail(err);
     if (serial != session.mutation_serial) return fail(error.StalePageSettingsBinding);
+    document_text_generation.enterMutation() catch |err| return fail(err);
     const changed = @import("../hwpx/display_resource_generation.zig").applyOwned(h, session, &.{.{ .kind = .page_settings, .page_settings = &request, .section = 0, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "" }}) catch |err| {
         _ = fail(err);
         return if (err == error.MutationUncertain or err == error.HistoryMutationUncertain or h.stats().poisoned) 3 else 0;
@@ -2482,6 +2665,59 @@ export fn hwpx_edit_write_page_settings(ptr: [*]const u8, len: usize) u32 {
 }
 
 // Owned-history publication remains the sole source replacement boundary.
+const inline_placement = @import("../hwpx/inline_object_placement.zig");
+export fn hwpx_edit_inline_object_placement_version() u32 {
+    return 1;
+}
+
+export fn hwpx_edit_inline_object_owner(ptr: [*]const u8, size: u32) u32 {
+    hwpx_edit_output_free();
+    if (size == 0 or size > 4096) return fail(error.LimitExceeded);
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const h = requireManagedHistory() catch |err| return fail(err);
+    const kinds = std.json.parseFromSlice(std.json.Value, a, ptr[0..size], .{ .duplicate_field_behavior = .@"error" }) catch |err| return fail(err);
+    defer kinds.deinit();
+    const root = kinds.value;
+    if (root != .object or root.object.count() != 2) return fail(error.InvalidInlineObjectOwner);
+    inline_placement.wireUnsigned(root.object.get("section") orelse return fail(error.InvalidSectionIndex)) catch |err| return fail(err);
+    if (root.object.get("paragraph")) |paragraph| {
+        inline_placement.wireUnsigned(paragraph) catch |err| return fail(err);
+        if (paragraph.integer == 0) return fail(error.InvalidParagraphIndex);
+    } else {
+        const cell = root.object.get("created_cell") orelse return fail(error.InvalidInlineObjectOwner);
+        if (cell != .object or cell.object.count() != 3) return fail(error.InvalidInlineObjectOwner);
+        const identity = cell.object.get("identity") orelse return fail(error.InvalidCreatedTableIdentity);
+        if (identity != .string) return fail(error.InvalidCreatedTableIdentity);
+        _ = @import("../model/formatting_binding.zig").decimal(identity.string) catch |err| return fail(err);
+        inline_placement.wireUnsigned(cell.object.get("row") orelse return fail(error.InvalidTableCellIndex)) catch |err| return fail(err);
+        inline_placement.wireUnsigned(cell.object.get("column") orelse return fail(error.InvalidTableCellIndex)) catch |err| return fail(err);
+    }
+    const parsed = std.json.parseFromSlice(inline_placement.Selector, a, ptr[0..size], .{ .allocate = .alloc_always, .ignore_unknown_fields = false, .duplicate_field_behavior = .@"error" }) catch |err| return fail(err);
+    defer parsed.deinit();
+    const epoch = formatting_lifetime.session(a) catch |err| return fail(err);
+    defer a.free(epoch);
+    var buffer: [20]u8 = undefined;
+    const serial = std.fmt.bufPrint(&buffer, "{d}", .{session.mutation_serial}) catch unreachable;
+    var observed = inline_placement.current(session, parsed.value, .{ .session = epoch, .revision = h.revision(), .serial = serial }) catch |err| return fail(err);
+    defer observed.deinit(a);
+    const owner = observed.owner;
+    output = switch (owner.kind) {
+        .body => std.json.Stringify.valueAlloc(a, .{ .schemaVersion = @as(u32, 1), .section = parsed.value.section, .paragraph = parsed.value.paragraph.?, .expected_text = observed.text, .owner = .{ .kind = "body", .binding = owner.binding } }, .{}),
+        .sourceCell => std.json.Stringify.valueAlloc(a, .{ .schemaVersion = @as(u32, 1), .section = parsed.value.section, .paragraph = parsed.value.paragraph.?, .expected_text = observed.text, .owner = .{ .kind = "sourceCell", .binding = owner.binding, .table_node = owner.table_node.?, .list_node = owner.list_node.? } }, .{}),
+        .createdCell => std.json.Stringify.valueAlloc(a, .{ .schemaVersion = @as(u32, 1), .section = parsed.value.section, .expected_text = observed.text, .owner = .{ .kind = "createdCell", .binding = owner.binding, .identity = owner.identity.?, .row = owner.row.?, .column = owner.column.? } }, .{}),
+    } catch |err| return fail(err);
+    return 1;
+}
+
+fn checkInlineInsertBinding(target: @import("../hwpx/inline_object_insert.zig").Target) !void {
+    const owner = target.owner orelse return;
+    const session = if (active) |*value| value else return error.EditorNotOpen;
+    const h = try requireManagedHistory();
+    try formatting_lifetime.check(.{ .session = owner.binding.session, .revision = owner.binding.revision }, h.revision());
+    if (try @import("../model/formatting_binding.zig").decimal(owner.binding.serial) != session.mutation_serial) return error.StaleInlineObjectOwner;
+    try inline_placement.checkCurrent(session, target.section, target.paragraph, owner, target.expected_text);
+}
+
 fn inlineInsertSourceDigest() ![32]u8 {
     try requireNoReadScope();
     const session = if (active) |*value| value else return error.EditorNotOpen;
@@ -2499,6 +2735,7 @@ export fn hwpx_edit_insert_equation(ptr: [*]const u8, size: u32) u32 {
     var parsed = @import("../hwpx/equation_insert.zig").parseRequest(a, ptr[0..size], digest) catch |err| return fail(err);
     defer parsed.deinit();
     const target = parsed.request.target;
+    checkInlineInsertBinding(target) catch |err| return fail(err);
     apply(.{ .kind = .equation_insert, .section = target.section, .paragraph = target.paragraph, .start = target.unit, .deleted = 0, .inserted = "", .equation_insert = &parsed.request }) catch |err| return fail(err);
     return 1;
 }
@@ -2514,8 +2751,41 @@ export fn hwpx_edit_create_chart(ptr: [*]const u8, size: u32) u32 {
     var parsed = @import("../hwpx/chart_create.zig").parseRequest(a, ptr[0..size], digest) catch |err| return fail(err);
     defer parsed.deinit();
     const target = parsed.request.target;
+    checkInlineInsertBinding(target) catch |err| return fail(err);
     apply(.{ .kind = .chart_create, .section = target.section, .paragraph = target.paragraph, .start = target.unit, .deleted = 0, .inserted = "", .chart_create = &parsed.request }) catch |err| return fail(err);
     return 1;
+}
+
+export fn hwpx_edit_created_cell_typing_version() u32 {
+    return 1;
+}
+export fn hwpx_edit_splice_created_cell(section: u32, low: u32, high: u32, row: u32, column: u32, start: u32, end: u32, text_ptr: [*]const u8, text_size: usize, request_ptr: [*]const u8, request_size: usize) u32 {
+    requireNoReadScope() catch |err| return fail(err);
+    const wire = @import("rich_typing_request.zig");
+    if (text_size > @import("../model/text_transaction.zig").limits.inserted_bytes or request_size > wire.max_bytes) return fail(error.LimitExceeded);
+    var request = wire.decodeCreatedCell(a, request_ptr[0..request_size]) catch |err| return fail(err);
+    defer request.deinit();
+    const identity = (@as(u64, high) << 32) | low;
+    const value: @import("../model/created_cell_typing.zig").Edit = .{ .section = section, .identity = identity, .row = row, .column = column, .start = start, .end = end, .text = text_ptr[0..text_size], .insertion = request.patch };
+    @import("../model/created_cell_typing.zig").validate(value) catch |err| return fail(err);
+    const changed = applyCreatedCellTyping(value, request.binding) catch |err| {
+        const poisoned = if (history) |*h| h.stats().poisoned else false;
+        if (poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) {
+            _ = fail(error.MutationUncertain);
+            return 3;
+        }
+        return fail(err);
+    };
+    return if (changed) 1 else 2;
+}
+fn applyCreatedCellTyping(value: @import("../model/created_cell_typing.zig").Edit, binding: @import("../model/formatting_patch.zig").Binding) !bool {
+    const service = try textTransactionService();
+    _ = try requireManagedHistory();
+    try formatting_lifetime.check(binding, try service.currentRevision());
+    var batch: @import("../hwpx/formatting_batch_context.zig").Context = .{};
+    try service.session.beginFormattingBatch(&batch);
+    defer service.session.endFormattingBatch(&batch);
+    return @import("../hwpx/display_resource_generation.zig").applyOwned(service.history, service.session, &.{.{ .kind = .splice_created_cell, .section = value.section, .paragraph = 0, .start = value.start, .deleted = value.end - value.start, .inserted = value.text, .created_table_identity = value.identity, .created_cell = .{ value.row, value.column }, .created_cell_insertion = &value.insertion }});
 }
 
 // Exact source-frame geometry: lifetime and serial fences precede owner validation.
@@ -2549,9 +2819,72 @@ export fn hwpx_edit_set_object_geometry(ptr: [*]const u8, len: usize) u32 {
     formatting_lifetime.check(.{ .session = request.binding.session, .revision = @as(u32, @intCast(request.historyRevision)) }, h.revision()) catch return fail(error.StaleObjectGeometryBinding);
     const serial = @import("../model/formatting_binding.zig").decimal(request.binding.serial) catch |err| return fail(err);
     if (serial != session.mutation_serial) return fail(error.StaleObjectGeometryBinding);
+    document_text_generation.enterMutation() catch |err| return fail(err);
     const changed = @import("../hwpx/display_resource_generation.zig").applyOwned(h, session, &.{.{ .kind = .object_geometry, .object_geometry = &request, .section = 0, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "" }}) catch |err| {
         _ = fail(err);
         return if (err == error.MutationUncertain or err == error.HistoryMutationUncertain or h.stats().poisoned) 3 else 0;
     };
     return if (changed) 1 else 2;
+}
+
+// Optional note creation; public ABI never accepts internal leases or receipts.
+export fn hwpx_edit_note_create_version() u32 {
+    return 1;
+}
+export fn hwpx_edit_insert_note(ptr: [*]const u8, size: u32) u32 {
+    hwpx_edit_output_free();
+    requireNoReadScope() catch |err| return fail(err);
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const h = requireManagedHistory() catch |err| return fail(err);
+    const parsed = @import("../hwpx/note_create_wire.zig").parse(a, ptr[0..size]) catch |err| return fail(err);
+    defer parsed.deinit();
+    const wire = parsed.value;
+    const external = wire.target.native();
+    checkInlineInsertBinding(external) catch |err| return fail(err);
+    const owner = wire.target.owner;
+    const selector: inline_placement.Selector = .{
+        .section = external.section,
+        .paragraph = if (owner.kind == .createdCell) null else external.paragraph,
+        .created_cell = if (owner.kind == .createdCell) .{ .identity = owner.identity.?, .row = owner.row.?, .column = owner.column.? } else null,
+    };
+    var observed = @import("../hwpx/note_create_owner.zig").observe(session, selector, external.unit, h.revision()) catch |err| return fail(err);
+    defer observed.deinit(a);
+    if (!std.mem.eql(u8, observed.placement.text, external.expected_text)) return fail(error.SourceBindingMismatch);
+    var receipt: @import("../hwpx/note_create_caret.zig").Receipt = undefined;
+    const request: @import("../hwpx/note_create.zig").Request = .{ .lease = observed.lease, .target = observed.target(), .kind = wire.kind, .resources = wire.resources, .format = wire.format, .body = wire.body, .initial_policies = wire.initial_policies, .receipt_out = &receipt };
+    // One normal owned History transaction issues the receipt only after commit.
+    apply(.{ .kind = .note_create, .section = request.target.section, .paragraph = request.target.paragraph, .start = request.target.unit, .deleted = 0, .inserted = "", .note_create = &request }) catch |err| {
+        _ = fail(err);
+        return if (err == error.MutationUncertain or err == error.HistoryMutationUncertain or h.stats().poisoned) 3 else 0;
+    };
+    const caret = @import("../hwpx/note_create_caret.zig").observe(session, receipt, h.revision()) catch |err| {
+        _ = fail(err);
+        return 3;
+    };
+    output = std.json.Stringify.valueAlloc(a, .{ .schemaVersion = @as(u32, 1), .caret = .{ .section = receipt.section, .paragraph = caret.paragraph, .unit = caret.unit, .coordinateSpace = "plain" } }, .{}) catch |err| {
+        _ = fail(err);
+        return 3;
+    };
+    return 1;
+}
+
+// Optional delete-at-reference ABI. The internal request is never deserialized.
+export fn hwpx_edit_note_delete_version() u32 {
+    return 1;
+}
+export fn hwpx_edit_delete_note(ptr: [*]const u8, size: u32) u32 {
+    hwpx_edit_output_free();
+    requireNoReadScope() catch |err| return fail(err);
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const h = requireManagedHistory() catch |err| return fail(err);
+    const parsed = @import("../hwpx/note_delete_wire.zig").parse(a, ptr[0..size]) catch |err| return fail(err);
+    defer parsed.deinit();
+    const target = parsed.value.target.native();
+    checkInlineInsertBinding(target) catch |err| return fail(err);
+    const request = @import("../hwpx/note_delete_current.zig").observe(session, target, h.revision()) catch |err| return fail(err);
+    apply(.{ .kind = .note_delete, .section = request.selector.section, .paragraph = request.paragraph, .start = std.math.cast(u32, request.anchor_unit) orelse return fail(error.LimitExceeded), .deleted = 0, .inserted = "", .note_delete = &request }) catch |err| {
+        _ = fail(err);
+        return if (err == error.MutationUncertain or err == error.HistoryMutationUncertain or h.stats().poisoned) 3 else 0;
+    };
+    return 1;
 }

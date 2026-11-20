@@ -69,7 +69,7 @@ test "chart rich text writer preserves formatting comments literal escapes and e
     defer a.free(noop);
     try std.testing.expectEqualStrings(source, noop);
     try std.testing.expectError(error.LimitExceeded, writer.write(a, &tree, &values, 0, "AB", source.len - 1));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, original: *const @import("chart_tree.zig").Tree, snapshot: *const model.Values) !void {
             const output = try writer.writeEdits(allocator, original, snapshot, &.{
                 .{ .ordinal = 0, .text = "_x0041_새😀<&\r" },
@@ -203,7 +203,7 @@ test "chart rich text resources clone current runs and combine numeric transient
     defer points.deinit(a);
     const point_xml = try @import("chart_point_write.zig").write(a, &tree, &points, &.{.{ .point = 0, .value = "2" }}, 10000);
     defer a.free(point_xml);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, original: *const @import("chart_tree.zig").Tree, runs: *const model.Values, cache: *const @import("chart_point_values.zig").Values, transient: []const u8) !void {
             var resources: @import("chart_resource_values.zig").Values = .{};
             defer resources.deinit(allocator);

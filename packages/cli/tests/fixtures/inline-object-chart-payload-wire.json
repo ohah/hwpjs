@@ -1,0 +1,594 @@
+{
+  "classification": "synthetic old JS validator wire/error compatibility baseline; not Native/SDK creation or XML output",
+  "sourceProfile": "08db2955ace61fa09157788e29c3ce184eccc25ed3c7bf2f96eb9e256ea8d5ef",
+  "validatorSourceSha256": "a9f0c7a7653771c0a867a24fa7e0ff8310e2e8bbac2ecd193f76ed1c7c0dd375",
+  "cases": [
+    {
+      "input": {
+        "target": {
+          "section": 0,
+          "paragraph": 1,
+          "unit": 0,
+          "expected_text": ""
+        },
+        "size": {
+          "width": 6000,
+          "height": 2000
+        },
+        "data": {
+          "categories": ["A", "B"],
+          "series": [
+            {
+              "name": "S",
+              "values": ["1.50", "-2e2"]
+            }
+          ]
+        }
+      },
+      "expectedWire": "{\"target\":{\"section\":0,\"paragraph\":1,\"unit\":0,\"expected_text\":\"\"},\"size\":{\"width\":6000,\"height\":2000},\"data\":{\"categories\":[\"A\",\"B\"],\"series\":[{\"name\":\"S\",\"values\":[\"1.50\",\"-2e2\"]}]}}"
+    },
+    {
+      "input": {
+        "target": {
+          "section": 0,
+          "paragraph": 1,
+          "unit": 0,
+          "expected_text": ""
+        },
+        "size": {
+          "width": 6000,
+          "height": 2000
+        },
+        "data": {
+          "categories": ["A", "B"],
+          "series": [
+            {
+              "name": "S",
+              "values": ["1.50", "-2e2"]
+            }
+          ]
+        },
+        "chart": {
+          "kind": "barChart",
+          "bar_direction": "col",
+          "grouping": "clustered"
+        }
+      },
+      "expectedWire": "{\"target\":{\"section\":0,\"paragraph\":1,\"unit\":0,\"expected_text\":\"\"},\"size\":{\"width\":6000,\"height\":2000},\"data\":{\"categories\":[\"A\",\"B\"],\"series\":[{\"name\":\"S\",\"values\":[\"1.50\",\"-2e2\"]}]},\"chart\":{\"kind\":\"barChart\",\"bar_direction\":\"col\",\"grouping\":\"clustered\"}}"
+    },
+    {
+      "input": {
+        "target": {
+          "section": 0,
+          "paragraph": 1,
+          "unit": 0,
+          "expected_text": ""
+        },
+        "size": {
+          "width": 6000,
+          "height": 2000
+        },
+        "data": {
+          "categories": ["A", "B"],
+          "series": [
+            {
+              "name": "S",
+              "values": ["1.50", "-2e2"]
+            }
+          ]
+        },
+        "chart": {
+          "kind": "bar3DChart",
+          "bar_direction": "col",
+          "grouping": "clustered"
+        }
+      },
+      "expectedWire": "{\"target\":{\"section\":0,\"paragraph\":1,\"unit\":0,\"expected_text\":\"\"},\"size\":{\"width\":6000,\"height\":2000},\"data\":{\"categories\":[\"A\",\"B\"],\"series\":[{\"name\":\"S\",\"values\":[\"1.50\",\"-2e2\"]}]},\"chart\":{\"kind\":\"bar3DChart\",\"bar_direction\":\"col\",\"grouping\":\"clustered\"}}"
+    },
+    {
+      "input": {
+        "target": {
+          "section": 0,
+          "paragraph": 1,
+          "unit": 0,
+          "expected_text": ""
+        },
+        "size": {
+          "width": 6000,
+          "height": 2000
+        },
+        "data": {
+          "categories": ["A", "B"],
+          "series": [
+            {
+              "name": "S",
+              "values": ["1.50", "-2e2"]
+            }
+          ]
+        },
+        "chart": {
+          "kind": "lineChart",
+          "grouping": "standard"
+        }
+      },
+      "expectedWire": "{\"target\":{\"section\":0,\"paragraph\":1,\"unit\":0,\"expected_text\":\"\"},\"size\":{\"width\":6000,\"height\":2000},\"data\":{\"categories\":[\"A\",\"B\"],\"series\":[{\"name\":\"S\",\"values\":[\"1.50\",\"-2e2\"]}]},\"chart\":{\"kind\":\"lineChart\",\"grouping\":\"standard\"}}"
+    },
+    {
+      "input": {
+        "target": {
+          "section": 0,
+          "paragraph": 1,
+          "unit": 0,
+          "expected_text": ""
+        },
+        "size": {
+          "width": 6000,
+          "height": 2000
+        },
+        "data": {
+          "categories": ["A", "B"],
+          "series": [
+            {
+              "name": "S",
+              "values": ["1.50", "-2e2"]
+            }
+          ]
+        },
+        "chart": {
+          "kind": "line3DChart",
+          "grouping": "standard"
+        }
+      },
+      "expectedWire": "{\"target\":{\"section\":0,\"paragraph\":1,\"unit\":0,\"expected_text\":\"\"},\"size\":{\"width\":6000,\"height\":2000},\"data\":{\"categories\":[\"A\",\"B\"],\"series\":[{\"name\":\"S\",\"values\":[\"1.50\",\"-2e2\"]}]},\"chart\":{\"kind\":\"line3DChart\",\"grouping\":\"standard\"}}"
+    },
+    {
+      "input": {
+        "target": {
+          "section": 0,
+          "paragraph": 1,
+          "unit": 0,
+          "expected_text": ""
+        },
+        "size": {
+          "width": 6000,
+          "height": 2000
+        },
+        "data": {
+          "categories": ["A", "B"],
+          "series": [
+            {
+              "name": "S",
+              "values": ["1.50", "-2e2"]
+            }
+          ]
+        },
+        "chart": {
+          "kind": "areaChart",
+          "grouping": "standard"
+        }
+      },
+      "expectedWire": "{\"target\":{\"section\":0,\"paragraph\":1,\"unit\":0,\"expected_text\":\"\"},\"size\":{\"width\":6000,\"height\":2000},\"data\":{\"categories\":[\"A\",\"B\"],\"series\":[{\"name\":\"S\",\"values\":[\"1.50\",\"-2e2\"]}]},\"chart\":{\"kind\":\"areaChart\",\"grouping\":\"standard\"}}"
+    },
+    {
+      "input": {
+        "target": {
+          "section": 0,
+          "paragraph": 1,
+          "unit": 0,
+          "expected_text": ""
+        },
+        "size": {
+          "width": 6000,
+          "height": 2000
+        },
+        "data": {
+          "categories": ["A", "B"],
+          "series": [
+            {
+              "name": "S",
+              "values": ["1.50", "-2e2"]
+            }
+          ]
+        },
+        "chart": {
+          "kind": "area3DChart",
+          "grouping": "standard"
+        }
+      },
+      "expectedWire": "{\"target\":{\"section\":0,\"paragraph\":1,\"unit\":0,\"expected_text\":\"\"},\"size\":{\"width\":6000,\"height\":2000},\"data\":{\"categories\":[\"A\",\"B\"],\"series\":[{\"name\":\"S\",\"values\":[\"1.50\",\"-2e2\"]}]},\"chart\":{\"kind\":\"area3DChart\",\"grouping\":\"standard\"}}"
+    },
+    {
+      "input": {
+        "target": {
+          "section": 0,
+          "paragraph": 1,
+          "unit": 0,
+          "expected_text": ""
+        },
+        "size": {
+          "width": 6000,
+          "height": 2000
+        },
+        "data": {
+          "categories": ["A", "B"],
+          "series": [
+            {
+              "name": "S",
+              "values": ["1.50", "2e2"]
+            }
+          ]
+        },
+        "chart": {
+          "kind": "pieChart"
+        }
+      },
+      "expectedWire": "{\"target\":{\"section\":0,\"paragraph\":1,\"unit\":0,\"expected_text\":\"\"},\"size\":{\"width\":6000,\"height\":2000},\"data\":{\"categories\":[\"A\",\"B\"],\"series\":[{\"name\":\"S\",\"values\":[\"1.50\",\"2e2\"]}]},\"chart\":{\"kind\":\"pieChart\"}}"
+    },
+    {
+      "input": {
+        "target": {
+          "section": 0,
+          "paragraph": 1,
+          "unit": 0,
+          "expected_text": ""
+        },
+        "size": {
+          "width": 6000,
+          "height": 2000
+        },
+        "data": {
+          "categories": ["A", "B"],
+          "series": [
+            {
+              "name": "S",
+              "values": ["1.50", "2e2"]
+            }
+          ]
+        },
+        "chart": {
+          "kind": "pie3DChart"
+        }
+      },
+      "expectedWire": "{\"target\":{\"section\":0,\"paragraph\":1,\"unit\":0,\"expected_text\":\"\"},\"size\":{\"width\":6000,\"height\":2000},\"data\":{\"categories\":[\"A\",\"B\"],\"series\":[{\"name\":\"S\",\"values\":[\"1.50\",\"2e2\"]}]},\"chart\":{\"kind\":\"pie3DChart\"}}"
+    },
+    {
+      "input": {
+        "target": {
+          "section": 0,
+          "paragraph": 1,
+          "unit": 0,
+          "expected_text": ""
+        },
+        "size": {
+          "width": 6000,
+          "height": 2000
+        },
+        "data": {
+          "categories": ["A", "B"],
+          "series": [
+            {
+              "name": "S",
+              "values": ["1.50", "2e2"]
+            }
+          ]
+        },
+        "chart": {
+          "kind": "doughnutChart"
+        }
+      },
+      "expectedWire": "{\"target\":{\"section\":0,\"paragraph\":1,\"unit\":0,\"expected_text\":\"\"},\"size\":{\"width\":6000,\"height\":2000},\"data\":{\"categories\":[\"A\",\"B\"],\"series\":[{\"name\":\"S\",\"values\":[\"1.50\",\"2e2\"]}]},\"chart\":{\"kind\":\"doughnutChart\"}}"
+    },
+    {
+      "input": {
+        "target": {
+          "section": 0,
+          "paragraph": 1,
+          "unit": 0,
+          "expected_text": ""
+        },
+        "size": {
+          "width": 6000,
+          "height": 2000
+        },
+        "data": {
+          "categories": ["A", "B"],
+          "series": [
+            {
+              "name": "S",
+              "values": ["1.50", "2e2"]
+            }
+          ]
+        },
+        "chart": {
+          "kind": "ofPieChart",
+          "of_pie_type": "pie"
+        }
+      },
+      "expectedWire": "{\"target\":{\"section\":0,\"paragraph\":1,\"unit\":0,\"expected_text\":\"\"},\"size\":{\"width\":6000,\"height\":2000},\"data\":{\"categories\":[\"A\",\"B\"],\"series\":[{\"name\":\"S\",\"values\":[\"1.50\",\"2e2\"]}]},\"chart\":{\"kind\":\"ofPieChart\",\"of_pie_type\":\"pie\"}}"
+    },
+    {
+      "input": {
+        "target": {
+          "section": 0,
+          "paragraph": 1,
+          "unit": 0,
+          "expected_text": ""
+        },
+        "size": {
+          "width": 6000,
+          "height": 2000
+        },
+        "data": {
+          "categories": ["A", "B"],
+          "series": [
+            {
+              "name": "S",
+              "values": ["1.50", "-2e2"]
+            }
+          ]
+        },
+        "chart": {
+          "kind": "radarChart",
+          "radar_style": "marker"
+        }
+      },
+      "expectedWire": "{\"target\":{\"section\":0,\"paragraph\":1,\"unit\":0,\"expected_text\":\"\"},\"size\":{\"width\":6000,\"height\":2000},\"data\":{\"categories\":[\"A\",\"B\"],\"series\":[{\"name\":\"S\",\"values\":[\"1.50\",\"-2e2\"]}]},\"chart\":{\"kind\":\"radarChart\",\"radar_style\":\"marker\"}}"
+    },
+    {
+      "input": {
+        "target": {
+          "section": 0,
+          "paragraph": 1,
+          "unit": 0,
+          "expected_text": ""
+        },
+        "size": {
+          "width": 6000,
+          "height": 2000
+        },
+        "data": {
+          "categories": [],
+          "series": [
+            {
+              "name": "S",
+              "values": ["1.50", "-2e2"],
+              "x_values": ["-1", "2"]
+            }
+          ]
+        },
+        "chart": {
+          "kind": "scatterChart",
+          "scatter_style": "marker"
+        }
+      },
+      "expectedWire": "{\"target\":{\"section\":0,\"paragraph\":1,\"unit\":0,\"expected_text\":\"\"},\"size\":{\"width\":6000,\"height\":2000},\"data\":{\"categories\":[],\"series\":[{\"name\":\"S\",\"values\":[\"1.50\",\"-2e2\"],\"x_values\":[\"-1\",\"2\"]}]},\"chart\":{\"kind\":\"scatterChart\",\"scatter_style\":\"marker\"}}"
+    },
+    {
+      "input": {
+        "target": {
+          "section": 0,
+          "paragraph": 1,
+          "unit": 0,
+          "expected_text": ""
+        },
+        "size": {
+          "width": 6000,
+          "height": 2000
+        },
+        "data": {
+          "categories": [],
+          "series": [
+            {
+              "name": "S",
+              "values": ["1.50", "-2e2"],
+              "x_values": ["-1", "2"],
+              "bubble_sizes": ["1", "2"]
+            }
+          ]
+        },
+        "chart": {
+          "kind": "bubbleChart"
+        }
+      },
+      "expectedWire": "{\"target\":{\"section\":0,\"paragraph\":1,\"unit\":0,\"expected_text\":\"\"},\"size\":{\"width\":6000,\"height\":2000},\"data\":{\"categories\":[],\"series\":[{\"name\":\"S\",\"values\":[\"1.50\",\"-2e2\"],\"x_values\":[\"-1\",\"2\"],\"bubble_sizes\":[\"1\",\"2\"]}]},\"chart\":{\"kind\":\"bubbleChart\"}}"
+    },
+    {
+      "input": {
+        "target": {
+          "section": 0,
+          "paragraph": 1,
+          "unit": 0,
+          "expected_text": ""
+        },
+        "size": {
+          "width": 6000,
+          "height": 2000
+        },
+        "data": {
+          "categories": ["A", "B"],
+          "series": [
+            {
+              "name": "high",
+              "stock_role": "high",
+              "values": ["5", "6"]
+            },
+            {
+              "name": "low",
+              "stock_role": "low",
+              "values": ["1", "2"]
+            },
+            {
+              "name": "close",
+              "stock_role": "close",
+              "values": ["3", "4"]
+            }
+          ]
+        },
+        "chart": {
+          "kind": "stockChart",
+          "stock_layout": "highLowClose"
+        }
+      },
+      "expectedWire": "{\"target\":{\"section\":0,\"paragraph\":1,\"unit\":0,\"expected_text\":\"\"},\"size\":{\"width\":6000,\"height\":2000},\"data\":{\"categories\":[\"A\",\"B\"],\"series\":[{\"name\":\"high\",\"values\":[\"5\",\"6\"],\"stock_role\":\"high\"},{\"name\":\"low\",\"values\":[\"1\",\"2\"],\"stock_role\":\"low\"},{\"name\":\"close\",\"values\":[\"3\",\"4\"],\"stock_role\":\"close\"}]},\"chart\":{\"kind\":\"stockChart\",\"stock_layout\":\"highLowClose\"}}"
+    },
+    {
+      "input": {
+        "target": {
+          "section": 0,
+          "paragraph": 1,
+          "unit": 0,
+          "expected_text": ""
+        },
+        "size": {
+          "width": 6000,
+          "height": 2000
+        },
+        "data": {
+          "categories": ["A", "B"],
+          "series": [
+            {
+              "name": "S",
+              "values": ["1.50", "-2e2"]
+            },
+            {
+              "name": "second",
+              "values": ["3", "4"]
+            }
+          ]
+        },
+        "chart": {
+          "kind": "surfaceChart",
+          "wireframe": false
+        }
+      },
+      "expectedWire": "{\"target\":{\"section\":0,\"paragraph\":1,\"unit\":0,\"expected_text\":\"\"},\"size\":{\"width\":6000,\"height\":2000},\"data\":{\"categories\":[\"A\",\"B\"],\"series\":[{\"name\":\"S\",\"values\":[\"1.50\",\"-2e2\"]},{\"name\":\"second\",\"values\":[\"3\",\"4\"]}]},\"chart\":{\"kind\":\"surfaceChart\",\"wireframe\":false}}"
+    },
+    {
+      "input": {
+        "target": {
+          "section": 0,
+          "paragraph": 1,
+          "unit": 0,
+          "expected_text": ""
+        },
+        "size": {
+          "width": 6000,
+          "height": 2000
+        },
+        "data": {
+          "categories": ["A", "B"],
+          "series": [
+            {
+              "name": "S",
+              "values": ["1.50", "-2e2"]
+            },
+            {
+              "name": "second",
+              "values": ["3", "4"]
+            }
+          ]
+        },
+        "chart": {
+          "kind": "surface3DChart",
+          "wireframe": false
+        }
+      },
+      "expectedWire": "{\"target\":{\"section\":0,\"paragraph\":1,\"unit\":0,\"expected_text\":\"\"},\"size\":{\"width\":6000,\"height\":2000},\"data\":{\"categories\":[\"A\",\"B\"],\"series\":[{\"name\":\"S\",\"values\":[\"1.50\",\"-2e2\"]},{\"name\":\"second\",\"values\":[\"3\",\"4\"]}]},\"chart\":{\"kind\":\"surface3DChart\",\"wireframe\":false}}"
+    },
+    {
+      "input": {
+        "target": {
+          "section": 0,
+          "paragraph": 1,
+          "unit": 0,
+          "expected_text": ""
+        },
+        "size": {
+          "width": 6000,
+          "height": 2000
+        },
+        "data": {
+          "categories": ["A", "B"],
+          "series": [
+            {
+              "name": "S",
+              "values": ["-1e-5000", "2e2"]
+            }
+          ]
+        },
+        "chart": {
+          "kind": "pieChart"
+        }
+      },
+      "error": "InvalidChartNumber"
+    },
+    {
+      "input": {
+        "target": {
+          "section": 0,
+          "paragraph": 1,
+          "unit": 0,
+          "expected_text": ""
+        },
+        "size": {
+          "width": 6000,
+          "height": 2000
+        },
+        "data": {
+          "categories": [],
+          "series": [
+            {
+              "name": "S",
+              "values": ["1.50", "-2e2"],
+              "x_values": ["-1", "2"],
+              "bubble_sizes": ["-1e-5000", "2"]
+            }
+          ]
+        },
+        "chart": {
+          "kind": "bubbleChart"
+        }
+      },
+      "error": "InvalidChartNumber"
+    },
+    {
+      "input": {
+        "target": {
+          "section": 0,
+          "paragraph": 1,
+          "unit": 0,
+          "expected_text": ""
+        },
+        "size": {
+          "width": 6000,
+          "height": 2000
+        },
+        "data": {
+          "categories": ["A", "B"],
+          "series": [
+            {
+              "name": "high",
+              "stock_role": "high",
+              "values": ["1", "6"]
+            },
+            {
+              "name": "low",
+              "stock_role": "low",
+              "values": ["1.0000000000000001", "2"]
+            },
+            {
+              "name": "close",
+              "stock_role": "close",
+              "values": ["1", "4"]
+            }
+          ]
+        },
+        "chart": {
+          "kind": "stockChart",
+          "stock_layout": "highLowClose"
+        }
+      },
+      "error": "InvalidChartStockValues"
+    }
+  ]
+}

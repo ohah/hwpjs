@@ -74,5 +74,5 @@ test "dutmal composed save preserves shifted body and removes only owning line c
             try std.testing.expectEqualStrings(expected, bytes);
         }
     };
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &tree, body, &entries });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &tree, body, &entries });
 }

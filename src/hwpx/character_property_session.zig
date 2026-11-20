@@ -3,6 +3,23 @@ const std = @import("std");
 const editor = @import("editor_session.zig");
 const Patch = @import("../model/document.zig").CharacterPropertyPatch;
 
+/// A generated paragraph resolves exactly the same current resource/merge as a
+/// source run. Outer History owns resource rollback and final package validation.
+pub fn resolveInsertedResource(session: *editor.Session, source_id: u32, patch: Patch) !u32 {
+    try @import("../model/character_properties.zig").validate(patch);
+    const context = session.formatting_batch orelse return error.FormattingBatchNotPrepared;
+    const a = session.allocator;
+    const document = try context.originalDocument(a, session.source);
+    const resources = try context.originalResources(a, document);
+    if (patch.font_ids) |ids| try validateFontIds(session, try context.originalFonts(a, document), ids);
+    var tree = if (patch.underline_kind != null or patch.strike_enabled != null or patch.strike_color != null) try document.readHeaderTree(a, .{}) else null;
+    defer if (tree) |*value| value.deinit(a);
+    const underlines = @import("character_underline_snapshot.zig");
+    const colors = if (patch.underline_color != null) try underlines.readFull(session) else null;
+    defer if (colors) |rows| underlines.deinit(a, rows);
+    return (try resolveResource(session, source_id, patch, resources.table(.char_shape).ids.items, null, if (tree) |*value| value else null, colors)) orelse source_id;
+}
+
 pub fn apply(session: *editor.Session, section: usize, paragraph: usize, start: u32, end: u32, patch: Patch) !bool {
     return applyMode(session, section, paragraph, start, end, patch, true);
 }

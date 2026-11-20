@@ -1,3 +1,9 @@
+import { surfaceOperation } from '../commands/surface-protocol.ts';
+import {
+  nativeReadSourceOrigin,
+  bindNativeReadSourceRuntime,
+} from '../internal/native-read-source-origin.ts';
+import type { NativeReadSourceOrigin } from '../internal/native-read-source-origin.ts';
 import { requestNamedFields } from '../editor/named-fields.ts';
 import type { RuntimeProjectionPreference } from '../internal/runtime-admission.ts';
 import { bindRuntimeAdmission } from '../internal/runtime-admission.ts';
@@ -62,6 +68,8 @@ export function createReaderEditorRuntime(options: ReaderRuntimeOptions = {}): E
       : {}),
   });
   const replies = new WeakMap<object, NativeRuntimeOrigin>();
+  const readSources = new WeakMap<object, NativeReadSourceOrigin>();
+  let readSourceContext: object | undefined;
   let runtime: EditorRuntime;
   const valid = () => {
     if (!canonicalRuntimeDescriptors(runtime, request, dispose, Object.prototype)) tainted = true;
@@ -84,6 +92,9 @@ export function createReaderEditorRuntime(options: ReaderRuntimeOptions = {}): E
     }
     const captured = context ? { ...context } : undefined,
       kind = message.kind;
+    // Revoke before a document/view transition can await. Save is a pure copy
+    // operation; read queries never upgrade this source identity into edit rights.
+    if (surfaceOperation(kind) !== 'read' && kind !== 'save') readSourceContext = undefined;
     const raw = await backend.request(
       message,
       admission,
@@ -102,6 +113,20 @@ export function createReaderEditorRuntime(options: ReaderRuntimeOptions = {}): E
       ['splice', 'splice-current', 'undo', 'redo', 'format'].includes(kind)
     )
       sequence++;
+    if (reply.content !== undefined) readSourceContext = Object.freeze({});
+    else if (reply.meta?.changed === true) readSourceContext = undefined;
+    const scope = readSourceContext;
+    const readOrigin = scope
+      ? nativeReadSourceOrigin(
+          reply,
+          captured,
+          sequence,
+          contract,
+          scope,
+          () => valid() && readSourceContext === scope,
+        )
+      : undefined;
+    if (readOrigin) readSources.set(reply, readOrigin);
     const origin = nativeOrigin(kind, reply, captured, sequence, contract, valid);
     if (origin) replies.set(reply, origin);
     return reply;
@@ -129,6 +154,12 @@ export function createReaderEditorRuntime(options: ReaderRuntimeOptions = {}): E
       replies.delete(reply);
       return o && sameRequestContext(o.context, ctx) ? o : undefined;
     },
+  });
+  bindNativeReadSourceRuntime(runtime, (reply, ctx) => {
+    const value = readSources.get(reply);
+    return value && valid() && value.authority() && sameRequestContext(value.context, ctx)
+      ? value
+      : undefined;
   });
   bindNativeRuntimeOrigin(runtime, (reply, ctx) =>
     consumeReaderNativeGeometryOrigin(runtime, reply, ctx),

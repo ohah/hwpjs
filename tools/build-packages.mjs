@@ -72,7 +72,12 @@ for (const name of selected) {
     source = join(directory, 'src');
   const entries =
     name === 'core'
-      ? ['index.ts', 'runtime.ts', '_internal/native-geometry.ts']
+      ? [
+          'index.ts',
+          'runtime.ts',
+          '_internal/native-geometry.ts',
+          '_internal/native-read-source.ts',
+        ]
       : name === 'react-native'
         ? ['index.ts', 'canvas.ts']
         : ['index.ts'];
@@ -189,6 +194,12 @@ for (const name of selected) {
             join(
               root,
               `packages/core/${name === 'core' ? 'src' : 'dist'}/_internal/native-geometry.${name === 'core' ? 'ts' : 'd.ts'}`,
+            ),
+          ],
+          '@hwpjs/core/_internal/native-read-source': [
+            join(
+              root,
+              `packages/core/${name === 'core' ? 'src' : 'dist'}/_internal/native-read-source.${name === 'core' ? 'ts' : 'd.ts'}`,
             ),
           ],
         },

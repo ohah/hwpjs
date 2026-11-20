@@ -267,3 +267,52 @@ test "created table grid all four commands ordinary leak checked and noresize OO
         try @import("../testing/allocation_failures.zig").check(allocationCase, .{ &source, &baseline, command, new_ids });
     }
 }
+
+test "created table grid preserves its UTF8 error boundary and propagates rich run errors" {
+    const Run = @import("authored_paragraph.zig").Run;
+    const Case = struct { text: []const u8, runs: []const Run, expected: anyerror };
+    const cases = [_]Case{
+        .{ .text = "\xf0\x9f\x98", .runs = &.{.{ .start_unit = 0, .char_shape_id = 23 }}, .expected = error.InvalidTableCellText },
+        .{ .text = "😀", .runs = &.{}, .expected = error.InvalidCharacterRuns },
+        .{ .text = "😀", .runs = &.{.{ .start_unit = 1, .char_shape_id = 23 }}, .expected = error.InvalidCharacterRuns },
+        .{ .text = "😀", .runs = &.{ .{ .start_unit = 0, .char_shape_id = 23 }, .{ .start_unit = 0, .char_shape_id = 24 } }, .expected = error.InvalidCharacterRuns },
+        .{ .text = "😀", .runs = &.{ .{ .start_unit = 0, .char_shape_id = 23 }, .{ .start_unit = 1, .char_shape_id = 24 } }, .expected = error.SplitSurrogatePair },
+        .{ .text = "😀", .runs = &.{ .{ .start_unit = 0, .char_shape_id = 23 }, .{ .start_unit = 3, .char_shape_id = 24 } }, .expected = error.InvalidCharacterRuns },
+        // Rich-map validation still precedes UTF8 decoding. Do not turn all
+        // errors on malformed text into the table-specific text error.
+        .{ .text = "\xf0\x9f\x98", .runs = &.{}, .expected = error.InvalidCharacterRuns },
+    };
+    var source = try fixture(2, 2);
+    defer source.deinit(a);
+    for (cases) |entry| {
+        const prior = source.cells[3];
+        const text = try a.dupe(u8, entry.text);
+        defer a.free(text);
+        const runs = try a.dupe(Run, entry.runs);
+        defer a.free(runs);
+        defer source.cells[3] = prior;
+        source.cells[3] = .{ .paragraph_id = prior.paragraph_id, .text = text, .styles = .{ .runs = runs } };
+        // Both operations delete this cell; every removed cell is still
+        // validated and every error leaves source bytes, IDs and runs intact.
+        try rejected(entry.expected, &source, .{ .delete_row = 1 }, &.{}, limits);
+        try rejected(entry.expected, &source, .{ .delete_column = 1 }, &.{}, limits);
+    }
+    // A valid rich cell survives a different row deletion with independent
+    // owned UTF8 and runs. Error mapping must not bypass rich validation/copy.
+    const prior = source.cells[3];
+    const text = try a.dupe(u8, "😀");
+    defer a.free(text);
+    const runs = try a.dupe(Run, &.{ .{ .start_unit = 0, .char_shape_id = 23 }, .{ .start_unit = 2, .char_shape_id = 24 } });
+    defer a.free(runs);
+    defer source.cells[3] = prior;
+    source.cells[3] = .{ .paragraph_id = prior.paragraph_id, .text = text, .styles = .{ .runs = runs } };
+    var before = try source.clone(a);
+    defer before.deinit(a);
+    var candidate = try grid.edit(a, &source, .{ .delete_row = 0 }, &.{}, limits);
+    defer candidate.deinit(a);
+    try testing.expectEqualDeep(before, source);
+    try testing.expectEqualStrings("😀", candidate.cells[1].text);
+    try testing.expectEqualDeep(runs, candidate.cells[1].styles.runs);
+    try testing.expect(candidate.cells[1].text.ptr != text.ptr);
+    try testing.expect(candidate.cells[1].styles.runs.ptr != runs.ptr);
+}

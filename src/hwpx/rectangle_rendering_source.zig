@@ -68,7 +68,7 @@ test "HWPX rectangle rendering source includes nontext group member" {
         if (!element.is(@import("document_xml.zig").paragraph_uri, "rect")) continue;
         const source = try read(a, tree, node);
         try std.testing.expect(source.rendering_corners != null);
-        try std.testing.checkAllAllocationFailures(a, struct {
+        try @import("../testing/allocation_failures.zig").check(struct {
             fn run(allocator: std.mem.Allocator, source_tree: *const Tree, index: usize) !void {
                 _ = try read(allocator, source_tree, index);
             }

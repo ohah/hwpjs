@@ -1,3 +1,4 @@
+import { plainHwp5ChartStampTransition } from './hwp5-chart-plain-metadata.ts';
 import { exactDisplayValue } from './full-snapshot-text-delta.ts';
 import type { GeometryOwner } from './native-geometry-evidence.ts';
 // A controller-derived history proof, not a synthesized Native delta receipt.
@@ -8,6 +9,7 @@ export function validateHistoryTextSnapshots(
   beforeEpoch: string,
   epoch: string,
   scope: string,
+  revisions?: Readonly<{ beforeRevision: number; revision: number }>,
 ): boolean {
   try {
     for (const snapshot of [before, next])
@@ -39,7 +41,13 @@ export function validateHistoryTextSnapshots(
       return false;
     const { paragraphs: ap, ...ah } = before,
       { paragraphs: bp, ...bh } = next;
-    if (!exactDisplayValue(ah, bh)) return false;
+    const chartStamps = plainHwp5ChartStampTransition(before, {
+      beforeEpoch,
+      beforeRevision: revisions?.beforeRevision,
+      epoch,
+      revision: revisions?.revision,
+    });
+    if (chartStamps === null || !exactDisplayValue({ ...ah, ...chartStamps }, bh)) return false;
     const ids = new Set((before.characterShapes ?? []).map((s: any) => s.id));
     let found = 0;
     const ranges = (p: any) => {

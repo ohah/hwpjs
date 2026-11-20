@@ -32,7 +32,7 @@ test "HWPX character style split clips selected deletion and rebases generated p
     try std.testing.expect(try @import("paragraph_structure_splice.zig").splice(a, &tree, &result, 1, 0, 0, "생성", 10000));
     try std.testing.expectEqualStrings("생성", result.paragraphs[1].sites.items[0].text);
     try std.testing.expectError(error.SplitSurrogatePair, split(a, &tree, &values, 0, 2, 2, 2, 10000));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, t: *const @import("xml_part_tree.zig").Tree, v: *const @import("paragraph_structure_values.zig").Values) !void {
             var copy = try @import("paragraph_structure_split.zig").prepare(allocator, t, v, 0, 3, 4, 2, 10000);
             defer copy.deinit(allocator);

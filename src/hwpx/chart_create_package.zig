@@ -25,7 +25,6 @@ const ManifestEnd = struct {
 pub fn prepare(a: std.mem.Allocator, input: []const u8, request: api.Request) !api.Result {
     if (input.len == 0 or input.len > 64 * 1024 * 1024) return error.LimitExceeded;
     try inline_insert.verifySource(input, request.expected_source_sha256);
-    if (request.target.section != 0) return error.UnsupportedInsertSections;
     if (request.target.expected_text.len > @import("../image/image_insertion.zig").max_text_bytes) return error.LimitExceeded;
     _ = try @import("../image/image_insertion.zig").byteOffset(request.target.expected_text, request.target.unit);
     try @import("chart_create_data.zig").validateFor(request.data, request.chart);
@@ -38,10 +37,10 @@ pub fn prepare(a: std.mem.Allocator, input: []const u8, request: api.Request) !a
     try security.validateTree(&trees.header);
     if (request.target.section >= trees.sections.len) return error.InvalidSectionIndex;
     var counters: @import("section_text.zig").Report = .{};
-    var selected: ?usize = null;
+    var selected: ?inline_insert.Binding = null;
     for (trees.sections) |*tree| {
         try security.validateTree(tree);
-        if (try inline_insert.locate(a, tree, request.target, &counters)) |node| {
+        if (try inline_insert.bind(a, tree, request.target, &counters)) |node| {
             if (selected != null) return error.SourceBindingMismatch;
             selected = node;
         }
@@ -98,7 +97,7 @@ pub fn prepare(a: std.mem.Allocator, input: []const u8, request: api.Request) !a
     const host = try @import("chart_create_host.zig").create(a, request.size, ids, chart_path, ole_id);
     defer a.free(host);
     const tree = &trees.sections[request.target.section];
-    const section = try inline_insert.write(a, tree, paragraph, request.target, host, xml_limit);
+    const section = try inline_insert.writeBound(a, tree, paragraph, request.target, host, xml_limit);
     defer a.free(section);
     const opf_entry = doc.archive.find(doc.container.path) orelse return error.MissingContentManifest;
     const old_opf = try doc.archive.decode(opf_entry, xml_limit);

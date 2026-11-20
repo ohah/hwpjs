@@ -13,6 +13,9 @@ pub const equation = @import("equation/root.zig");
 pub const model = @import("model/document.zig");
 
 test {
+    _ = @import("hwp5_chart_record_layout_probe.zig");
+    _ = @import("strict_layout_integration_probe.zig");
+    _ = @import("hwpx_note_public_delete_probe.zig");
     _ = @import("cell_background_probe.zig");
     _ = @import("cell_border_probe.zig");
     _ = @import("new_document_probe.zig");
@@ -37,6 +40,7 @@ test {
     _ = @import("hwp5_strike_color_probe.zig");
     _ = @import("character_strike_color_session_probe.zig");
     _ = @import("hwp5/edit/source_tree_tests.zig");
+    _ = @import("hwp5/edit/source_grid_line_cache_leaf_tests.zig");
     _ = @import("compat/stack_fallback_tests.zig");
     _ = @import("testing/repeated_bytes.zig");
     _ = @import("hwpx/formula_result_paragraphs.zig");

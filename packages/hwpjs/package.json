@@ -53,6 +53,10 @@
       "types": "./dist/types/core/src/_internal/native-geometry.d.ts",
       "import": "./dist/_internal/native-geometry.js"
     },
+    "./_internal/native-read-source": {
+      "types": "./dist/types/core/src/_internal/native-read-source.d.ts",
+      "import": "./dist/_internal/native-read-source.js"
+    },
     "./runtime": {
       "types": "./dist/types/core/src/runtime.d.ts",
       "browser": "./dist/runtime.js",

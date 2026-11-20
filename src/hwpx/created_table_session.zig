@@ -8,7 +8,7 @@ pub fn stage(session: *editor.Session, section_index: usize, paragraph: usize, u
     const anchor = try @import("created_table_anchor.zig").capture(a, session, section_index, paragraph, unit);
     try @import("created_table_object_ids.zig").validateCurrent(session, table.identity, table.instance_id);
     try @import("created_table_source_ids.zig").validate(session, table);
-    try @import("created_table_resources.zig").validate(session, table.resources);
+    try @import("created_table_resources.zig").validateTable(session, table);
     const validation = try @import("created_table_xml.zig").write(a, table, session.options.max_xml_bytes);
     defer a.free(validation);
     const section = &session.sections[section_index];

@@ -127,7 +127,7 @@ test "HWPX chart create stale source and text refusals do not mutate input" {
     try std.testing.expectError(error.InlineObjectTextMismatch, api.prepare(a, input, request));
     request = requestFor(input);
     request.target.section = 1;
-    try std.testing.expectError(error.UnsupportedInsertSections, api.prepare(a, input, request));
+    try std.testing.expectError(error.InvalidSectionIndex, api.prepare(a, input, request));
 }
 
 test "HWPX chart create reserves orphan physical XML ids and unmanifested ZIP paths" {

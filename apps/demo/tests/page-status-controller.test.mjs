@@ -43,6 +43,10 @@ test('controller renders Surface page events without Core events, clears on load
     node.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600 });
     return node;
   };
+  doc.querySelector = (selector) => {
+    assert.equal(selector, 'dialog:modal');
+    return null;
+  };
   doc.head = doc.createElement('head');
   doc.body = doc.createElement('body');
   doc.defaultView = Object.assign(new EventTarget(), {
@@ -65,6 +69,10 @@ test('controller renders Surface page events without Core events, clears on load
     cancelLoad: async () => {},
     dispose: async () => {},
     dispatchCommand: async () => ({ status: 'applied' }),
+    getFormattingCapabilities: async () => ({ atomic: false, fields: {} }),
+    queryFormatting: async () => {
+      throw Error('UnexpectedFormattingQuery');
+    },
   };
   globalThis[Symbol.for('page-status-test-editor')] = editor;
   const host = {

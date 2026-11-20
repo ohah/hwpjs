@@ -24,7 +24,7 @@ pub const Values = struct {
             total = std.math.add(usize, total, bytes) catch return error.LimitExceeded;
             if (total > limit) return error.LimitExceeded;
             for (entry.table.cells) |cell| {
-                total = std.math.add(usize, total, cell.text.len) catch return error.LimitExceeded;
+                total = std.math.add(usize, total, cell.dynamicBytes() catch return error.LimitExceeded) catch return error.LimitExceeded;
                 if (total > limit) return error.LimitExceeded;
             }
         }

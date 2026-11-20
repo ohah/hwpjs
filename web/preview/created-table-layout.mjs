@@ -1,3 +1,4 @@
+import { createdCellCharacterRanges } from '../../js/created-cell-character-runs.mjs';
 import { layoutContent } from './layout.mjs';
 import { tableGrid, hwpUnitsToPixels } from './table-grid.mjs';
 import { tableInsets } from './table-insets.mjs';
@@ -29,10 +30,12 @@ export function layoutCreatedTable(
     ...(cell.currentReference ? { currentReference: cell.currentReference } : {}),
     ...(cell.softLineBreakAvailable === true ? { softLineBreakAvailable: true } : {}),
     text: cell.text,
+    hasCanonicalCharacterRuns: Object.hasOwn(cell, 'character_runs'),
     editable: true,
     selectable: true,
     label: '',
-    characterRanges: [{ start: 0, end: cell.text.length, charShapeId: table.resources.character }],
+    characterRanges:
+      cell.draftCharacterRanges ?? createdCellCharacterRanges(cell, table.resources.character),
   }));
   const flows = [];
   let count = 0;

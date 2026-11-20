@@ -124,7 +124,7 @@ test "column boundary union merge saves original derived run text atomically" {
     try std.testing.expect(resplit.paragraphs[1].column_structure_changed);
     const split_saved = try @import("paragraph_structure_save.zig").write(a, &tree, &resplit, .{}, &.{}, 10000);
     defer a.free(split_saved);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const Tree, current: *const model.Values) !void {
             defer {
                 std.testing.expect(current.paragraphs[0].column_structure_changed) catch @panic("source permission changed");
@@ -142,7 +142,7 @@ test "column boundary union merge saves original derived run text atomically" {
     defer denied.deinit(a);
     denied.paragraphs[0].column_structure_changed = false;
     try std.testing.expectError(error.SourceBindingMismatch, @import("paragraph_structure_save.zig").write(a, &tree, &denied, .{}, &.{}, 10000));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const Tree, current: *const model.Values) !void {
             var result = try prepare(allocator, parsed, current, 0, 10000);
             defer result.deinit(allocator);

@@ -1,4 +1,5 @@
 import type { HeadlessEditor } from '@hwpjs/core';
+import type { Hwp5ChartCreateOptions } from '../../../js/hwp5-chart-create.mjs';
 import type {
   InlineObjectKind,
   EquationInsertOptions,
@@ -8,8 +9,11 @@ import {
   createInlineObjectInsertPort,
   type InlineObjectInsertCore,
   type InlineObjectInsertCapture,
+  type InlineObjectCaretCapture,
 } from './inline-object-insert-port.ts';
 import { createInlineObjectInsertDialog } from './inline-object-insert-dialog.ts';
+import { createHwp5ChartCanvasProvider } from './hwp5-chart-canvas-provider.mjs';
+import { createHwp5ChartCreatePreviewPort } from './hwp5-chart-create-preview-port.ts';
 import './inline-object-insert-style.css';
 
 export function createInlineObjectInsertTool(options: {
@@ -19,31 +23,86 @@ export function createInlineObjectInsertTool(options: {
   onStatus(text: string): void;
   onPresentationChange?(): void;
   onClose(): void;
+  captureCaret?(): InlineObjectCaretCapture | null;
 }) {
-  const port = createInlineObjectInsertPort(options.editor, options.core);
+  const port = createInlineObjectInsertPort(options.editor, options.core, options.captureCaret);
   let view: ReturnType<typeof createInlineObjectInsertDialog> | undefined;
   let capture: InlineObjectInsertCapture | undefined;
+  let preview: ReturnType<typeof createHwp5ChartCreatePreviewPort> | undefined;
   let pending = false,
+    previewPending = false,
+    opening = false,
     disposed = false,
-    epoch = 0;
+    epoch = 0,
+    previewSerial = 0;
+  function cancelPreview() {
+    ++previewSerial;
+    previewPending = false;
+    preview?.invalidate();
+    view?.setPreviewBusy(false);
+  }
   function close(restore = false) {
-    const hadView = !!view,
+    const oldView = view,
       old = capture;
     ++epoch;
-    view?.destroy();
+    ++previewSerial;
+    previewPending = false;
     view = undefined;
     capture = undefined;
-    if (restore && hadView && old && !disposed && options.editor.getEditorState() === old.state)
+    preview?.dispose();
+    preview = undefined;
+    oldView?.destroy();
+    if (restore && oldView && old && !disposed && options.editor.getEditorState() === old.state)
       options.onClose();
   }
-  async function submit(draft: EquationInsertOptions | ChartCreateOptions) {
-    if (!capture || !view || pending || disposed) return;
+  async function showPreview(draft: Hwp5ChartCreateOptions) {
+    if (!capture || !view || !preview || pending || previewPending || disposed) return;
+    const lease = capture,
+      targetView = view,
+      backend = preview,
+      ticket = epoch,
+      serial = ++previewSerial;
+    if (!port.current(lease)) {
+      targetView.setUnavailable('선택이 바뀌었습니다. 창을 다시 열어주세요.');
+      return;
+    }
+    previewPending = true;
+    targetView.setPreviewBusy(true);
+    options.onPresentationChange?.();
+    try {
+      const { profile, preview: _pixels, ...values } = draft;
+      const prepared = await backend.prepare(lease, values, profile);
+      if (
+        disposed ||
+        ticket !== epoch ||
+        serial !== previewSerial ||
+        view !== targetView ||
+        !backend.current(prepared)
+      )
+        return;
+      targetView.showPreview(prepared.preview);
+    } catch (error) {
+      if (!disposed && ticket === epoch && serial === previewSerial && view === targetView)
+        options.onStatus(String(error));
+    } finally {
+      if (serial === previewSerial) {
+        previewPending = false;
+        if (view === targetView) targetView.setPreviewBusy(false);
+      }
+      if (!disposed) options.onPresentationChange?.();
+    }
+  }
+  async function submit(
+    draft: EquationInsertOptions | ChartCreateOptions | Hwp5ChartCreateOptions,
+  ) {
+    if (!capture || !view || pending || previewPending || disposed) return;
     const lease = capture,
       ticket = epoch;
     if (!port.current(lease)) {
       view.setUnavailable('선택이 바뀌었습니다. 창을 다시 열어주세요.');
       return;
     }
+    cancelPreview();
     pending = true;
     view.setBusy(true);
     options.onPresentationChange?.();
@@ -79,22 +138,75 @@ export function createInlineObjectInsertTool(options: {
     }
   }
   const unsubscribe = port.subscribe(() => {
+    if (capture) {
+      const now = options.editor.getEditorState();
+      if (
+        now.documentId !== capture.state.documentId ||
+        now.generation !== capture.state.generation
+      )
+        close();
+      else if (!pending && !port.current(capture)) {
+        cancelPreview();
+        view?.setUnavailable('선택이 바뀌었습니다. 창을 다시 열어주세요.');
+      }
+    }
     view?.setChartProfileVersion(port.chartCreateProfileVersion());
-    if (capture && !pending && !port.current(capture))
-      view?.setUnavailable('선택이 바뀌었습니다. 창을 다시 열어주세요.');
     options.onPresentationChange?.();
   });
+  function show(captured: InlineObjectInsertCapture, kind: InlineObjectKind) {
+    if (!port.current(captured)) throw Error('StaleInlineObjectInsert');
+    capture = captured;
+    ++epoch;
+    const content = captured.state.content;
+    const format = content && typeof content === 'object' && 'format' in content && typeof content.format === 'string' ? content.format : undefined;
+    if (kind === 'chart' && format === 'hwp5') {
+      const helper = options.core.hwp5ChartCreatePreviewMessage,
+        availability = options.core.getInlineObjectInsertAvailability;
+      if (!helper || !availability) throw Error('InlineObjectInsertionUnavailable');
+      const provider = createHwp5ChartCanvasProvider(options.root.ownerDocument);
+      preview = createHwp5ChartCreatePreviewPort({
+        editor: options.editor,
+        core: {
+          hwp5ChartCreatePreviewMessage: helper,
+          getInlineObjectInsertAvailability: availability,
+        },
+        isCaptureCurrent: (value) => port.current(value),
+        render: provider.render,
+      });
+    }
+    view = createInlineObjectInsertDialog(options.root, kind, {
+      format,
+      chartCreateProfileVersion: port.chartCreateProfileVersion(),
+      onInsert: (draft) => {
+        void submit(draft);
+      },
+      ...(preview
+        ? {
+            onPreview: (draft: Hwp5ChartCreateOptions) => {
+              void showPreview(draft);
+            },
+            onDraftChange: cancelPreview,
+          }
+        : {}),
+      onDismiss: () => {
+        if (!pending) close(true);
+      },
+    });
+  }
   return {
     presentation(kind: InlineObjectKind) {
-      return pending || disposed
+      return pending || previewPending || opening || disposed
         ? {
             enabled: false,
-            reason: pending ? '새 개체를 삽입하는 중입니다.' : '삽입 도구가 종료되었습니다.',
+            reason:
+              pending || previewPending || opening
+                ? '새 개체를 삽입하는 중입니다.'
+                : '삽입 도구가 종료되었습니다.',
           }
         : port.presentation(kind);
     },
     open(kind: InlineObjectKind) {
-      if (disposed || pending) return;
+      if (disposed || pending || previewPending || opening) return;
       if (view) {
         view.focus();
         return;
@@ -103,24 +215,36 @@ export function createInlineObjectInsertTool(options: {
         options.onStatus('열린 창을 먼저 닫아주세요.');
         return;
       }
+      if (options.captureCaret) {
+        opening = true;
+        const ticket = epoch;
+        void port
+          .captureAtCaret(kind)
+          .then((captured) => {
+            if (disposed || ticket !== epoch) return;
+            show(captured, kind);
+          })
+          .catch((error) => {
+            if (!disposed && ticket === epoch) {
+              options.onStatus(String(error));
+              close();
+            }
+          })
+          .finally(() => {
+            opening = false;
+            if (!disposed) options.onPresentationChange?.();
+          });
+        return;
+      }
       try {
-        capture = port.capture(kind);
-        ++epoch;
-        view = createInlineObjectInsertDialog(options.root, kind, {
-          chartCreateProfileVersion: port.chartCreateProfileVersion(),
-          onInsert: (draft) => {
-            void submit(draft);
-          },
-          onDismiss: () => {
-            if (!pending) close(true);
-          },
-        });
+        show(port.capture(kind), kind);
       } catch (error) {
         options.onStatus((error as Error).message);
         close();
       }
     },
     dispose() {
+      if (disposed) return;
       disposed = true;
       unsubscribe();
       close();

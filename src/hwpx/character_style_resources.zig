@@ -1,6 +1,24 @@
 //! Actual header IDs, not counts or array indices. Caller owns the result.
 const std = @import("std");
 pub fn ids(session: *const @import("editor_session.zig").Session) ![]u32 {
+    var inventory = try buildMembershipIndex(session);
+    inventory.current.deinit(session.allocator);
+    std.mem.sort(u32, inventory.ids, {}, std.sort.asc(u32));
+    return inventory.ids;
+}
+pub const Index = struct {
+    allocator: std.mem.Allocator,
+    ids: []u32,
+    current: std.AutoHashMapUnmanaged(u32, void),
+    pub fn deinit(self: *Index) void {
+        self.current.deinit(self.allocator);
+        self.allocator.free(self.ids);
+        self.* = undefined;
+    }
+};
+/// Request-local membership in Native source IDs and current COW IDs. Preserve
+/// the sorted ids() API, while a whole text batch needs no per-entry scan/sort.
+pub fn buildMembershipIndex(session: *const @import("editor_session.zig").Session) !Index {
     const a = session.allocator;
     var preparation = try @import("header_read_context.zig").lease(session);
     defer preparation.deinit();
@@ -8,14 +26,62 @@ pub fn ids(session: *const @import("editor_session.zig").Session) ![]u32 {
     const original = resources.table(.char_shape).ids.items;
     var output: std.ArrayList(u32) = .empty;
     errdefer output.deinit(a);
+    var source_ids: std.AutoHashMapUnmanaged(u32, void) = .empty;
+    defer source_ids.deinit(a);
+    var current: std.AutoHashMapUnmanaged(u32, void) = .empty;
+    errdefer current.deinit(a);
+    for (original) |id| {
+        try source_ids.put(a, id, {});
+        try current.put(a, id, {});
+    }
     try output.appendSlice(a, original);
     for (session.character_resources.entries.items) |entry| {
-        if (std.mem.indexOfScalar(u32, original, entry.source_id) == null) return error.InvalidCharacterShapeReference;
-        if (std.mem.indexOfScalar(u32, output.items, entry.id) != null) return error.DuplicateCharacterResourceId;
+        if (!source_ids.contains(entry.source_id)) return error.InvalidCharacterShapeReference;
+        if ((try current.getOrPut(a, entry.id)).found_existing) return error.DuplicateCharacterResourceId;
         try output.append(a, entry.id);
     }
-    std.mem.sort(u32, output.items, {}, std.sort.asc(u32));
-    return output.toOwnedSlice(a);
+    return .{ .allocator = a, .ids = try output.toOwnedSlice(a), .current = current };
+}
+
+test "document text HX character resource index preserves sorted API sparse IDs and source guards through OOM" {
+    const a = std.testing.allocator;
+    const bytes = try @import("../new_document/root.zig").hwpx(a);
+    defer a.free(bytes);
+    var session = try @import("editor_session.zig").open(a, bytes, .{});
+    defer session.deinit();
+    var original = try buildMembershipIndex(&session);
+    defer original.deinit();
+    try std.testing.expect(original.ids.len != 0);
+    const source = original.ids[0];
+    const first = std.math.maxInt(u32);
+    const second = first - 1;
+    try std.testing.expect(!original.current.contains(first) and !original.current.contains(second));
+    try session.character_resources.entries.append(a, .{ .source_id = source, .id = first, .properties = .{ .bold = true } });
+    try session.character_resources.entries.append(a, .{ .source_id = source, .id = second, .properties = .{ .italic = true } });
+    const Check = struct {
+        fn run(allocator: std.mem.Allocator, live: *const @import("editor_session.zig").Session) !void {
+            var reader = live.*;
+            reader.allocator = allocator;
+            var inventory = try buildMembershipIndex(&reader);
+            defer inventory.deinit();
+            const sorted = try ids(&reader);
+            defer allocator.free(sorted);
+            try std.testing.expectEqual(sorted.len, inventory.ids.len);
+            for (sorted, 0..) |id, ordinal| {
+                try std.testing.expect(inventory.current.contains(id));
+                if (ordinal != 0) try std.testing.expect(sorted[ordinal - 1] < id);
+            }
+            try std.testing.expect(inventory.current.contains(std.math.maxInt(u32)));
+            try std.testing.expect(inventory.current.contains(std.math.maxInt(u32) - 1));
+        }
+    };
+    try Check.run(a, &session);
+    try @import("../testing/allocation_failures.zig").check(Check.run, .{@as(*const @import("editor_session.zig").Session, &session)});
+    session.character_resources.entries.items[1].source_id = first;
+    try std.testing.expectError(error.InvalidCharacterShapeReference, buildMembershipIndex(&session));
+    session.character_resources.entries.items[1].source_id = source;
+    session.character_resources.entries.items[1].id = source;
+    try std.testing.expectError(error.DuplicateCharacterResourceId, buildMembershipIndex(&session));
 }
 
 /// Formatting-patch-only request index. Original inventory and current COW IDs

@@ -48,6 +48,7 @@ export function attachHwpxPageSettings(editor, content) {
       content.paragraphFlowErrors.push({ section, error: error.message });
     }
   }
+  attachDirectNoteSelectionOwners(content);
   if (!content.window && !content.limited) {
     try {
       content.hwpxPageNumberSource = editor.pageNumberDisplaySource?.() ?? null;
@@ -63,4 +64,38 @@ export function attachHwpxPageSettings(editor, content) {
   content.noteBodies = notes.state === 'bound' ? notes.notes : [];
   content.noteBodyBindingError = notes.state === 'bound' ? null : notes.error;
   return content;
+}
+
+function attachDirectNoteSelectionOwners(content) {
+  if (content.paragraphFlowErrors.length) return;
+  const coordinates = (row) => `${row.section}:${row.paragraph}`;
+  const flows = new Map();
+  for (const flow of content.paragraphFlows) {
+    const key = coordinates(flow);
+    if (flows.has(key)) return;
+    flows.set(key, flow);
+  }
+  const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
+  for (const row of content.paragraphs) {
+    const flow = flows.get(coordinates(row));
+    const context = flow?.note_context;
+    if (
+      !context ||
+      flow.top_level !== false ||
+      !['footnote', 'endnote'].includes(flow.host) ||
+      context.kind !== flow.host ||
+      ![context.note_node, context.list_node, flow.source_node].every(uint) ||
+      !(context.note_node < context.list_node && context.list_node < flow.source_node) ||
+      row.clipped ||
+      row.selectionOwner != null ||
+      row.tableCell ||
+      row.tableCaption ||
+      row.drawingText ||
+      row.drawingCaption ||
+      row.createdCell ||
+      row.pageArea
+    )
+      continue;
+    row.selectionOwner = `section:${row.section}:${context.kind}:${context.note_node}:list:${context.list_node}`;
+  }
 }

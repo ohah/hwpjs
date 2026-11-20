@@ -49,6 +49,7 @@ export const DEMO_COMMAND_REGISTRY = Object.freeze({
   'insert-equation': entry('수식', '삽입', true),
   'edit-chart-data': entry('기존 차트 데이터 편집', '개체'),
   'edit-equation': entry('기존 수식 편집', '개체'),
+  'delete-note': entry('현재 주석 삭제', '삽입', true),
   'insert-footnote': entry('각주', '삽입', true),
   'insert-endnote': entry('미주', '삽입', true),
   'insert-link': entry('링크', '삽입', true),

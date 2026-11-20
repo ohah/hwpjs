@@ -1,3 +1,4 @@
+import { createDocumentSearchRelay } from './document-search-relay.ts';
 import { createObjectActivationRelay } from './object-activation-relay.ts';
 import { createDemoSurfaceEnvironment } from './surface-environment.ts';
 import { createCanvasSurface } from '@hwpjs/vanilla';
@@ -44,7 +45,8 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
   react: (root, editor, onStatus) => {
     const pages = createPageStatusRelay(),
       cellBlockMenus = createCellBlockMenuRelay(),
-      objectActivations = createObjectActivationRelay();
+      objectActivations = createObjectActivationRelay(),
+      documentSearch = createDocumentSearchRelay();
     const tree = createRoot(root),
       ref = createRef<CanvasSurfaceHandle>();
     tree.render(
@@ -59,6 +61,7 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
             pages.connect(surface as DemoPageStatusHost);
             cellBlockMenus.connect(surface);
             objectActivations.connect(surface);
+            documentSearch.connect(surface);
           },
           ref,
           style: { height: '100%' },
@@ -109,6 +112,9 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       hasCellBlock: () => ref.current?.surface?.hasCellBlock() ?? false,
       registerCellBlockMenu: cellBlockMenus.register,
       registerObjectActivation: objectActivations.register,
+      selectDocumentText: documentSearch.select,
+      captureDocumentTextCaret: documentSearch.captureCaret,
+      prepareDocumentTextReadView: documentSearch.prepareRead,
       registerObjectPropertiesRequest: objectActivations.registerProperties,
       getSelectedObject: objectActivations.getSelectedObject,
       requestSelectedObjectProperties: objectActivations.requestSelectedObjectProperties,
@@ -137,6 +143,7 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
         pages.dispose();
         cellBlockMenus.dispose();
         objectActivations.dispose();
+        documentSearch.dispose();
         tree.unmount();
       },
     };
@@ -144,7 +151,8 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
   svelte: (root, editor, onStatus) => {
     const pages = createPageStatusRelay(),
       cellBlockMenus = createCellBlockMenuRelay(),
-      objectActivations = createObjectActivationRelay();
+      objectActivations = createObjectActivationRelay(),
+      documentSearch = createDocumentSearchRelay();
     let surface: SvelteSurface | undefined;
     const component = mount(CanvasEditor, {
       target: root,
@@ -158,6 +166,7 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
           pages.connect(value as DemoPageStatusHost);
           cellBlockMenus.connect(value);
           objectActivations.connect(value);
+          documentSearch.connect(value);
         },
       },
     });
@@ -199,6 +208,9 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       hasCellBlock: () => surface?.hasCellBlock() ?? false,
       registerCellBlockMenu: cellBlockMenus.register,
       registerObjectActivation: objectActivations.register,
+      selectDocumentText: documentSearch.select,
+      captureDocumentTextCaret: documentSearch.captureCaret,
+      prepareDocumentTextReadView: documentSearch.prepareRead,
       registerObjectPropertiesRequest: objectActivations.registerProperties,
       getSelectedObject: objectActivations.getSelectedObject,
       requestSelectedObjectProperties: objectActivations.requestSelectedObjectProperties,
@@ -223,6 +235,7 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
         pages.dispose();
         cellBlockMenus.dispose();
         objectActivations.dispose();
+        documentSearch.dispose();
         surface = undefined;
         return unmount(component);
       },

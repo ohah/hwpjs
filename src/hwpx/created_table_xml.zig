@@ -36,11 +36,17 @@ pub fn write(a: std.mem.Allocator, table: *const model.Table, max_bytes: usize) 
         for (0..table.plan.columns) |column| {
             const geometry = try table.plan.cell(@intCast(row), @intCast(column));
             const cell = table.cells[row * table.plan.columns + column];
-            try output.print("<hp:tc name=\"\" header=\"0\" hasMargin=\"0\" protect=\"0\" editable=\"0\" dirty=\"0\" borderFillIDRef=\"{d}\"><hp:subList id=\"\" textDirection=\"HORIZONTAL\" lineWrap=\"BREAK\" vertAlign=\"TOP\" linkListIDRef=\"0\" linkListNextIDRef=\"0\" textWidth=\"0\" textHeight=\"0\" hasTextRef=\"0\" hasNumRef=\"0\"><hp:p id=\"{d}\" paraPrIDRef=\"{d}\" styleIDRef=\"{d}\" pageBreak=\"0\" columnBreak=\"0\" merged=\"0\"><hp:run charPrIDRef=\"{d}\"><hp:t>", .{ table.resources.border_fill, cell.paragraph_id, table.resources.paragraph, table.resources.style, table.resources.character });
-            const encoded = try @import("created_cell_text_xml.zig").encode(a, cell.text, max_bytes -| output.bytes.items.len);
-            defer a.free(encoded);
-            try output.append(encoded);
-            try output.print("</hp:t></hp:run></hp:p></hp:subList><hp:cellAddr colAddr=\"{d}\" rowAddr=\"{d}\"/><hp:cellSpan colSpan=\"1\" rowSpan=\"1\"/><hp:cellSz width=\"{d}\" height=\"{d}\"/><hp:cellMargin left=\"0\" right=\"0\" top=\"0\" bottom=\"0\"/></hp:tc>", .{ column, row, geometry.width, geometry.height });
+            try output.print("<hp:tc name=\"\" header=\"0\" hasMargin=\"0\" protect=\"0\" editable=\"0\" dirty=\"0\" borderFillIDRef=\"{d}\"><hp:subList id=\"\" textDirection=\"HORIZONTAL\" lineWrap=\"BREAK\" vertAlign=\"TOP\" linkListIDRef=\"0\" linkListNextIDRef=\"0\" textWidth=\"0\" textHeight=\"0\" hasTextRef=\"0\" hasNumRef=\"0\"><hp:p id=\"{d}\" paraPrIDRef=\"{d}\" styleIDRef=\"{d}\" pageBreak=\"0\" columnBreak=\"0\" merged=\"0\">", .{ table.resources.border_fill, cell.paragraph_id, table.resources.paragraph, table.resources.style });
+            var run_scratch: [1]@import("../model/document.zig").CharacterRun = undefined;
+            var spans = try cell.spans(table.resources.character, &run_scratch);
+            while (try spans.next()) |span| {
+                try output.print("<hp:run charPrIDRef=\"{d}\"><hp:t>", .{span.char_shape_id});
+                const encoded = try @import("created_cell_text_xml.zig").encode(a, span.text, max_bytes -| output.bytes.items.len);
+                defer a.free(encoded);
+                try output.append(encoded);
+                try output.append("</hp:t></hp:run>");
+            }
+            try output.print("</hp:p></hp:subList><hp:cellAddr colAddr=\"{d}\" rowAddr=\"{d}\"/><hp:cellSpan colSpan=\"1\" rowSpan=\"1\"/><hp:cellSz width=\"{d}\" height=\"{d}\"/><hp:cellMargin left=\"0\" right=\"0\" top=\"0\" bottom=\"0\"/></hp:tc>", .{ column, row, geometry.width, geometry.height });
         }
         try output.append("</hp:tr>");
     }

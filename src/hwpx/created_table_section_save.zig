@@ -4,7 +4,9 @@ const editor = @import("editor_session.zig");
 const xml = @import("../xml/root.zig");
 const sites_mod = @import("text_sites.zig");
 const source_writer = @import("xml_source_writer.zig");
-const Pending = struct { site: usize, unit: u32, entry: usize };
+const Pending = struct { site: usize, unit: u32, entry: usize, current_host: usize, current_unit: u32, saved_unit: u32 = 0 };
+const receipts_mod = @import("created_table_placement_receipts.zig");
+const Emission = struct { record: receipts_mod.Record, source_start: usize, within: usize };
 
 fn append(a: std.mem.Allocator, out: *std.ArrayList(u8), bytes: []const u8, limit: usize) !void {
     if (bytes.len > limit -| out.items.len) return error.LimitExceeded;
@@ -34,7 +36,7 @@ fn cloneable(value: xml.tags.Tag, run: bool) !void {
     }
 }
 
-fn replacement(a: std.mem.Allocator, session: *const editor.Session, section_index: usize, tree: *const @import("xml_part_tree.zig").Tree, sites: *const sites_mod.Sites, group: []const Pending, limit: usize) ![]u8 {
+fn replacement(a: std.mem.Allocator, session: *const editor.Session, section_index: usize, tree: *const @import("xml_part_tree.zig").Tree, sites: *const sites_mod.Sites, group: []const Pending, limit: usize, emissions: ?*std.ArrayList(Emission)) ![]u8 {
     const site = sites.items[group[0].site];
     const element = tree.elements[site.element_index];
     const run_node = if (site.missing_text) site.element_index else element.parent orelse return error.SourceBindingMismatch;
@@ -64,6 +66,18 @@ fn replacement(a: std.mem.Allocator, session: *const editor.Session, section_ind
         }
         const fragment = try @import("created_table_xml.zig").write(a, &session.sections[section_index].created_tables.entries.items[pending.entry].table, limit -| output.items.len);
         defer a.free(fragment);
+        if (emissions) |records| {
+            const entry = session.sections[section_index].created_tables.entries.items[pending.entry];
+            try records.append(a, .{ .source_start = site.start, .within = output.items.len, .record = .{
+                .identity = entry.table.identity,
+                .section = section_index,
+                .host_reference = entry.anchor.paragraph,
+                .source_unit = entry.anchor.unit,
+                .current_host = pending.current_host,
+                .current_unit = pending.current_unit,
+                .saved_unit = pending.saved_unit,
+            } });
+        }
         try append(a, &output, fragment, limit);
         if (!site.missing_text) {
             try closing(a, &output, run, limit);
@@ -80,6 +94,10 @@ fn replacement(a: std.mem.Allocator, session: *const editor.Session, section_ind
 }
 
 pub fn write(session: *const editor.Session, section_index: usize, current_xml: []const u8, limit: usize) ![]u8 {
+    return writeWithPlacements(session, section_index, current_xml, limit, null);
+}
+
+pub fn writeWithPlacements(session: *const editor.Session, section_index: usize, current_xml: []const u8, limit: usize, receipts: ?*receipts_mod.Receipts) ![]u8 {
     if (section_index >= session.sections.len) return error.InvalidSectionIndex;
     const a = session.allocator;
     const section = &session.sections[section_index];
@@ -111,7 +129,7 @@ pub fn write(session: *const editor.Session, section_index: usize, current_xml: 
             const score: u8 = if (!candidate.missing_text) 2 else if (!candidate.anchor_boundary) 1 else 0;
             if (best != null and (score < quality or (score == quality and candidate.start < sites.items[best.?.site].start))) continue;
             quality = score;
-            best = .{ .site = position.index, .unit = @intCast(point.unit - position.start_unit), .entry = entry_index };
+            best = .{ .site = position.index, .unit = @intCast(point.unit - position.start_unit), .entry = entry_index, .current_host = point.paragraph, .current_unit = point.unit };
         }
         try pending.append(a, best orelse return error.MissingCreatedTableInsertionSite);
         try hosts.put(try @import("paragraph_site_owner.zig").resolve(&tree, &sites, locations, local), {});
@@ -124,6 +142,18 @@ pub fn write(session: *const editor.Session, section_index: usize, current_xml: 
             return left.entry < right.entry;
         }
     }.less);
+    if (receipts != null) {
+        var host_counts = std.AutoHashMap(usize, u32).init(a);
+        defer host_counts.deinit();
+        for (pending.items) |*item| {
+            const slot = try host_counts.getOrPut(item.current_host);
+            if (!slot.found_existing) slot.value_ptr.* = 0;
+            item.saved_unit = try std.math.add(u32, item.current_unit, slot.value_ptr.*);
+            slot.value_ptr.* = try std.math.add(u32, slot.value_ptr.*, 1);
+        }
+    }
+    var emissions: std.ArrayList(Emission) = .empty;
+    defer emissions.deinit(a);
     var changes: std.ArrayList(source_writer.Change) = .empty;
     defer {
         for (changes.items) |change| if (change.serialized_xml) |bytes| a.free(bytes);
@@ -134,7 +164,7 @@ pub fn write(session: *const editor.Session, section_index: usize, current_xml: 
         var end = index + 1;
         while (end < pending.items.len and pending.items[end].site == pending.items[index].site) : (end += 1) {}
         const site = sites.items[pending.items[index].site];
-        const bytes = try replacement(a, session, section_index, &tree, &sites, pending.items[index..end], limit);
+        const bytes = try replacement(a, session, section_index, &tree, &sites, pending.items[index..end], limit, if (receipts != null) &emissions else null);
         errdefer a.free(bytes);
         try changes.append(a, .{ .start = site.start, .end = site.end, .text = "", .serialized_xml = bytes });
         index = end;
@@ -148,5 +178,26 @@ pub fn write(session: *const editor.Session, section_index: usize, current_xml: 
             return left.start < right.start;
         }
     }.less);
-    return source_writer.write(a, current_xml, changes.items, limit);
+    const bytes = try source_writer.write(a, current_xml, changes.items, limit);
+    errdefer a.free(bytes);
+    if (receipts) |records| {
+        var offsets = std.AutoHashMap(usize, usize).init(a);
+        defer offsets.deinit();
+        var source_at: usize = 0;
+        var output_at: usize = 0;
+        for (changes.items) |change| {
+            output_at = try std.math.add(usize, output_at, change.start - source_at);
+            try offsets.put(change.start, output_at);
+            const emitted = if (change.serialized_xml) |replacement_bytes| replacement_bytes.len else 0;
+            output_at = try std.math.add(usize, output_at, emitted);
+            source_at = change.end;
+        }
+        for (emissions.items) |*emission| {
+            emission.record.table_start = try std.math.add(usize, offsets.get(emission.source_start) orelse return error.SourceBindingMismatch, emission.within);
+            if (emission.record.table_start >= bytes.len) return error.SourceBindingMismatch;
+        }
+        try records.items.ensureUnusedCapacity(a, emissions.items.len);
+        for (emissions.items) |emission| records.items.appendAssumeCapacity(emission.record);
+    }
+    return bytes;
 }

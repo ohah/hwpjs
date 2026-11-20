@@ -20,8 +20,67 @@ pub fn build(b: *std.Build) void {
     tests.step.dependOn(&icc_registry_check.step);
     const run_tests = b.addRunArtifact(tests);
     run_tests.step.dependOn(&abi_check.step);
-    const core_test_step = b.step("test", "Run core and controlled text unit tests");
+    const core_test_step = b.step("test", "Run core, controlled text and required pinned package corpus tests");
     core_test_step.dependOn(&run_tests.step);
+
+    // Corpus is required by the regular full test target, not an optional skip.
+    const package_corpus_options = b.addOptions();
+    package_corpus_options.addOption([]const u8, "root", b.option([]const u8, "hwpx-package-corpus-root", "Absolute isolated historical raw484 dataset path; required by test") orelse "");
+    const package_corpus_module = b.createModule(.{
+        .root_source_file = b.path("src/hwpx_package_corpus_probe.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    package_corpus_module.addOptions("hwpx_package_corpus_config", package_corpus_options);
+    const package_corpus_tests = b.addTest(.{
+        .use_llvm = true,
+        .root_module = package_corpus_module,
+        .filters = &.{
+            "HWPX corpus package relationships read-only survey",
+            "HWPX corpus version XML read-only survey",
+            "HWPX corpus protection manifest read-only survey",
+        },
+    });
+    const run_package_corpus_tests = b.addRunArtifact(package_corpus_tests);
+    run_package_corpus_tests.has_side_effects = true;
+    core_test_step.dependOn(&run_package_corpus_tests.step);
+    const package_corpus_step = b.step("test-hwpx-package-corpus", "Run all three required historical raw484 package surveys with strict input pins");
+    package_corpus_step.dependOn(&run_package_corpus_tests.step);
+
+    // Document search Native registration (SSOT).
+    const document_search_step = b.step("test-document-search", "Run all registered document search Native contracts");
+    const control_text_read_step = b.step("test-control-text-read-context", "Run the thirteen kernel and three paragraph-coverage Native contracts");
+    for ([_]struct { path: []const u8, filter: []const u8, step: []const u8, named: usize }{
+        .{ .path = "src/document_text_search_probe.zig", .filter = "document text search", .step = "test-document-search-read", .named = 6 },
+        .{ .path = "src/document_text_transaction_probe.zig", .filter = "document text", .step = "test-document-search-transaction", .named = 13 },
+        .{ .path = "src/document_text_hx_probe.zig", .filter = "document text HX", .step = "test-document-search-hx", .named = 25 },
+        .{ .path = "src/document_text_selection_probe.zig", .filter = "document text selection", .step = "test-document-search-selection", .named = 10 },
+        .{ .path = "src/document_text_title_probe.zig", .filter = "document text title diagnostic", .step = "test-document-search-title-diagnostic", .named = 3 },
+        .{ .path = "src/document_text_title_emission_probe.zig", .filter = "document text title emission", .step = "test-document-search-title-emission", .named = 10 },
+        .{ .path = "src/title_source_linear_probe.zig", .filter = "title source linear", .step = "test-document-search-title-linear", .named = 4 },
+        .{ .path = "src/document_text_anchor_probe.zig", .filter = "document text anchor", .step = "test-document-search-anchor", .named = 7 },
+        .{ .path = "src/document_text_read_generation_probe.zig", .filter = "document text read generation", .step = "test-document-search-read-generation", .named = 8 },
+        .{ .path = "src/document_text_readonly_hwp_probe.zig", .filter = "document text readonly H5", .step = "test-document-search-readonly-hwp", .named = 9 },
+        .{ .path = "src/document_text_batch_delegation_probe.zig", .filter = "document text batch delegation", .step = "test-document-search-batch-delegation", .named = 15 },
+        .{ .path = "src/control_text_read_context_probe.zig", .filter = "control text batch Native", .step = "test-document-search-control-kernel", .named = 13 },
+        .{ .path = "src/control_text_read_paragraph_coverage_probe.zig", .filter = "control paragraph coverage Native", .step = "test-document-search-paragraph-coverage", .named = 3 },
+    }) |contract| {
+        const module = b.createModule(.{ .root_source_file = b.path(contract.path), .target = target, .optimize = optimize });
+        const compiled = b.addTest(.{ .root_module = module, .use_llvm = true, .filters = &.{contract.filter} });
+        const run = b.addRunArtifact(compiled);
+        const focused = b.step(contract.step, contract.filter);
+        if (std.mem.eql(u8, contract.path, "src/control_text_read_context_probe.zig") or
+            std.mem.eql(u8, contract.path, "src/control_text_read_paragraph_coverage_probe.zig"))
+        {
+            run.step.dependOn(&abi_check.step);
+            run.step.dependOn(&icc_registry_check.step);
+            control_text_read_step.dependOn(&run.step);
+        }
+        focused.dependOn(&run.step);
+        document_search_step.dependOn(&run.step);
+        core_test_step.dependOn(&run.step);
+    }
+    // End document search Native registration.
 
     const equation_display_step = b.step("test-hwp5-equation-display", "Verify HWP5 equation snapshots, ownership, allocation failures and read-only session roundtrip");
     for ([_]struct { path: []const u8, filters: []const []const u8 }{
@@ -46,8 +105,10 @@ pub fn build(b: *std.Build) void {
 
     const editor_extensions_step = b.step("test-editor-extensions", "Verify equation projection, source caret typing and editable object geometry");
     editor_extensions_step.dependOn(equation_display_step);
+    editor_extensions_step.dependOn(control_text_read_step);
     for ([_]struct { path: []const u8, filters: []const []const u8, step: []const u8, description: []const u8 }{
         .{ .path = "src/object_geometry_probe.zig", .filters = &.{"object geometry"}, .step = "test-object-geometry", .description = "Verify source-owned object geometry, history and allocation failure rollback" },
+        .{ .path = "src/generated_cell_rich_transfer_probe.zig", .filters = &.{"generated cell rich"}, .step = "test-generated-cell-rich", .description = "Verify canonical generated-cell rich typing, serializer transfer and owned history" },
         .{ .path = "src/caret_rich_native_probe.zig", .filters = &.{"caret rich"}, .step = "test-caret-rich", .description = "Verify HWP5 and HWPX source body and cell rich typing" },
         .{ .path = "src/caret_eof_native_probe.zig", .filters = &.{"caret EOF"}, .step = "test-caret-eof", .description = "Verify character-style inheritance at the visible paragraph end" },
         .{ .path = "src/caret_eof_delta_native_probe.zig", .filters = &.{"caret EOF managed"}, .step = "test-caret-eof-managed", .description = "Verify direct live EOF insertion, source windows and history in body cells and textboxes" },
@@ -56,6 +117,93 @@ pub fn build(b: *std.Build) void {
             "HWP5 source file grid all four commands compressed and raw save reopen exact oracle document IDs",
             "HWP5 source grid semantic oracle rejects wrong retained text and empty header",
         }, .step = "test-hwp5-implicit-empty-grid", .description = "Verify preserved source cells and implicit empty paragraphs after grid edits" },
+        .{ .path = "src/noori_column_grid_probe.zig", .filters = &.{
+            "source column grid retains each height and independent table bound",
+            "source column grid refuses vertical bound changes malformed coverage and conflicting widths",
+            "source column grid keeps established row and merged refusal policy",
+            "source column grid detached allocation failures retain all source values",
+            "source grid cell extension width-preserving profile refuses unproved variants",
+            "source column HWP5 picture paragraph preserves raw anchor and strict policy boundary",
+            "source column HWP5 picture refuses mismatched anchor and unknown owned record",
+            "source column HWP5 observed8 keeps full attributes separate from unknown word",
+            "source column retained picture preserves complete subtree comment and duplicate or missing metadata",
+            "source column retained picture refuses picture donors deleted owners and unrelated comments",
+            "source column retained picture detached failures preserve original subtree",
+            "Noori fifth HWP5 original columns save reopen retains pictures text styles and heights",
+            "Noori fifth HWPX original columns save reopen retains raw picture comments and bounds",
+        }, .step = "test-noori-source-columns", .description = "Verify bounded source column edits, retained pictures and pinned public Noori originals" },
+        .{ .path = "src/hwp5_chart_read_only_probe.zig", .filters = &.{
+            "H5 OOXML resource reads owned tree and reports backups without interpreting or changing them",
+            "H5 OOXML resource rejects missing modern stream and foreign chart namespace without fallback",
+            "H5 OOXML presentation observations use direct root ownership across display names and reject nested and similar decoys",
+            "H5 batch binary index name keys preserve CFB case and UTF16 length equivalence",
+        }, .step = "test-hwp5-chart-read-only", .description = "Verify synthetic HWP5 chart resource ownership without private reference input" },
+
+        .{ .path = "src/hwpx_note_delete_protection_probe.zig", .filters = &.{
+            "HWPX N02 delete protection selected six descendant locks reject without publication or redo loss",
+            "HWPX N02 delete protection selected six zero false locks retain normal lifecycle",
+            "HWPX N02 delete protection actual format descendant lock is included",
+            "HWPX N02 renumber matched inner prefix field refuses actual number write and preserves prior redo",
+            "HWPX N02 renumber unresolved inner prefix field refuses without guessing a closing marker",
+            "HWPX N02 renumber actual number and body ancestor locks refuse with full bytes and redo intact",
+            "HWPX N02 selected referenced style paragraph character resources respect explicit readonly locks",
+            "HWPX N02 delete protection OOM preserves bound owner and field refusal redo state",
+            "HWPX N02 delete protection unrelated locked known unknown caches remain exact at prefix and suffix",
+            "HWPX N02 delete protection unrelated note body lock and opaque cache are preserved",
+            "HWPX N02 renumber proof resolves the actual internal current paragraph not the body reference",
+            "HWPX N02 delete protection unrelated matched or unresolved other note fields remain exact",
+            "HWPX N02 delete protection unrelated actual picture resources and known unknown caches remain exact",
+            "HWPX N02 delete protection unreferenced locked or malformed style does not reject the document",
+            "HWPX N02 protection resource classifier retains direct canonical header descriptor ownership",
+            "HWPX N02 renumber protection precedes unsupported number attributes",
+            "HWPX N02 renumber unlocked unknown number attributes remain unsupported",
+            "HWPX N02 renumber field envelope precedes unsupported number attributes",
+        }, .step = "test-hwpx-note-delete-protection", .description = "각주와 미주의 삭제 보호 및 원본 보존을 검사합니다" },
+        .{ .path = "src/hwpx_note_delete_atomic_probe.zig", .filters = &.{
+            "HWPX N02 atomic footnote delete single edge undo redo save reopen",
+            "HWPX N02 atomic endnote delete single edge undo redo save reopen",
+            "HWPX N02 nonfirst section deletion retains its real physical ordinal",
+            "HWPX N02 atomic delete allocation failures retain owner history and immutable input",
+            "HWPX N02 current number source proof and session binding are revalidated",
+            "HWPX N02 continuous footnote deletion renumbers two to one and preserves resources",
+            "HWPX N02 continuous endnote deletion renumbers two to one and preserves resources",
+            "HWPX N02 continuous renumber allocation failures preserve a single history owner",
+            "HWPX N02 deletion keeps the independent other note numbering family",
+            "HWPX N02 unsupported page restart policy is explicit without fallback",
+            "HWPX N02 note deletion cannot bypass managed history protocol",
+            "HWPX N02 selected note field opaque body and lock remain protected",
+            "HWPX N02 pending note text is preserved by deletion undo through saved owner revalidation",
+            "HWPX N02 inconsistent source sequence fails without a partial history commit",
+            "HWPX N02 scoped cache target free preserves unrelated prefix suffix picture other note matrix",
+            "HWPX N02 scoped target note cache validates leaf children and opaque data",
+            "HWPX N02 scoped valid target cache removes only note and actual host cache",
+            "HWPX N02 scoped validation leaves page geometry fullsection strict policy unchanged",
+        }, .step = "test-hwpx-note-delete", .description = "각주와 미주의 원자적 삭제 및 이력을 검사합니다" },
+        .{ .path = "src/hwpx_note_create_package_probe.zig", .filters = &.{
+            "HWPX N02 create paragraph identity excludes unlisted physical XML ids",
+            "HWPX N02 create missing resource ids never substitute native zero defaults",
+            "HWPX N02 create footnote actual package single history caret text save reopen both sections",
+            "HWPX N02 create endnote actual package single history caret text save reopen both sections",
+            "HWPX N02 create package allocation failures do not publish owner receipt or history",
+            "HWPX N02 insert before existing note renumbers only following actual family",
+            "HWPX N02 create source and pending generated cell retain canonical owner through undo",
+            "HWPX N02 create rejects protected following internal field without losing prior redo",
+            "HWPX N02 create requires explicit missing policy and preserves existing policy",
+            "HWPX N02 create rejects forged lease physical target and UTF16 half surrogate",
+            "HWPX N02 create preserves unrelated prefix suffix locked known and unknown caches",
+            "HWPX N02 create rejects selected resource locks and malformed booleans",
+            "HWPX N02 plain body footnote empty CRLF emoji tabs literal UFFFC lifecycle",
+            "HWPX N02 plain body endnote empty CRLF emoji tabs literal UFFFC lifecycle",
+            "HWPX N02 plain body allocation failures preserve empty body history receipt",
+            "HWPX N02 plain body snapshot current edit split invalid indices and allocation failures",
+            "HWPX generated note anchor text does not resurrect source prefix after plain split",
+            "HWPX paragraph text snapshot keeps nested text in current editor order",
+        }, .step = "test-hwpx-note-create", .description = "각주와 미주의 생성 및 저장 이력을 검사합니다" },
+        .{ .path = "src/hwpx_note_create_package_probe.zig", .filters = &.{
+            "HWPX N02 public note request preserves exact body and owner without internal lease",
+            "HWPX N02 public note request rejects internal targets floating positions and duplicate keys",
+            "HWPX N02 public note request allocation failures release parse ownership",
+        }, .step = "test-hwpx-note-public-wire", .description = "Verify strict note creation transport ownership and allocation failures" },
     }) |entry| {
         const extension_tests = b.addTest(.{
             .use_llvm = true,
@@ -74,6 +222,16 @@ pub fn build(b: *std.Build) void {
         editor_extensions_step.dependOn(&run_extension_tests.step);
         core_test_step.dependOn(&run_extension_tests.step);
     }
+
+    const chart_read_source_tests = b.addSystemCommand(&.{
+        "node",                                            "--test",                                         "--test-concurrency=1",
+        "tests/hwp5/chart-display-api.test.mjs",           "tests/hwp5/chart-display-owner-limits.test.mjs", "tests/hwp5/chart-canvas-connection.test.mjs",
+        "tests/hwp5/chart-floating-reference.test.mjs",    "tests/hwp5/chart-read-frame-affine.test.mjs",    "tests/hwp5/chart-owner-window-metadata.test.mjs",
+        "tests/hwp5/chart-owner-window-temporal.test.mjs", "tests/hwp5/chart-read-registration.test.mjs",    "tests/hwp5/chart-optional-abi.test.mjs",
+    });
+    const chart_read_source_step = b.step("test-hwp5-chart-read-source", "Run read-only chart wire, frame and COW source contracts without Native execution");
+    chart_read_source_step.dependOn(&chart_read_source_tests.step);
+    core_test_step.dependOn(&chart_read_source_tests.step);
 
     const portable_tests = b.addTest(.{
         .use_llvm = true,
@@ -282,6 +440,25 @@ pub fn build(b: *std.Build) void {
         run_probe.has_side_effects = true;
         grid_session_step.dependOn(&run_probe.step);
         core_test_step.dependOn(&run_probe.step);
+    }
+
+    inline for (.{
+        .{ "test-hwp5-independent-row-frame", "HWP5 independent frame row focused" },
+        .{ "test-hwp5-independent-row-frame-oom", "HWP5 independent frame row OOM" },
+    }) |entry| {
+        const step = b.step(entry[0], "Verify isolated HWP5 row-frame policy candidate");
+        const probe = b.addTest(.{
+            .use_llvm = true,
+            .filters = &.{entry[1]},
+            .root_module = b.createModule(.{
+                .root_source_file = b.path("src/h5_source_table_row_frame_probe.zig"),
+                .target = target,
+                .optimize = optimize,
+            }),
+        });
+        const run_probe = b.addRunArtifact(probe);
+        run_probe.has_side_effects = true;
+        step.dependOn(&run_probe.step);
     }
 
     const source_grid_step = b.step("test-source-table-grid-candidates", "Verify private original-table grid candidates");

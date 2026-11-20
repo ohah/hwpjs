@@ -1,7 +1,7 @@
 import {
   SPLICE_TEXT_COMMAND,
   REPLACE_ALL_COMMAND,
-  findTextMatch,
+  findDocumentTextMatch,
   selectionMatchesText,
   type HeadlessEditor,
   type SelectionTarget,
@@ -15,6 +15,11 @@ import {
 import { createDocumentStatisticsController } from './document-statistics-controller.ts';
 import { createDocumentStatisticsView } from './document-statistics-view.ts';
 import { replacementCaret } from './replacement-selection.ts';
+import {
+  createDocumentSearchController,
+  type DocumentSearchSelectionPort,
+  type DocumentSearchCaretPort,
+} from './document-search-controller.ts';
 
 export function createTextToolsBridge({
   editor,
@@ -23,6 +28,9 @@ export function createTextToolsBridge({
   onClose,
   onPresentationChange,
   resolveShortcut,
+  selectDocumentText,
+  captureDocumentTextCaret,
+  prepareDocumentTextReadView,
 }: {
   editor: HeadlessEditor;
   root: HTMLElement;
@@ -30,6 +38,11 @@ export function createTextToolsBridge({
   onClose?: () => void;
   onPresentationChange?: () => void;
   resolveShortcut?: (event: KeyboardEvent) => string | undefined;
+  selectDocumentText?: DocumentSearchSelectionPort;
+  captureDocumentTextCaret?: DocumentSearchCaretPort;
+  prepareDocumentTextReadView?: (
+    current: () => boolean,
+  ) => Promise<'current' | 'refreshed' | 'unavailable'>;
 }) {
   let view: ReturnType<typeof createTextToolsDialog> | undefined,
     closed = false,
@@ -47,6 +60,14 @@ export function createTextToolsBridge({
     onClose,
     onStatus,
   });
+  const search = createDocumentSearchController({
+    editor,
+    findMatch: findDocumentTextMatch,
+    getCaret: captureDocumentTextCaret,
+    prepareRead: prepareDocumentTextReadView,
+    select: (observation, current, match) =>
+      selectDocumentText?.(observation, current, match) ?? Promise.resolve(null),
+  });
   const current = () => view?.getDraft() ?? draft;
   const clearContinuation = () => {
     continuation = undefined;
@@ -63,6 +84,7 @@ export function createTextToolsBridge({
   };
   const close = (restoreFocus = false, clearDraft = false) => {
     epoch++;
+    search.reset();
     if (view) {
       draft = view.getDraft();
       view.destroy();
@@ -100,12 +122,34 @@ export function createTextToolsBridge({
   const report = (error: unknown) => {
     if (closed) return;
     const message = error instanceof Error ? error.message : String(error);
-    onStatus(message);
-    view?.setStatus(
-      ['StaleSearchSelection', 'StaleSelectionObservation', 'StaleSearchQuery'].includes(message)
-        ? '선택이나 검색 조건이 바뀌었습니다. 다시 찾아주세요.'
-        : message,
-    );
+    const stale = [
+      'StaleSearchSelection',
+      'StaleSelectionObservation',
+      'StaleSearchQuery',
+      'StaleDocumentTextSnapshot',
+      'StaleDocumentTextReference',
+      'StaleDocumentTextReadBinding',
+      'StaleTarget',
+    ].includes(message);
+    const unavailable = [
+      'DocumentTextSnapshotUnavailable',
+      'DocumentTextSelectionUnavailable',
+      'DocumentTextAnchorUnavailable',
+      'DocumentTextReadBindingRequired',
+      'UnsupportedAtomicRuntime',
+      'IncompleteDocumentTextSnapshot',
+    ].includes(message);
+    const human = stale
+      ? '문서나 검색 조건이 바뀌었습니다. 다시 찾아주세요.'
+      : unavailable
+        ? '현재 문서에서는 전체 검색을 준비할 수 없습니다.'
+        : message === 'DocumentSearchCaretUnavailable'
+          ? '현재 커서 위치를 확인할 수 없습니다. 문서에서 찾기 시작할 위치를 다시 선택해주세요.'
+          : message === 'DocumentSearchSelectionUnavailable'
+            ? '일치하는 내용은 찾았지만 현재 화면에서 선택할 수 없습니다.'
+            : '찾기·바꾸기를 완료하지 못했습니다. 문서 상태를 확인한 뒤 다시 시도해주세요.';
+    onStatus(human);
+    view?.setStatus(human);
   };
   const run = async (operation: (active: () => boolean) => Promise<void>) => {
     if (closed || pending) return;
@@ -153,35 +197,28 @@ export function createTextToolsBridge({
         return;
       }
       clearContinuation();
-      await editor.update(() => {});
+      const result = await search.find({
+        query: text,
+        direction: requestedMode === 'up' ? 'backward' : 'forward',
+        wrap: requestedMode === 'all' || continuing,
+        current: () =>
+          active() && current().query === text && current().direction === values.direction,
+      });
       if (!active()) return;
-      if (editor.getEditorState().stateVersion !== captured.stateVersion)
-        throw Error('StaleSearchSelection');
-      if (current().query !== text || current().direction !== values.direction)
-        throw Error('StaleSearchQuery');
-      const direction = requestedMode === 'up' ? 'backward' : 'forward',
-        target = findTextMatch(captured, text, {
-          direction,
-          wrap: requestedMode === 'all' || continuing,
-        });
-      if (!target) {
-        if (
-          !continuing &&
-          requestedMode !== 'all' &&
-          findTextMatch(captured, text, { direction, wrap: true })
-        ) {
-          continuation = { version: captured.stateVersion, query: text, mode: requestedMode };
-          view?.continueFromEnd(requestedMode === 'up' ? '끝부터 계속 찾기' : '처음부터 계속 찾기');
-          status(
-            requestedMode === 'up'
-              ? '처음까지 찾았습니다. 끝부분에서 이어서 찾을까요?'
-              : '끝까지 찾았습니다. 앞부분에서 이어서 찾을까요?',
-          );
-        } else status('불러온 내용에서 찾지 못했습니다.');
-        return;
-      }
-      await editor.setSelection(target, { stateVersion: captured.stateVersion });
-      if (active()) status('일치하는 내용을 선택했습니다.');
+      if (result.status === 'selected') status('일치하는 내용을 선택했습니다.');
+      else if (result.status === 'edge') {
+        continuation = {
+          version: editor.getEditorState().stateVersion,
+          query: text,
+          mode: requestedMode,
+        };
+        view?.continueFromEnd(requestedMode === 'up' ? '끝부터 계속 찾기' : '처음부터 계속 찾기');
+        status(
+          requestedMode === 'up'
+            ? '처음까지 찾았습니다. 끝부분에서 이어서 찾을까요?'
+            : '끝까지 찾았습니다. 앞부분에서 이어서 찾을까요?',
+        );
+      } else if (result.status === 'not-found') status('문서 전체에서 찾지 못했습니다.');
     });
   const replaceSelection = () =>
     run(async (active) => {
@@ -262,7 +299,10 @@ export function createTextToolsBridge({
       replace,
       draft,
       onDismiss: () => close(true),
-      onChange: clearContinuation,
+      onChange: () => {
+        search.reset();
+        clearContinuation();
+      },
       onFind: (continuing) => {
         if (epoch === openingEpoch && view) void find(continuing);
       },
@@ -355,6 +395,7 @@ export function createTextToolsBridge({
     dispose() {
       if (closed) return;
       closed = true;
+      search.dispose();
       root.removeEventListener('keydown', keyboard, true);
       try {
         unsubscribe();

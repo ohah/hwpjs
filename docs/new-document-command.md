@@ -23,3 +23,11 @@ HWP5 display0/source0에서 ‘첫A’를 입력하면 원시 secd/cold가 sourc
 2026-11-06 R4 후보는 실제 브라우저의 Vanilla·React·Svelte × HWP5·HWPX 6개 조합에서 초기 커서, 첫 입력, Home/방향키/반복 Backspace, 한 문단 전체 선택 교체와 취소, Enter 뒤 두 번째 문단 입력 및 undo/redo를 통과했다. 빠른 입력 직후 이력 준비를 기다리지 않고 새 문서를 요청해도 취소 시 기존 텍스트를 보존했고, 동의 후에는 빈 새 문서와 빈 이력을 확인했다. Vanilla HWP5와 Svelte HWPX 두 조합은 실제 다운로드·독립 CFB/XML 검사·파일 재열기까지 확인했다. 브라우저의 신뢰된 키/입력 이벤트 증거이며 실제 OS 한글 IME 증거로 확대하지 않는다.
 
 화면 초기 선택 수정의 통제 Surface/Canvas 검사는 신규7개와 기존65개를 각각 통과했다. 수정 전4실패와 최초 수정의 무효 입력 lease 반례도 보존했다. SDK를 다시 만든 최종 브라우저 결과는 `integration/R4-FINAL-AGGREGATE.json`이 소유한다. 표2개와 새 문서6개는 서로 다른 두 제한 실행이며 한 실행에서8개를 통과했다고 합산하지 않는다. 모든 소유 브라우저는 종료했고, 일시적으로 남아 보였던 프로세스도 재조회에서0개였다. 이는 전체 문서·모든 포맷 필드·모바일 완료를 뜻하지 않는다.
+
+## 현대 HWP5 기본 생성 경로의 격리 통합 후보
+
+HWP5를 선택한 새 문서는 공통 Native factory의 modern5.0.3.0 기본값을 사용한다. 생략한 형식의 기본 HWPX 정책은 그대로다. 데모의 `editor.createDocument({format})`는 Core의 `runtimeFactory.createDocumentBytes(format)`를 거쳐 `js/new-document.mjs`의 새 WASM instance와 `new_document_create(1)`로 이어지고, CLI create도 같은 JS 생성기를 호출한다. ABI는 `new_document/root.zig.hwp5(a)`를 직접 호출하므로 상위 계층에 별도 템플릿·profile 상수·버전 후처리를 만들지 않는다. 명시 Native `hwp5WithProfile(a, .legacy_5_0_1_7)`는 기존 전체 바이트 계약을 유지한다. 기존 파일 load/save는 생성 factory를 호출하지 않는다.
+
+이 경로가 현대 결과를 내는지 확인하려면 통합 후보에서 새로 만든 WASM을 정규 Web/Core/CLI와 함께 검증해야 한다. 구형 WASM을 사용한 성공 결과는 현대 생성 성공으로 계수하지 않는다. 독립 새 문서 검사기는 기본 modern 버전·ID mapping/CharShape/ParaShape 크기·직접 구역 자식 observed28/14와 명시 legacy를 구분하여 검사한다. 구형·현대 둘 중 하나이면 통과하는 버전 검사는 사용하지 않는다.
+
+2026-11-20 scoped canonical63268d1f에서 전상19개가 일치하는 격리 후속을 준비했다. 기존 narrowemit3 실제 성공과 Main의 CLI Markdown 읽기 성공은 별도 소스 코호트 증거다. 이 canonical 후속의 컴파일·정상 SDK·브라우저·공식 한글 수용은 아직 실행하지 않았다.

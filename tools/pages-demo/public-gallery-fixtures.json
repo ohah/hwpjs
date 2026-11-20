@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "catalogSHA256": "2bf1df66130640729e338f19c323fe65a03db55990e53057a2d4b35aee891ff8",
+  "catalogSHA256": "70e7670054f6747a2c18ac3ad571678bd3c5c509531eb5d03cce2b0e4a97190c",
   "files": [
     {
       "id": "chart-data-edit.hwpx",
@@ -17,6 +17,14 @@
       "path": "fixtures/equation-edit.hwpx",
       "bytes": 8225,
       "sha256": "1a197476622a65221d2bb27de61fa2e7850159c8c3341a4d5c7669e922cd3c46"
+    },
+    {
+      "id": "hwp5-chart-create.hwp",
+      "name": "hwp5-chart-create.hwp",
+      "label": "[기능 예제] HWP5 차트 생성과 미리보기",
+      "path": "fixtures/hwp5-chart-create.hwp",
+      "bytes": 13824,
+      "sha256": "cd0252dabb83e7d0f7410ade8d091ccbb3511c444ccaa2f2078d606b5ed9272e"
     },
     {
       "id": "noori.hwp",

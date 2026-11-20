@@ -85,7 +85,7 @@ pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, reque
         var first_runs: ?usize = null;
         var last_header = paragraph;
         while (paragraph < group.end) {
-            const runs = (try @import("source_grid_paragraph.zig").inspect(tree, paragraph, group.end, false, .validated_cache)).runs;
+            const runs = (try @import("source_grid_paragraph.zig").inspect(tree, paragraph, group.end, false, if (command == .insert_column or command == .delete_column) .retained_picture_cache else .validated_cache)).runs;
             if (first_runs == null) first_runs = runs;
             last_header = paragraph;
             paragraph = tree.nodes[paragraph].subtree_end;
@@ -99,10 +99,21 @@ pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, reque
     const spans = @import("../../model/source_table_span_grid.zig");
     const input = try scratch.alloc(spans.Cell, cells.len);
     for (cells, 0..) |c, i| input[i] = .{ .row = c.value.row, .column = c.value.column, .row_span = c.value.row_span, .column_span = c.value.column_span, .width = c.value.width, .height = c.value.height };
-    const shape = spans.prepare(scratch, table.row_count, table.column_count, input, common.width, common.height, command, limits.max_cells) catch |err| return switch (err) {
+    const geometry = @import("source_table_row_geometry.zig").prepare(scratch, table.row_count, table.column_count, input, common.width, common.height, command, limits.max_cells) catch |err| return switch (err) {
         error.InvalidSourceSpanGrid, error.UnsupportedSourceSpanGeometry, error.ConflictingSourceTableTracks => error.UnsupportedSourceTableGrid,
         else => err,
     };
+    const shape = geometry.shape;
+    // The new offset-preserving row policy is a top-level candidate only.
+    // Existing exact-frame nested/column/split admission is unchanged.
+    if (geometry.independent_frame and tree.nodes[host].parent != null) return error.UnsupportedSourceTableGrid;
+    const surviving = try scratch.alloc(bool, cells.len);
+    @memset(surviving, false);
+    for (shape.cells) |output| {
+        if (!output.fresh) surviving[output.source] = true;
+        if (output.fresh or output.cell.width != cells[output.source].value.width or output.cell.height != cells[output.source].value.height) try requirePlainCell(tree, cells[output.source]);
+    }
+    for (cells, surviving) |cell, retained| if (!retained) try requirePlainCell(tree, cell);
     if (table.cell_spacing != 0) return error.UnsupportedSourceTableGrid;
     var row_cursor: usize = 0;
     for (0..table.rows.count()) |r| {
@@ -142,7 +153,7 @@ pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, reque
     try append(scratch, &out, source[0..control.record.framing.offset], limits.max_bytes);
     const ctrl = try scratch.dupe(u8, control.record.framing.payload);
     std.mem.writeInt(u32, ctrl[4 + common.size_offset ..][0..4], shape.width, .little);
-    std.mem.writeInt(u32, ctrl[8 + common.size_offset ..][0..4], shape.height, .little);
+    std.mem.writeInt(u32, ctrl[8 + common.size_offset ..][0..4], geometry.frame_height, .little);
     try framing.append(scratch, &out, 71, control.record.framing.level, ctrl, limits.max_bytes);
     // The typed caption lives before TABLE even when its displayed side is BOTTOM.
     // Preserve its complete source span and physical sibling order, not its text alone.
@@ -208,7 +219,57 @@ pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, reque
     defer verified.deinit(scratch);
     var verified_groups = try @import("../body/list_groups.zig").Groups.build(scratch, verified);
     defer verified_groups.deinit(scratch);
-    return @import("source_grid_line_cache.zig").write(a, out.items, version, limits.max_bytes);
+    const output = try @import("source_grid_line_cache.zig").write(a, out.items, version, limits.max_bytes);
+    errdefer a.free(output);
+    if (geometry.independent_frame) {
+        var table_ordinal: usize = 0;
+        for (tree.nodes[0..request.table_node]) |node| if (node.record.value == .table) {
+            table_ordinal += 1;
+        };
+        try verifyIndependentRowOutput(scratch, output, version, request.layout, table_ordinal, shape, geometry.frame_height, limits);
+    }
+    return output;
+}
+fn verifyIndependentRowOutput(scratch: std.mem.Allocator, bytes: []const u8, version: Version, layout: body.list_header.Layout, table_ordinal: usize, expected: @import("../../model/source_table_span_grid.zig").Plan, frame_height: u32, limits: Limits) !void {
+    var tree = try @import("source_tree.zig").parse(scratch, bytes, version, .{ .max_records = limits.max_records });
+    defer tree.deinit(scratch);
+    // Known paragraph caches before TABLE may be retired during serialization.
+    // Preserve the physical TABLE ordinal instead of reusing a stale node index.
+    var ordinal: usize = 0;
+    var target: ?usize = null;
+    for (tree.nodes, 0..) |node, index| {
+        if (node.record.value != .table) continue;
+        if (ordinal == table_ordinal) target = index;
+        ordinal += 1;
+    }
+    const table_node = target orelse return error.SourceBindingMismatch;
+    const marker = tree.nodes[table_node];
+    if (marker.record.value.table.row_count != expected.rows or marker.record.value.table.column_count != expected.columns) return error.SourceBindingMismatch;
+    const owner = marker.parent orelse return error.SourceBindingMismatch;
+    const control = tree.nodes[owner];
+    if (control.record.value != .control_header or control.record.value.control_header.id != @import("../body/control_rules.zig").table_id) return error.SourceBindingMismatch;
+    const common = try body.object_common.parseControl(control.record.value.control_header);
+    if (common.width != expected.width or common.height != frame_height) return error.SourceBindingMismatch;
+    var groups = try @import("../body/list_groups.zig").Groups.build(scratch, tree);
+    defer groups.deinit(scratch);
+    var lists: @import("../body/table_list_index.zig").Index = .{ .tree = tree };
+    defer lists.deinit(scratch);
+    var index: usize = 0;
+    for (groups.items) |group| {
+        if (group.parent_node != owner) continue;
+        const role = try lists.get(scratch, owner, group.header_node);
+        if (role.table_node != table_node) return error.SourceBindingMismatch;
+        if (role.kind == .caption) continue;
+        if (index >= expected.cells.len) return error.SourceBindingMismatch;
+        const view = try tree.nodes[group.header_node].record.value.list_header.view(layout);
+        const cell = try body.Cell.parse(view.extra);
+        const wanted = expected.cells[index].cell;
+        // Exact serialized ownership and dimensions bind the already-proved
+        // output interval equations; frame height is checked independently.
+        if (cell.row != wanted.row or cell.column != wanted.column or cell.row_span != wanted.row_span or cell.column_span != wanted.column_span or cell.width != wanted.width or cell.height != wanted.height) return error.SourceBindingMismatch;
+        index += 1;
+    }
+    if (index != expected.cells.len) return error.SourceBindingMismatch;
 }
 fn validateCaptionGroup(tree: Tree, group: @import("../body/list_groups.zig").Group, table: usize, layout: body.list_header.Layout) !CaptionGroup {
     const list = tree.nodes[group.header_node].record.value.list_header;
@@ -307,4 +368,14 @@ pub fn validateParagraph(tree: Tree, index: usize, end: usize) !usize {
         previous = run.start;
     }
     return run_index;
+}
+
+// Inserted blanks and deleted cells retain the original strict plain policy.
+// A surviving picture never becomes an implicit template or deletion target.
+fn requirePlainCell(tree: Tree, cell: Cell) !void {
+    var paragraph = cell.group.begin;
+    while (paragraph < cell.group.end) {
+        _ = try @import("source_grid_paragraph.zig").inspect(tree, paragraph, cell.group.end, false, .validated_cache);
+        paragraph = tree.nodes[paragraph].subtree_end;
+    }
 }

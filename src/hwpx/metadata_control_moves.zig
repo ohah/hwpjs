@@ -117,7 +117,7 @@ test "metadata group moves page areas only within proven sibling domain" {
         }
     };
     try Probe.run(a, &tree, &sites, locations, &.{ left, right }, &requests);
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &tree, &sites, locations, &[_]usize{ left, right }, &requests });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &tree, &sites, locations, &[_]usize{ left, right }, &requests });
     var outside = requests[1];
     outside.paragraph = 5;
     try std.testing.expectError(error.CrossParagraphOwner, writeGroup(a, &tree, &sites, locations, left, &.{ left, right }, &.{outside}, 10000, @import("page_area_text_xml.zig").writeManyFrom));

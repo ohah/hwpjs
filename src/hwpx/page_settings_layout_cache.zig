@@ -22,6 +22,35 @@ fn checkAttributes(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig
 fn whitespace(bytes: []const u8) !void {
     if (std.mem.trim(u8, bytes, " \t\r\n").len != 0) return error.UnsupportedPageLayoutCache;
 }
+fn validateArray(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, index: usize) !void {
+    const cache = tree.elements[index];
+    const parent = cache.parent orelse return error.UnsupportedPageLayoutCache;
+    if (!tree.elements[parent].is(hp, "p")) return error.UnsupportedPageLayoutCache;
+    try checkAttributes(a, tree, index, &.{});
+    var child = cache.first_child;
+    var cursor = cache.start_tag.end;
+    while (child) |node| : (child = tree.elements[node].next_sibling) {
+        const e = tree.elements[node];
+        if (!e.is(hp, "lineseg") or e.first_child != null) return error.UnsupportedPageLayoutCache;
+        try whitespace(tree.source[cursor..e.start_tag.start]);
+        try checkAttributes(a, tree, node, &.{ "textpos", "vertpos", "vertsize", "textheight", "baseline", "spacing", "horzpos", "horzsize", "flags" });
+        if (e.end_tag) |ending| try whitespace(tree.source[e.start_tag.end..ending.start]);
+        cursor = e.end;
+    }
+    if (cache.end_tag) |ending| try whitespace(tree.source[cursor..ending.start]);
+}
+
+/// Explicit physical subtree admission; unrelated caches are not inspected.
+pub const Subtree = struct { root_node: usize };
+pub fn validateSubtree(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, scope: Subtree) !void {
+    if (scope.root_node >= tree.elements.len) return error.InvalidPageLayoutCacheScope;
+    const root = tree.elements[scope.root_node];
+    for (tree.elements[scope.root_node..], scope.root_node..) |element, index| {
+        if (element.start_tag.start >= root.end) break;
+        if (element.is(hp, "linesegarray")) try validateArray(a, tree, index);
+    }
+}
+
 pub fn remove(a: std.mem.Allocator, source: []const u8, section: usize, item: usize, limit: usize) ![]u8 {
     var tree = try @import("section_tree.zig").parse(a, source, section, item, .{});
     defer tree.deinit(a);
@@ -29,20 +58,7 @@ pub fn remove(a: std.mem.Allocator, source: []const u8, section: usize, item: us
     defer changes.deinit(a);
     for (tree.elements, 0..) |cache, index| {
         if (!cache.is(hp, "linesegarray")) continue;
-        const parent = cache.parent orelse return error.UnsupportedPageLayoutCache;
-        if (!tree.elements[parent].is(hp, "p")) return error.UnsupportedPageLayoutCache;
-        try checkAttributes(a, &tree, index, &.{});
-        var child = cache.first_child;
-        var cursor = cache.start_tag.end;
-        while (child) |node| : (child = tree.elements[node].next_sibling) {
-            const e = tree.elements[node];
-            if (!e.is(hp, "lineseg") or e.first_child != null) return error.UnsupportedPageLayoutCache;
-            try whitespace(source[cursor..e.start_tag.start]);
-            try checkAttributes(a, &tree, node, &.{ "textpos", "vertpos", "vertsize", "textheight", "baseline", "spacing", "horzpos", "horzsize", "flags" });
-            if (e.end_tag) |ending| try whitespace(source[e.start_tag.end..ending.start]);
-            cursor = e.end;
-        }
-        if (cache.end_tag) |ending| try whitespace(source[cursor..ending.start]);
+        try validateArray(a, &tree, index);
         // Preorder source ranges are already disjoint and sorted. One linear pass.
         try changes.append(a, .{ .start = cache.start_tag.start, .end = cache.end, .text = "", .serialized_xml = "" });
     }

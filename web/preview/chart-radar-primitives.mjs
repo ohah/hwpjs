@@ -20,7 +20,6 @@ export function chartRadarPrimitives(display, node) {
   const data = chartCartesianData(display, node);
   if (data.state !== 'ready') return data;
   if (!familyBudget(data)) return unavailable('ChartFamilyCellBudgetExceeded');
-  if (data.indices.length < 3) return unavailable('InsufficientRadarCategories');
   if (data.series.some((s) => ['x', 'y', 'bubble_size'].some((r) => s.roles[r].length)))
     return unavailable('UnsupportedRadarRoles');
   const blanks = chartBlankPolicy(display);
@@ -61,12 +60,13 @@ export function chartRadarPrimitives(display, node) {
     for (let i = 0; i < points.length; i++) {
       const a = points[i],
         b = points[(i + 1) % points.length];
-      if (a && b && !addFamilyStroke(g, a, b, series.node))
+      const hasDistinctEdge = points.length > 2 || (points.length === 2 && i === 0);
+      if (hasDistinctEdge && a && b && !addFamilyStroke(g, a, b, series.node))
         return unavailable('InvalidChartCoordinate');
-      if (a && style.radar_style === 'marker')
+      if (a && (style.radar_style === 'marker' || points.length === 1))
         g.circles.push({ ...a, series_node: series.node, radius: 0.006, sphere: false });
     }
-    if (style.radar_style === 'filled' && points.every(Boolean))
+    if (style.radar_style === 'filled' && points.length >= 3 && points.every(Boolean))
       addFamilyPolygon(g, points, series.node);
   }
   return {
@@ -91,7 +91,9 @@ export function chartRadarPrimitives(display, node) {
       'PreviewRadarRadialScale',
       'PreviewRadarRadialClipping',
       'SourceRadarAxesAndLabelsNotApplied',
-      ...(style.radar_style === 'marker' ? ['PreviewRadarMarkerDots'] : []),
+      ...(style.radar_style === 'marker' || data.indices.length === 1
+        ? ['PreviewRadarMarkerDots']
+        : []),
     ],
   };
 }

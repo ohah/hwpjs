@@ -5,6 +5,8 @@ const profiles = new Map<string, Profile>(
   (
     [
       ['fe6092257efb40ff93b92c7de59bb9bd75c3828ebde6db48116a3fe219225334', true],
+      ['e77b379b01a5a5169d2b5f045202a1492c7f32aa614d89f489acaee5474e443a', true],
+      ['33690503e8d98eb950a199afee2cea176a201fe54db0a2185d9f9216d2bc4c42', true],
       ['8e0ff0d0e80f185f255024cb9d946b0469648fd5eb175ef6c7aa3562124c91ff', false],
       ['a38f4df7993c8f645fd28fd13df0108f9be4ba5ca55736e76e334d7d8968343f', false],
       ['d849a4b22357e62d2425c3f1632edc07f2948ac18ce6d97009aede9d2b6cb1eb', true],
@@ -51,6 +53,9 @@ const profiles = new Map<string, Profile>(
       ['a66a15318385b04e0c3f150f8882d0598396918e0e160d43c939698dd424efe9', true],
       ['a3a363615683bffcace0212df625c8351f8546bab9aa23a824c91863db95a6e3', true],
       ['6c952cd2aea7928ecb44df5f8366ee933740788a9d2b183ff0ceca3d21ba880b', true],
+      ['286a1fadf281cc1292837c4cc53f17e60c832f3efe9e8a3c37afbd56096f48a8', true],
+      ['6332809503366628a8dfaf56df6c790203ebbd17839e331dabbde6afaec6b22e', true],
+      ['9235b2430324e486fe24b093f18da52e5e5e148e2540c043a68c4346ffbebec5', true],
     ] as const
   ).map(
     ([sha256, ownerWindow]) =>

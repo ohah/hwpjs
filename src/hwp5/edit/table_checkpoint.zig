@@ -4,6 +4,7 @@ const model = @import("../../model/document.zig");
 const base = @import("editor_checkpoint.zig");
 const Values = @import("created_table_values.zig").Values;
 const Backgrounds = @import("cell_background_values.zig").Values;
+const ChartResources = @import("../chart/created_resources.zig").Values;
 const State = struct {
     allocator: std.mem.Allocator,
     owner: *const anyopaque,
@@ -11,6 +12,7 @@ const State = struct {
     document_bytes: usize,
     tables: []Values,
     backgrounds: Backgrounds,
+    charts: ChartResources = .{},
     limit: usize,
 };
 pub const Checkpoint = opaque {
@@ -21,6 +23,7 @@ pub const Checkpoint = opaque {
         for (state.tables) |*tables| tables.deinit(a);
         a.free(state.tables);
         state.backgrounds.deinit(a);
+        state.charts.deinit(a);
         a.destroy(state);
     }
 };
@@ -81,11 +84,14 @@ pub fn cloneTo(checkpoint: *const Checkpoint, a: std.mem.Allocator, owner: *cons
         target.* = try source.clone(a, limit);
         initialized += 1;
     }
-    _ = try total(state.document_bytes, tables, state.backgrounds, limit);
+    const base_size = try total(state.document_bytes, tables, state.backgrounds, limit);
+    _ = try state.charts.byteSize(limit - base_size);
     var backgrounds = try state.backgrounds.clone(a);
     errdefer backgrounds.deinit(a);
+    var charts = try state.charts.clone(a, limit);
+    errdefer charts.deinit(a);
     const out = try a.create(State);
-    out.* = .{ .allocator = a, .owner = owner, .document = document, .document_bytes = state.document_bytes, .tables = tables, .backgrounds = backgrounds, .limit = limit };
+    out.* = .{ .allocator = a, .owner = owner, .document = document, .document_bytes = state.document_bytes, .tables = tables, .backgrounds = backgrounds, .charts = charts, .limit = limit };
     return @ptrCast(out);
 }
 
@@ -93,7 +99,7 @@ fn bind(state: *const State, a: std.mem.Allocator, owner: *const anyopaque, docu
     if (state.owner != owner or state.allocator.ptr != a.ptr or state.allocator.vtable != a.vtable or tables.len != state.tables.len or tables.len != document.sections.len) return error.SourceBindingMismatch;
 }
 
-pub fn matchesWithCells(checkpoint: *const Checkpoint, a: std.mem.Allocator, owner: *const anyopaque, document: *const model.Document, tables: []const Values, backgrounds: Backgrounds) !bool {
+fn matchesBase(checkpoint: *const Checkpoint, a: std.mem.Allocator, owner: *const anyopaque, document: *const model.Document, tables: []const Values, backgrounds: Backgrounds) !bool {
     const state: *const State = @ptrCast(@alignCast(checkpoint));
     try bind(state, a, owner, document, tables);
     if (!state.backgrounds.equals(backgrounds)) return false;
@@ -102,7 +108,7 @@ pub fn matchesWithCells(checkpoint: *const Checkpoint, a: std.mem.Allocator, own
     return true;
 }
 
-pub fn exchangeWithCells(checkpoint: *Checkpoint, a: std.mem.Allocator, owner: *const anyopaque, document: *model.Document, tables: *[]Values, backgrounds: *Backgrounds) !void {
+fn exchangeBase(checkpoint: *Checkpoint, a: std.mem.Allocator, owner: *const anyopaque, document: *model.Document, tables: *[]Values, backgrounds: *Backgrounds) !void {
     const state: *State = @ptrCast(@alignCast(checkpoint));
     try bind(state, a, owner, document, tables.*);
     _ = try sizeWithCells(document, tables.*, backgrounds.*, state.limit);
@@ -113,7 +119,7 @@ pub fn exchangeWithCells(checkpoint: *Checkpoint, a: std.mem.Allocator, owner: *
     state.document_bytes = bytes;
 }
 
-pub fn rollbackWithCells(checkpoint: *Checkpoint, a: std.mem.Allocator, owner: *const anyopaque, document: *model.Document, tables: *[]Values, backgrounds: *Backgrounds) !void {
+fn rollbackBase(checkpoint: *Checkpoint, a: std.mem.Allocator, owner: *const anyopaque, document: *model.Document, tables: *[]Values, backgrounds: *Backgrounds) !void {
     const state: *State = @ptrCast(@alignCast(checkpoint));
     try bind(state, a, owner, document, tables.*);
     _ = try total(state.document_bytes, state.tables, state.backgrounds, state.limit);
@@ -145,4 +151,59 @@ pub fn rollback(checkpoint: *Checkpoint, a: std.mem.Allocator, owner: *const any
     if (state.backgrounds.entries.len != 0) return error.SourceBindingMismatch;
     var empty: Backgrounds = .{};
     return rollbackWithCells(checkpoint, a, owner, document, tables, &empty);
+}
+
+// Extended paths used by Session. Existing table-only callers keep empty charts.
+pub fn sizeWithCharts(document: *const model.Document, tables: []const Values, backgrounds: Backgrounds, charts: ChartResources, limit: usize) !usize {
+    const base_size = try sizeWithCells(document, tables, backgrounds, limit);
+    return base_size + try charts.byteSize(limit - base_size);
+}
+pub fn captureWithCharts(a: std.mem.Allocator, owner: *const anyopaque, document: *const model.Document, tables: []const Values, backgrounds: Backgrounds, charts: ChartResources, limit: usize) !*Checkpoint {
+    _ = try sizeWithCharts(document, tables, backgrounds, charts, limit);
+    const result = try captureWithCells(a, owner, document, tables, backgrounds, limit);
+    errdefer result.deinit();
+    const state: *State = @ptrCast(@alignCast(result));
+    state.charts = try charts.clone(a, limit);
+    return result;
+}
+pub fn matchesWithCharts(checkpoint: *const Checkpoint, a: std.mem.Allocator, owner: *const anyopaque, document: *const model.Document, tables: []const Values, backgrounds: Backgrounds, charts: ChartResources) !bool {
+    const state: *const State = @ptrCast(@alignCast(checkpoint));
+    try bind(state, a, owner, document, tables);
+    return state.charts.equals(charts) and try matchesBase(checkpoint, a, owner, document, tables, backgrounds);
+}
+pub fn exchangeWithCharts(checkpoint: *Checkpoint, a: std.mem.Allocator, owner: *const anyopaque, document: *model.Document, tables: *[]Values, backgrounds: *Backgrounds, charts: *ChartResources) !void {
+    const state: *State = @ptrCast(@alignCast(checkpoint));
+    try bind(state, a, owner, document, tables.*);
+    _ = try sizeWithCharts(document, tables.*, backgrounds.*, charts.*, state.limit);
+    try exchangeBase(checkpoint, a, owner, document, tables, backgrounds);
+    // No allocation or fallible work after the model/table swap.
+    std.mem.swap(ChartResources, &state.charts, charts);
+}
+pub fn rollbackWithCharts(checkpoint: *Checkpoint, a: std.mem.Allocator, owner: *const anyopaque, document: *model.Document, tables: *[]Values, backgrounds: *Backgrounds, charts: *ChartResources) !void {
+    const state: *State = @ptrCast(@alignCast(checkpoint));
+    try bind(state, a, owner, document, tables.*);
+    const base_size = try total(state.document_bytes, state.tables, state.backgrounds, state.limit);
+    _ = try state.charts.byteSize(state.limit - base_size);
+    try rollbackBase(checkpoint, a, owner, document, tables, backgrounds);
+    std.mem.swap(ChartResources, &state.charts, charts);
+}
+
+// A legacy caller must not exchange a new chart snapshot without its resources.
+pub fn matchesWithCells(checkpoint: *const Checkpoint, a: std.mem.Allocator, owner: *const anyopaque, document: *const model.Document, tables: []const Values, backgrounds: Backgrounds) !bool {
+    const state: *const State = @ptrCast(@alignCast(checkpoint));
+    try bind(state, a, owner, document, tables);
+    if (!state.charts.empty()) return error.SourceBindingMismatch;
+    return matchesBase(checkpoint, a, owner, document, tables, backgrounds);
+}
+pub fn exchangeWithCells(checkpoint: *Checkpoint, a: std.mem.Allocator, owner: *const anyopaque, document: *model.Document, tables: *[]Values, backgrounds: *Backgrounds) !void {
+    const state: *State = @ptrCast(@alignCast(checkpoint));
+    try bind(state, a, owner, document, tables.*);
+    if (!state.charts.empty()) return error.SourceBindingMismatch;
+    return exchangeBase(checkpoint, a, owner, document, tables, backgrounds);
+}
+pub fn rollbackWithCells(checkpoint: *Checkpoint, a: std.mem.Allocator, owner: *const anyopaque, document: *model.Document, tables: *[]Values, backgrounds: *Backgrounds) !void {
+    const state: *State = @ptrCast(@alignCast(checkpoint));
+    try bind(state, a, owner, document, tables.*);
+    if (!state.charts.empty()) return error.SourceBindingMismatch;
+    return rollbackBase(checkpoint, a, owner, document, tables, backgrounds);
 }

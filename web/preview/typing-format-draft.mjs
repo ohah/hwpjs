@@ -11,7 +11,12 @@ const splitsScalar = (text, unit) =>
  * Preserve the plain splice's first inclusive source site (left affinity),
  * including an explicit empty source site. Never substitute style zero.
  */
-export function projectTypingDraftRanges(paragraph, text, selection = null) {
+export function projectTypingDraftRanges(
+  paragraph,
+  text,
+  selection = null,
+  insertionResourceId = null,
+) {
   const before = paragraph?.text,
     ranges = paragraph?.characterRanges;
   if (
@@ -39,6 +44,7 @@ export function projectTypingDraftRanges(paragraph, text, selection = null) {
     cursor = range.end;
   }
   if (cursor !== before.length || !ranges.length) return null;
+  if (insertionResourceId !== null && !uint(insertionResourceId)) return null;
   if (before === text) return ranges.map((range) => ({ ...range }));
   const change = textChange(before, text, selection);
   if (!change) return null;
@@ -61,7 +67,8 @@ export function projectTypingDraftRanges(paragraph, text, selection = null) {
   for (const range of ranges) {
     if (range.start < start) append(range.start, Math.min(range.end, start), range.charShapeId);
   }
-  if (change.text.length) append(start, start + change.text.length, site.charShapeId);
+  if (change.text.length)
+    append(start, start + change.text.length, insertionResourceId ?? site.charShapeId);
   for (const range of ranges) {
     if (range.end > end)
       append(Math.max(range.start, end) + delta, range.end + delta, range.charShapeId);

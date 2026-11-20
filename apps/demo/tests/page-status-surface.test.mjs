@@ -6,7 +6,8 @@ import { fixture } from '../../../packages/vanilla/tests/non-text-history-fixtur
 const rendererURL = new URL('../../../web/preview/renderer.mjs', import.meta.url).href;
 const shim =
   'data:text/javascript,' +
-  encodeURIComponent(`export function createSurfaceRenderer(canvas, viewport, spacer, onLayout) {
+  encodeURIComponent(`export function createDocumentOutputRenderer() { throw Error('UnexpectedOutput'); }
+export function createSurfaceRenderer(canvas, viewport, spacer, onLayout) {
   const w = globalThis.__nonTextFixture;
   w.viewport = viewport; w.onLayout = onLayout;
   return w.renderer;
@@ -25,7 +26,7 @@ const tick = async () => {
 };
 function setup() {
   const f = fixture();
-  const pages = [0, 820, 1640].map((y) => ({ paper: { y, height: 800 } }));
+  const pages = [0, 820, 1640].map((y) => ({ paper: { x: 0, y, width: 800, height: 800 } }));
   let current = true,
     scale = 1;
   const frame = {
@@ -188,13 +189,15 @@ test('layout/scroll-paint notifications deduplicate page values and unsubscribe 
     f.w.onLayout(f.frame.layout);
     await tick();
     assert.equal(updates, 2);
+    const final = [];
     f.surface.subscribePageStatus(() => {
-      updates++;
+      final.push(f.surface.getPageStatus());
     });
     f.w.onLayout(f.frame.layout);
     await f.surface.dispose();
     await tick();
     assert.equal(updates, 2);
+    assert.deepEqual(final, [null]);
   } finally {
     await f.surface.dispose();
   }

@@ -94,8 +94,10 @@ const ContentCheck = struct {
     tree: *const Tree,
     table: usize,
     limit: usize,
+    accepted_comments: ?[]const bool = null,
     fn onContent(raw: *anyopaque, event: Tree.ContentEvent) !void {
         const self: *ContentCheck = @ptrCast(@alignCast(raw));
+        if (self.accepted_comments) |accepted| if (accepted[event.parent_index]) return;
         const e = self.tree.elements[event.parent_index];
         const root = self.tree.elements[self.table];
         if (e.start_tag.start < root.start_tag.start or e.end > root.end or fields.childIs(self.tree, event.parent_index, "t")) return;
@@ -105,7 +107,7 @@ const ContentCheck = struct {
 };
 // Each paragraph is checked once through direct sibling links. Only the first
 // paragraph contributes t-body blanks; later paragraphs contribute whole spans.
-fn inspectParagraph(a: std.mem.Allocator, t: *const Tree, p: usize, blanks: ?*std.ArrayList(tree_mod.Span), merging: bool, cache: bool) !void {
+fn inspectParagraph(a: std.mem.Allocator, t: *const Tree, p: usize, blanks: ?*std.ArrayList(tree_mod.Span), merging: bool, cache: bool, pictures: bool) !void {
     try attributes(a, t, p, &.{ "id", "paraPrIDRef", "styleIDRef", "pageBreak", "columnBreak", "merged" });
     try zero(a, t, p, &.{ "pageBreak", "columnBreak", "merged" });
     try allowed(t, p, if (cache) &.{ "run", "linesegarray" } else &.{"run"});
@@ -117,9 +119,12 @@ fn inspectParagraph(a: std.mem.Allocator, t: *const Tree, p: usize, blanks: ?*st
     while (runs) |run| : (runs = t.elements[run].next_sibling) {
         if (cache and fields.childIs(t, run, "linesegarray")) continue;
         try attributes(a, t, run, &.{"charPrIDRef"});
-        try allowed(t, run, &.{"t"});
+        try allowed(t, run, if (pictures) &.{ "t", "pic" } else &.{"t"});
         var next_text = t.elements[run].first_child;
         while (next_text) |text| : (next_text = t.elements[text].next_sibling) {
+            // The whole picture subtree was validated before ContentCheck. No
+            // blank/deleted donor may use this preservation-only paragraph path.
+            if (pictures and fields.childIs(t, text, "pic")) continue;
             try attributes(a, t, text, &.{});
             if (merging) {
                 try allowed(t, text, &.{ "tab", "fwSpace", "nbSpace", "lineBreak", "hypen" });
@@ -137,12 +142,12 @@ fn inspectParagraph(a: std.mem.Allocator, t: *const Tree, p: usize, blanks: ?*st
     }
 }
 const Paragraphs = struct { first: usize, blanks: []const tree_mod.Span };
-fn inspectParagraphs(a: std.mem.Allocator, t: *const Tree, sub: usize, merging: bool, cache: bool) !Paragraphs {
+fn inspectParagraphs(a: std.mem.Allocator, t: *const Tree, sub: usize, merging: bool, cache: bool, pictures: bool) !Paragraphs {
     const first = t.elements[sub].first_child orelse return error.UnsupportedSourceTableStructure;
     var blanks: std.ArrayList(tree_mod.Span) = .empty;
     var cursor: ?usize = first;
     while (cursor) |p| : (cursor = t.elements[p].next_sibling) {
-        try inspectParagraph(a, t, p, if (!merging and p == first) &blanks else null, merging, cache);
+        try inspectParagraph(a, t, p, if (!merging and p == first) &blanks else null, merging, cache, pictures);
         if (!merging and p != first) {
             const e = t.elements[p];
             try blanks.append(a, .{ .start = e.start_tag.start, .end = e.end });
@@ -168,14 +173,14 @@ fn inspectCaption(a: std.mem.Allocator, t: *const Tree, table: usize) !void {
     inline for (.{ .has_text_ref, .has_num_ref }) |field| {
         if (list.get(field)) |raw| if (try @import("xml_values.zig").boolean(raw)) return error.UnsupportedSourceTableStructure;
     }
-    _ = try inspectParagraphs(a, t, sub, false, false);
+    _ = try inspectParagraphs(a, t, sub, false, false, false);
     var paragraph = t.elements[sub].first_child;
     while (paragraph) |p| : (paragraph = t.elements[p].next_sibling) {
         const owner = (try @import("caption_list_owner.zig").resolve(t, p, .table)) orelse return error.UnsupportedSourceTableStructure;
         if (owner.component_node != table or owner.caption_node != caption or owner.list_node != sub) return error.UnsupportedSourceTableStructure;
     }
 }
-const Profile = enum { row_column, grid_spans, merge, split };
+const Profile = enum { row_column, grid_spans, column_preserved, merge, split };
 
 pub fn inspectForSplit(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: u32, limit: usize) !Grid {
     const grid = try inspect(a, t, table, rows, cols, limit, .split);
@@ -189,6 +194,12 @@ pub fn inspectForGridEdit(a: std.mem.Allocator, t: *const Tree, table: usize, ro
         for (grid.cells) |cell| if (cell.row_span != 1 or cell.column_span != 1) return error.MergedSourceTable;
         return err;
     };
+    return grid;
+}
+
+fn inspectForColumnEdit(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: u32, limit: usize) !Grid {
+    const grid = try inspect(a, t, table, rows, cols, limit, .column_preserved);
+    try validateSpanGrid(a, t, table, rows, cols, grid.cells.len, limit);
     return grid;
 }
 
@@ -224,9 +235,10 @@ fn validateGridPlacement(t: *const Tree, selected: usize) !void {
 }
 
 fn inspect(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: u32, limit: usize, profile: Profile) !Grid {
-    if (profile == .grid_spans) try validateGridPlacement(t, table);
+    const grid_edit = profile == .grid_spans or profile == .column_preserved;
+    if (grid_edit) try validateGridPlacement(t, table);
     const merging = profile == .merge or profile == .split;
-    const spanning = profile == .split or profile == .grid_spans;
+    const spanning = profile == .split or grid_edit;
     if (rows == 0 or cols == 0 or @as(u64, rows) * cols > limit) return error.LimitExceeded;
     if (try number(a, t, table, "rowCnt") != rows or try number(a, t, table, "colCnt") != cols) return error.StaleSourceTableGrid;
     if (merging) {
@@ -243,14 +255,15 @@ fn inspect(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: 
         try zero(a, t, i, &.{ "lock", "protect" });
     }
     var content = ContentCheck{ .a = a, .tree = t, .table = table, .limit = t.source.len };
+    if (profile == .column_preserved) content.accepted_comments = try @import("source_grid_retained_picture.zig").comments(a, t, table, t.source.len);
     try t.visitContent(a, .{ .context = &content, .on_content = ContentCheck.onContent });
     // Preserve opaque table attributes but reject unhandled geometry/children.
     try zero(a, t, table, &.{"cellSpacing"});
-    try allowed(t, table, if (profile == .grid_spans) &.{ "sz", "pos", "outMargin", "inMargin", "tr", "caption" } else &.{ "sz", "pos", "outMargin", "inMargin", "tr" });
-    if (profile == .grid_spans) try inspectCaption(a, t, table);
+    try allowed(t, table, if (grid_edit) &.{ "sz", "pos", "outMargin", "inMargin", "tr", "caption" } else &.{ "sz", "pos", "outMargin", "inMargin", "tr" });
+    if (grid_edit) try inspectCaption(a, t, table);
     var direct = t.elements[table].first_child;
     while (direct) |i| : (direct = t.elements[i].next_sibling) {
-        if (!fields.childIs(t, i, "tr") and !(profile == .grid_spans and fields.childIs(t, i, "caption"))) try allowed(t, i, &.{});
+        if (!fields.childIs(t, i, "tr") and !(grid_edit and fields.childIs(t, i, "caption"))) try allowed(t, i, &.{});
     }
     const size = try child(t, table, "sz");
     try zero(a, t, size, &.{"protect"});
@@ -266,7 +279,7 @@ fn inspect(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: 
     var cursor = t.elements[table].first_child;
     while (cursor) |row| : (cursor = t.elements[row].next_sibling) {
         if (!fields.childIs(t, row, "tr")) continue;
-        if (r == rows or (profile != .grid_spans and t.elements[row].end_tag == null)) return error.InvalidSourceTableGrid;
+        if (r == rows or (!grid_edit and t.elements[row].end_tag == null)) return error.InvalidSourceTableGrid;
         rs[r] = row;
         try attributes(a, t, row, &.{});
         if (merging) try rejectLocalNamespaces(a, t, row);
@@ -295,7 +308,7 @@ fn inspect(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: 
                 try rejectLocalNamespaces(a, t, cell);
                 try rejectLocalNamespaces(a, t, sub);
             }
-            const paragraphs = try inspectParagraphs(a, t, sub, merging, profile == .grid_spans);
+            const paragraphs = try inspectParagraphs(a, t, sub, merging, grid_edit, profile == .column_preserved);
             inline for (.{ .{ addr, &.{ "rowAddr", "colAddr" } }, .{ span, &.{ "rowSpan", "colSpan" } }, .{ sz, &.{ "width", "height" } } }) |item| {
                 try attributes(a, t, item[0], item[1]);
                 try allowed(t, item[0], &.{});
@@ -401,11 +414,12 @@ pub fn prepare(allocator: std.mem.Allocator, source: []const u8, request: Reques
     if (t.elements[table].name.local.encoding != .utf8) return error.UnsupportedEditEncoding;
     const rows = request.expected_rows;
     const cols = request.expected_columns;
-    const g = try inspectForGridEdit(a, &t, table, rows, cols, request.max_cells);
+
     const row_edit = switch (request.command) {
         .insert_row, .delete_row => true,
         else => false,
     };
+    const g = if (row_edit) try inspectForGridEdit(a, &t, table, rows, cols, request.max_cells) else try inspectForColumnEdit(a, &t, table, rows, cols, request.max_cells);
     const insertion = switch (request.command) {
         .insert_row, .insert_column => true,
         else => false,
@@ -430,10 +444,19 @@ pub fn prepare(allocator: std.mem.Allocator, source: []const u8, request: Reques
     const spans = @import("../model/source_table_span_grid.zig");
     const input = try a.alloc(spans.Cell, g.cells.len);
     for (g.cells, 0..) |c, i| input[i] = .{ .row = c.row, .column = c.column, .row_span = c.row_span, .column_span = c.column_span, .width = c.width, .height = c.height };
-    const plan = spans.prepare(a, rows, cols, input, g.width, g.height, request.command, request.max_cells) catch |err| return switch (err) {
+    const plan = @import("../model/source_table_column_grid.zig").prepareSource(a, rows, cols, input, g.width, g.height, request.command, request.max_cells) catch |err| return switch (err) {
         error.InvalidSourceSpanGrid => error.InvalidSourceTableGrid,
         error.UnsupportedSourceSpanGeometry, error.ConflictingSourceTableTracks => error.UnsupportedSourceTableGeometry,
         else => err,
+    };
+    const retained = try a.alloc(bool, g.cells.len);
+    @memset(retained, false);
+    for (plan.cells) |output| {
+        if (!output.fresh) retained[output.source] = true;
+        if (output.fresh or output.cell.width != g.cells[output.source].width or output.cell.height != g.cells[output.source].height) _ = try inspectParagraphs(a, &t, g.cells[output.source].list, false, true, false);
+    }
+    for (g.cells, retained) |cell, survives| if (!survives) {
+        _ = try inspectParagraphs(a, &t, cell.list, false, true, false);
     };
     if (request.fresh_paragraph_ids.len != coordinate.inserted_count) return error.InvalidTableParagraphIds;
     var ids: std.AutoHashMap(u32, void) = .init(a);
@@ -501,7 +524,11 @@ pub fn prepare(allocator: std.mem.Allocator, source: []const u8, request: Reques
     while (attribute < 2) : (attribute += 1) try ordered.append(a, changes.items[attribute]);
     const result = try writer.write(a, source, ordered.items, request.max_bytes);
     var check = try @import("section_tree.zig").parse(a, result, 0, 0, .{ .max_xml_bytes = request.max_bytes });
-    _ = try inspectForGridEdit(a, &check, table, plan.rows, plan.columns, request.max_cells);
+    if (row_edit) {
+        _ = try inspectForGridEdit(a, &check, table, plan.rows, plan.columns, request.max_cells);
+    } else {
+        _ = try inspectForColumnEdit(a, &check, table, plan.rows, plan.columns, request.max_cells);
+    }
     return @import("source_grid_line_cache.zig").write(allocator, result, request.max_bytes);
 }
 

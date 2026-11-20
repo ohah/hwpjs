@@ -1,4 +1,8 @@
+import { createStrictLayoutWorker, strictLayoutKinds } from './strict-layout-worker.mjs';
+import { attachHwp5Charts } from './hwp5-chart-content.mjs';
 import { attachHwp5EquationRendering } from './hwp5-equation-content.mjs';
+import { admitDocumentTextReadSelection } from './document-text-read-selection.mjs';
+import { documentTextWindow } from './document-text-window.mjs';
 import {
   observedChartCreateProfileVersion,
   requireChartCreateProfile,
@@ -14,6 +18,10 @@ import { copyDocumentInsertRuntimeMessage } from '../../js/hwpx-document-insert.
 import { renameHwpxNamedField, setHwpxNamedFieldValue } from './hwpx-named-field-value.mjs';
 import { projectHwp5NamedFields } from './hwp5-named-fields.mjs';
 import { prepareRichTypingTarget, richTypingProjectionOwners } from './rich-typing-admission.mjs';
+import {
+  prepareCreatedCellTypingTarget,
+  observeCreatedCellTextTarget,
+} from './created-cell-typing-admission.mjs';
 import { prepareReplaceAllTransaction } from './replace-all-transaction.mjs';
 import { validateHwp5CurrentBodyReference } from './hwp5-current-body-reference.mjs';
 import { validateCellStylesMessage } from '../../js/cell-style-command.mjs';
@@ -180,8 +188,16 @@ export function createReaderRuntime({
   const createExperimentalHwp5Editor = (module, input, options = {}) =>
     createHwp5Session(module, input, { ...options, referenceScope });
   let module, bytes, preview, editor, format;
+  let readonlyTextReader;
+  const textReadSource = () => editor ?? (format === 'hwp5' ? readonlyTextReader : undefined);
+  function retireReadonlyTextReader() {
+    const previous = readonlyTextReader;
+    readonlyTextReader = undefined;
+    previous?.close();
+  }
   const displayResources = createDisplayResourceCache();
   let historyEnabled = false;
+  let hwp5DisplaySaveAvailable = false;
   let richTypingScope = 0;
   let hwpxRichTypingOwners = null;
   let historyPoisoned = false;
@@ -191,6 +207,15 @@ export function createReaderRuntime({
   let documentWindow = null;
   let hwp5PreviewDirty = false;
   let hwpxCreatedTablesPending = false;
+  const strictLayout = createStrictLayoutWorker({
+    current: () => ({
+      editor,
+      format,
+      historyEnabled,
+      poisoned: historyPoisoned,
+    }),
+    consent: (value) => requirePasswordRemovalConsent(protectionRemoved, value),
+  });
   function normalizationMetadataAvailable() {
     return WebAssembly.Module.exports(module).some(
       (entry) => entry.name === 'hwp5_edit_normalization_info' && entry.kind === 'function',
@@ -205,6 +230,7 @@ export function createReaderRuntime({
     );
   }
   function hwp5DisplayProjection() {
+    if (readonlyTextReader && !editor) return { ...preview, readOnly: true };
     if (hwp5PreviewDirty) refreshCurrentHwp5Preview();
     // Only an explicitly opened native editor can lift the display-only gate.
     return editor && historyEnabled && preview.primarySource === 'distribution_viewtext'
@@ -262,15 +288,34 @@ export function createReaderRuntime({
     if (!projected && documentWindow) {
       const total = preview.sections.reduce((sum, section) => sum + section.paragraphs.length, 0);
       const offset = Math.min(documentWindow.offset, Math.max(0, total - 1));
-      projected = queryHwp5WindowContent(
-        editor,
-        hwp5DisplayProjection(),
-        { offset, count: Math.min(documentWindow.count, total - offset) },
-        hwp5ParagraphFormatsAvailable(),
-      );
+      projected =
+        !editor && readonlyTextReader
+          ? displayContent(hwp5DisplayProjection(), {
+              paragraphOffset: offset,
+              maxParagraphs: Math.min(documentWindow.count, total - offset),
+              maxUnits: 4 * 1024 * 1024,
+            })
+          : queryHwp5WindowContent(
+              editor,
+              hwp5DisplayProjection(),
+              { offset, count: Math.min(documentWindow.count, total - offset) },
+              hwp5ParagraphFormatsAvailable(),
+            );
     }
     const content = projected ?? displayContent(hwp5DisplayProjection());
     content.editorSessionAvailable = Boolean(editor);
+    content.equationInsertionAvailable =
+      historyEnabled &&
+      !historyPoisoned &&
+      editor?.historyStats?.()?.protocolVersion === 2 &&
+      editor?.supportsEquationInsertionAbi?.() === true;
+    content.hwp5ChartCreateProfileVersion = editor?.supportsChartCreationAbi?.() === true ? 1 : 0;
+    content.chartCreationAvailable =
+      historyEnabled &&
+      !historyPoisoned &&
+      editor?.historyStats?.()?.protocolVersion === 2 &&
+      content.hwp5ChartCreateProfileVersion === 1 &&
+      typeof globalThis.OffscreenCanvas === 'function';
     content.sourceTableCellWidthAvailable =
       Boolean(editor) &&
       historyEnabled &&
@@ -521,7 +566,8 @@ export function createReaderRuntime({
         ),
       ),
     );
-    const roots = projectHwp5RootContent(prepared);
+    const chartContent = attachHwp5Charts(editor, prepared);
+    const roots = projectHwp5RootContent(chartContent);
     if (roots.state === 'projected')
       return attachHwp5EquationRendering(
         editor,
@@ -535,7 +581,18 @@ export function createReaderRuntime({
     else prepared.hwp5DrawingPageModelError = roots.error;
     return attachHwp5EquationRendering(
       editor,
-      attachParagraphNumbering(editor, attachHwp5NoteSelectionOwners(prepared)),
+      attachParagraphNumbering(
+        editor,
+        attachHwp5NoteSelectionOwners({
+          ...chartContent,
+          ...(prepared.hwp5GroupPageModelError
+            ? { hwp5GroupPageModelError: prepared.hwp5GroupPageModelError }
+            : {}),
+          ...(prepared.hwp5DrawingPageModelError
+            ? { hwp5DrawingPageModelError: prepared.hwp5DrawingPageModelError }
+            : {}),
+        }),
+      ),
     );
   }
   function anchorView(section, paragraph) {
@@ -1105,11 +1162,32 @@ export function createReaderRuntime({
             ...value,
             content: {
               ...value.content,
+              noteDeletionAvailable:
+                historyEnabled &&
+                historyStats?.protocolVersion === 2 &&
+                historyStats?.poisoned !== true &&
+                !historyPoisoned &&
+                editor?.supportsNoteDeletionAbi?.() === true,
+              noteCreationAvailable:
+                historyEnabled &&
+                historyStats?.protocolVersion === 2 &&
+                historyStats?.poisoned !== true &&
+                !historyPoisoned &&
+                editor?.supportsNoteCreationAbi?.() === true,
               equationInsertionAvailable:
                 historyEnabled &&
                 historyStats?.protocolVersion === 2 &&
                 !historyPoisoned &&
                 editor?.supportsEquationInsertionAbi?.() === true,
+              inlineObjectPlacementVersion:
+                historyEnabled &&
+                historyStats?.protocolVersion === 2 &&
+                historyStats?.poisoned !== true &&
+                !historyPoisoned
+                  ? editor?.inlineObjectPlacementVersion?.() === 1
+                    ? 1
+                    : 0
+                  : 0,
               chartCreateProfileVersion: observedChartCreateProfileVersion(
                 editor,
                 format,
@@ -1124,9 +1202,32 @@ export function createReaderRuntime({
                 editor?.supportsChartCreationAbi?.() === true,
             },
           };
+        if (value.content?.format === format)
+          value = {
+            ...value,
+            content: {
+              ...value.content,
+              strictMeasuredSaveAvailable: strictLayout.available(),
+              createdCellTypingScope:
+                historyEnabled &&
+                historyStats?.protocolVersion === 2 &&
+                Number.isInteger(historyRevision) &&
+                !historyPoisoned &&
+                editor?.supportsCreatedCellTypingAbi?.() === true
+                  ? richTypingScope
+                  : null,
+            },
+          };
+        // This optional Native-owned read context is not a History revision.
+        const documentTextReadBinding =
+          value.content !== undefined &&
+          textReadSource()?.supportsDocumentTextReadBinding?.() === true
+            ? textReadSource().documentTextReadBinding()
+            : undefined;
         response = {
           origin: message.origin,
           ...value,
+          ...(documentTextReadBinding === undefined ? {} : { documentTextReadBinding }),
           ...(value.content?.format === format &&
           historyStats?.protocolVersion === 2 &&
           Number.isInteger(historyRevision) &&
@@ -1185,6 +1286,47 @@ export function createReaderRuntime({
     };
     displayResources.beginRequest(message, { format, editor, historyEnabled });
     try {
+      // Any other serialized request conservatively expires measurement ownership.
+      if (!strictLayoutKinds.has(message.kind)) strictLayout.reset();
+      if (strictLayoutKinds.has(message.kind)) {
+        reply({
+          ...strictLayout.handle(message),
+          ...(protectionRemoved ? { passwordProtectionRemoved: true } : {}),
+        });
+        return;
+      }
+      if (message.kind === 'created-cell-text-target') {
+        if (!editor || !historyEnabled || editor.historyStats?.()?.protocolVersion !== 2)
+          throw Error('CreatedCellTypingUnavailable');
+        if (historyPoisoned || editor.historyStats?.()?.poisoned === true)
+          throw Error('HistoryMutationUncertain');
+        reply({
+          kind: message.kind,
+          createdCellText: observeCreatedCellTextTarget({
+            editor,
+            format,
+            selector: message.selector,
+            scope: richTypingScope,
+          }),
+        });
+        return;
+      }
+      if (message.kind === 'inline-object-owner') {
+        if (
+          format !== 'hwpx' ||
+          !historyEnabled ||
+          historyPoisoned ||
+          editor?.historyStats?.()?.protocolVersion !== 2 ||
+          editor?.historyStats?.()?.poisoned === true ||
+          editor?.inlineObjectPlacementVersion?.() !== 1
+        )
+          throw Error('InlineObjectPlacementUnavailable');
+        reply({
+          kind: message.kind,
+          inlineObjectOwner: editor.inlineObjectOwner(message.selector),
+        });
+        return;
+      }
       if (message.kind === 'object-geometry-query') {
         if (
           !['hwpx', 'hwp5'].includes(format) ||
@@ -1390,6 +1532,47 @@ export function createReaderRuntime({
         reply({ kind: message.kind, formatting: queryAtomicFormatting(editor, format, message) });
         return;
       }
+      if (message.kind === 'document-text-anchor') {
+        const source = textReadSource();
+        if (historyPoisoned) throw Error('HistoryReloadRequired');
+        if (!source || source.supportsDocumentTextAnchor?.() !== true)
+          throw Error('DocumentTextAnchorUnavailable');
+        reply({
+          kind: message.kind,
+          documentTextAnchor: source.documentTextAnchor(message.request),
+        });
+        return;
+      }
+      if (message.kind === 'document-text-selection') {
+        const source = textReadSource();
+        if (historyPoisoned) throw Error('HistoryReloadRequired');
+        if (!source || source.supportsDocumentTextSelection?.() !== true)
+          throw Error('DocumentTextSelectionUnavailable');
+        reply({
+          kind: message.kind,
+          documentTextSelection: source.documentTextSelection(message.request),
+        });
+        return;
+      }
+      if (message.kind === 'document-text-read-binding') {
+        if (historyPoisoned) throw Error('HistoryReloadRequired');
+        const source = textReadSource();
+        const available = source?.supportsDocumentTextReadBinding?.() === true;
+        reply({
+          kind: message.kind,
+          available,
+          ...(available ? { documentTextReadBinding: source.documentTextReadBinding() } : {}),
+        });
+        return;
+      }
+      if (message.kind === 'document-text-snapshot') {
+        const source = textReadSource();
+        if (historyPoisoned) throw Error('HistoryReloadRequired');
+        if (!source || source.supportsDocumentTextSnapshot?.() !== true)
+          throw Error('DocumentTextSnapshotUnavailable');
+        reply({ kind: message.kind, documentText: source.documentTextSnapshot() });
+        return;
+      }
       if (message.kind === 'text-transaction-capabilities') {
         let cap = {
           available: false,
@@ -1399,7 +1582,11 @@ export function createReaderRuntime({
         if (editor && historyEnabled && editor.supportsIndependentTextAbi?.()) {
           try {
             const native = editor.independentTextCapabilities();
-            cap = { available: true, supportsNewlines: native.supportsNewlines === true };
+            cap = {
+              available: true,
+              supportsNewlines: native.supportsNewlines === true,
+              ...(editor.supportsDocumentReplaceAll?.() === true ? { documentScope: true } : {}),
+            };
           } catch (error) {
             cap.reason = error?.message || String(error);
           }
@@ -1415,9 +1602,12 @@ export function createReaderRuntime({
         });
         return;
       }
-      if (message.kind === 'independent-text') {
+      if (message.kind === 'independent-text' || message.kind === 'replace-document-text') {
         if (!editor || !historyEnabled) throw Error('HistoryNotEnabled');
-        atomicOutcome = editor.applyIndependentText(message.request);
+        atomicOutcome =
+          message.kind === 'replace-document-text'
+            ? editor.replaceDocumentText(message.request)
+            : editor.applyIndependentText(message.request);
         applied = atomicOutcome.application === 'applied';
         mutationUncertain = atomicOutcome.application === 'unknown';
         if (mutationUncertain) historyPoisoned = true;
@@ -1601,6 +1791,36 @@ export function createReaderRuntime({
         });
         return;
       }
+      if (message.kind === 'created-cell-splice') {
+        if (!editor || !historyEnabled) throw Error('EditorNotOpen');
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        const request = prepareCreatedCellTypingTarget({
+          editor,
+          format,
+          message,
+          scope: richTypingScope,
+        });
+        atomicOutcome = editor.spliceCreatedCell(request);
+        applied = atomicOutcome.application === 'applied';
+        mutationUncertain = atomicOutcome.application === 'unknown';
+        if (mutationUncertain) historyPoisoned = true;
+        if (atomicOutcome.error || atomicOutcome.cleanupError)
+          throw Error(atomicOutcome.error || atomicOutcome.cleanupError);
+        if (atomicOutcome.nativeCode === 2) {
+          reply({ kind: message.kind, changed: false, identity: message.identity });
+          return;
+        }
+        if (format === 'hwpx') {
+          reader = await createHwpxReader(module);
+          preview = reader.readTextEvents(editor.saveForDisplay());
+        } else await refreshHwp5PreviewFallback();
+        reply({
+          kind: message.kind,
+          identity: message.identity,
+          content: format === 'hwpx' ? hwpxDisplay() : hwp5Display(),
+        });
+        return;
+      }
       if (message.kind === 'insert-table' || message.kind === 'created-cell-text') {
         if (!editor || !historyEnabled) throw new Error('EditorNotOpen');
         if (format === 'hwp5') {
@@ -1633,6 +1853,39 @@ export function createReaderRuntime({
         reader = await createHwpxReader(module);
         preview = reader.readTextEvents(editor.saveForDisplay());
         reply({ kind: message.kind, identity, content: hwpxDisplay() });
+        return;
+      }
+      if (message.kind === 'reveal-document-text') {
+        const source = textReadSource();
+        if (historyPoisoned) throw Error('HistoryReloadRequired');
+        if (!source || !preview || source.supportsDocumentTextSelection?.() !== true)
+          throw Error('DocumentTextSelectionUnavailable');
+        // Requery current Native ownership instead of trusting client offsets.
+        const observation = source.documentTextSelection(message.request);
+        const projection = format === 'hwp5' ? hwp5DisplayProjection() : preview;
+        const plan = documentTextWindow(source, projection, format, observation);
+        const content =
+          format === 'hwp5'
+            ? hwp5Display(() =>
+                !editor && readonlyTextReader
+                  ? displayContent(hwp5DisplayProjection(), {
+                      paragraphOffset: plan.offset,
+                      maxParagraphs: plan.count,
+                      maxUnits: 4 * 1024 * 1024,
+                    })
+                  : queryHwp5WindowContent(
+                      editor,
+                      projection,
+                      plan,
+                      hwp5ParagraphFormatsAvailable(),
+                    ),
+              )
+            : hwpxDisplay(projectHwpxWindow(editor, preview, plan));
+        documentWindow = plan;
+        reply({
+          kind: message.kind,
+          content: admitDocumentTextReadSelection(content, observation),
+        });
         return;
       }
       if (message.kind === 'set-edit-window') {
@@ -1730,17 +1983,24 @@ export function createReaderRuntime({
       if (
         format === 'hwp5' &&
         !historyEnabled &&
-        ['save', 'undo', 'redo', 'split', 'merge', 'splice', 'format'].includes(message.kind)
+        (['undo', 'redo', 'split', 'merge', 'splice', 'format'].includes(message.kind) ||
+          (message.kind === 'save' && !hwp5DisplaySaveAvailable))
       )
         throw new Error('EditorNotOpen');
-      if (message.kind === 'refresh') {
-        if (!editor || !preview) throw new Error('EditorNotOpen');
+      if (message.kind === 'refresh' || message.kind === 'refresh-document-text-view') {
+        if (message.kind === 'refresh-document-text-view' && historyPoisoned)
+          throw Error('HistoryReloadRequired');
+        if (!preview || (!editor && !readonlyTextReader)) throw new Error('EditorNotOpen');
+        if (format === 'hwp5' && readonlyTextReader && !editor) {
+          reply({ kind: message.kind, content: hwp5Display() });
+          return;
+        }
         if (format === 'hwp5') await refreshHwp5PreviewFallback();
         else {
           reader = await createHwpxReader(module);
           preview = reader.readTextEvents(editor.saveForDisplay());
         }
-        reply({ kind: 'refresh', content: format === 'hwpx' ? hwpxDisplay() : hwp5Display() });
+        reply({ kind: message.kind, content: format === 'hwpx' ? hwpxDisplay() : hwp5Display() });
         return;
       }
       if (message.kind === 'load') {
@@ -1753,6 +2013,7 @@ export function createReaderRuntime({
         if (typeof requestedPolicy !== 'boolean') throw new Error('InvalidChartOlePolicy');
         if (requestedPolicy && message.format !== 'hwpx')
           throw new Error('UnsupportedChartOlePolicyFormat');
+        retireReadonlyTextReader();
         editor?.close();
         editor = undefined;
         preview = undefined;
@@ -1761,6 +2022,7 @@ export function createReaderRuntime({
         bytes = undefined;
         module = undefined;
         historyEnabled = false;
+        hwp5DisplaySaveAvailable = false;
         historyPoisoned = false;
         hwp5StyleOpenError = null;
         documentWindow = null;
@@ -1787,6 +2049,7 @@ export function createReaderRuntime({
             next.close();
             throw error;
           }
+          retireReadonlyTextReader();
           editor = next;
           reply({ kind: 'load', content: hwpxDisplay() });
           return;
@@ -1802,6 +2065,7 @@ export function createReaderRuntime({
             next.close();
             throw error;
           }
+          retireReadonlyTextReader();
           editor = next;
           reply({ kind: 'load', content: hwp5Display() });
           return;
@@ -1814,6 +2078,8 @@ export function createReaderRuntime({
         if (!preview.readOnly) {
           try {
             editor = await createExperimentalHwp5Editor(module, bytes);
+            hwp5DisplaySaveAvailable = true;
+            retireReadonlyTextReader();
           } catch (error) {
             hwp5StyleOpenError = error.message;
           }
@@ -1833,6 +2099,8 @@ export function createReaderRuntime({
             hwp5StyleOpenError = error.message;
           }
         }
+        if (!editor && reader?.supportsDocumentTextReadBinding?.() === true)
+          readonlyTextReader = reader;
         reply({ kind: 'load', content: hwp5Display() });
       } else if (message.kind === 'table-background-bytes') {
         if (!editor || format !== 'hwpx') throw new Error('TableBackgroundReadUnavailable');
@@ -1879,12 +2147,14 @@ export function createReaderRuntime({
             next.open(plaintext, { allowObservedChartOleDeviations: hwpxChartOlePolicy });
           } else next = await createExperimentalHwp5Editor(module, plaintext);
           editor?.close();
+          retireReadonlyTextReader();
           editor = next;
           next = undefined;
           bytes = plaintext;
           preview = current;
           protectionRemoved = true;
           historyEnabled = false;
+          hwp5DisplaySaveAvailable = false;
           historyPoisoned = false;
           reply({ kind: 'unlock', content: format === 'hwpx' ? hwpxDisplay() : hwp5Display() });
         } catch (error) {
@@ -1945,6 +2215,95 @@ export function createReaderRuntime({
         reader = await createHwpxReader(module);
         preview = reader.readTextEvents(editor.saveForDisplay());
         reply({ kind: message.kind, content: hwpxDisplay() });
+      } else if (message.kind === 'create-chart' && format === 'hwp5') {
+        if (
+          !editor ||
+          !historyEnabled ||
+          historyPoisoned ||
+          editor.historyStats?.()?.protocolVersion !== 2 ||
+          editor.supportsChartCreationAbi?.() !== true ||
+          typeof globalThis.OffscreenCanvas !== 'function'
+        )
+          throw Error('InlineObjectInsertionUnavailable');
+        const ownedEditor = editor;
+        atomicOutcome = await ownedEditor.createChart(message.request, {
+          createCanvas: (width, height) => new globalThis.OffscreenCanvas(width, height),
+          current: () =>
+            editor === ownedEditor &&
+            historyEnabled &&
+            !historyPoisoned &&
+            ownedEditor.historyStats?.()?.protocolVersion === 2,
+        });
+        applied = atomicOutcome.application === 'applied';
+        mutationUncertain = atomicOutcome.application === 'unknown';
+        if (mutationUncertain) historyPoisoned = true;
+        if (atomicOutcome.error || atomicOutcome.cleanupError)
+          throw Error(atomicOutcome.error || atomicOutcome.cleanupError);
+        reply({
+          kind: message.kind,
+          changed: applied,
+          content: hwp5Display(),
+          chartPreviewWarnings: atomicOutcome.chartPreviewWarnings,
+          chartPreviewRendering: atomicOutcome.chartPreviewRendering,
+        });
+      } else if (message.kind === 'insert-equation' && format === 'hwp5') {
+        if (
+          !editor ||
+          !historyEnabled ||
+          editor.historyStats?.()?.protocolVersion !== 2 ||
+          editor.supportsEquationInsertionAbi?.() !== true
+        )
+          throw Error('InlineObjectInsertionUnavailable');
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        atomicOutcome = editor.insertEquation(message.request);
+        applied = atomicOutcome.application === 'applied';
+        mutationUncertain = atomicOutcome.application === 'unknown';
+        if (mutationUncertain) historyPoisoned = true;
+        if (atomicOutcome.error || atomicOutcome.cleanupError)
+          throw Error(atomicOutcome.error || atomicOutcome.cleanupError);
+        reply({ kind: message.kind, changed: applied, content: hwp5Display() });
+      } else if (message.kind === 'delete-note') {
+        if (
+          format !== 'hwpx' ||
+          !editor ||
+          !historyEnabled ||
+          editor.historyStats()?.protocolVersion !== 2 ||
+          editor.supportsNoteDeletionAbi?.() !== true
+        )
+          throw Error('NoteDeletionUnavailable');
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        atomicOutcome = editor.deleteNote(message.request);
+        applied = atomicOutcome.application === 'applied';
+        mutationUncertain = atomicOutcome.application === 'unknown';
+        if (mutationUncertain) historyPoisoned = true;
+        if (atomicOutcome.error || atomicOutcome.cleanupError)
+          throw Error(atomicOutcome.error || atomicOutcome.cleanupError);
+        if (!applied) throw Error('InvalidNoteDeleteResult');
+        reader = await createHwpxReader(module);
+        preview = reader.readTextEvents(editor.saveForDisplay());
+        reply({ kind: message.kind, content: hwpxDisplay() });
+      } else if (message.kind === 'insert-footnote' || message.kind === 'insert-endnote') {
+        if (
+          format !== 'hwpx' ||
+          !editor ||
+          !historyEnabled ||
+          editor.historyStats()?.protocolVersion !== 2 ||
+          editor.supportsNoteCreationAbi?.() !== true
+        )
+          throw Error('NoteCreationUnavailable');
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        if (message.request?.kind !== (message.kind === 'insert-footnote' ? 'foot' : 'end'))
+          throw Error('InvalidNoteCreateKind');
+        atomicOutcome = editor.insertNote(message.request);
+        applied = atomicOutcome.application === 'applied';
+        mutationUncertain = atomicOutcome.application === 'unknown';
+        if (mutationUncertain) historyPoisoned = true;
+        if (atomicOutcome.error || atomicOutcome.cleanupError)
+          throw Error(atomicOutcome.error || atomicOutcome.cleanupError);
+        if (!applied) throw Error('InvalidNoteCreateResult');
+        reader = await createHwpxReader(module);
+        preview = reader.readTextEvents(editor.saveForDisplay());
+        reply({ kind: message.kind, noteCaret: atomicOutcome.noteCaret, content: hwpxDisplay() });
       } else if (message.kind === 'insert-equation' || message.kind === 'create-chart') {
         if (
           format !== 'hwpx' ||
@@ -2599,6 +2958,32 @@ export function createReaderRuntime({
           preview = reader.readTextEvents(editor.saveForDisplay());
           reply({ kind: 'formula-definition', content: hwpxDisplay() });
         }
+      } else if (message.kind === 'hwp5-chart-create-preview') {
+        if (
+          format !== 'hwp5' ||
+          !editor ||
+          !historyEnabled ||
+          historyPoisoned ||
+          editor.historyStats?.()?.protocolVersion !== 2 ||
+          editor.supportsChartCreationAbi?.() !== true
+        )
+          throw Error('InlineObjectInsertionUnavailable');
+        reply({
+          kind: message.kind,
+          requestId: message.requestId,
+          preview: editor.chartCreatePreview(message.request),
+        });
+      } else if (message.kind === 'hwp5-chart-display') {
+        if (format !== 'hwp5' || !editor || editor.supportsHwp5ChartDisplayAbi?.() !== true)
+          throw Error('Hwp5ChartDisplayAbiUnavailable');
+        const chart = editor.hwp5ChartDisplay(message.section, message.controlNode);
+        reply({
+          kind: message.kind,
+          requestId: message.requestId,
+          section: message.section,
+          controlNode: message.controlNode,
+          chart,
+        });
       } else if (message.kind === 'chart-display') {
         if (format !== 'hwpx') throw new Error('UnsupportedChartEditing');
         // Display is read-only and load already owns an open native Session.
@@ -2884,6 +3269,7 @@ export function createReaderRuntime({
               next.close();
               throw error;
             }
+            retireReadonlyTextReader();
             editor = next;
           }
           if (!historyEnabled) {
@@ -3480,7 +3866,7 @@ export function createReaderRuntime({
       });
     } finally {
       try {
-        reader?.close();
+        if (reader !== readonlyTextReader) reader?.close();
       } catch (error) {
         response = minimalError(error);
       }
@@ -3577,13 +3963,19 @@ export function createReaderRuntime({
     hwpxRichTypingOwners = null;
     displayResources.reset();
     try {
-      editor?.close();
+      try {
+        strictLayout.reset();
+        retireReadonlyTextReader();
+      } finally {
+        editor?.close();
+      }
     } finally {
       if (protectionRemoved) bytes?.fill(0);
       module = bytes = preview = editor = format = undefined;
       lastHistoryRevision = undefined;
       historyPoisoned =
         historyEnabled =
+        hwp5DisplaySaveAvailable =
         hwpxChartOlePolicy =
         protectionRemoved =
         hwpxCreatedTablesPending =

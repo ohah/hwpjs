@@ -39,7 +39,9 @@ pub const Prepared = struct {
 /// JSON owns strings; Request borrows them until ParsedRequest.deinit().
 pub const Wire = struct {
     section: usize,
-    paragraph: usize,
+    paragraph: usize = 0,
+    owner: ?@import("inline_object_placement.zig").Owner = null,
+    affinity: @FieldType(Target, "affinity") = .forward,
     start: u32,
     expectedText: []const u8,
     script: []const u8,
@@ -65,8 +67,11 @@ pub fn parseRequest(a: std.mem.Allocator, bytes: []const u8, source_sha256: [32]
     // before decoding so SDK/ABI callers have one strict request contract.
     const kinds = try std.json.parseFromSlice(std.json.Value, a, bytes, .{ .duplicate_field_behavior = .@"error" });
     defer kinds.deinit();
-    if (kinds.value != .object or kinds.value.object.count() != 11) return error.InvalidEquationInsertRequest;
-    for ([_][]const u8{ "section", "paragraph", "start", "width", "height", "baseLine", "baseUnit" }) |key| {
+    if (kinds.value != .object) return error.InvalidEquationInsertRequest;
+    const owner_kind = @import("inline_object_placement.zig").wireAddress(kinds.value) catch return error.InvalidEquationInsertRequest;
+    const fields: usize = if (owner_kind == .createdCell) 11 else if (owner_kind != null) 12 else 11;
+    if (kinds.value.object.count() != fields + @as(usize, if (kinds.value.object.contains("affinity")) 1 else 0)) return error.InvalidEquationInsertRequest;
+    for ([_][]const u8{ "start", "width", "height", "baseLine", "baseUnit" }) |key| {
         const value = kinds.value.object.get(key) orelse return error.InvalidEquationInsertRequest;
         if (value != .integer or value.integer < 0) return error.InvalidEquationInsertRequest;
     }
@@ -83,7 +88,7 @@ pub fn parseRequest(a: std.mem.Allocator, bytes: []const u8, source_sha256: [32]
     const wire = parsed.value;
     const request: Request = .{
         .expected_source_sha256 = source_sha256,
-        .target = .{ .section = wire.section, .paragraph = wire.paragraph, .unit = wire.start, .expected_text = wire.expectedText },
+        .target = .{ .section = wire.section, .paragraph = wire.paragraph, .owner = wire.owner, .affinity = wire.affinity, .unit = wire.start, .expected_text = wire.expectedText },
         .script = wire.script,
         .width = wire.width,
         .height = wire.height,
@@ -97,13 +102,12 @@ pub fn parseRequest(a: std.mem.Allocator, bytes: []const u8, source_sha256: [32]
 }
 
 pub fn validate(a: std.mem.Allocator, request: Request, options: Options) !void {
-    if (request.target.section != 0) return error.UnsupportedInsertSections;
     if (request.width == 0 or request.height == 0 or request.base_unit == 0 or
         request.width > std.math.maxInt(i32) or request.height > std.math.maxInt(i32) or request.base_unit > std.math.maxInt(i32))
         return error.InvalidEquationInsertionSize;
     if (request.version.len == 0 or request.font.len == 0 or request.version.len > 128 or request.font.len > 128)
         return error.InvalidEquationInsertionMetadata;
-    if (request.target.paragraph == 0) return error.InvalidParagraphIndex;
+    if (request.target.paragraph == 0 and (request.target.owner == null or request.target.owner.?.kind != .createdCell)) return error.InvalidParagraphIndex;
     try @import("equation_script_write.zig").validateValue(a, request.script, .{
         .max_script_bytes = @min(options.max_script_bytes, (@import("equation_script_write.zig").Options{}).max_script_bytes),
         .max_output_bytes = options.max_xml_bytes,
@@ -153,10 +157,10 @@ pub fn prepare(a: std.mem.Allocator, input: []const u8, request: Request, option
     defer a.free(ids);
     // Scanner paragraph numbering is document-global. Accumulate in source order.
     var counters: @import("section_text.zig").Report = .{};
-    var paragraph: ?usize = null;
+    var paragraph: ?inline_insert.Binding = null;
     for (trees.sections) |*tree| {
         if (tree.section_ordinal == request.target.section) {
-            paragraph = try inline_insert.locate(a, tree, request.target, &counters);
+            paragraph = try inline_insert.bind(a, tree, request.target, &counters);
             break;
         }
         try @import("section_text.zig").scanSource(a, tree.source, tree.section_ordinal orelse return error.InvalidSectionIndex, tree.item_index, .{}, &counters, null);
@@ -164,7 +168,7 @@ pub fn prepare(a: std.mem.Allocator, input: []const u8, request: Request, option
     const tree = &trees.sections[request.target.section];
     const object = try createXml(a, request, ids[0], options);
     defer a.free(object);
-    const changed = try inline_insert.write(a, tree, paragraph orelse return error.InvalidParagraphIndex, request.target, object, options.max_xml_bytes);
+    const changed = try inline_insert.writeBound(a, tree, paragraph orelse return error.InvalidParagraphIndex, request.target, object, options.max_xml_bytes);
     defer a.free(changed);
     const entry_index = doc.manifest.items[tree.item_index].entry_index orelse return error.MissingInsertPart;
     const bytes = try @import("../zip/replace_writer.zig").write(a, input, &.{.{ .entry_index = entry_index, .bytes = changed }}, .{ .max_output_bytes = options.max_output_bytes });

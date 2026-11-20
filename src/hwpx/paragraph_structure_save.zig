@@ -299,7 +299,7 @@ fn writePrepared(a: std.mem.Allocator, tree: *const Tree, input: *const model.Va
                     try @import("paragraph_joined_tab_group.zig").validate(a, tree, current.paragraphs[i..end]);
             } else try @import("paragraph_protected_partition.zig").validate(a, tree, current.paragraphs[i..end]);
         }
-        if (!protected_group and paragraph.pieces == null and paragraph.character_styles == null and end == i + 1 and !try @import("page_area_current_xml.zig").requiresRelocation(a, tree, paragraph) and !try @import("column_boundary_current_xml.zig").requiresRelocation(a, tree, paragraph)) {
+        if (!protected_group and paragraph.pieces == null and paragraph.character_styles == null and paragraph.title_positions == null and end == i + 1 and !try @import("page_area_current_xml.zig").requiresRelocation(a, tree, paragraph) and !try @import("column_boundary_current_xml.zig").requiresRelocation(a, tree, paragraph)) {
             if (paragraph.paragraph_shape_id) |id| {
                 const opening = try @import("paragraph_format_write.zig").write(a, tree, paragraph.template_element, id, limit);
                 errdefer a.free(opening);
@@ -456,7 +456,7 @@ test "HWPX structure save preserves non-target values and repeated splits atomic
     try std.testing.expectError(error.DuplicateParagraphId, write(a, &tree, &current, .{}, &.{}, 10000));
     current.paragraphs[2].generated_id = previous_id;
     try std.testing.expectError(error.LimitExceeded, write(a, &tree, &current, .{}, &.{}, 1));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, borrowed: *const Tree, borrowed_values: *const model.Values) !void {
             const result = try write(allocator, borrowed, borrowed_values, .{}, &.{}, 10000);
             defer allocator.free(result);

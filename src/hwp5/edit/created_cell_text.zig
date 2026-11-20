@@ -5,6 +5,7 @@ const Values = @import("created_table_values.zig").Values;
 const records = @import("created_table_records.zig");
 pub const Point = struct { section: usize, table: u64, row: u32, column: u32 };
 pub const Edit = struct { point: Point, utf8: []const u8 };
+pub const Splice = struct { point: Point, start: u32, end: u32, utf8: []const u8 };
 
 fn tableIndex(pending: []const Values, point: Point) !usize {
     if (point.section >= pending.len) return error.InvalidSection;
@@ -32,6 +33,25 @@ pub fn apply(a: std.mem.Allocator, sources: []const []const u8, document: *const
     defer candidate.deinit(a);
     const changed = try candidate.entries[index].value.table.replaceText(a, edit.point.row, edit.point.column, edit.utf8, limits.max_bytes);
     if (!changed) return;
+    _ = try candidate.byteSize(limits.max_bytes);
+    const output = try @import("created_table_section.zig").write(a, sources[edit.point.section], document.sections[edit.point.section], &candidate, version, resources, limits);
+    defer a.free(output);
+    std.mem.swap(Values, &pending[edit.point.section], &candidate);
+}
+
+/// The reference API is a splice, not a whole-cell replacement. Preserve the
+/// same canonical run map even when no explicit typing properties were set.
+pub fn applySplice(a: std.mem.Allocator, sources: []const []const u8, document: *const model.Document, pending: []Values, version: @import("../version.zig").Version, edit: Splice, resources: records.Resources, limits: records.Limits) !void {
+    if (sources.len != document.sections.len or pending.len != sources.len) return error.SourceBindingMismatch;
+    const index = try tableIndex(pending, edit.point);
+    var candidate = try pending[edit.point.section].clone(a, limits.max_bytes);
+    defer candidate.deinit(a);
+    const table = &candidate.entries[index].value.table;
+    _ = try table.plan.cell(edit.point.row, edit.point.column);
+    const cell = @as(usize, edit.point.row) * table.plan.columns + edit.point.column;
+    if (cell >= table.cells.len) return error.InvalidTableCell;
+    const inherited = try table.cells[cell].typingResourceId(table.resources.character, edit.start, edit.end, .at_start);
+    if (!try table.cells[cell].splice(a, table.resources.character, edit.start, edit.end, edit.utf8, inherited, limits.max_bytes)) return;
     _ = try candidate.byteSize(limits.max_bytes);
     const output = try @import("created_table_section.zig").write(a, sources[edit.point.section], document.sections[edit.point.section], &candidate, version, resources, limits);
     defer a.free(output);

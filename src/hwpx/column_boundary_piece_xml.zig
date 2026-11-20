@@ -80,7 +80,7 @@ test "column piece XML preserves empty styled runs and cleans allocation failure
             }
         };
         try Probe.run(a, &tree, &paragraph, owner);
-        try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &tree, &paragraph, owner });
+        try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &tree, &paragraph, owner });
     }
     var output: std.ArrayList(u8) = .empty;
     defer output.deinit(a);

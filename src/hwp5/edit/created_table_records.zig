@@ -5,49 +5,19 @@ const Version = @import("../version.zig").Version;
 const payloads = @import("created_table_payloads.zig");
 const cells = @import("created_table_cell_records.zig");
 const writer = @import("../record_writer.zig");
-pub const Common = struct {
-    flags: u32,
-    offset_y: i32,
-    offset_x: i32,
-    z_order: i32,
-    margins: [4]i16,
-    prevent_page_break: bool,
-    description: []const u8,
-};
+pub const Common = @import("../body/object_common_write.zig").Common;
+
 pub const Options = struct { common: Common, table: payloads.Options, cell: cells.Options };
 pub const Resources = struct { paragraphs: cells.Resources, border_count: usize };
 pub const Limits = struct { max_cells: usize, max_bytes: usize };
 
 fn commonPayload(a: std.mem.Allocator, table: *const Model, options: Common, limit: usize) ![]u8 {
-    // The shared creation plan supplies absolute dimensions, not relative ratios.
+    // Preserve the existing table admission and byte layout; the common header
+    // serializer is shared with other newly created native objects.
     if (!@import("../body/object_common.zig").hasAbsoluteDimensions(options.flags)) return error.InvalidTableCreationPolicy;
-    const count = std.unicode.calcUtf16LeLen(options.description) catch return error.InvalidObjectDescription;
-    if (count > 65535) return error.LimitExceeded;
-    const length = 46 + count * 2;
-    if (length > limit) return error.LimitExceeded;
+    _ = try @import("../body/object_common_write.zig").descriptionUnits(options.description, limit);
     const height = try table.plan.height();
-    const description = try std.unicode.utf8ToUtf16LeAlloc(a, options.description);
-    defer a.free(description);
-    const bytes = try a.alloc(u8, length);
-    var offset: usize = 0;
-    put(u32, bytes, &offset, @import("../body/control_rules.zig").table_id);
-    put(u32, bytes, &offset, options.flags);
-    put(i32, bytes, &offset, options.offset_y);
-    put(i32, bytes, &offset, options.offset_x);
-    put(u32, bytes, &offset, table.plan.width);
-    put(u32, bytes, &offset, height);
-    put(i32, bytes, &offset, options.z_order);
-    for (options.margins) |margin| put(i16, bytes, &offset, margin);
-    put(u32, bytes, &offset, table.instance_id);
-    put(i32, bytes, &offset, @intFromBool(options.prevent_page_break));
-    put(u16, bytes, &offset, @intCast(count));
-    @memcpy(bytes[offset..], std.mem.sliceAsBytes(description));
-    return bytes;
-}
-
-fn put(comptime T: type, bytes: []u8, offset: *usize, value: T) void {
-    std.mem.writeInt(T, bytes[offset.*..][0..@sizeOf(T)], value, .little);
-    offset.* += @sizeOf(T);
+    return @import("../body/object_common_write.zig").write(a, @import("../body/control_rules.zig").table_id, table.plan.width, height, table.instance_id, options, limit);
 }
 
 pub fn write(a: std.mem.Allocator, table: *const Model, version: Version, options: Options, resources: Resources, control_level: u10, limits: Limits) ![]u8 {
@@ -75,4 +45,16 @@ pub fn write(a: std.mem.Allocator, table: *const Model, version: Version, option
         try cells.append(a, &out, table, @intCast(row), @intCast(column), version, options.cell, resources.paragraphs, control_level + 1, limits.max_bytes);
     };
     return out.toOwnedSlice(a);
+}
+
+// Adversarial simultaneous faults prove preflight error priority, independently
+// of the public table-plan validation which runs before this private helper.
+test "HWP5 equation shared common retains table error precedence" {
+    const a = std.testing.allocator;
+    const table: Model = .{ .identity = 1, .instance_id = 2, .plan = .{ .rows = 0, .columns = 1, .width = 100, .row_height = 1 }, .resources = .{ .paragraph = 0, .character = 0, .style = 0, .border_fill = 0 }, .cells = &.{} };
+    var common: Common = .{ .flags = 0x6a2211, .offset_y = 0, .offset_x = 0, .z_order = 0, .margins = @splat(0), .prevent_page_break = false, .description = "\xff" };
+    try std.testing.expectError(error.InvalidObjectDescription, commonPayload(a, &table, common, 0));
+    common.description = "abc";
+    try std.testing.expectError(error.LimitExceeded, commonPayload(a, &table, common, 46));
+    try std.testing.expectError(error.InvalidTableCreation, commonPayload(a, &table, common, 52));
 }

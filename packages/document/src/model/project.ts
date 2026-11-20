@@ -1,3 +1,4 @@
+import { carryControlAwareWitness } from './control-aware-text.ts';
 import type { DocumentFormat } from '../types/native.ts';
 import type {
   DocumentView,
@@ -419,6 +420,7 @@ export function project(
         editability: p.identityKnown ? 'range-check-required' : 'unknown',
         ...(p.identityKnown ? {} : { reason: 'SourceIdentityUnverified' }),
       };
+      if (format === 'hwpx') carryControlAwareWitness(p, block);
       if (displayText === null) {
         warn('DisplayTextUnavailable', 'Known display text unavailable', pSource);
         model.coverage.unknownBlocks++;

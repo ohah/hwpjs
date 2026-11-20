@@ -1,3 +1,4 @@
+import { plainHwp5ChartStampTransition } from './hwp5-chart-plain-metadata.ts';
 // A receipt alone never authorizes reuse: compare the complete owned snapshots.
 export function exactDisplayValue(a: any, b: any, budget = { n: 200000 }, depth = 0): boolean {
   if (--budget.n < 0 || depth > 64) return false;
@@ -89,7 +90,13 @@ export function validateFullSnapshotTextDelta(before: any, next: any, packet: an
       return false;
     const { paragraphs: ap, ...ah } = before,
       { paragraphs: bp, ...bh } = next;
-    if (!exactDisplayValue(ah, bh)) return false;
+    const chartStamps = plainHwp5ChartStampTransition(before, {
+      beforeEpoch: r.beforeEpoch,
+      beforeRevision: r.beforeRevision,
+      epoch: r.epoch,
+      revision: r.revision,
+    });
+    if (chartStamps === null || !exactDisplayValue({ ...ah, ...chartStamps }, bh)) return false;
     let owners = 0;
     for (let i = 0; i < ap.length; i++) {
       const a = ap[i],

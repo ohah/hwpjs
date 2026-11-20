@@ -474,7 +474,7 @@ export function extendedDocumentTools({
       config: {
         title: '문서 변경 묶음을 새 파일에 저장',
         description:
-          '명시한 작업들을 독립 Native 세션에서 순서대로 적용하고 한 번 저장합니다. coordinates는 current-transaction 필수이며 직전 작업 이후 실제 Native 좌표입니다. 구조 변경 뒤 문단 번호를 자동 보정하지 않습니다. expectedText와 expectedRangeText는 get_document_paragraph로 확인한 Native 원문 조건입니다. 실패하면 새 파일을 게시하지 않습니다. 기존 원본·출력은 덮어쓰지 않습니다. HWP5 오래된 배치 허용은 새 조판 생성을 뜻하지 않습니다.',
+          '명시한 작업들을 독립 Native 세션에서 순서대로 적용하고 한 번 저장합니다. coordinates는 current-transaction 필수이며 직전 작업 이후 실제 Native 좌표입니다. 구조 변경 뒤 문단 번호를 자동 보정하지 않습니다. HWPX chart-create/equation-insert는 selector로 Native owner를 조회하며, created_cell.operation은 선행 table-insert 결과 identity만 참조합니다. chart payload의 values/x_values/bubble_sizes는 유한 숫자 어휘 문자열이며 size,data,선택 chart 프로필을 명시합니다. HWP5 새 차트·수식 생성은 이 경로에서 지원하지 않습니다. expectedText와 expectedRangeText는 get_document_paragraph로 확인한 Native 원문 조건입니다. 실패하면 새 파일을 게시하지 않습니다. 기존 원본·출력은 덮어쓰지 않습니다. HWP5 오래된 배치 허용은 새 조판 생성을 뜻하지 않습니다.',
         inputSchema: z.strictObject({
           inputPath: path(),
           outputPath: path(),

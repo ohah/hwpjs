@@ -39,6 +39,7 @@ export type DemoCommand =
   | 'insert-equation'
   | 'edit-chart-data'
   | 'edit-equation'
+  | 'delete-note'
   | 'insert-footnote'
   | 'insert-endnote'
   | 'insert-link'

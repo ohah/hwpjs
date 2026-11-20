@@ -1,3 +1,4 @@
+import { projectedHwp5ChartRootKeys } from './hwp5-chart-roots.mjs';
 import { projectHwp5RectangleContent } from './hwp5-rectangle-content-projection.mjs';
 import { projectHwp5GroupContent } from './hwp5-group-content-projection.mjs';
 import { projectHwp5MixedRootContent } from './hwp5-mixed-root-content-projection.mjs';
@@ -6,6 +7,26 @@ import { projectHwp5GroupedMixedContent } from './hwp5-grouped-mixed-content.mjs
 // Worker and page layout share root selection, not separate format guesses.
 export function projectHwp5RootContent(content) {
   const roots = content.hwp5Drawings ?? [];
+  const chartKeys = projectedHwp5ChartRootKeys(content);
+  if (chartKeys.size) {
+    const otherRoots = roots.filter((row) => !chartKeys.has(`${row.section}:${row.controlNode}`));
+    const projected = projectHwp5RootContent({
+      ...content,
+      hwp5Drawings: otherRoots,
+      hwp5ChartTargets: [],
+    });
+    return projected.state === 'projected'
+      ? {
+          ...projected,
+          content: {
+            ...projected.content,
+            hwp5Drawings: roots,
+            hwp5ChartTargets: content.hwp5ChartTargets,
+          },
+        }
+      : projected;
+  }
+
   if (!roots.length)
     return content.currentParagraphFlows?.some((row) => row.host === 'drawing')
       ? { state: 'unavailable', error: 'IncompleteHwp5RootSources' }

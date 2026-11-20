@@ -11,6 +11,9 @@ pub const Change = struct {
     start_tag: ?[]const u8 = null,
     /// Trusted serializer output, never user text. Caller owns XML semantics.
     serialized_xml: ?[]const u8 = null,
+    /// Trusted mixed CharData/inline XML content prepared by a serializer. The
+    /// existing empty-t/run materialization still owns surrounding XML tags.
+    serialized_content: ?[]const u8 = null,
 };
 
 /// UTF-8 XML source only. Sorted, nonoverlapping spans are replaced with XML
@@ -18,6 +21,9 @@ pub const Change = struct {
 pub fn write(a: std.mem.Allocator, source: []const u8, changes: []const Change, max_bytes: usize) ![]u8 {
     var previous: usize = 0;
     for (changes, 0..) |change, index| {
+        if (change.serialized_content != null and
+            (change.text.len != 0 or change.serialized_xml != null or change.start_tag != null))
+            return error.InvalidSourceSpan;
         if (change.start > change.end or change.end > source.len or change.start < previous) return error.InvalidSourceSpan;
         if (index != 0 and change.start == changes[index - 1].start) return error.DuplicateSourceSpan;
         previous = change.end;
@@ -71,9 +77,13 @@ pub fn write(a: std.mem.Allocator, source: []const u8, changes: []const Change, 
             try append(a, &output, name[0 .. name.len - 3], max_bytes);
             try append(a, &output, "t>", max_bytes);
         }
-        const encoded = try text_writer.encode(a, change.text, max_bytes -| output.items.len);
-        defer a.free(encoded);
-        try append(a, &output, encoded, max_bytes);
+        if (change.serialized_content) |prepared| {
+            try append(a, &output, prepared, max_bytes);
+        } else {
+            const encoded = try text_writer.encode(a, change.text, max_bytes -| output.items.len);
+            defer a.free(encoded);
+            try append(a, &output, encoded, max_bytes);
+        }
         if (change.run_opening != null) {
             const name = tag.?.name.raw;
             try append(a, &output, "</", max_bytes);

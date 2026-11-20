@@ -96,7 +96,8 @@
   display: flex;
   justify-content: flex-end;
   gap: 0.6rem;
-  padding-top: 0.5rem;
+  border-top: 1px solid #dbe1ea;
+  padding: 0.75rem 0;
 }
 .inline-object-insert-dialog button {
   padding: 0.65rem 1rem;
@@ -130,14 +131,6 @@
   .inline-object-insert-dialog .inline-object-insert-size {
     grid-template-columns: 1fr;
   }
-}
-.inline-object-insert-actions {
-  position: sticky;
-  bottom: 0;
-  z-index: 1;
-  background: #fff;
-  border-top: 1px solid #dbe1ea;
-  padding: 0.75rem 0;
 }
 .inline-object-insert-grid-scroll {
   max-width: 100%;

@@ -2,6 +2,12 @@
 //! Every input is produced in memory; no fixture or filesystem access.
 comptime {
     _ = @import("new_document/color_profile_tests.zig");
+    _ = @import("new_document/hwp5_profile_tests.zig");
+    _ = @import("new_document/section_children_tests.zig");
+    _ = @import("hwp5/body/section_child_writer_tests.zig");
+    _ = @import("new_document/hwp5_profile_lifecycle_tests.zig");
+    _ = @import("new_document/hwp5_default_flows_tests.zig");
+    _ = @import("new_document/hwp5_profile_grid_tests.zig");
 }
 const std = @import("std");
 const new_document = @import("new_document/root.zig");

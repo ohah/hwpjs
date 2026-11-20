@@ -93,7 +93,7 @@ test "HWPX table display bindings follow split and merge current paragraphs with
             try std.testing.expectEqual(expected_count, bindings.len);
         }
     };
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &session, before.len });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &session, before.len });
     const target = before[0];
     try std.testing.expect(try session.splitParagraph(0, target.paragraph, 0, 0));
     const after = try read(a, &session, 0);
@@ -102,11 +102,11 @@ test "HWPX table display bindings follow split and merge current paragraphs with
     try std.testing.expectEqualDeep(target.owner, after[0].owner);
     try std.testing.expectEqualDeep(target.owner, after[1].owner);
     try std.testing.expectEqual(target.paragraph + 1, after[1].paragraph);
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &session, before.len + 1 });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &session, before.len + 1 });
     try std.testing.expect(try session.mergeParagraph(0, target.paragraph));
     const merged = try read(a, &session, 0);
     defer a.free(merged);
     try std.testing.expectEqualDeep(before, merged);
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &session, before.len });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &session, before.len });
     try std.testing.expectError(error.InvalidSectionIndex, read(a, &session, session.sections.len));
 }

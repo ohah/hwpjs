@@ -148,22 +148,82 @@ test "HWP5 delta service: 외부 실제setter는 epoch mismatch로 미기록undo
 test "HWP5 delta service: payload한도는 준비단계에서 text revision redo 보존" {
     const bytes = try input();
     defer a.free(bytes);
+    const immutable_input = try a.dupe(u8, bytes);
+    defer a.free(immutable_input);
     const s = try edit.Session.open(a, bytes);
     defer s.close();
     s.enableHistoryDelta();
-    const payload = try s.checkpointSize(std.math.maxInt(usize));
-    try std.testing.expectEqual(try baseline.payloadCost(a, bytes), payload);
-    const original_error = (try baseline.refusal(a, bytes, .payload, @intCast(payload))) orelse return error.MissingOriginalBudgetFailure;
+    const payload = try @import("hwp5_history_payload_oracle.zig").freshNoori(bytes);
+    try std.testing.expectEqual(payload, try s.checkpointSize(std.math.maxInt(usize)));
+    try std.testing.expectEqual(payload, try s.checkpointSize(payload));
+    try std.testing.expectError(error.LimitExceeded, s.checkpointSize(payload - 1));
+
+    // Historical refusal is queried at its OWN fixed cap. Its numeric payload
+    // is never used as today's memory budget or rewritten to today's answer.
+    const historical_payload = try baseline.payloadCost(a, bytes);
+    const original_error = (try baseline.refusal(a, bytes, .payload, @intCast(historical_payload))) orelse return error.MissingOriginalBudgetFailure;
+    try std.testing.expectEqualStrings("LimitExceeded", original_error);
+    if (histories.History.initV2(a, s, .{ .max_checkpoint_bytes = @intCast(payload - 1) })) |value| {
+        var unexpected = value;
+        unexpected.deinit();
+        return error.CandidateUnexpectedBudgetSuccess;
+    } else |err| try std.testing.expectEqual(error.LimitExceeded, err);
+    try same(s, bytes);
+
     var h = try histories.History.initV2(a, s, .{ .max_checkpoint_bytes = @intCast(payload) });
     defer h.deinit();
+    const growth: edit.Command = .{ .splice_text = .{ .section = 0, .paragraph = 15, .start_unit = 0, .end_unit = 0, .utf8 = "x" } };
+    const initial_stats = h.stats();
+    const initial_ticket = try s.historyTicket();
     const observed: ?anyerror = blk: {
-        _ = h.apply(s, .{ .splice_text = .{ .section = 0, .paragraph = 15, .start_unit = 0, .end_unit = 0, .utf8 = "x" } }) catch |err| break :blk err;
+        _ = h.apply(s, growth) catch |err| break :blk err;
         break :blk null;
     };
     try std.testing.expectEqualStrings(original_error, @errorName(observed orelse return error.CandidateUnexpectedBudgetSuccess));
+    try std.testing.expect(std.meta.eql(initial_stats, h.stats()));
+    try std.testing.expect(std.meta.eql(initial_ticket, try s.historyTicket()));
     try std.testing.expectEqual(@as(u32, 0), h.revision());
     try std.testing.expectEqual(@as(usize, 0), h.stats().undoCount);
+    try std.testing.expectEqual(@as(usize, 0), h.stats().redoCount);
     try same(s, bytes);
+
+    // A one-unit replacement fits the SAME exact cap and creates real redo.
+    // Raw fixture paragraph15 starts with U+AD6D; replacement preserves the
+    // number of UTF16 units/tokens/runs, so it needs no larger payload budget.
+    const original_text = try s.copyText(a, 0, 15);
+    defer a.free(original_text);
+    try std.testing.expect(original_text.len >= 2);
+    try std.testing.expectEqual(@as(u16, 0xad6d), std.mem.readInt(u16, original_text[0..2], .little));
+    const expected_text = try a.dupe(u8, original_text);
+    defer a.free(expected_text);
+    expected_text[0] = 'x';
+    expected_text[1] = 0;
+    try splice(&h, s, 0, 1, "x");
+    try std.testing.expectEqual(payload, try s.checkpointSize(payload));
+    const actual_text = try s.copyText(a, 0, 15);
+    defer a.free(actual_text);
+    try std.testing.expectEqualSlices(u8, expected_text, actual_text);
+    const changed = try saved(s);
+    defer a.free(changed);
+    try std.testing.expect(!std.mem.eql(u8, bytes, changed));
+    try std.testing.expect(try h.undo(s));
+    try same(s, bytes);
+    const before = h.stats();
+    const ticket = try s.historyTicket();
+    try std.testing.expectEqual(@as(usize, 1), before.redoCount);
+    try std.testing.expectError(error.LimitExceeded, h.apply(s, growth));
+    try std.testing.expect(std.meta.eql(before, h.stats()));
+    try std.testing.expect(std.meta.eql(ticket, try s.historyTicket()));
+    try std.testing.expectEqual(payload, try s.checkpointSize(payload));
+    try same(s, bytes);
+    try std.testing.expect(try h.redo(s));
+    try std.testing.expectEqual(@as(u32, 1), h.revision());
+    try std.testing.expectEqual(@as(usize, 1), h.stats().undoCount);
+    try std.testing.expectEqual(@as(usize, 0), h.stats().redoCount);
+    try same(s, changed);
+    try std.testing.expect(try h.undo(s));
+    try same(s, bytes);
+    try std.testing.expectEqualSlices(u8, immutable_input, bytes);
 }
 test "HWP5 delta service: surrogate 삽입 역명령과실패batch는 원본과redo보존" {
     const bytes = try input();

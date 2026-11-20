@@ -1,6 +1,10 @@
 const Reader = @import("../../binary/reader.zig").Reader;
 pub const tag: u10 = 84;
 pub const Layout = enum { spec24, observed26 };
+/// Explicit raw observations retain their existing policy. Default chart reads
+/// select the complete spec24 record or the existing observed26 prefix contract.
+/// Selection never retries a document or interprets an opaque legacy tail.
+pub const Selection = union(enum) { explicit: Layout, structural };
 pub const Properties = struct {
     layout: Layout,
     attributes: u32,
@@ -23,6 +27,25 @@ pub const Properties = struct {
             .border_thickness = try r.readInt(i32),
             .border_attributes = try r.readInt(u32),
             .extra = bytes[r.offset..],
+        };
+    }
+    /// Exact24 is the complete specification record. At >=26 retain the
+    /// historical observed26 prefix, including arbitrary borrowed trailing bytes.
+    /// No new enum/reserved-bit allowlist: those values are raw observations,
+    /// with existing validation diagnostics and independent resource admission.
+    /// Length25 is ambiguous/incomplete and is never retried as spec24+tail.
+    pub fn parseKnown(bytes: []const u8) !Properties {
+        const layout: Layout = switch (bytes.len) {
+            24 => .spec24,
+            0...23, 25 => return error.UnexpectedEnd,
+            else => .observed26,
+        };
+        return parse(bytes, layout);
+    }
+    pub fn read(bytes: []const u8, selection: Selection) !Properties {
+        return switch (selection) {
+            .explicit => |layout| parse(bytes, layout),
+            .structural => parseKnown(bytes),
         };
     }
     pub fn drawingAspect(self: Properties) u8 {

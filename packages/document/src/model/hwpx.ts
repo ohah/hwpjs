@@ -1,3 +1,4 @@
+import { observeControlAwareParagraphs } from './control-aware-text.ts';
 import { createObservationReadScope } from './read-observation-scope.ts';
 import type {
   ObservationSdk,
@@ -32,6 +33,7 @@ interface ObjectSite {
   source?: { node?: number; issue?: string | null };
   paragraph?: number;
   anchorUnit?: number;
+  anchor_unit?: number;
   error_name?: string | null;
   ole_node?: number;
   node?: number;
@@ -39,6 +41,7 @@ interface ObjectSite {
   drawingNode?: number;
 }
 import { call, array, uint, unique } from './common.ts';
+
 function collectSection(
   sdk: ObservationSdk,
   section: number,
@@ -59,16 +62,13 @@ function collectSection(
       observedRows.push({ paragraph: flow.paragraph });
       observedIds.add(flow.paragraph);
     }
-  const paragraphs: ParagraphObservation[] = observedRows.map((row) => {
-    const flow = flowMap.get(row.paragraph);
-    return {
-      paragraph: row.paragraph,
-      node: uint(flow?.source_node) ? flow.source_node : null,
-      identityKnown: uint(flow?.source_node),
-      displayText: typeof row.text === 'string' ? row.text : null,
-      flow: flow ?? null,
-    };
-  });
+  const paragraphs: ParagraphObservation[] = observeControlAwareParagraphs(
+    sdk,
+    section,
+    observedRows,
+    flowMap,
+    warnings,
+  );
   const bindings = get<TableBinding[]>('tableBindings'),
     placements = get<TablePlacement[]>('tablePlacements'),
     tableInventory = get<CellInventory>('tableBorderSources'),
@@ -139,6 +139,9 @@ function collectSection(
           : null,
       detailUnavailable: row?.error_name !== null,
       reason: row?.error_name ?? 'ObjectDetailsDeferred',
+      ...(row?.error_name === null && uint(row?.paragraph) && uint(row?.anchorUnit)
+        ? { paragraph: row.paragraph, anchorUnit: row.anchorUnit }
+        : {}),
     });
   for (const row of inventory('equationSites'))
     addObject({
@@ -150,6 +153,12 @@ function collectSection(
           : null,
       detailUnavailable: row?.source?.issue !== null || row?.error_name !== null,
       reason: row?.source?.issue ?? row?.error_name ?? 'ObjectDetailsDeferred',
+      ...(row?.source?.issue === null &&
+      row?.error_name === null &&
+      uint(row?.paragraph) &&
+      uint(row?.anchor_unit)
+        ? { paragraph: row.paragraph, anchorUnit: row.anchor_unit }
+        : {}),
     });
   for (const row of inventory('oleSites'))
     addObject({

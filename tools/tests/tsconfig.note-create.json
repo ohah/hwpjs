@@ -1,0 +1,29 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "strict": true,
+    "paths": {
+      "@hwpjs/core": ["../../packages/core/src/index.ts"],
+      "@hwpjs/core/runtime": ["../../packages/core/src/runtime.ts"],
+      "@hwpjs/vanilla": ["../../packages/vanilla/src/index.ts"],
+      "@hwpjs/core/_internal/native-geometry": [
+        "../../packages/core/src/_internal/native-geometry.ts"
+      ],
+      "@hwpjs/core/_internal/*": ["../../packages/core/src/_internal/*.ts"]
+    }
+  },
+  "files": [
+    "../../packages/core/src/index.ts",
+    "../../apps/demo/src/assets.d.ts",
+    "../../apps/demo/src/demo-controller.ts",
+    "../../apps/demo/src/note-insert-tool.ts",
+    "../../tests/hwpx/note-create-core.test.ts",
+    "../../apps/demo/tests/note-insert-tool.test.ts",
+    "note-create-types.ts",
+    "../../apps/demo/tests/note-delete-tool.test.ts",
+    "../../tests/hwpx/note-delete-core.test.ts",
+    "note-delete-types.ts"
+  ],
+  "include": []
+}

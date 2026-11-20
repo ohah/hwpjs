@@ -57,7 +57,56 @@ export function insertExpected(before, paragraph, at, text) {
   p.characterRanges = ranges;
   return expected;
 }
-export function assertFullSnapshot(actual, expected, before) {
+// Test-owned revision plan. It never consumes a product response.
+export function createHistoryPlan() {
+  let revisions = [0],
+    cursor = 0,
+    next = 1;
+  return {
+    get revision() {
+      return revisions[cursor];
+    },
+    move(kind) {
+      if (kind === 'undo') {
+        assert(cursor > 0);
+        cursor--;
+      } else if (kind === 'redo') {
+        assert(cursor + 1 < revisions.length);
+        cursor++;
+      } else {
+        assert.equal(kind, 'splice');
+        revisions.splice(cursor + 1);
+        revisions.push(next++);
+        cursor++;
+      }
+      return revisions[cursor];
+    },
+  };
+}
+export function assertChartStamps(content, expectedRevision) {
+  assert(Number.isSafeInteger(expectedRevision) && expectedRevision >= 0);
+  if (content.hwp5ChartDisplayAvailable !== true) {
+    assert.equal(Object.hasOwn(content, 'hwp5ChartSourceEpoch'), false);
+    assert.equal(Object.hasOwn(content, 'hwp5ChartHistoryRevision'), false);
+    return;
+  }
+  assert.equal(
+    content.hwp5ChartHistoryRevision,
+    expectedRevision,
+    'Independent chart history revision',
+  );
+  const epoch = content.hwp5ChartSourceEpoch;
+  assert.equal(typeof epoch, 'string');
+  assert.match(epoch, /^[1-9][0-9]*$/);
+  assert(BigInt(epoch) <= 0xffffffffffffffffn);
+  assert(content.paragraphs.length > 0);
+  for (const p of content.paragraphs)
+    assert.equal(p.currentReference?.epoch, epoch, 'Chart epoch agrees with Native references');
+}
+export function assertFullSnapshot(actual, expected, before, { revision, beforeRevision }) {
+  // Validate temporal observations BEFORE excluding exactly two fields from comparison.
+  assertChartStamps(actual, revision);
+  assertChartStamps(before, beforeRevision);
   for (const v of [actual, expected, before]) assertContentShape(v, true);
   assert.equal(actual.format, 'hwp5');
   assert.equal(actual.limited, false);
@@ -67,6 +116,10 @@ export function assertFullSnapshot(actual, expected, before) {
   const a = cloneData(actual),
     e = cloneData(expected),
     b = cloneData(before);
+  for (const value of [a, e]) {
+    delete value.hwp5ChartSourceEpoch;
+    delete value.hwp5ChartHistoryRevision;
+  }
   let epoch, oldEpoch;
   for (let i = 0; i < a.paragraphs.length; i++) {
     const ref = a.paragraphs[i].currentReference,

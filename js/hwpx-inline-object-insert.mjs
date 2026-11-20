@@ -1,26 +1,18 @@
+import {
+  checkedInlineObjectTarget,
+  checkedInlineObjectSelector,
+  matchInlineObjectObservation,
+  requireInlineObjectPlacement,
+  inlineObjectPlacementAvailable,
+} from './hwpx-inline-object-placement.mjs';
 import { parseChartDecimal, compareChartDecimals } from './chart-create-decimal.mjs';
 import { applyNativeEdit } from './native-edit-outcome.mjs';
 
 // Transport validation only. Native owns the document, XML, resources and history.
 const maxInt = 0x7fffffff;
-export function inlineInsertRecord(input, keys) {
-  if (
-    !input ||
-    typeof input !== 'object' ||
-    ![Object.prototype, null].includes(Object.getPrototypeOf(input))
-  )
-    throw Error('InvalidInlineObjectRequest');
-  const descriptors = Object.getOwnPropertyDescriptors(input);
-  if (Reflect.ownKeys(descriptors).length !== keys.length)
-    throw Error('InvalidInlineObjectRequest');
-  const result = {};
-  for (const key of keys) {
-    const entry = descriptors[key];
-    if (!entry || !Object.hasOwn(entry, 'value')) throw Error('InvalidInlineObjectRequest');
-    result[key] = entry.value;
-  }
-  return result;
-}
+export { inlineInsertRecord } from './hwpx-inline-object-record.mjs';
+import { inlineInsertRecord } from './hwpx-inline-object-record.mjs';
+
 function integer(value, min = 0, max = 0xffffffff) {
   if (!Number.isSafeInteger(value) || value < min || value > max || Object.is(value, -0))
     throw Error('InvalidInlineObjectInteger');
@@ -93,37 +85,31 @@ function legacyChartCreateOptions(input) {
   };
 }
 export function checkedEquationInsertRequest(input) {
-  const p = inlineInsertRecord(input, [
+  const optionKeys = ['script', 'width', 'height', 'baseLine', 'baseUnit', 'version', 'font'];
+  const fields = Object.getOwnPropertyDescriptors(input ?? {});
+  const owner = Object.hasOwn(fields, 'owner');
+  const paragraph = Object.hasOwn(fields, 'paragraph');
+  const targetKeys = [
     'section',
-    'paragraph',
+    ...(paragraph ? ['paragraph'] : []),
     'start',
     'expectedText',
-    'script',
-    'width',
-    'height',
-    'baseLine',
-    'baseUnit',
-    'version',
-    'font',
-  ]);
+    ...(owner ? ['owner'] : []),
+    ...(Object.hasOwn(fields, 'affinity') ? ['affinity'] : []),
+  ];
+  const p = inlineInsertRecord(input, [...targetKeys, ...optionKeys]);
+  const target = checkedInlineObjectTarget(
+    Object.fromEntries(targetKeys.map((k) => [k, p[k]])),
+    true,
+  );
   return {
-    section: integer(p.section, 0, 0),
-    paragraph: integer(p.paragraph, 1),
-    start: integer(p.start),
-    expectedText: text(p.expectedText, 8 * 1024 * 1024, true),
-    ...checkedEquationInsertOptions(
-      Object.fromEntries(
-        ['script', 'width', 'height', 'baseLine', 'baseUnit', 'version', 'font'].map((k) => [
-          k,
-          p[k],
-        ]),
-      ),
-    ),
+    ...target,
+    expectedText: text(target.expectedText, 8 * 1024 * 1024, true),
+    ...checkedEquationInsertOptions(Object.fromEntries(optionKeys.map((k) => [k, p[k]]))),
   };
 }
-function legacyChartCreateRequest(input) {
-  const p = inlineInsertRecord(input, ['target', 'size', 'data']);
-  const t = inlineInsertRecord(p.target, ['section', 'paragraph', 'unit', 'expected_text']);
+function legacyChartCreatePayload(input) {
+  const p = inlineInsertRecord(input, ['size', 'data']);
   const size = inlineInsertRecord(p.size, ['width', 'height']);
   const data = inlineInsertRecord(p.data, ['categories', 'series']);
   const series = list(data.series, 64, (value) => {
@@ -144,12 +130,6 @@ function legacyChartCreateRequest(input) {
   });
   const options = checkedChartCreateOptions({ ...size, categories: data.categories, series });
   return {
-    target: {
-      section: integer(t.section, 0, 0),
-      paragraph: integer(t.paragraph, 1),
-      unit: integer(t.unit),
-      expected_text: text(t.expected_text, 8 * 1024 * 1024, true),
-    },
     size: { width: options.width, height: options.height },
     data: {
       categories: options.categories,
@@ -158,6 +138,15 @@ function legacyChartCreateRequest(input) {
         return { name: s.name, values: list(s.values, 4096, (value) => value) };
       }),
     },
+  };
+}
+function legacyChartCreateRequest(input) {
+  const p = inlineInsertRecord(input, ['target', 'size', 'data']);
+  const target = checkedInlineObjectTarget(p.target);
+  const payload = legacyChartCreatePayload({ size: p.size, data: p.data });
+  return {
+    target: { ...target, expected_text: text(target.expected_text, 8 * 1024 * 1024, true) },
+    ...payload,
   };
 }
 // Explicit v1 profile contract, shared with Native chart_create_profile.zig.
@@ -303,20 +292,31 @@ export function checkedChartCreateOptions(input) {
 export function checkedChartCreateRequest(input) {
   if (!hasChart(input)) return legacyChartCreateRequest(input);
   const p = inlineInsertRecord(input, ['target', 'size', 'data', 'chart']);
-  const target = inlineInsertRecord(p.target, ['section', 'paragraph', 'unit', 'expected_text']);
+  const target = checkedInlineObjectTarget(p.target);
   const size = inlineInsertRecord(p.size, ['width', 'height']);
   const chart = checkedChartCreateProfile(p.chart);
   return {
     target: {
-      section: integer(target.section, 0, 0),
-      paragraph: integer(target.paragraph, 1),
-      unit: integer(target.unit),
+      ...target,
       expected_text: text(target.expected_text, 8 * 1024 * 1024, true),
     },
+    ...profileChartCreatePayload(size, p.data, chart),
+  };
+}
+function profileChartCreatePayload(size, data, chart) {
+  return {
     size: { width: integer(size.width, 1, maxInt), height: integer(size.height, 1, maxInt) },
-    data: profileData(p.data, chart, true),
+    data: profileData(data, chart, true),
     chart,
   };
+}
+/** Validate lexical chart data independently of any physical insert target. */
+export function checkedChartCreatePayload(input) {
+  if (!hasChart(input)) return legacyChartCreatePayload(input);
+  const p = inlineInsertRecord(input, ['size', 'data', 'chart']);
+  const size = inlineInsertRecord(p.size, ['width', 'height']);
+  const chart = checkedChartCreateProfile(p.chart);
+  return profileChartCreatePayload(size, p.data, chart);
 }
 /** Project number DTO to Native lexical strings. Legacy String(-0) stays '0'. */
 export function chartCreateWireData(options) {
@@ -351,6 +351,7 @@ export function createHwpxInlineObjectInsertApi({ wasm, memory, check }) {
   const insert = (name, request) => {
     check();
     if (typeof wasm[name] !== 'function') throw Error('InlineObjectInsertionUnavailable');
+    requireInlineObjectPlacement(wasm, request);
     const bytes = new TextEncoder().encode(JSON.stringify(request));
     if (bytes.length > 8 * 1024 * 1024) throw Error('InlineObjectRequestLimitExceeded');
     // Never simulate success/no-op, nor retry after an ambiguous completion.
@@ -362,6 +363,30 @@ export function createHwpxInlineObjectInsertApi({ wasm, memory, check }) {
     );
   };
   return {
+    inlineObjectOwner: (selector) => {
+      check();
+      if (!inlineObjectPlacementAvailable(wasm)) throw Error('InlineObjectPlacementUnavailable');
+      const request = checkedInlineObjectSelector(selector);
+      return memory.withBytes(new TextEncoder().encode(JSON.stringify(request)), (ptr, size) => {
+        if (wasm.hwpx_edit_inline_object_owner(ptr, size) !== 1) throw memory.error();
+        try {
+          return matchInlineObjectObservation(
+            request,
+            JSON.parse(
+              new TextDecoder('utf-8', { fatal: true }).decode(
+                memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
+              ),
+            ),
+          );
+        } finally {
+          wasm.hwpx_edit_output_free();
+        }
+      });
+    },
+    inlineObjectPlacementVersion: () => {
+      check();
+      return inlineObjectPlacementAvailable(wasm) ? 1 : 0;
+    },
     supportsEquationInsertionAbi: () => typeof wasm.hwpx_edit_insert_equation === 'function',
     supportsChartCreationAbi: () => typeof wasm.hwpx_edit_create_chart === 'function',
     insertEquation: (input) =>

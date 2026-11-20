@@ -1,6 +1,11 @@
 /** Disposable display snapshots only. Never used for document saves. */
 export function createChartDisplayResources({
   read,
+  validate = (value, section, owner) =>
+    value?.kind === 'chart_display' &&
+    value.pair?.section_ordinal === section &&
+    value.pair?.wrapper_node === owner,
+  targetOwner = (target) => target.wrapper,
   onChange = () => {},
   maxEntries = 64,
   maxSnapshotUnits = 1000000,
@@ -8,6 +13,8 @@ export function createChartDisplayResources({
 }) {
   if (
     typeof read !== 'function' ||
+    typeof validate !== 'function' ||
+    typeof targetOwner !== 'function' ||
     ![maxEntries, maxSnapshotUnits, maxTotalUnits].every((n) => Number.isSafeInteger(n) && n >= 1)
   )
     throw new Error('InvalidChartDisplayResources');
@@ -49,8 +56,8 @@ export function createChartDisplayResources({
       epoch++;
       const wanted = new Set();
       for (const target of targets ?? [])
-        if (target && !target.error_name && valid(target.section, target.wrapper))
-          wanted.add(key(target.section, target.wrapper));
+        if (target && !target.error_name && valid(target.section, targetOwner(target)))
+          wanted.add(key(target.section, targetOwner(target)));
       totalUnits = 0;
       for (const [id, old] of entries) {
         const previewValue =
@@ -103,12 +110,7 @@ export function createChartDisplayResources({
           try {
             const value = await read(section, wrapper);
             if (generation !== epoch || closed) return;
-            if (
-              value?.kind !== 'chart_display' ||
-              value.pair?.section_ordinal !== section ||
-              value.pair?.wrapper_node !== wrapper
-            )
-              throw new Error('InvalidChartDisplayReply');
+            if (!validate(value, section, wrapper)) throw new Error('InvalidChartDisplayReply');
             const units = JSON.stringify(value).length;
             if (units > maxSnapshotUnits || units > maxTotalUnits - (totalUnits - entry.units))
               throw new Error('ChartDisplayUnitsLimitExceeded');

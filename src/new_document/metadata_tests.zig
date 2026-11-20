@@ -40,7 +40,7 @@ fn inspectHwp(bytes: []const u8) !void {
     const header_bytes = try file.readStream(a, "/FileHeader");
     const section_bytes = try file.readStream(a, "/BodyText/Section0");
     const header = try hwp.Header.parse(header_bytes);
-    try std.testing.expectEqual(@as(u32, 0x05000107), header.version().raw);
+    try std.testing.expectEqual(@as(u32, 0x05000300), header.version().raw);
     const docinfo_bytes = try file.readStream(a, "/DocInfo");
     var docinfo_records = hwp.record.Iterator.init(docinfo_bytes, .{});
     var characters: usize = 0;

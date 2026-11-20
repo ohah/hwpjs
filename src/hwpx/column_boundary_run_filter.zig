@@ -67,7 +67,7 @@ test "column run filter partitions identical controls without text or metadata l
             }
         };
         try Probe.runProbe(a, &tree, run, id);
-        try std.testing.checkAllAllocationFailures(a, Probe.runProbe, .{ &tree, run, id });
+        try @import("../testing/allocation_failures.zig").check(Probe.runProbe, .{ &tree, run, id });
     }
     try std.testing.expectError(error.LimitExceeded, write(a, &tree, 2, run, &.{}, 1));
 }

@@ -93,6 +93,7 @@ const icons = {
       'M4 12h18M13 3c-6 5-6 13 0 18m0-18c6 5 6 13 0 18m5-1 4-4c5-4 10 2 6 6l-4 4c-4 4-10-2-6-6m1 3 7-5',
     ),
   ],
+  'delete-note': [paper, line('M10 14h12')],
   'insert-footnote': [paper, line('M11 9h10m-10 4h10m-10 4h10M9 23h14m-12 3h8m-8-5 2-2v5')],
   'insert-endnote': [paper, line('M11 9h10m-10 4h10m-10 4h10M9 23h14m-11 3h8m-5-6v6m-2-6h4')],
   'insert-header': [

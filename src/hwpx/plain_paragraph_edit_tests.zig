@@ -72,7 +72,7 @@ test "HWPX plain paragraph tab-only boundaries support insert restore and alloca
     try std.testing.expectError(error.LimitExceeded, edit.spliceWithTabs(a, &tree, &bounded, bounded_locations, 1, 1, 0, "x", 0, true));
     for (bounded.items) |site| try std.testing.expectEqualStrings("", site.text);
     try std.testing.expect(!try edit.spliceWithTabs(a, &tree, &bounded, bounded_locations, 1, 1, 0, "", 0, true));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const tree_module.Tree) !void {
             const options: sites_module.Options = .{ .materialize_tab_boundaries = true };
             var sites = try sites_module.collect(allocator, parsed, options);

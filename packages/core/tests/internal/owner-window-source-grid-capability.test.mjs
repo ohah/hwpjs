@@ -197,3 +197,102 @@ test('unknown dangerous root fields still refuse COW even when both snapshots ag
     assert.equal(f.merge(), null);
   }
 });
+
+// Source-only successor declarations. Not executed; actual Native/Worker content
+// plus the complete current 40-test gate are required before accepting this delta.
+test('created cell typing scope keeps legacy absence and explicit null without granting a generation', () => {
+  for (const extra of [
+    {},
+    { createdCellTypingScope: null },
+    { richTypingScope: 7, createdCellTypingScope: null },
+  ]) {
+    const f = fixture(extra);
+    assert.equal(isPlainOwnerBaseline(f.before, 0, 0), true);
+    const next = f.merge();
+    assert(next);
+    assert.equal(
+      Object.hasOwn(next, 'createdCellTypingScope'),
+      Object.hasOwn(extra, 'createdCellTypingScope'),
+    );
+    assert.equal(next.createdCellTypingScope, f.before.createdCellTypingScope);
+    assert.equal(next.characterShapes, f.before.characterShapes);
+    assert.equal(validateFullSnapshotTextDelta(f.before, next, f.packet), true);
+  }
+});
+test('created cell typing scope matches the exact positive body load ticket without numeric coercion', () => {
+  for (const scope of [1, 7, Number.MAX_SAFE_INTEGER]) {
+    const f = fixture({ richTypingScope: scope, createdCellTypingScope: scope });
+    assert.equal(isPlainOwnerBaseline(f.before, 0, 0), true);
+    const next = f.merge();
+    assert(next);
+    assert.equal(next.createdCellTypingScope, scope);
+    assert.equal(next.richTypingScope, scope);
+    assert.equal(next.currentParagraphFlows, f.before.currentParagraphFlows);
+  }
+});
+test('created cell typing scope rejects malformed values and different or missing body tickets', () => {
+  const cases = [
+    ...[undefined, false, true, 0, -0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1, '7', {}, []].map(
+      (scope) => ({ richTypingScope: 7, createdCellTypingScope: scope }),
+    ),
+    ...[undefined, null, false, '7', 8, {}, []].map((scope) => ({
+      richTypingScope: scope,
+      createdCellTypingScope: 7,
+    })),
+  ];
+  for (const extra of cases) {
+    const f = fixture(extra);
+    assert.equal(isPlainOwnerBaseline(f.before, 0, 0), false);
+    assert.equal(f.merge(), null);
+  }
+  for (const scope of [NaN, Infinity, -Infinity]) {
+    assert.throws(
+      () => fixture({ richTypingScope: 7, createdCellTypingScope: scope }),
+      /InvalidNumber/,
+    );
+  }
+});
+test('valid created cell typing scope cannot bypass pending-owner readonly or unknown-field guards', () => {
+  for (const extra of [
+    { createdTables: [{ identity: '1', cells: [] }] },
+    { readOnly: true },
+    { createdCellTypingScopeExtra: 7 },
+    { unknownDangerousField: true },
+  ]) {
+    const f = fixture({ richTypingScope: 7, createdCellTypingScope: 7, ...extra });
+    assert.equal(isPlainOwnerBaseline(f.before, 0, 0), false);
+    assert.equal(f.merge(), null);
+  }
+});
+test('created cell typing scope remains exact metadata across COW and full-snapshot delta validation', () => {
+  for (const extra of [
+    {},
+    { createdCellTypingScope: null },
+    { richTypingScope: 7, createdCellTypingScope: 7 },
+  ]) {
+    const f = fixture(extra),
+      next = f.merge();
+    assert(next);
+    assert.equal(validateFullSnapshotTextDelta(f.before, next, f.packet), true);
+    for (const value of [undefined, null, 8, '7', {}]) {
+      if (Object.hasOwn(extra, 'createdCellTypingScope') && value === extra.createdCellTypingScope)
+        continue;
+      assert.equal(
+        validateFullSnapshotTextDelta(
+          f.before,
+          ownObservation({ ...next, createdCellTypingScope: value })(),
+          f.packet,
+        ),
+        false,
+      );
+    }
+    if (Object.hasOwn(extra, 'createdCellTypingScope')) {
+      const removed = { ...next };
+      delete removed.createdCellTypingScope;
+      assert.equal(
+        validateFullSnapshotTextDelta(f.before, ownObservation(removed)(), f.packet),
+        false,
+      );
+    }
+  }
+});

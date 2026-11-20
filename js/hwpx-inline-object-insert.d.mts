@@ -1,4 +1,9 @@
 import type {
+  InlineObjectAddress,
+  InlineObjectSelector,
+  InlineObjectObservation,
+} from './hwpx-inline-object-placement.mjs';
+import type {
   EquationInsertOptions,
   ChartCreateOptions,
   ChartCreateWireData,
@@ -32,12 +37,11 @@ export interface ChartCreateStockWireSeries extends ChartCreateWireSeries {
   readonly stock_role: ChartStockRole;
 }
 export function chartCreateWireData(options: ChartCreateOptions): ChartCreateWireData;
-export type EquationInsertRequest = EquationInsertOptions & {
-  readonly section: number;
-  readonly paragraph: number;
-  readonly start: number;
-  readonly expectedText: string;
-};
+export type EquationInsertRequest = EquationInsertOptions &
+  InlineObjectAddress & {
+    readonly start: number;
+    readonly expectedText: string;
+  };
 type ChartWireData<S extends ChartCreateWireSeries = ChartCreateWireSeries> = {
   readonly categories: readonly string[];
   readonly series: readonly S[];
@@ -47,9 +51,7 @@ type ChartXYWireData<S extends ChartCreateXYWireSeries> = {
   readonly series: readonly S[];
 };
 export type ChartCreateRequest = {
-  readonly target: {
-    readonly section: number;
-    readonly paragraph: number;
+  readonly target: InlineObjectAddress & {
     readonly unit: number;
     readonly expected_text: string;
   };
@@ -66,15 +68,23 @@ export type ChartCreateRequest = {
 );
 export function checkedEquationInsertRequest(input: unknown): EquationInsertRequest;
 export function checkedChartCreateRequest(input: unknown): ChartCreateRequest;
+export type ChartCreatePayload = ChartCreateRequest extends infer R
+  ? R extends ChartCreateRequest
+    ? Omit<R, 'target'>
+    : never
+  : never;
+export function checkedChartCreatePayload(input: unknown): ChartCreatePayload;
 export function createHwpxInlineObjectInsertApi(options: {
   readonly wasm: Readonly<Record<string, unknown>>;
-  readonly memory: NativeEditMemory;
+  readonly memory: NativeEditMemory & { copy(pointer: number, length: number): Uint8Array };
   check(): void;
 }): {
   supportsEquationInsertionAbi(): boolean;
   supportsChartCreationAbi(): boolean;
   supportsChartCreateProfileAbi(): boolean;
   chartCreateProfileVersion(): 0 | 1;
+  inlineObjectPlacementVersion(): 0 | 1;
+  inlineObjectOwner(selector: InlineObjectSelector): InlineObjectObservation;
   insertEquation(input: unknown): NativeEditOutcome;
   createChart(input: unknown): NativeEditOutcome;
 };

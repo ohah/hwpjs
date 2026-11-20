@@ -396,7 +396,7 @@ test('read-only and closed HWP5 surfaces cannot issue or reuse width authority',
     null,
   );
   assert.equal((await editor.dispatchCommand(WIDTH, target)).status, 'rejected-unapplied');
-  await assert.rejects(save(editor), /EditorNotOpen/);
+  assert.deepEqual((await editor.save()).bytes, original);
   const capturedWitness = witness(editor);
   await editor.dispose();
   assert.equal(

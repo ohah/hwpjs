@@ -1,3 +1,4 @@
+import { consumeParagraphAxis } from './model/control-aware-text.ts';
 import type {
   DocumentView,
   DocumentBlock,
@@ -89,9 +90,83 @@ export function renderContent(
     }
     return parts.join(separator);
   };
+  // Only an existing verified reference at its exact Native UTF-16 anchor may
+  // replace U+FFFC. Equal ordinals in another section never share this index.
+  const candidates = new Map<string, Map<number, DocumentBlock | null>>();
+  const shown = new Set<DocumentBlock>();
+  const ownerKey = (section: number, paragraph: number) => `${section}:${paragraph}`;
+  if (model.format === 'hwpx') {
+    const stack: DocumentBlock[] = [];
+    for (const section of model.sections) {
+      for (const block of section.body) stack.push(block);
+      for (const area of [section.header, section.footer])
+        for (const definition of area.definitions)
+          for (const block of definition.blocks) stack.push(block);
+    }
+    // Unplaced objects never acquire inline placement permission from a matching label.
+    while (stack.length) {
+      const block = stack.pop()!;
+      if (block.type === 'table') {
+        for (const cell of block.cells) for (const child of cell.blocks) stack.push(child);
+      } else if (block.type === 'unknown' && ['chart', 'equation'].includes(block.kind)) {
+        const source = block.source;
+        if (
+          !source ||
+          !Number.isSafeInteger(source.paragraph) ||
+          !Number.isSafeInteger(source.anchorUnit) ||
+          source.anchorUnit! < 0 ||
+          !references.has(block)
+        )
+          continue;
+        const key = ownerKey(source.section, source.paragraph!);
+        const slots = candidates.get(key) ?? new Map<number, DocumentBlock | null>();
+        const at = source.anchorUnit!;
+        slots.set(at, slots.has(at) ? null : block);
+        candidates.set(key, slots);
+      }
+    }
+  }
+  const paragraphText = (block: Extract<DocumentBlock, { type: 'paragraph' }>): string => {
+    const captured =
+      model.format === 'hwpx'
+        ? consumeParagraphAxis(block)
+        : {
+            text: block.displayText,
+            owner: null,
+            allowsAnchor: (_unit: number, _node: number) => false,
+          };
+    const text = captured.text;
+    if (text === null) return '[문단 내용 확인 불가]';
+    if (model.format !== 'hwpx') return escape(text);
+    const slots = captured.owner
+      ? candidates.get(ownerKey(captured.owner.section, captured.owner.paragraph))
+      : undefined;
+    const parts: string[] = [];
+    let last = 0;
+    for (const match of text.matchAll(/[\n\t\ufffc]/gu)) {
+      const at = match.index;
+      parts.push(escape(text.slice(last, at)));
+      if (match[0] === '\n') parts.push(markdown ? '<br>' : '\n');
+      else if (match[0] === '\t') parts.push(markdown ? '&#9;' : '\t');
+      else {
+        const object = slots?.get(at);
+        const reference = object ? references.get(object) : undefined;
+        const label =
+          object && reference && captured.allowsAnchor(at, reference.node) && !shown.has(object)
+            ? caption(object)
+            : null;
+        if (label && object) {
+          parts.push(label + ' [내용 확인 불가]');
+          shown.add(object);
+        } else parts.push(match[0]);
+      }
+      last = at + 1;
+    }
+    parts.push(escape(text.slice(last)));
+    return join(parts, '');
+  };
   const inline = (block: DocumentBlock): string => {
-    if (block.type === 'paragraph')
-      return block.displayText === null ? '[문단 내용 확인 불가]' : escape(block.displayText);
+    if (block.type === 'paragraph') return paragraphText(block);
     if (block.type !== 'image') throw new TypeError('UnsupportedInlineBlockType');
     const label = caption(block);
     const alt = block.altState === 'provided' && block.alt !== '' ? escape(block.alt) : null;
@@ -124,6 +199,8 @@ export function renderContent(
       if (block.type === 'paragraph' || block.type === 'image') {
         emit(inline(block), 'paragraph', context);
       } else if (block.type === 'unknown') {
+        if (shown.has(block)) continue;
+        shown.add(block);
         const label = caption(block);
         const name = names.get(block.kind);
         emit(
@@ -181,6 +258,72 @@ export function renderContent(
   for (const entry of model.unplaced) {
     emit('[위치를 확인할 수 없는 내용]', 'paragraph', null);
     blocks([entry.block], null);
+  }
+  // Default content is the actual CLI/MCP response text. Its early return in
+  // render.ts must not hide a plain fallback's missing control-aware axis.
+  const partialCodes = new Set([
+    'ControlAwareOwnerUnverified',
+    'ControlAwareTextUnavailable',
+    'ControlAwareTextMismatch',
+    'InvalidControlAwareText',
+    'ControlAwareBatchUnavailable',
+  ]);
+  type PartialGroup = {
+    code: string;
+    section: number | null;
+    paragraphs: Set<number>;
+    min: number;
+    max: number;
+    representative: number | null;
+    unlocated: boolean;
+  };
+  const groups = new Map<string, PartialGroup>();
+  const nativeUint = (value: unknown): value is number =>
+    typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
+  for (const warning of model.warnings) {
+    if (!partialCodes.has(warning.code)) continue;
+    const source = warning.source;
+    const section =
+      source && 'section' in source && nativeUint(source.section) ? source.section : null;
+    const paragraph =
+      source && 'paragraph' in source && nativeUint(source.paragraph) && source.paragraph > 0
+        ? source.paragraph
+        : null;
+    const key = `${warning.code}:${section ?? 'unknown'}`;
+    let group = groups.get(key);
+    if (!group) {
+      group = {
+        code: warning.code,
+        section,
+        paragraphs: new Set<number>(),
+        min: Infinity,
+        max: -Infinity,
+        representative: null,
+        unlocated: false,
+      };
+      groups.set(key, group);
+    }
+    if (paragraph === null) group.unlocated = true;
+    else {
+      group.paragraphs.add(paragraph);
+      group.min = Math.min(group.min, paragraph);
+      group.max = Math.max(group.max, paragraph);
+      group.representative ??= paragraph;
+    }
+  }
+  for (const group of groups.values()) {
+    const place = group.section === null ? ' · 구역 미확인' : ` · 구역 ${group.section}`;
+    const affected = group.paragraphs.size
+      ? `영향 문단 ${group.paragraphs.size}개 · 관측 번호 범위 ${group.min}–${group.max} · 대표 Native 문단 ${group.representative}` +
+        (group.unlocated ? ' · 일부 영향 문단 번호 미확인' : '')
+      : '영향 문단 번호 미확인';
+    // Preserve plain/site.text as observed content. Do not present it as a
+    // Native error, or echo arbitrary SDK messages/private host addresses.
+    emit(
+      `[부분 읽기: ${escape(group.code)}${place}] 본문 텍스트는 보존해 읽었습니다. 줄바꿈·탭·개체 위치의 완전한 관측은 확인하지 못했습니다. ${affected}.`,
+      'paragraph',
+      null,
+    );
   }
   if (!model.coverage.inventoryComplete || model.warnings.length)
     emit('[일부 내용의 관측이 불완전합니다]', 'paragraph', null);

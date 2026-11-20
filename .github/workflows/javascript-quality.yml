@@ -10,6 +10,49 @@ permissions:
   contents: read
 
 jobs:
+  document-search-native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.20.0'
+      - name: Test document search Native registration
+        run: node --test tools/tests/document-search-native-registration.test.mjs
+      - name: Install pinned document search Zig toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          search_zig_dir="$RUNNER_TEMP/document-search-zig"
+          mkdir "$search_zig_dir"
+          node --input-type=module -e 'import fs from "node:fs"; const p=JSON.parse(fs.readFileSync("tools/document-search-zig-toolchain.json")); for (const k of ["url","archiveSha256","archiveBytes"]) console.log(p[k]);' > "$search_zig_dir/pin.txt"
+          mapfile -t search_zig_pin < "$search_zig_dir/pin.txt"
+          curl --fail --location --proto '=https' --tlsv1.2 "${search_zig_pin[0]}" --output "$search_zig_dir/toolchain.tar.xz"
+          test "$(stat -c %s "$search_zig_dir/toolchain.tar.xz")" = "${search_zig_pin[2]}"
+          printf '%s  %s\n' "${search_zig_pin[1]}" "$search_zig_dir/toolchain.tar.xz" | sha256sum --check --strict
+          mkdir "$search_zig_dir/compiler"
+          tar -xJf "$search_zig_dir/toolchain.tar.xz" --strip-components=1 -C "$search_zig_dir/compiler"
+          chmod -R a-w "$search_zig_dir/compiler"
+          printf 'HWPJS_SEARCH_ZIG=%s\n' "$search_zig_dir/compiler/zig" >> "$GITHUB_ENV"
+      - name: Run all registered document search Native contracts once
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tools/run-document-search-native.mjs --execute --zig="$HWPJS_SEARCH_ZIG" --out="$RUNNER_TEMP/document-search-native"
+      - name: Preserve first document search Native evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: document-search-native-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/document-search-native
+            ${{ runner.temp }}/document-search-zig/pin.txt
+          retention-days: 7
+          if-no-files-found: error
   quality:
     runs-on: ubuntu-latest
     steps:
@@ -24,8 +67,41 @@ jobs:
           node-version: '24.20.0'
       - name: Install frozen workspace dependencies
         run: bun install --frozen-lockfile --ignore-scripts
+      - name: Test strict font decode ownership and recovery
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --experimental-transform-types --test --test-concurrency=1 --test-reporter=tap \
+            tools/tests/hwp5-strict-font-owner.test.mjs \
+            tools/tests/hwp5-strict-font-late-save.test.mjs \
+            apps/demo/tests/strict-layout-save-tool.test.ts 2>&1 | tee "$RUNNER_TEMP/strict-font-decode.tap"
+          grep -Eq '^# tests 14$' "$RUNNER_TEMP/strict-font-decode.tap"
+          grep -Eq '^# pass 14$' "$RUNNER_TEMP/strict-font-decode.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/strict-font-decode.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/strict-font-decode.tap"
+      - name: Test readonly document search SDK and source boundaries
+        timeout-minutes: 1
+        run: |
+          node --experimental-transform-types --test --test-concurrency=1 \
+            tools/tests/document-text-readonly-owner-contract.test.mjs \
+            tools/tests/document-text-batch-delegation.test.mjs \
+            tests/canvas/hwp5-readonly-public-reader.test.mjs \
+            tests/canvas/hwp5-readonly-core-path.test.mjs \
+            tests/canvas/hwpx-control-text-freshness-sdk.test.mjs \
+            tests/canvas/document-text-coordinate-boundary.test.ts \
+            tools/tests/selected-run-owner-contract.test.mjs
+      - name: Test selected-run Native fixture ownership contract
+        run: python3 -B -m unittest discover -s tools/tests -p 'test_document_text_selected_run_fixture.py' -v
       - name: Test current public demo dependency notices
         run: node --test tools/tests/ui-license-inputs.test.mjs
+      - name: Test headless generated-cell source authority and public Core types
+        run: |
+          bun test --no-install ./packages/core/tests/commands/created-cell-headless-text.test.ts ./packages/core/tests/commands/inline-object-owner-query.test.ts
+          node --test --test-concurrency=1 tools/tests/created-cell-headless-admission.test.mjs
+          bunx --no-install tsc -p tools/tests/tsconfig.created-cell-headless.json
+      - name: Test generated-cell Native registration graph
+        run: node --test --test-concurrency=1 tools/tests/generated-cell-native-registration.test.mjs
       - name: Test form text raw line endings and measured wrapping
         timeout-minutes: 1
         shell: bash
@@ -101,6 +177,16 @@ jobs:
           grep -Eq '^# skipped 0$' "$RUNNER_TEMP/object-activation.tap"
           bunx --no-install tsc --noEmit -p tools/tsconfig.object-activation.json
           bunx --no-install tsc --noEmit -p apps/demo/tests/tsconfig.drawing-properties.json
+      - name: HWP5 chart anchor source and current owner boundaries
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --experimental-transform-types --test --test-concurrency=1 --test-reporter=tap tests/canvas/hwp5-chart-anchor-current.test.mjs apps/demo/tests/hwp5-chart-properties.test.mjs 2>&1 | tee "$RUNNER_TEMP/hwp5-chart-anchor.tap"
+          grep -Eq '^# tests 25$' "$RUNNER_TEMP/hwp5-chart-anchor.tap"
+          grep -Eq '^# pass 25$' "$RUNNER_TEMP/hwp5-chart-anchor.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/hwp5-chart-anchor.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/hwp5-chart-anchor.tap"
       - name: Test selected object P source contracts
         shell: bash
         run: |
@@ -146,6 +232,15 @@ jobs:
           grep -Eq '^# pass 14$' "$RUNNER_TEMP/object-selection-viewport-scroll.tap"
           grep -Eq '^# fail 0$' "$RUNNER_TEMP/object-selection-viewport-scroll.tap"
           grep -Eq '^# skipped 0$' "$RUNNER_TEMP/object-selection-viewport-scroll.tap"
+      - name: Test generated-cell semantic ACK before queued input
+        shell: bash
+        run: |
+          set -euo pipefail
+          export HWPJS_TEST_CORE_DIST="$PWD/packages/core/dist"
+          node --experimental-transform-types --import ./tools/renderer-test-core-provider.mjs --test --test-concurrency=1 --test-reporter=tap tests/canvas/created-cell-burst-ack.test.mjs | tee "$RUNNER_TEMP/created-cell-burst-ack.tap"
+          grep -Eq '^# tests 24$' "$RUNNER_TEMP/created-cell-burst-ack.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/created-cell-burst-ack.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/created-cell-burst-ack.tap"
       - name: Test ordinary plain ACK draft settlement
         timeout-minutes: 2
         shell: bash
@@ -834,6 +929,34 @@ jobs:
             --import ./tools/renderer-test-core-provider.mjs \
             --import ./packages/vanilla/tests/non-text-history-renderer-hook.mjs \
             --test --test-concurrency=1 "$@"
+      - name: Test historical HWPX corpus restoration helper
+        run: python3 -B -m unittest discover -s tools/tests -p 'test_restore_hwpx_package_corpus.py' -v
+      - name: Test generated-cell clipboard capture and command lifecycle
+        timeout-minutes: 2
+        env:
+          HWPJS_TEST_CORE_DIST: packages/core/dist
+        run: |
+          test -f ./packages/core/dist/build-manifest.json || exit 1
+          log="$(mktemp "$RUNNER_TEMP/generated-cell-clipboard.XXXXXX")"
+          if ! node --experimental-transform-types --max-old-space-size=256 \
+            --import ./tools/renderer-test-core-provider.mjs \
+            --import ./packages/vanilla/tests/non-text-history-renderer-hook.mjs \
+            --test --test-reporter=tap --test-concurrency=1 \
+            ./apps/demo/tests/clipboard-surface-report.test.mjs \
+            ./apps/demo/tests/clipboard-selection-presentation.test.mjs \
+            ./packages/vanilla/tests/created-cell-clipboard-source.test.mjs \
+            ./packages/vanilla/tests/created-cell-clipboard-command.test.mjs \
+            ./packages/vanilla/tests/created-cell-clipboard-surface.test.mjs \
+            ./packages/vanilla/tests/created-cell-clipboard-caret.test.mjs \
+            ./packages/vanilla/tests/readonly-cell-navigation.test.mjs > "$log" 2>&1; then
+            cat "$log"
+            exit 1
+          fi
+          cat "$log"
+          grep -qx '# tests 70' "$log"
+          grep -qx '# pass 70' "$log"
+          grep -qx '# fail 0' "$log"
+          grep -qx '# skipped 0' "$log"
       - name: Test multi-paragraph formatting history selection lifecycle
         timeout-minutes: 2
         env:
@@ -952,7 +1075,8 @@ jobs:
           test -f ./legacy/rust/crates/hwp-core/tests/fixtures/footnote-endnote.hwp || exit 1
           set -- \
             ./tools/tests/existing-note-selection.test.ts \
-            ./tests/hwp5/note-selection-owner.test.mjs
+            ./tests/hwp5/note-selection-owner.test.mjs \
+            ./tests/hwpx/note-selection-owner.test.mjs
           for path in "$@"; do test -f "$path" || exit 1; done
           bun test --no-install "$@"
       - name: Test delegated context menu composition lifetime
@@ -1026,6 +1150,12 @@ jobs:
             packages/cli/tests/host-main.test.mjs \
             packages/cli/tests/host-adversarial.test.mjs \
             packages/cli/tests/document-model.test.mjs \
+            packages/cli/tests/hwpx-control-aware-read.test.mjs \
+            packages/cli/tests/hwpx-control-aware-witness.test.mjs \
+            packages/cli/tests/hwpx-incomplete-read-content.test.mjs \
+            packages/cli/tests/hwpx-partial-read-summary.test.mjs \
+            packages/cli/tests/hwpx-consumed-axis-snapshot.test.mjs \
+            tools/tests/hwpx-control-text-batch.test.mjs \
             packages/cli/tests/render-document.test.mjs \
             packages/cli/tests/read-operation.test.mjs \
             packages/cli/tests/engine.test.mjs \

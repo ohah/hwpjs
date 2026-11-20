@@ -1,6 +1,21 @@
 // Authoritative ABI schema. tools/generate-abi.mjs derives the Zig declarations.
 // Breaking changes require a version bump and an independently pinned contract test.
 export const ABI_VERSION = 6;
+// Optional independent readonly owner; never part of required ABI6/editor surface.
+export const HWP5_DOCUMENT_TEXT_READ_FUNCTIONS = Object.freeze([
+  'hwp5_read_open',
+  'hwp5_read_close',
+  'hwp5_read_document_text_snapshot',
+  'hwp5_read_document_text_anchor',
+  'hwp5_read_document_text_selection',
+  'hwp5_read_document_text_read_binding',
+  'hwp5_read_output_ptr',
+  'hwp5_read_output_len',
+  'hwp5_read_output_free',
+  'hwp5_read_error_ptr',
+  'hwp5_read_error_len',
+]);
+
 // Optional generated-table grid command codes, shared by both format adapters.
 export const CREATED_TABLE_GRID_ACTION = Object.freeze({
   insert_row: 0,
@@ -24,6 +39,30 @@ export const EXPERIMENTAL_EDITOR_FUNCTIONS = Object.freeze([
   'hwp5_edit_output_free',
   'hwp5_edit_reflow',
 ]);
+// Optional Native control-aware section batch; plain endpoint is unchanged.
+export const HWPX_CONTROL_TEXT_READ_FUNCTIONS = Object.freeze([
+  'hwpx_edit_paragraph_control_text_snapshot',
+  'hwpx_edit_paragraph_control_text_snapshot_current',
+  'hwpx_edit_control_text_read_identity',
+]);
+// Optional existing HWP5 chart reads. u32 values normalize to Wasm i32.
+// Names are derived from this signature map, never maintained as a second list.
+export const HWP5_CHART_READ_PROFILE_VERSION = 1;
+export const HWP5_CHART_READ_ABI = Object.freeze({
+  hwp5_edit_chart_display_profile_version: Object.freeze({
+    params: Object.freeze([]),
+    results: Object.freeze(['i32']),
+  }),
+  hwp5_edit_chart_candidates: Object.freeze({
+    params: Object.freeze([]),
+    results: Object.freeze(['i32']),
+  }),
+  hwp5_edit_chart_display: Object.freeze({
+    params: Object.freeze(['i32', 'i32']),
+    results: Object.freeze(['i32']),
+  }),
+});
+export const HWP5_CHART_READ_FUNCTIONS = Object.freeze(Object.keys(HWP5_CHART_READ_ABI));
 // Optional ordinary-only H5 text transactions; not REQUIRED_FUNCTIONS or UI activation.
 export const HWP5_TEXT_TRANSACTION_FUNCTIONS = Object.freeze([
   'hwp5_edit_text_transaction_capabilities',
@@ -130,4 +169,14 @@ export const REQUIRED_FUNCTIONS = Object.freeze([
 // Optional HWPX creation-profile query; ABI6 required exports remain unchanged.
 export const HWPX_CHART_CREATE_PROFILE_FUNCTIONS = Object.freeze([
   'hwpx_edit_chart_create_profile_version',
+  'hwpx_edit_inline_object_placement_version',
+  'hwpx_edit_inline_object_owner',
 ]);
+
+// Optional explicit HWP5 authoring profile. ABI6 required exports are unchanged.
+export const HWP5_CHART_CREATE_ABI = Object.freeze({
+  hwp5_edit_chart_create_profile_version: Object.freeze({ params: Object.freeze([]), results: Object.freeze(['i32']) }),
+  hwp5_edit_chart_create_preview: Object.freeze({ params: Object.freeze(['i32', 'i32', 'i32', 'i32']), results: Object.freeze(['i32']) }),
+  hwp5_edit_create_chart_current: Object.freeze({ params: Object.freeze(['i32', 'i32', 'i32', 'i32', 'i32', 'i32']), results: Object.freeze(['i32']) }),
+});
+export const HWP5_CHART_CREATE_FUNCTIONS = Object.freeze(Object.keys(HWP5_CHART_CREATE_ABI));

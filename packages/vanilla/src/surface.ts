@@ -1,9 +1,18 @@
+import { captureCreatedCellClipboard } from './created-cell-clipboard.ts';
+import { displayDocumentParagraph } from '../../../js/document-text-coordinates.mjs';
+import { createDocumentTextReadPermit } from './document-text-read-permit.ts';
+import { prepareDocumentTextReadView } from './document-text-read-view.ts';
+import { readNativeReadSourceEvidence } from '@hwpjs/core/_internal/native-read-source';
+import { captureDocumentTextCaret } from './document-text-caret.ts';
 import { createObjectPropertiesControls } from './object-properties-controls.ts';
 import {
   createObjectSelection,
   bindObjectSelectionEvents,
   type CanvasObjectPropertiesRequest,
 } from './object-selection.ts';
+import { selectDocumentTextObservation } from './document-text-selection.ts';
+// @ts-ignore Shared direct range namespace/unique generated-owner admission.
+import { textRangeTarget } from '../../../web/preview/text-range-target.mjs';
 // @ts-ignore Existing client/scroll/scale projection, never a synthetic hit target.
 import { canvasDocumentPoint } from '../../../web/preview/canvas-pointer-coordinates.mjs';
 import { bindObjectActivation, type CanvasObjectActivation } from './object-activation.ts';
@@ -50,6 +59,7 @@ import type { InputSurfaceHooks, InputSurfaceLease } from '@hwpjs/core';
 import type { SelectionTarget } from '@hwpjs/core';
 import type { RuntimeMessage, RuntimeReply } from '@hwpjs/core';
 import {
+  SPLICE_TEXT_COMMAND,
   getHistoryAvailability,
   createParagraphSelection,
   getSelectionFormatting,
@@ -282,10 +292,19 @@ export function createCanvasSurface({
   let frameObserver: ResizeObserver | undefined;
   let unsubscribe: (() => void) | undefined,
     bridge: ReturnType<typeof createControlBridge> | undefined;
+  let createdCellCutReceipt:
+    | {
+        before: ReturnType<HeadlessEditor['getEditorState']>;
+        observed?: ReturnType<HeadlessEditor['getEditorState']>;
+        invalid: boolean;
+        reset(state: ReturnType<HeadlessEditor['getEditorState']>): void;
+      }
+    | undefined;
   let displayed = '',
     selectionKey = '',
     observedStateVersion = -1;
   let checkBoxControls: any, formTextControls: any;
+  let documentReadPermit: ReturnType<typeof createDocumentTextReadPermit> | undefined;
   let nonTextHistoryAdmissionReady = false;
   let nonTextHistoryPending: object | undefined;
   let nonTextSelectionProjection: ReturnType<HeadlessEditor['getEditorState']> | undefined;
@@ -565,6 +584,11 @@ export function createCanvasSurface({
     }
   };
   const render = (state: ReturnType<HeadlessEditor['getEditorState']>) => {
+    if (createdCellCutReceipt && state !== createdCellCutReceipt.before) {
+      if (createdCellCutReceipt.observed && createdCellCutReceipt.observed !== state)
+        createdCellCutReceipt.invalid = true;
+      else createdCellCutReceipt.observed = state;
+    }
     objectSelection?.observeState(state);
     if (closed || !renderer) return;
     // Only new observations may change the projection. Native acknowledgment
@@ -641,7 +665,9 @@ export function createCanvasSurface({
     const externalUpdate = Boolean(
       !nonTextHistoryPending && !retained && !changedDocument && displayed && !bridge?.busy(),
     );
-    if (externalUpdate) direct?.external({ kind: 'external-update', origin: 'core' });
+    if (externalUpdate) {
+      direct?.external({ kind: 'external-update', origin: 'core' });
+    }
     displayed = key;
     checkBoxControls?.message({ kind: 'snapshot', content: state.content });
     formTextControls?.message({ kind: 'enable', ...(state.capabilities as object) });
@@ -678,6 +704,7 @@ export function createCanvasSurface({
         historyRevision: state.nativeHistoryRevision,
         historyRevisions: state.nativeHistoryRevisions,
       });
+    if (externalUpdate) createdCellCutReceipt?.reset(state);
   };
   // Remember dialog entry/exit even when a caller checks only after it has closed.
   let sourceGridModalEpoch = 0;
@@ -893,6 +920,7 @@ export function createCanvasSurface({
     objectPropertiesControls.dispose();
     objectSelectionListeners.clear();
     objectSelection?.dispose();
+    documentReadPermit?.dispose();
     objectActivation.dispose();
     // Final null observation is synchronous, before listeners are discarded.
     // A retained ruler/relay can hide even when no replacement Surface arrives.
@@ -923,6 +951,9 @@ export function createCanvasSurface({
       }
     }
   };
+  const rangeWritable = (state: ReturnType<HeadlessEditor['getEditorState']>) =>
+    (state.capabilities as { readOnly?: boolean } | undefined)?.readOnly !== true &&
+    (state.content as { readOnly?: boolean } | undefined)?.readOnly !== true;
   try {
     const rendererEnvironment = Object.create(environment);
     const hostEpochs = createHostEpochReaders(environment);
@@ -972,7 +1003,24 @@ export function createCanvasSurface({
         return nativeLease.request(message, options);
       },
       publishSelection(selected) {
-        return nativeLease.publishSelection(viewAllowsSelection(selected) ? selected : null);
+        const read =
+          selected &&
+          direct?.isDocumentReadSelectionCurrent?.() === true &&
+          (() => {
+            const value = direct.currentFormattingSelection();
+            return (
+              value &&
+              !value.anchor.createdCell &&
+              !value.focus.createdCell &&
+              selected.section === value.anchor.section &&
+              selected.paragraph === value.anchor.paragraph &&
+              selected.startUnit === Math.min(value.anchor.unit, value.focus.unit) &&
+              selected.endUnit === Math.max(value.anchor.unit, value.focus.unit)
+            );
+          })();
+        return nativeLease.publishSelection(
+          viewAllowsSelection(selected) || read ? selected : null,
+        );
       },
     };
     bridge = createControlBridge(
@@ -1045,6 +1093,8 @@ export function createCanvasSurface({
       input,
       renderer,
       controls: {
+        admitDocumentReadSelection: (token: unknown, range: any) =>
+          documentReadPermit?.current(token, range) === true,
         ready: () => nonTextHistoryPending === undefined && bridge!.ready(),
         busy: () => nonTextHistoryPending !== undefined || bridge!.busy(),
         request: (message: RuntimeMessage) =>
@@ -1161,6 +1211,8 @@ export function createCanvasSurface({
       transferMultiParagraphSelection(options: {
         cut?: boolean;
         clipboard?: { writeText?: (text: string) => Promise<void> } | null;
+        onStatus?: (message: string) => void;
+        onResult?: (result: import('@hwpjs/core').CommandResult) => void;
       }) {
         if (!nonTextHistoryAdmissionReady || !direct) return Promise.resolve(false);
         return transferSurfaceSelection(options);
@@ -1170,8 +1222,10 @@ export function createCanvasSurface({
         const state = nonTextHistoryState(kind);
         return state ? requestNonTextHistory(kind, state) : false;
       },
-      queryEditRange: (m: RuntimeMessage) => viewAllowsRequest(m) && bridge!.request(m),
-      querySplitRange: (m: RuntimeMessage) => viewAllowsRequest(m) && bridge!.request(m),
+      queryEditRange: (m: RuntimeMessage) =>
+        rangeWritable(editor.getEditorState()) && viewAllowsRequest(m) && bridge!.request(m),
+      querySplitRange: (m: RuntimeMessage) =>
+        rangeWritable(editor.getEditorState()) && viewAllowsRequest(m) && bridge!.request(m),
       onCommittedSelection(value: any, observation?: { origin?: string }) {
         if (closed || !lease?.isActive()) return;
         if (value) objectSelection?.clear('text-selection');
@@ -1181,9 +1235,15 @@ export function createCanvasSurface({
         if (state.status !== 'ready') return;
         const singleOwnerRange =
           value &&
+          !value.anchor.createdCell &&
+          !value.focus.createdCell &&
           value.anchor.section === value.focus.section &&
           value.anchor.paragraph === value.focus.paragraph;
-        const point = singleOwnerRange && viewAllowsCurrentSelection() ? value.anchor : null,
+        const point =
+            singleOwnerRange &&
+            (viewAllowsCurrentSelection() || direct.isDocumentReadSelectionCurrent?.() === true)
+              ? value.anchor
+              : null,
           row = point && renderer.paragraph(point);
         const owner = paragraphSelectionOwner(row);
         const target: SelectionTarget | null =
@@ -1248,6 +1308,9 @@ export function createCanvasSurface({
     );
     renderer.chartReader((section: number, wrapper: number) =>
       resource('chart-display', { section, wrapper }, 'chart'),
+    );
+    renderer.hwp5ChartReader((section: number, controlNode: number) =>
+      resource('hwp5-chart-display', { section, controlNode }, 'chart'),
     );
     render(editor.getEditorState());
     direct.initializeCapabilities({
@@ -1465,7 +1528,10 @@ export function createCanvasSurface({
       },
     };
   };
-  const rangeViewState = (modalCurrent: () => boolean = () => !modalOpen()) => {
+  const rangeViewState = (
+    modalCurrent: () => boolean = () => !modalOpen(),
+    createdCellClipboard = false,
+  ) => {
     if (!viewAllowsCurrentSelection()) return undefined;
     if (closed || nonTextHistoryPending || !lease?.isActive() || bridge?.busy() || !modalCurrent())
       return undefined;
@@ -1476,7 +1542,9 @@ export function createCanvasSurface({
       state.selection != null ||
       state.stateVersion !== observedStateVersion ||
       key !== displayed ||
-      direct.hasMultiParagraphSelection() !== true ||
+      (createdCellClipboard
+        ? !direct.captureCreatedCellClipboardSelection()
+        : direct.hasMultiParagraphSelection() !== true) ||
       !direct.settled()
     )
       return undefined;
@@ -1484,17 +1552,129 @@ export function createCanvasSurface({
       ? state
       : undefined;
   };
-  const rangeWritable = (state: ReturnType<HeadlessEditor['getEditorState']>) =>
-    (state.capabilities as { readOnly?: boolean } | undefined)?.readOnly !== true &&
-    (state.content as { readOnly?: boolean } | undefined)?.readOnly !== true;
   const surfaceClipboard = () =>
     environment.clipboard === undefined ? realm.navigator?.clipboard : environment.clipboard;
+  const captureCreatedCellTransfer = (
+    options: {
+      cut?: boolean;
+      clipboard?: { writeText?: (text: string) => Promise<void> } | null;
+      onStatus?: (message: string) => void;
+      onResult?: (result: import('@hwpjs/core').CommandResult) => void;
+    } = {},
+  ) => {
+    const state = rangeViewState(undefined, true);
+    const clipboard = options.clipboard === undefined ? surfaceClipboard() : options.clipboard;
+    if (!state || !renderer.historyModelMatches(state)) return null;
+    const captured = direct.captureCreatedCellClipboardSelection();
+    if (!captured) return null;
+    const active = () =>
+      (input.getRootNode() as Document | ShadowRoot).activeElement ?? doc.activeElement;
+    const focus = active();
+    const writableCurrent = () =>
+      rangeWritable(state) &&
+      (state.capabilities as { historyAvailable?: boolean })?.historyAvailable === true &&
+      getHistoryAvailability(state).available &&
+      direct.canCutCreatedCellClipboardSelection() === true;
+    const current = () =>
+      rangeViewState(undefined, true) === state &&
+      renderer.historyModelMatches(state) &&
+      active() === focus &&
+      (options.cut !== true || writableCurrent()) &&
+      rangeViewState(undefined, true) === state;
+    return captureCreatedCellClipboard({
+      editor,
+      selection: captured,
+      spliceCommand: SPLICE_TEXT_COMMAND,
+      token: { token: state.token },
+      clipboard,
+      cut: options.cut === true,
+      writable: options.cut === true ? writableCurrent() : false,
+      current,
+      report: options.onStatus ?? status,
+      onResult: options.onResult,
+      prepareCut() {
+        if (!current() || createdCellCutReceipt) return null;
+        const recovery = direct.captureCreatedCellClipboardCutContinuation();
+        if (!recovery || !current()) {
+          recovery?.cancel();
+          return null;
+        }
+        const modalRevision = sourceGridModalRevision();
+        const ownedLease = lease;
+        const receipt = {
+          before: state,
+          observed: undefined as typeof state | undefined,
+          invalid: false,
+          reset: (next: typeof state) => recovery.reset(next),
+        };
+        createdCellCutReceipt = receipt;
+        return {
+          async complete(result) {
+            const next = result.state;
+            const valid = () =>
+              !closed &&
+              createdCellCutReceipt === receipt &&
+              !receipt.invalid &&
+              receipt.observed === next &&
+              editor.getEditorState() === next &&
+              lease === ownedLease &&
+              ownedLease?.isActive() === true &&
+              !bridge?.busy() &&
+              !nonTextHistoryPending &&
+              next.status === 'ready' &&
+              next.documentId === state.documentId &&
+              next.generation === state.generation &&
+              next.operationRevision === state.operationRevision + 1 &&
+              next.selection == null &&
+              sourceGridModalRevision() === modalRevision &&
+              !modalOpen() &&
+              renderer.historyModelMatches(next) &&
+              rangeWritable(next) &&
+              (next.capabilities as { historyAvailable?: boolean })?.historyAvailable === true &&
+              getHistoryAvailability(next).available;
+            if (result.status !== 'committed-with-snapshot' || result.error || !valid())
+              return false;
+            renderer.flushProjection();
+            if (!valid()) return false;
+            const painted = await new Promise<boolean>((resolve) => {
+              let done = false;
+              const finish = (value: boolean) => {
+                if (done) return;
+                done = true;
+                realm.clearTimeout(timeout);
+                resolve(value);
+              };
+              const timeout = realm.setTimeout(() => finish(false), 1000);
+              realm.requestAnimationFrame(() =>
+                finish(valid() && renderer.isPaintedFrameCurrent() === true),
+              );
+            });
+            const presentationCurrent = () =>
+              valid() && renderer.isPaintedFrameCurrent() === true && valid();
+            return (
+              painted &&
+              presentationCurrent() &&
+              recovery.complete(next, next.nativeHistoryRevision, presentationCurrent)
+            );
+          },
+          cancel() {
+            if (createdCellCutReceipt === receipt) createdCellCutReceipt = undefined;
+            recovery.cancel();
+          },
+        };
+      },
+    });
+  };
   const captureSurfaceSelection = (
     options: {
       cut?: boolean;
       clipboard?: { writeText?: (text: string) => Promise<void> } | null;
+      onStatus?: (message: string) => void;
+      onResult?: (result: import('@hwpjs/core').CommandResult) => void;
     } = {},
   ) => {
+    const created = captureCreatedCellTransfer(options);
+    if (created) return created;
     const state = rangeViewState();
     const clipboard = options.clipboard === undefined ? surfaceClipboard() : options.clipboard;
     if (
@@ -1510,6 +1690,7 @@ export function createCanvasSurface({
       cut: options.cut === true,
       clipboard,
       multiOnly: true,
+      onStatus: options.onStatus,
       isCurrent: () =>
         rangeViewState() === state &&
         (options.cut !== true || rangeWritable(state)) &&
@@ -1521,6 +1702,8 @@ export function createCanvasSurface({
     options: {
       cut?: boolean;
       clipboard?: { writeText?: (text: string) => Promise<void> } | null;
+      onStatus?: (message: string) => void;
+      onResult?: (result: import('@hwpjs/core').CommandResult) => void;
     } = {},
   ) => captureSurfaceSelection(options)?.() ?? Promise.resolve(false);
   const prepareAtomicProfile = (state: ReturnType<HeadlessEditor['getEditorState']>) => {
@@ -1676,7 +1859,306 @@ export function createCanvasSurface({
       return { capture: null, reason: error instanceof Error ? error.message : String(error) };
     }
   };
+  const searchSceneReady = (state: ReturnType<HeadlessEditor['getEditorState']>) =>
+    !closed &&
+    !nonTextHistoryPending &&
+    lease?.isActive() === true &&
+    !bridge?.busy() &&
+    !modalOpen() &&
+    state.status === 'ready' &&
+    state === editor.getEditorState() &&
+    state.stateVersion === observedStateVersion &&
+    displayed ===
+      `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}` &&
+    direct.settled() &&
+    renderer.historyModelMatches(state) &&
+    ((state.capabilities as any)?.readOnly !== true ||
+      readNativeReadSourceEvidence(state) !== undefined);
+  const waitSearchScene = (current: () => boolean) =>
+    new Promise<boolean>((resolve) => {
+      let frames = 0,
+        done = false,
+        frame: number | undefined;
+      const finish = (value: boolean) => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        if (frame !== undefined) doc.defaultView?.cancelAnimationFrame?.(frame);
+        resolve(value);
+      };
+      // Timeout only rejects; elapsed time never stands in for a painted owner.
+      const timer = setTimeout(() => finish(false), 2000);
+      const check = () => {
+        if (!current()) {
+          finish(false);
+          return;
+        }
+        if (searchSceneReady(editor.getEditorState())) {
+          finish(true);
+          return;
+        }
+        if (++frames >= 120 || typeof doc.defaultView?.requestAnimationFrame !== 'function') {
+          finish(false);
+          return;
+        }
+        frame = doc.defaultView.requestAnimationFrame(check);
+      };
+      check();
+    });
+  documentReadPermit = createDocumentTextReadPermit({
+    state: () => editor.getEditorState(),
+    active: () => !closed && lease?.isActive() === true && !modalOpen(),
+    ready: searchSceneReady,
+    row: (range) =>
+      renderer.paragraph(
+        range.createdCell
+          ? { section: range.section, createdCell: range.createdCell }
+          : { section: range.section, paragraph: range.paragraph },
+      ),
+    geometry: (range) => {
+      const layout = renderer.layout(),
+        point = range.createdCell
+          ? { section: range.section, createdCell: range.createdCell }
+          : { section: range.section, paragraph: range.paragraph };
+      const target = textRangeTarget(range, layout),
+        row = renderer.paragraph(point);
+      return Boolean(
+        target &&
+        row &&
+        (!target.paragraph || target.paragraph === row) &&
+        caretGeometry(layout, { ...point, unit: range.startUnit }) &&
+        caretGeometry(layout, { ...point, unit: range.endUnit }),
+      );
+    },
+  });
   return {
+    async prepareDocumentTextReadView(current: () => boolean = () => true) {
+      const capturedLease = lease;
+      const active = () =>
+        !closed &&
+        current() &&
+        lease === capturedLease &&
+        capturedLease?.isActive() === true &&
+        !nonTextHistoryPending &&
+        !bridge?.busy() &&
+        !modalOpen();
+      const request = async (kind: 'document-text-read-binding' | 'refresh-document-text-view') => {
+        if (!active()) throw Error('StaleSearchSelection');
+        const reply = await capturedLease!.request(
+          { kind },
+          { coordinates: 'legacy-native', token: editor.getEditorState().token },
+        );
+        if (reply.error) throw Error(String(reply.error));
+        return reply;
+      };
+      return prepareDocumentTextReadView({
+        state: () => editor.getEditorState(),
+        current: active,
+        hasEvidence: (state) => readNativeReadSourceEvidence(state) !== undefined,
+        bindingAvailable: async () =>
+          ((await request('document-text-read-binding')) as { available?: unknown }).available ===
+          true,
+        refresh: async () => {
+          await request('refresh-document-text-view');
+        },
+        wait: waitSearchScene,
+      });
+    },
+    captureDocumentTextCaret() {
+      return captureDocumentTextCaret({
+        state: () => editor.getEditorState(),
+        ready: searchSceneReady,
+        selection: () => direct.currentFormattingSelection(),
+        selectionFence: () => direct.captureDocumentTextSelectionFence(),
+        paragraph: (point) => renderer.paragraph(point),
+        geometry: (anchor, focus) => {
+          const layout = renderer.layout();
+          if (
+            direct.isDocumentReadSelectionCurrent?.() !== true &&
+            (renderer.viewAllowsRange
+              ? renderer.viewAllowsRange(anchor, focus) !== true
+              : renderer.viewEditPolicyActive?.() === true)
+          )
+            return false;
+          return Boolean(caretGeometry(layout, anchor) && caretGeometry(layout, focus));
+        },
+      });
+    },
+    async selectDocumentText(
+      observation: import('@hwpjs/core').DocumentTextSelectionObservation,
+      current: () => boolean = () => true,
+      match?: import('@hwpjs/core').DocumentTextMatch,
+    ) {
+      const nativeFrame = observation.native.readBinding;
+      const publishedFrame = readNativeReadSourceEvidence(editor.getEditorState());
+      if (
+        nativeFrame &&
+        (!publishedFrame ||
+          publishedFrame.session !== observation.native.binding.session ||
+          publishedFrame.epoch !== nativeFrame.epoch ||
+          publishedFrame.serial !== nativeFrame.serial)
+      )
+        return null;
+      const before = editor.getEditorState();
+      if (!current() || !searchSceneReady(before)) return null;
+      if (match) {
+        const value = observation.native,
+          target = value.target;
+        const sameToken = (
+          a: import('@hwpjs/core').StateToken,
+          b: import('@hwpjs/core').StateToken,
+        ) =>
+          ['editorId', 'documentId', 'generation', 'operationRevision', 'viewRevision'].every(
+            (key) => (a as any)?.[key] === (b as any)?.[key],
+          );
+        if (
+          observation.stateVersion !== before.stateVersion ||
+          !sameToken(observation.token, before.token) ||
+          !sameToken(match.token, before.token) ||
+          match.stateVersion !== before.stateVersion ||
+          match.executionAuthority !== false ||
+          value.executionAuthority !== false ||
+          match.ref !== value.ref ||
+          match.expectedOriginal !== value.expectedOriginal ||
+          match.binding.session !== value.binding.session ||
+          match.binding.revision !== value.binding.revision ||
+          value.binding.revision !== (before.nativeHistoryRevision ?? null)
+        )
+          return null;
+        const paragraph =
+          target.kind === 'paragraph'
+            ? displayDocumentParagraph(value.format, target.paragraph)
+            : undefined;
+        if (target.kind === 'paragraph' && paragraph === undefined) return null;
+        const point =
+          target.kind === 'paragraph'
+            ? { section: target.section, paragraph }
+            : {
+                section: target.section,
+                createdCell: { identity: target.identity, row: target.row, column: target.column },
+              };
+        const row = renderer.paragraph(point);
+        if (!row || row.clipped || (!row.editable && row.selectable !== true)) {
+          const capturedLease = lease;
+          const alive = () => {
+            const now = editor.getEditorState();
+            return (
+              current() &&
+              !closed &&
+              lease === capturedLease &&
+              capturedLease?.isActive() === true &&
+              now.status === 'ready' &&
+              now.documentId === before.documentId &&
+              now.generation === before.generation &&
+              now.operationRevision === before.operationRevision &&
+              now.nativeHistoryRevision === before.nativeHistoryRevision
+            );
+          };
+          if (!alive()) return null;
+          await capturedLease!.request(
+            {
+              kind: 'reveal-document-text',
+              request: {
+                schemaVersion: 1,
+                scope: 'native-document-text-selection',
+                binding: match.binding,
+                ...(observation.native.readBinding
+                  ? { readBinding: observation.native.readBinding }
+                  : {}),
+                ref: match.ref,
+                startUnit: match.startUnit,
+                endUnit: match.endUnit,
+                expectedOriginal: match.expectedOriginal,
+              },
+            },
+            { coordinates: 'legacy-native', token: before.token },
+          );
+          if (!alive() || !(await waitSearchScene(alive))) return null;
+          return Object.freeze({ state: editor.getEditorState(), status: 'revealed' as const });
+        }
+      }
+      const readToken = documentReadPermit?.issue(observation, current);
+      return selectDocumentTextObservation(observation, current, {
+        state: () => editor.getEditorState(),
+        ready: searchSceneReady,
+        admit(range, state) {
+          try {
+            const point = range.createdCell
+              ? { section: range.section, createdCell: range.createdCell }
+              : { section: range.section, paragraph: range.paragraph };
+            // paragraph() can flush deferred typed-cell projection. Read layout
+            // afterwards so text ownership and caret geometry are from one frame.
+            const row = renderer.paragraph(point),
+              layout = renderer.layout();
+            if (!row || row.clipped || row.text !== range.expectedText) return false;
+            const admitted = textRangeTarget(range, layout);
+            if (!admitted || (admitted.paragraph && admitted.paragraph !== row)) return false;
+            const start = { ...point, unit: range.startUnit },
+              end = { ...point, unit: range.endUnit };
+            if (
+              !(readToken && documentReadPermit?.current(readToken, range)) &&
+              (renderer.viewAllowsRange
+                ? renderer.viewAllowsRange(start, end) !== true
+                : renderer.viewEditPolicyActive?.() === true)
+            )
+              return false;
+            if (!range.createdCell)
+              createParagraphSelection(state, {
+                section: range.section,
+                paragraph: range.paragraph!,
+                startUnit: range.startUnit,
+                endUnit: range.endUnit,
+              });
+            return Boolean(caretGeometry(layout, start) && caretGeometry(layout, end));
+          } catch {
+            return false;
+          }
+        },
+        select: (range) => {
+          const point = range.createdCell
+            ? { section: range.section, createdCell: range.createdCell }
+            : { section: range.section, paragraph: range.paragraph };
+          const row = renderer.paragraph(point);
+          const editing =
+            (editor.getEditorState().capabilities as any)?.readOnly !== true &&
+            row?.editable === true &&
+            (renderer.viewAllowsRange
+              ? renderer.viewAllowsRange(
+                  { ...point, unit: range.startUnit },
+                  { ...point, unit: range.endUnit },
+                ) === true
+              : renderer.viewEditPolicyActive?.() !== true);
+          return editing
+            ? direct.selectTextRange(range, { focusInput: false, selectionOrigin: 'canvas' })
+            : Boolean(readToken && direct.selectDocumentReadRange(range, readToken));
+        },
+        published(range, state) {
+          if (range.createdCell) return state.selection === null;
+          try {
+            const expected = createParagraphSelection(state, {
+              section: range.section,
+              paragraph: range.paragraph!,
+              startUnit: range.startUnit,
+              endUnit: range.endUnit,
+            });
+            const selected = state.selection as SelectionTarget | null;
+            return Boolean(
+              selected &&
+              Object.keys(expected).every(
+                (key) =>
+                  selected[key as keyof SelectionTarget] === expected[key as keyof SelectionTarget],
+              ),
+            );
+          } catch {
+            return false;
+          }
+        },
+        selection: () => direct.currentFormattingSelection(),
+        async flush() {
+          await editor.update(() => {});
+        },
+      });
+    },
     /** Measured visible page only; never a source page number or caret page. */
     getPageStatus,
     getPageGeometry,
@@ -1765,6 +2247,7 @@ export function createCanvasSurface({
         | null
         | undefined = surfaceClipboard(),
     ): boolean {
+      if (captureCreatedCellTransfer({ cut, clipboard })) return true;
       const state = rangeViewState();
       return Boolean(
         state &&
@@ -1777,6 +2260,8 @@ export function createCanvasSurface({
       options: {
         cut?: boolean;
         clipboard?: { writeText?: (text: string) => Promise<void> } | null;
+        onStatus?: (message: string) => void;
+        onResult?: (result: import('@hwpjs/core').CommandResult) => void;
       } = {},
     ): (() => Promise<boolean>) | null {
       return captureSurfaceSelection(options);
@@ -1785,6 +2270,8 @@ export function createCanvasSurface({
       options: {
         cut?: boolean;
         clipboard?: { writeText?: (text: string) => Promise<void> } | null;
+        onStatus?: (message: string) => void;
+        onResult?: (result: import('@hwpjs/core').CommandResult) => void;
       } = {},
     ): Promise<boolean> {
       return transferSurfaceSelection(options);
@@ -1920,6 +2407,50 @@ export function createCanvasSurface({
         },
       });
     },
+    captureInlineObjectInsertCaret() {
+      const state = editor.getEditorState();
+      const content = state.content as Record<string, unknown> | undefined;
+      if (modalOpen()) return null;
+      const current = () =>
+        !closed &&
+        !nonTextHistoryPending &&
+        lease?.isActive() === true &&
+        !bridge?.busy() &&
+        editor.getEditorState() === state &&
+        state.status === 'ready' &&
+        state.stateVersion === observedStateVersion &&
+        displayed ===
+          `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}` &&
+        (content?.inlineObjectPlacementVersion === 1 ||
+          // HWP5 creation owns a scoped current-reference path, not the HWPX
+          // placement ABI. This observes UX caret only; Core still admits it.
+          (content?.format === 'hwp5' &&
+            content?.chartCreationAvailable === true &&
+            content?.hwp5ChartCreateProfileVersion === 1 &&
+            state.nativeHistoryStats?.protocolVersion === 2)) &&
+        content?.readOnly !== true &&
+        (state.capabilities as any)?.readOnly !== true &&
+        content?.limited !== true &&
+        !content?.window &&
+        direct.settled() &&
+        renderer.historyModelMatches(state);
+      if (!current()) return null;
+      const captured = direct.captureInlineObjectInsertCaret();
+      if (!captured || !current() || !captured.current()) return null;
+      let invalid = false;
+      return Object.freeze({
+        state,
+        selector: captured.selector,
+        unit: captured.unit,
+        affinity: captured.affinity,
+        expected_text: captured.expected_text,
+        current() {
+          if (!invalid && current() && captured.current() && current()) return true;
+          invalid = true;
+          return false;
+        },
+      });
+    },
     captureGeneratedTableGridSelection() {
       const state = editor.getEditorState();
       const current = () =>
@@ -1966,9 +2497,41 @@ export function createCanvasSurface({
         state.status !== 'ready'
       )
         return null;
-      const source = getSelectionFormatting(state);
+      const pointsAtCapture = direct.currentFormattingSelection();
+      const createdUnit = pointsAtCapture?.anchor?.unit;
+      const created = pointsAtCapture?.anchor?.createdCell
+        ? renderer.createdCellTypingObservation?.(pointsAtCapture.anchor)
+        : null;
+      let source = getSelectionFormatting(state);
+      if (created) {
+        const observed = created.observation;
+        source = {
+          ...source,
+          ...observed,
+          // A generated input lease does not fabricate a source SelectionTarget.
+          target: null,
+          characterAvailableReason: null,
+          paragraphAvailableReason: 'CreatedCellRequiresSurfacePort',
+          underlineAvailableReason:
+            typeof observed.underline === 'boolean' ? null : 'UnknownCharacterUnderline',
+          strikeAvailableReason:
+            typeof observed.strike === 'boolean' ? null : 'UnknownCharacterStrike',
+          textColorAvailableReason: observed.colorBindingValid ? null : 'UnknownCharacterTextColor',
+          fontNameAvailableReasons: Object.freeze(
+            Object.fromEntries(
+              FONT_LANGUAGES.map((language: import('@hwpjs/core').CharacterFontLanguage) => [
+                language,
+                observed.fontBindings[language] ? null : 'UnknownCharacterFontName',
+              ]),
+            ),
+          ) as import('@hwpjs/core').SelectionFormatting['fontNameAvailableReasons'],
+        };
+      }
       const selected = source.target;
-      if (!selected || source.characterAvailableReason === 'CreatedCellRequiresSurfacePort')
+      if (
+        (!selected && !created) ||
+        source.characterAvailableReason === 'CreatedCellRequiresSurfacePort'
+      )
         return null;
       const canonical = () => {
         if (!viewAllowsSelection(selected) || !viewAllowsCurrentSelection()) return false;
@@ -1984,13 +2547,30 @@ export function createCanvasSurface({
             `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}` ||
           !direct.settled() ||
           !renderer.historyModelMatches(state) ||
-          !selected ||
-          selected.startUnit !== selected.endUnit
+          (!created && (!selected || selected.startUnit !== selected.endUnit))
         )
           return false;
         const points = direct.currentFormattingSelection();
+        if (created) {
+          if (!points || points.anchor.unit !== createdUnit || points.focus.unit !== createdUnit)
+            return false;
+          const first = renderer.createdCellTypingObservation?.(points.anchor);
+          const last = renderer.createdCellTypingObservation?.(points.focus);
+          return (
+            first?.owner === created.owner &&
+            last?.owner === created.owner &&
+            first.scope === created.scope &&
+            last.scope === created.scope &&
+            first.resourceId === created.resourceId &&
+            last.resourceId === created.resourceId &&
+            Boolean(caretGeometry(renderer.layout(), points.anchor)) &&
+            Boolean(caretGeometry(renderer.layout(), points.focus)) &&
+            editor.getEditorState() === state
+          );
+        }
         return (
           points &&
+          selected &&
           points.anchor.section === selected.section &&
           points.focus.section === selected.section &&
           points.anchor.paragraph === selected.paragraph &&

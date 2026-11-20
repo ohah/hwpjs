@@ -18,6 +18,12 @@ fn admitCacheParagraph(tree: Tree, paragraph: usize) !void {
 pub fn validate(tree: Tree, paragraph: usize) !void {
     const header = tree.nodes[paragraph].record.value.header;
     const children = try @import("../body/paragraph_children.zig").collect(tree, paragraph);
+    // A derived cache can be retired only when it owns no opaque subtree.
+    // Keep association in paragraph_children; never reparent or drop descendants.
+    if (children.line_node) |index| {
+        const cache = tree.nodes[index];
+        if (cache.parent != paragraph or cache.subtree_end != index + 1) return error.UnsupportedSourceLineCache;
+    }
     const count = if (children.metadata.lines) |lines| lines.count() else 0;
     if (children.metadata.lines != null or header.line_segment_count != 0) try admitCacheParagraph(tree, paragraph);
     if (count != header.line_segment_count) return error.UnsupportedSourceLineCache;

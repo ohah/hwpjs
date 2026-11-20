@@ -1,4 +1,16 @@
 import {
+  isCreatedCellSpliceOperation,
+  applyCreatedCellSpliceOperation,
+} from './mutations/created-cell-splice.ts';
+import {
+  checkedCreatedTableReceipt,
+  type CreatedOperationTable,
+} from './mutations/created-operation-selector.ts';
+import {
+  applyInlineObjectOperation,
+  isInlineObjectOperation,
+} from './mutations/inline-object-create.ts';
+import {
   isFormOperation,
   prepareFormOperations,
   type FormStateResult,
@@ -66,7 +78,22 @@ export async function applyDocumentOperations(
     const extensions = prepareCharacterExtensions(document, captured);
     const identities: (AppliedOperationIdentity | CharacterExtensionResult | FormStateResult)[] =
       [];
+    const createdTables = new Map<number, CreatedOperationTable>();
     for (const [index, operation] of captured.entries()) {
+      if (isCreatedCellSpliceOperation(operation)) {
+        extensions.runLegacy(operation, () =>
+          applyCreatedCellSpliceOperation(document, operation, createdTables),
+        );
+        extensions.advance(operation);
+        continue;
+      }
+      if (isInlineObjectOperation(operation)) {
+        extensions.runLegacy(operation, () =>
+          applyInlineObjectOperation(document, operation, createdTables),
+        );
+        extensions.advance(operation);
+        continue;
+      }
       if (isFormOperation(operation)) {
         identities.push(forms.apply(document, operation, index));
         continue;
@@ -81,13 +108,11 @@ export async function applyDocumentOperations(
           ? sourceSplits.apply(document, operation)
           : extensions.runLegacy(operation, () => applyOperation(document, operation));
       if (identity !== null) {
-        if (
-          typeof identity !== 'string' ||
-          !/^[1-9][0-9]{0,19}$/u.test(identity) ||
-          BigInt(identity) > 0xffffffffffffffffn
-        )
-          throw new Error('InvalidCreatedTableIdentity');
-        identities.push({ operation: index, kind: 'table-insert', identity });
+        const tableIdentity = checkedCreatedTableReceipt(identity);
+        if (operation.kind !== 'table-insert')
+          throw new Error('UnexpectedCreatedTableOperationResult');
+        createdTables.set(index, { section: operation.section, identity: tableIdentity });
+        identities.push({ operation: index, kind: 'table-insert', identity: tableIdentity });
       }
       extensions.advance(operation);
     }
@@ -105,7 +130,10 @@ export async function applyDocumentOperations(
         ? saved.layoutRequiresReflow
         : captured.some(
             (operation) =>
-              operation.kind === 'source-table-cell-split' || operation.kind === 'page-settings',
+              isInlineObjectOperation(operation) ||
+              isCreatedCellSpliceOperation(operation) ||
+              operation.kind === 'source-table-cell-split' ||
+              operation.kind === 'page-settings',
           );
     if (typeof reflow !== 'boolean') throw new Error('InvalidOperationLayoutState');
     const owned = Uint8Array.from(output);

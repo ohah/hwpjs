@@ -88,7 +88,7 @@ test "column original character style split save preserves source under allocati
         }
     };
     try Probe.run(a, &tree, &source);
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &tree, &source });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &tree, &source });
 }
 
 test "column joined character style candidate and save preserve source under allocation failures" {

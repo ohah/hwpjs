@@ -95,6 +95,10 @@ pub const History = struct {
         self.stack.deinit();
         a.destroy(self);
     }
+    /// Read-only save gate uses the same owner/poison/current-epoch validation.
+    pub fn validateCurrentForLayout(self: *Self, s: *edit.Session) !void {
+        try self.bind(s);
+    }
     fn bind(self: *Self, s: *edit.Session) !void {
         if (self.poisoned) return error.HistoryMutationUncertain;
         if (s != self.owner) return error.SourceBindingMismatch;

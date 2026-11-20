@@ -114,6 +114,10 @@ const alias = [
     find: '@hwpjs/core/_internal/native-geometry',
     replacement: resolve(core, '_internal/native-geometry.js'),
   },
+  {
+    find: '@hwpjs/core/_internal/native-read-source',
+    replacement: resolve(core, '_internal/native-read-source.js'),
+  },
   ...['core', 'vanilla', 'react', 'svelte'].map((name) => ({
     find: '@hwpjs/' + name,
     replacement: resolve(source, `packages/${name}/dist/index.js`),

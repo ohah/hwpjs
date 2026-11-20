@@ -127,6 +127,12 @@
     <button id="enable-edit" type="button" disabled>Canvas 편집 시작</button>
     <button id="enable-observed-docinfo-edit" type="button" hidden disabled>불완전 서식 원본 보존 편집</button>
     <button id="download" type="button" aria-keyshortcuts="Control+s Meta+s" title="편집본 다운로드 (Ctrl/Cmd+S)" disabled>편집본 다운로드</button>
+    <details id="strict-save-options">
+      <summary>글꼴 측정 저장</summary>
+      <label>원문 글꼴 파일 <input id="strict-save-font" type="file" accept=".ttf,.otf,.woff,.woff2" disabled></label>
+      <button id="download-measured" type="button" disabled>글꼴 측정 후 다운로드</button>
+      <p id="strict-save-status" role="status" aria-live="polite">원문과 같은 글꼴로 지원되는 본문을 측정해 저장합니다.</p>
+    </details>
     </div>
     <div class="toolbar-group" role="group" aria-label="편집 이력">
     <button id="undo" type="button" disabled>실행 취소</button>

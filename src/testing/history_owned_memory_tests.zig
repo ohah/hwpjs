@@ -63,12 +63,7 @@ test "MEMORY-V2 HWPX exact actual total accepts boundary and rejects one byte le
     const a = std.testing.allocator;
     const input = try fixture("shapeline.hwpx");
     defer a.free(input);
-    var measure = try hx.open(a, input, .{});
-    defer measure.deinit();
-    const mh = try hv.History.create(a, &measure, .{ .max_entries = 3 });
-    defer mh.deinit();
-    _ = try mh.applyBatch(&measure, &.{cmd});
-    const required = mh.stack.retained_bytes;
+    const required = (try @import("history_memory_boundary_measure.zig").find(a, input, &.{cmd}, 3, null)).cap;
     for ([_]usize{ required, required - 1 }) |cap| {
         var s = try hx.open(a, input, .{});
         defer s.deinit();

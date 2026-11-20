@@ -26,6 +26,9 @@ pub const OrderedEvent = union(enum) {
 pub const OrderedVisitor = struct {
     context: *anyopaque,
     on_event: *const fn (*anyopaque, OrderedEvent) anyerror!void,
+    /// Borrowed only during this callback, after exact tree/name/parent/span
+    /// validation. Never retain tag/scope pointers beyond the callback.
+    on_open_tag: ?*const fn (*anyopaque, usize, xml.tags.Tag, *const xml.namespaces.State) anyerror!void = null,
 };
 
 /// Replays the common XML parser over the owned source, connecting each text
@@ -96,6 +99,7 @@ pub fn visitOrdered(a: std.mem.Allocator, tree: anytype, visitor: OrderedVisitor
             if (node.parent != parent) return error.InvalidSectionTreeDepth;
             self.next_element += 1;
             if (tag.kind == .start) try self.stack.append(self.allocator, index);
+            if (self.visitor.on_open_tag) |on_open| try on_open(self.visitor.context, index, tag, scope);
             try self.visitor.on_event(self.visitor.context, if (tag.kind == .start) .{ .start_element = index } else .{ .empty_element = index });
         }
 

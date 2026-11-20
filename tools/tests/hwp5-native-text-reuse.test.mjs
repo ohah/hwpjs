@@ -20,6 +20,8 @@ import {
   row,
   insertExpected,
   assertFullSnapshot,
+  createHistoryPlan,
+  assertChartStamps,
 } from './helpers/hwp5-native-text-expectation.mjs';
 function guard(p) {
   assert(typeof p === 'string' && isAbsolute(p), 'ExplicitAbsoluteInputRequired');
@@ -88,6 +90,9 @@ async function session(paragraph = 15, mode = 'registered') {
     const original = cloneData(state.content);
     const originalCaps = state.capabilities;
     let historyCapsChanged = false;
+    const historyPlan = createHistoryPlan();
+    assert.equal(state.nativeHistoryRevision, 0);
+    assertChartStamps(state.content, 0);
     assert.equal(original.paragraphs.length, 65);
     if (mode === 'registered') assert(projection);
     else assert.equal(projection, undefined);
@@ -101,6 +106,8 @@ async function session(paragraph = 15, mode = 'registered') {
       async step(message, expected, kind) {
         const before = state,
           prior = projection;
+        const beforeRevision = historyPlan.revision;
+        assert.equal(before.nativeHistoryRevision, beforeRevision);
         const oldScope = prior && deps.prepare(prior.content, prior.evidence, host);
         const oldStamps = oldScope && before.content.paragraphs.map((p) => oldScope.stamp(p));
         const result = await lease.request(message, {
@@ -110,7 +117,10 @@ async function session(paragraph = 15, mode = 'registered') {
         assert.equal(result.status, 'committed-with-snapshot', JSON.stringify(result.error));
         state = e.getEditorState();
         projection = readGeometryProjection(lease, state);
-        assertFullSnapshot(state.content, expected, before.content);
+        const revision = historyPlan.move(message.kind);
+        assert.equal(state.nativeHistoryRevision, revision, 'Independent Native history plan');
+        assert.equal(result.reply.historyRevision, revision);
+        assertFullSnapshot(state.content, expected, before.content, { revision, beforeRevision });
         assert.equal(
           result.reply.content,
           state.content,
@@ -203,6 +213,8 @@ async function session(paragraph = 15, mode = 'registered') {
         state = e.getEditorState();
         assert.equal(state.content, before.content);
         assert.equal(state.nativeHistoryRevision, before.nativeHistoryRevision);
+        assert.equal(state.nativeHistoryRevision, historyPlan.revision);
+        assertChartStamps(state.content, historyPlan.revision);
         projection = readGeometryProjection(lease, state);
         assert(projection);
       },

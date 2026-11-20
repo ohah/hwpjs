@@ -3,6 +3,11 @@ const std = @import("std");
 const model = @import("../../model/document.zig");
 
 pub fn prepare(a: std.mem.Allocator, p: model.Paragraph, unit: u32, ranges: ?@import("../body/reader.zig").Ranges, char_count: usize, limit: usize) !model.Paragraph {
+    return prepareObject(a, p, unit, ranges, char_count, limit, @import("../body/control_rules.zig").table_id);
+}
+
+/// Shared actual eight-unit object token; admission stays with each command.
+pub fn prepareObject(a: std.mem.Allocator, p: model.Paragraph, unit: u32, ranges: ?@import("../body/reader.zig").Ranges, char_count: usize, limit: usize, control_id: u32) !model.Paragraph {
     const content = @import("plain_text_content.zig");
     const before = try content.editableTextBytes(a, p);
     defer a.free(before);
@@ -16,10 +21,8 @@ pub fn prepare(a: std.mem.Allocator, p: model.Paragraph, unit: u32, ranges: ?@im
     defer a.free(after);
     const at = @as(usize, unit) * 2;
     @memcpy(after[0..at], before[0..at]);
-    @memset(after[at..][0..16], 0);
-    std.mem.writeInt(u16, after[at..][0..2], 11, .little);
-    std.mem.writeInt(u32, after[at + 2 ..][0..4], @import("../body/control_rules.zig").table_id, .little);
-    std.mem.writeInt(u16, after[at + 14 ..][0..2], 11, .little);
+    const marker = try @import("../body/object_anchor_write.zig").create(control_id);
+    @memcpy(after[at..][0..16], &marker);
     @memcpy(after[at + 16 ..], before[at..]);
     var draft = try @import("../../model/clone.zig").paragraph(a, p);
     errdefer draft.deinit(a);

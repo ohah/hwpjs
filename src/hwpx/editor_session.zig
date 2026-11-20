@@ -12,7 +12,12 @@ pub const Options = struct {
     max_input_bytes: usize = 64 * 1024 * 1024,
     max_output_bytes: usize = 128 * 1024 * 1024,
     max_xml_bytes: usize = 128 * 1024 * 1024,
+    /// Semantic owned UTF-8 text bytes across the document.
     max_text_bytes: usize = 64 * 1024 * 1024,
+    /// Per-section read-kernel retained plain + visible bytes, not semantic text.
+    /// null derives checked 2 * max_text_bytes at read admission; overflow refuses.
+    /// An explicit value (including zero) is exact and is never raised or doubled.
+    max_read_retained_bytes: ?usize = null,
     max_sites: usize = 1_000_000,
     max_sections: usize = 4096,
 };
@@ -167,6 +172,9 @@ pub const Session = struct {
             total = std.math.add(u32, total, count) catch return error.LimitExceeded;
         }
         return .{ .sections = rows, .paragraphs = total, .created_cell_paragraphs = created };
+    }
+    pub fn documentTextSnapshot(self: *const Session, a: std.mem.Allocator, lifetime: @import("../model/formatting_binding.zig").State, revision: ?u32) !@import("../model/document_text_snapshot.zig").Snapshot {
+        return @import("document_text_snapshot.zig").read(a, self, lifetime, revision);
     }
 
     pub fn deinit(self: *Session) void {
@@ -972,11 +980,18 @@ pub const Session = struct {
         context.deinit(self.allocator);
     }
     pub fn save(self: *const Session) ![]u8 {
+        return self.saveWithTablePlacements(null);
+    }
+    /// The ordinary save remains byte-identical. Optional provenance is private
+    /// to a transaction and publishes only after the entire ZIP save succeeds.
+    pub fn saveWithTablePlacements(self: *const Session, output_placements: ?*@import("created_table_placement_receipts.zig").Receipts) ![]u8 {
         if (self.formatting_batch) |context| context.save_calls += 1;
         try @import("inline_leaf_text_budget.zig").validate(self);
         for (self.sections) |section| if (section.dutmal_texts.entries.items.len != 0 and section.structure_values != null) return error.UnsupportedDutmalStructuralSave;
         for (self.sections) |section| if (section.equation_scripts.entries.items.len != 0 and section.structure_values != null) return error.UnsupportedEquationStructuralSave;
         const a = self.allocator;
+        var placements: @import("created_table_placement_receipts.zig").Receipts = .{};
+        defer placements.deinit(a);
         const trees = try a.alloc(tree_module.Tree, self.sections.len);
         defer a.free(trees);
         for (self.sections, trees) |section, *tree| tree.* = section.tree;
@@ -1063,14 +1078,16 @@ pub const Session = struct {
             };
             const bytes = if (section.created_tables.entries.items.len == 0) equations else block: {
                 defer a.free(equations);
-                break :block try @import("created_table_section_save.zig").write(self, index, equations, self.options.max_xml_bytes -| xml_bytes);
+                break :block try @import("created_table_section_save.zig").writeWithPlacements(self, index, equations, self.options.max_xml_bytes -| xml_bytes, if (output_placements != null) &placements else null);
             };
             errdefer a.free(bytes);
             try replacements.append(a, .{ .entry_index = section.entry_index, .bytes = bytes });
             xml_bytes += bytes.len;
         }
         try @import("chart_resource_save.zig").append(a, self.source, &self.chart_resources, &replacements, self.options.max_output_bytes, self.options.allow_observed_chart_ole_deviations);
-        return zip_writer.write(a, self.source, replacements.items, .{ .max_output_bytes = self.options.max_output_bytes });
+        const bytes = try zip_writer.write(a, self.source, replacements.items, .{ .max_output_bytes = self.options.max_output_bytes });
+        if (output_placements) |out| std.mem.swap(@import("created_table_placement_receipts.zig").Receipts, out, &placements);
+        return bytes;
     }
     // Temporary staging gate, removed only when host edits rebase table points.
     fn requireMutableHostPositions(self: *const Session) !void {

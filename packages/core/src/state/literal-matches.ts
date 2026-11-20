@@ -7,8 +7,13 @@ export function validateLiteralQuery(query: unknown): asserts query is string {
 
 /** Query-local KMP preprocessing. The optional tap counts comparisons, not time.
  * No ownership, coordinate mapping, document cache or mutation lives here. */
-export function createLiteralMatcher(query: string, visit?: (phase: 'prefix' | 'scan') => void) {
+export function createLiteralMatcher(
+  query: string,
+  visit?: (phase: 'prefix' | 'scan') => void,
+  overlapping = false,
+) {
   validateLiteralQuery(query);
+  if (typeof overlapping !== 'boolean') throw Error('InvalidSearchOptions');
   const prefix = new Uint32Array(query.length);
   for (let i = 1, matched = 0; i < query.length; i++) {
     for (;;) {
@@ -35,7 +40,7 @@ export function createLiteralMatcher(query: string, visit?: (phase: 'prefix' | '
       }
       if (matched === query.length) {
         yield i + 1 - matched;
-        matched = 0;
+        matched = overlapping ? prefix[matched - 1] : 0;
       }
     }
   };

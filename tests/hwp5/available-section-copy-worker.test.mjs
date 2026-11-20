@@ -6,6 +6,16 @@ import { withoutNormalizationExport } from './normalization-export-fixture.mjs';
 
 assert(process.env.HWPJS_TEST_WASM, 'Explicit copy API candidate required');
 const wasm = readFileSync(process.env.HWPJS_TEST_WASM);
+test('Worker saves an ordinary HWP5 snapshot without enabling edit history', async (t) => {
+  const send = await worker(t);
+  const bytes = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp');
+  assert.equal((await send({ kind: 'load', bytes })).error, undefined);
+  const save = await send({ kind: 'save' });
+  assert.equal(save.error, undefined);
+  assert.deepEqual(Buffer.from(save.bytes), bytes);
+  assert.equal((await send({ kind: 'undo' })).error, 'EditorNotOpen');
+});
+
 test('copy warning metadata does not depend on the optional legacy CFB metadata getter', async (t) => {
   const path = `reference/rhwp/samples/${sectionCountFixtures[0][0]}`;
   if (!existsSync(path)) {

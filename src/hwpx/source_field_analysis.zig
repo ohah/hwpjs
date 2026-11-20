@@ -40,6 +40,36 @@ fn buildMode(a: std.mem.Allocator, sections: anytype, known_only: bool) !Source 
     };
     return .{ .report = report, .fields = fields, .bindings = bindings };
 }
+/// Request-local selected facts. Never replace the raw source_fields cache or
+/// promote a read observation into a field-label editing lease.
+pub fn selectedForExterior(session: anytype) !Source {
+    const a = session.allocator;
+    const sections = session.sections;
+    const inputs = try a.alloc(trees.Tree, sections.len);
+    defer a.free(inputs);
+    const Frame = @import("xml_tree_selection.zig").Frame;
+    const frames = try a.alloc([]const Frame, sections.len);
+    defer a.free(frames);
+    var initialized: usize = 0;
+    defer for (frames[0..initialized]) |rows| a.free(rows);
+    for (sections, inputs, frames) |section, *input, *rows| {
+        try section.validateSourceBasis();
+        input.* = section.tree;
+        rows.* = try @import("xml_tree_selection.zig").build(a, input, @import("editor_session.zig").siteOptions(session.options).branch_policy, 4096);
+        initialized += 1;
+    }
+    var report = try markers.inspectSelected(a, inputs, frames, .{});
+    errdefer report.deinit();
+    const fields = try ranges.build(a, inputs, &report);
+    errdefer a.free(fields);
+    const bindings = try a.alloc(Binding, sections.len);
+    for (inputs, bindings) |tree, *binding| binding.* = .{ .source_ptr = @intFromPtr(tree.source.ptr), .source_len = tree.source.len, .elements_ptr = @intFromPtr(tree.elements.ptr), .elements_len = tree.elements.len };
+    for (report.markers) |marker| if (marker.kind == .begin) {
+        bindings[marker.section_ordinal].has_fields = true;
+    };
+    return .{ .report = report, .fields = fields, .bindings = bindings };
+}
+
 pub const Lease = struct {
     source: Source,
     owned: bool,

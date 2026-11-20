@@ -1,0 +1,88 @@
+{
+  "kind": "actual official synthetic B Native read observations, no Native run in this test",
+  "inputSHA256": "65def08372e579cbb2945f1817763259e92610d58bd63858c681cc11ddb30abf",
+  "NativeSHA256": "5644df179adff2c8335de2aaf8828b32b08506c81560de03b136dfa6e4d0657c",
+  "packet": {
+    "kind": "hwp5_chart_candidates",
+    "format": "hwp5",
+    "version": 1,
+    "source_epoch": "2",
+    "history_revision": null,
+    "candidates": [
+      {
+        "section": 0,
+        "owner": {
+          "section_source_sha256": [
+            35, 233, 232, 189, 92, 149, 104, 126, 13, 244, 55, 215, 89, 105, 129, 31, 110, 6, 221,
+            240, 189, 197, 240, 205, 132, 212, 156, 138, 18, 66, 194, 0
+          ],
+          "control_node": 11,
+          "component_node": 12,
+          "ole_node": 13,
+          "paragraph_node": 0,
+          "paragraph": 0,
+          "source_unit": 17,
+          "current_unit": 17,
+          "ordinal": 1,
+          "ole_layout": "observed26",
+          "attributes": 1,
+          "extent_x": 7200,
+          "extent_y": 7200,
+          "opaque_tail_bytes": 4,
+          "geometry": {
+            "control_node": 11,
+            "component_node": 12,
+            "paragraph_node": 0,
+            "kind_id": 611282021,
+            "flags": 336208661,
+            "offset_x": 0,
+            "offset_y": 0,
+            "width": 20000,
+            "height": 12000,
+            "instance_id": 0,
+            "z_order": 0,
+            "outer_margins": [0, 0, 0, 0],
+            "prevent_page_break": 0,
+            "description_bytes": 0,
+            "object_extra_bytes": 0,
+            "component_offset_x": 0,
+            "component_offset_y": 0,
+            "original_width": 7200,
+            "original_height": 7200,
+            "current_width": 7200,
+            "current_height": 7200,
+            "component_attributes": 720896,
+            "rotation_angle": 0,
+            "matrix_pairs": 1,
+            "component_extra_bytes": 0
+          }
+        },
+        "resource": {
+          "state": "modern_chart",
+          "resource_sha256": [
+            202, 154, 104, 123, 134, 48, 80, 58, 223, 138, 191, 106, 88, 49, 155, 119, 154, 222,
+            102, 65, 7, 229, 67, 66, 105, 56, 52, 115, 77, 46, 81, 253
+          ],
+          "physical_id": 1,
+          "stream_entry": 3,
+          "legacy_backup_present": true,
+          "presentation_streams": 1,
+          "error_name": null
+        }
+      }
+    ]
+  },
+  "local": {
+    "component_node": 12,
+    "owner_node": 11,
+    "matrix": [1, 0, 0, 0, 1, 0]
+  },
+  "provenance": [
+    {
+      "sha256": "399e31307dc4a62e780c46a3b93aa6275bdf8ae2236aed0c8dc657503fbb7a21"
+    },
+    {
+      "sha256": "b171783876971ffc8864de52d4546aa5d743bed0eb5fca8dfb2ed60abf55774c"
+    }
+  ]
+}

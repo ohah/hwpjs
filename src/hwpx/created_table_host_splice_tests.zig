@@ -33,7 +33,7 @@ test "created table field style ownership retains all linked rows under allocati
     var counters: @import("section_text.zig").Report = .{};
     var values = try @import("paragraph_structure_collect.zig").collect(a, &session.sections[0].tree, &session.sections[0].sites, session.sections[0].locations, editor.siteOptions(session.options), &counters);
     defer values.deinit(a);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, original: *const editor.Session, initial: *const @import("paragraph_structure_values.zig").Values) !void {
             var candidate = try initial.clone(allocator);
             defer candidate.deinit(allocator);

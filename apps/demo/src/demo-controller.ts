@@ -1,3 +1,8 @@
+import { mountStrictLayoutSaveTool } from './strict-layout-save-tool.ts';
+import { createMeasuredPlainLayoutSaver } from '@hwpjs/core/runtime';
+import { createHwp5ChartPropertiesTool } from './hwp5-chart-properties-tool.ts';
+import { createNoteDeleteTool } from './note-delete-tool.ts';
+import { createNoteInsertTool } from './note-insert-tool.ts';
 import { createChartPropertiesTool } from './chart-properties-tool.ts';
 import { connectObjectActivation } from './object-activation-bridge.ts';
 import { createDrawingPropertiesTool } from './drawing-properties-tool.ts';
@@ -8,7 +13,7 @@ import { createPageSettingsTool } from './page-settings-tool.ts';
 import { createTableCellSplitTool, type TableCellSplitCapture } from './table-cell-split-tool.ts';
 import { createTableGridPort, type TableGridHost } from './table-grid-port.ts';
 import { createGeneratedTableGridTool } from './generated-table-grid-tool.ts';
-import { createPresentationRefresh } from './presentation-refresh.ts';
+import { createPresentationRefresh, observeSelectionPresentation } from './presentation-refresh.ts';
 import { pageStatusLabel, type DemoPageStatusHost } from './page-status.ts';
 import { captureFormattingPresentation } from './surface-formatting-capture.ts';
 import type { SurfaceFormattingHost } from './surface-formatting-port.ts';
@@ -89,8 +94,18 @@ import { getInitialAvailableFixtures, fetchAvailableFixtures } from './available
 // @ts-ignore Canonical fixture catalog is shared with the server.
 import { fixtureUrl } from '../../../web/preview/fixture-catalog.mjs';
 
+import type { DocumentSearchSelectionPort } from './document-search-controller.ts';
+
 export interface DemoHost
   extends SurfaceFormattingHost, SurfaceClipboardPort, DemoPageStatusHost, TableGridHost {
+  captureInlineObjectInsertCaret?():
+    | import('./inline-object-insert-port.ts').InlineObjectCaretCapture
+    | null;
+  selectDocumentText?: DocumentSearchSelectionPort;
+  prepareDocumentTextReadView?: (
+    current: () => boolean,
+  ) => Promise<'current' | 'refreshed' | 'unavailable'>;
+  captureDocumentTextCaret?: import('./document-search-controller.ts').DocumentSearchCaretPort;
   /** undefined는 관측 미연결/불확실, null은 현재 그림 선택 없음입니다. */
   getContextPicture?(): ContextPicture | null | undefined;
   getSelectedObject?(): import('@hwpjs/vanilla').CanvasSelectedObject | null;
@@ -286,6 +301,15 @@ export async function mountDemo(
   const textTools = createTextToolsBridge({
     editor,
     root,
+    prepareDocumentTextReadView: (current) =>
+      host?.prepareDocumentTextReadView?.(current) ?? Promise.resolve('unavailable'),
+    captureDocumentTextCaret: () =>
+      host?.captureDocumentTextCaret?.() ?? {
+        status: 'unavailable',
+        reason: 'DocumentSearchCaretUnavailable',
+      },
+    selectDocumentText: (observation, current, match) =>
+      host?.selectDocumentText?.(observation, current, match) ?? Promise.resolve(null),
     onStatus: note,
     onClose: () => {
       host?.focus?.();
@@ -354,6 +378,14 @@ export async function mountDemo(
     onEditData: (target) => chartData.open(target),
     getDataEditAvailability: () => chartData.presentation(),
   });
+  const hwp5ChartProperties = createHwp5ChartPropertiesTool({
+    root,
+    editor,
+    onStatus: note,
+    onClose: () => {
+      host?.focus?.();
+    },
+  });
   const drawingProperties = createDrawingPropertiesTool({
     root,
     editor,
@@ -393,11 +425,27 @@ export async function mountDemo(
     root,
     editor,
     core: paragraphShapeCore,
+    captureCaret: () => host?.captureInlineObjectInsertCaret?.() ?? null,
     onStatus: note,
     onPresentationChange: () => shell.update(),
     onClose: () => {
       host?.focus?.();
     },
+  });
+  const noteDelete = createNoteDeleteTool({
+    editor,
+    captureCaret: () => host?.captureInlineObjectInsertCaret?.() ?? null,
+    onStatus: note,
+    onPresentationChange: () => shell.update(),
+    onClose: () => host?.focus?.(),
+  });
+  const noteInsert = createNoteInsertTool({
+    root,
+    editor,
+    captureCaret: () => host?.captureInlineObjectInsertCaret?.() ?? null,
+    onStatus: note,
+    onClose: () => host?.focus?.(),
+    onPresentationChange: () => shell.update(),
   });
   const chartData = createChartDataTool({
     root,
@@ -461,6 +509,9 @@ export async function mountDemo(
       'insert-table': tableInsert.presentation(),
       'insert-chart': inlineObjectInsert.presentation('chart'),
       'insert-equation': inlineObjectInsert.presentation('equation'),
+      'delete-note': noteDelete.presentation(),
+      'insert-footnote': noteInsert.presentation(),
+      'insert-endnote': noteInsert.presentation(),
       'edit-chart-data': chartData.presentation(),
       'edit-equation': equation.presentation(),
       ...(host?.requestCellBlock
@@ -804,6 +855,14 @@ export async function mountDemo(
       inlineObjectInsert.open(action.command === 'insert-chart' ? 'chart' : 'equation');
       return;
     }
+    if (action.command === 'delete-note') {
+      void noteDelete.remove();
+      return;
+    }
+    if (action.command === 'insert-footnote' || action.command === 'insert-endnote') {
+      void noteInsert.open(action.command === 'insert-footnote' ? 'foot' : 'end');
+      return;
+    }
     if (action.command === 'edit-chart-data') {
       chartData.open();
       return;
@@ -935,6 +994,13 @@ export async function mountDemo(
     }
   }
   const savePolicy = mountSavePolicy(shell.saveOptionsMount, editor);
+  const strictLayoutSave = mountStrictLayoutSaveTool({
+    root: shell.saveOptionsMount,
+    editor,
+    saver: createMeasuredPlainLayoutSaver(editor),
+    filename: () => filename,
+    consent: () => savePolicy.options().allowUnprotectedOutput === true,
+  });
   const contextMenu = shell.surfaceMount
     ? mountDemoContextMenu({
         root: shell.surfaceMount,
@@ -988,6 +1054,11 @@ export async function mountDemo(
   const presentationRefresh = createPresentationRefresh(() => {
     if (!closed) shell.update();
   });
+  const stopSelectionPresentation = observeSelectionPresentation(
+    shell.surfaceMount,
+    () => presentationRefresh.request(),
+    (error) => note(error instanceof Error ? error.message : String(error)),
+  );
   let unsubscribe = () => {};
   let unsubscribePages = () => {};
   let unsubscribeObjects = () => {};
@@ -1002,6 +1073,7 @@ export async function mountDemo(
     unsubscribeObjects = connectObjectActivation(host, editor, {
       picture: objectProperties,
       chart: chartProperties,
+      hwp5Chart: hwp5ChartProperties,
       drawing: drawingProperties,
     });
     for (const control of shell.objectPropertiesFocusTargets)
@@ -1077,10 +1149,13 @@ export async function mountDemo(
     closed = true;
     cellSplit.dispose();
     inlineObjectInsert.dispose();
+    noteInsert.dispose();
+    noteDelete.dispose();
     chartData.dispose();
     equation.dispose();
     documentInsert.dispose();
     cancelFixtureRefresh();
+    stopSelectionPresentation();
     presentationRefresh.dispose();
     pageRuler?.dispose();
     unsubscribePages();
@@ -1099,6 +1174,7 @@ export async function mountDemo(
     objectProperties.dispose();
     drawingProperties.dispose();
     chartProperties.dispose();
+    hwp5ChartProperties.dispose();
     pageSettingsTool.dispose();
     paragraphBullet.dispose();
     paragraphShape.dispose();
@@ -1111,6 +1187,7 @@ export async function mountDemo(
     sourcePolicyNotice.dispose();
     observedNotice.dispose();
     normalizationNotice.dispose();
+    strictLayoutSave.dispose();
     savePolicy.dispose();
     shell.destroy();
     await editor.dispose();
@@ -1129,12 +1206,15 @@ export async function mountDemo(
       closed = true;
       cellSplit.dispose();
       inlineObjectInsert.dispose();
+      noteInsert.dispose();
+      noteDelete.dispose();
       chartData.dispose();
       equation.dispose();
       documentInsert.dispose();
       formatting.dispose();
       cancelFixtureRefresh();
       const drained = admission.dispose();
+      stopSelectionPresentation();
       presentationRefresh.dispose();
       pageRuler?.dispose();
       unsubscribePages();
@@ -1154,6 +1234,7 @@ export async function mountDemo(
       objectProperties.dispose();
       drawingProperties.dispose();
       chartProperties.dispose();
+      hwp5ChartProperties.dispose();
       pageSettingsTool.dispose();
       paragraphBullet.dispose();
       paragraphShape.dispose();
@@ -1166,6 +1247,7 @@ export async function mountDemo(
       sourcePolicyNotice.dispose();
       observedNotice.dispose();
       normalizationNotice.dispose();
+      strictLayoutSave.dispose();
       savePolicy.dispose();
       try {
         await host?.dispose();

@@ -261,6 +261,7 @@ export function createGeometryEvidenceController() {
             e.nativeEpoch,
             origin.nativeEpoch,
             e.scope.referenceScope,
+            { beforeRevision: e.nativeRevision, revision: origin.nativeRevision },
           )
         ) {
           historyReuse = true;

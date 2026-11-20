@@ -161,10 +161,38 @@ fn check(source: []const u8, output: []const u8, layout: Layout, command: Comman
             put(u16, &h, 12, 1);
             put(u32, &h, 18, fresh[next]);
             next += 1;
-            try std.testing.expectEqualSlices(u8, &h, after.items[cursor].payload);
-            try std.testing.expectEqualSlices(u8, &.{ 13, 0 }, after.items[cursor + 1].payload);
-            try std.testing.expectEqualSlices(u8, before.items[first_runs.?].payload[0..8], after.items[cursor + 2].payload);
-            cursor += 3;
+            // Only an authored empty cell uses the implicit one-unit terminator.
+            // Keep the complete HEADER oracle, then prove its physical ownership.
+            try std.testing.expect(cursor + 2 < after.items.len);
+            const list = after.items[cursor - 1];
+            const paragraph = after.items[cursor];
+            const runs = after.items[cursor + 1];
+            const boundary = after.items[cursor + 2];
+            try std.testing.expectEqual(@as(u10, 72), list.tag);
+            try std.testing.expectEqual(@as(u10, 2), list.level);
+            try std.testing.expectEqual(@as(u16, 1), std.mem.readInt(u16, list.payload[0..2], .little));
+            try std.testing.expectEqual(@as(u10, 66), paragraph.tag);
+            try std.testing.expectEqual(list.level, paragraph.level);
+            try std.testing.expectEqual(list.offset + list.raw.len, paragraph.offset);
+            try std.testing.expectEqualSlices(u8, &h, paragraph.payload);
+            try std.testing.expectEqual(fresh[next - 1], std.mem.readInt(u32, paragraph.payload[18..22], .little));
+            try std.testing.expectEqual(@as(u32, 1), std.mem.readInt(u32, paragraph.payload[0..4], .little) & 0x7fffffff);
+            try std.testing.expectEqual(@as(u16, 1), std.mem.readInt(u16, paragraph.payload[12..14], .little));
+            try std.testing.expectEqual(@as(u16, 0), std.mem.readInt(u16, paragraph.payload[16..18], .little));
+            try std.testing.expectEqual(@as(u10, 68), runs.tag);
+            try std.testing.expectEqual(paragraph.level + 1, runs.level);
+            try std.testing.expectEqual(paragraph.offset + paragraph.raw.len, runs.offset);
+            try std.testing.expectEqual(@as(usize, 8), runs.payload.len);
+            try std.testing.expectEqual(@as(u32, 0), std.mem.readInt(u32, runs.payload[0..4], .little));
+            const inherited_style = std.mem.readInt(u32, before.items[first_runs.?].payload[4..8], .little);
+            try std.testing.expectEqual(inherited_style, std.mem.readInt(u32, runs.payload[4..8], .little));
+            // A direct run followed immediately by the next cell/tail proves no
+            // TEXT, cache, extra run or second paragraph exists in this cell.
+            try std.testing.expectEqual(runs.offset + runs.raw.len, boundary.offset);
+            const last_cell = r + 1 == rows and c + 1 == columns;
+            try std.testing.expectEqual(@as(u10, if (last_cell) 66 else 72), boundary.tag);
+            try std.testing.expectEqual(@as(u10, if (last_cell) 0 else 2), boundary.level);
+            cursor += 2;
         }
     };
     try std.testing.expectEqual(after.items.len - 1, cursor);
@@ -336,8 +364,72 @@ test "HWP5 multipara source grid zero count absent or empty TEXT first middle fi
         };
     };
 }
+// Re-read typed physical owners as well as the independent raw record oracle.
+// Exactly one implicit paragraph survives per cell, including newly added cells.
+fn implicitAttempt(allocator: std.mem.Allocator, source: []const u8, baseline: []const u8, layout: Layout, command: Command) !void {
+    defer std.testing.expectEqualSlices(u8, baseline, source) catch @panic("source mutated");
+    const output = try grid.prepare(allocator, source, version, request(command, layout), .{});
+    defer allocator.free(output);
+    try check(source, output, layout, command);
+    var tree = try @import("source_tree.zig").parse(allocator, output, version, .{});
+    defer tree.deinit(allocator);
+    var groups = try @import("../body/list_groups.zig").Groups.build(allocator, tree);
+    defer groups.deinit(allocator);
+    const rows: usize = switch (command) {
+        .insert_row => 4,
+        .delete_row => 2,
+        else => 3,
+    };
+    const columns: usize = switch (command) {
+        .insert_column => 4,
+        .delete_column => 2,
+        else => 3,
+    };
+    try std.testing.expectEqual(rows * columns, groups.items.len);
+    var implicit: usize = 0;
+    for (tree.nodes, 0..) |node, index| {
+        if (node.record.framing.level != 2 or node.record.value != .header) continue;
+        const h = node.record.value.header;
+        if (h.characterUnits() != 1) continue;
+        try std.testing.expectEqual(@as(u16, 1), h.char_shape_count);
+        try std.testing.expectEqual(@as(u16, 0), h.line_segment_count);
+        try std.testing.expectEqual(index + 2, node.subtree_end);
+        const run = tree.nodes[index + 1];
+        try std.testing.expectEqual(@as(?usize, index), run.parent);
+        try std.testing.expectEqual(index + 2, run.subtree_end);
+        try std.testing.expect(run.record.value == .char_runs);
+        try std.testing.expectEqual(@as(usize, 1), run.record.value.char_runs.count());
+        try std.testing.expectEqual(@as(u32, 0), run.record.value.char_runs.get(0).?.start);
+        implicit += 1;
+    }
+    try std.testing.expectEqual(groups.items.len, implicit);
+}
+test "HWP5 multipara source grid implicit CR one unit absent TEXT raw survival styles reread all actions and OOM" {
+    for ([_]Layout{ .spec6, .observed8 }) |layout| for (0..3) |placement| {
+        const source = try emptyFixture(layout, .absent, placement, .positive_units);
+        defer a.free(source);
+        const baseline = try a.dupe(u8, source);
+        defer a.free(baseline);
+        for (0..4) |action| for ([_]u32{ 0, 1, if (action < 2) 3 else 2 }) |at| {
+            const command = commandFor(action, at);
+            try implicitAttempt(a, source, baseline, layout, command);
+            try @import("../../testing/allocation_failures.zig").check(implicitAttempt, .{ source, baseline, layout, command });
+        };
+    };
+}
 test "HWP5 multipara source grid positive count missing or empty TEXT malformed empty style refuses and OOM" {
-    for ([_]Layout{ .spec6, .observed8 }) |layout| for (std.enums.values(EmptyWire)) |wire_form| for ([_]EmptyIssue{ .positive_units, .run_count, .run_start }) |issue| {
+    // An actual zero-payload TEXT with units1 is still a mismatch. Only the
+    // absent-TEXT units1/run1/start0 case moved to the positive regression.
+    const malformed = [_]struct { wire: EmptyWire, issue: EmptyIssue }{
+        .{ .wire = .zero_payload, .issue = .positive_units },
+        .{ .wire = .absent, .issue = .run_count },
+        .{ .wire = .zero_payload, .issue = .run_count },
+        .{ .wire = .absent, .issue = .run_start },
+        .{ .wire = .zero_payload, .issue = .run_start },
+    };
+    for ([_]Layout{ .spec6, .observed8 }) |layout| for (malformed) |case| {
+        const wire_form = case.wire;
+        const issue = case.issue;
         const source = try emptyFixture(layout, wire_form, 1, issue);
         defer a.free(source);
         const baseline = try a.dupe(u8, source);

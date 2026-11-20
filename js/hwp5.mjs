@@ -1,3 +1,4 @@
+import { createHwp5DocumentTextReader } from './hwp5-document-text-reader.mjs';
 import { createMemory } from './wasm-memory.mjs';
 import { validateAbi } from './abi.mjs';
 import { inputBytes } from './input.mjs';
@@ -11,12 +12,23 @@ export async function createHwp5Reader(source) {
   validateAbi(wasm);
   const memory = createMemory(wasm);
   let closed = false;
+  const textReader = createHwp5DocumentTextReader({
+    wasm,
+    memory,
+    check() {
+      if (closed) throw Error('ReaderClosed');
+    },
+  });
   const readText = (data, availableOnly = false) => {
     if (closed) throw new Error('ReaderClosed');
+    textReader.retire();
     if (availableOnly && !availableSectionExports.every((name) => typeof wasm[name] === 'function'))
       throw new Error('AvailableSectionsPreviewUnavailable');
-    const bytes = inputBytes(data);
-    if (bytes.length > 64 * 1024 * 1024) throw new RangeError('LimitExceeded');
+    const input = inputBytes(data);
+    if (input.length > 64 * 1024 * 1024) throw new RangeError('LimitExceeded');
+    // Preview and the independent read owner must observe the same input,
+    // including when the caller retains a concurrently writable shared view.
+    const bytes = input.slice();
     return memory.withBytes(bytes, (ptr, size) => {
       try {
         const read = availableOnly ? wasm.hwp5_text_read_available : wasm.hwp5_text_read;
@@ -39,6 +51,7 @@ export async function createHwp5Reader(source) {
               : 'available_bodytext';
           result.sectionInventory = sectionInventory(declared, available);
         }
+        textReader.observe(bytes);
         return result;
       } finally {
         wasm.hwp5_text_free();
@@ -46,6 +59,7 @@ export async function createHwp5Reader(source) {
     });
   };
   return {
+    ...textReader.publicApi,
     readText(data) {
       return readText(data);
     },
@@ -53,8 +67,13 @@ export async function createHwp5Reader(source) {
       return readText(data, true);
     },
     close() {
-      if (!closed) wasm.hwp5_text_free();
+      if (closed) return;
       closed = true;
+      try {
+        textReader.retire();
+      } finally {
+        wasm.hwp5_text_free();
+      }
     },
   };
 }

@@ -14,9 +14,14 @@ pub const Scope = struct {
     view: display.View,
     cache: @import("paragraph_query_cache.zig").Cache,
 
+    fn sameSectionFormSlot(session: *const editor.Session, section: usize) bool {
+        const context = session.form_read_context orelse return false;
+        return context.section_index == section;
+    }
+
     pub fn init(session: *editor.Session, section: usize) !Scope {
         if (section >= session.sections.len) return error.InvalidSectionIndex;
-        if (session.form_read_context != null or session.sections[section].paragraph_query_cache != null) return error.ReadObservationScopeActive;
+        if (sameSectionFormSlot(session, section) or session.sections[section].paragraph_query_cache != null) return error.ReadObservationScopeActive;
         const view = try display.readUncached(session.allocator, &session.sections[section], session.options);
         return .{ .session = session, .forms = @import("form_read_context.zig").Context.init(session, section), .headers = @import("header_read_context.zig").Context.init(session), .allocator = session.allocator, .section = &session.sections[section], .view = view, .cache = .{
             .owner = &session.sections[section],
@@ -27,10 +32,12 @@ pub const Scope = struct {
     }
 
     pub fn attach(self: *Scope) !void {
-        if (self.session.form_read_context != null or self.section.paragraph_query_cache != null) return error.ReadObservationScopeActive;
+        if (sameSectionFormSlot(self.session, self.forms.section_index) or self.section.paragraph_query_cache != null) return error.ReadObservationScopeActive;
         if (!self.cache.valid()) return error.StaleParagraphReadScope;
         self.section.paragraph_query_cache = &self.cache;
-        self.session.form_read_context = &self.forms;
+        // Keep the first owner's optimization slot. Other sections retain
+        // their paragraph caches and use canonical form reads, never this slot.
+        if (self.session.form_read_context == null) self.session.form_read_context = &self.forms;
         if (self.session.header_read_context == null) self.session.header_read_context = &self.headers;
     }
 

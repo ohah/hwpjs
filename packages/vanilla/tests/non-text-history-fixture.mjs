@@ -208,6 +208,7 @@ export function fixture() {
     pictureReader() {},
     tableBackgroundReader() {},
     chartReader() {},
+    hwp5ChartReader() {},
     select() {},
     // This fixture has no selectable chart/drawing scene; only clearing is supported.
     selectObject(value) {

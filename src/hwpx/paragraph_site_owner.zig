@@ -29,6 +29,21 @@ test "field marker ownership excludes nested fields and foreign namespace marker
     try std.testing.expectError(error.InvalidTextSites, ownsFieldMarker(&tree, 0));
 }
 
+/// Nearest paragraph ancestors for every physical node in one parent-order
+/// pass. The current node itself is excluded, exactly like optionalAncestor.
+/// Caller owns the slice; no paragraph/site permission is issued here.
+pub fn indexAncestors(a: @import("std").mem.Allocator, tree: *const tree_module.Tree) ![]?usize {
+    const owners = try a.alloc(?usize, tree.elements.len);
+    errdefer a.free(owners);
+    for (tree.elements, 0..) |element, index| {
+        owners[index] = if (element.parent) |parent| value: {
+            if (parent >= index) return error.SourceBindingMismatch;
+            break :value if (tree.elements[parent].is(uri, "p")) parent else owners[parent];
+        } else null;
+    }
+    return owners;
+}
+
 pub fn ancestor(tree: *const tree_module.Tree, element: usize) !usize {
     return (try optionalAncestor(tree, element)) orelse error.SourceBindingMismatch;
 }

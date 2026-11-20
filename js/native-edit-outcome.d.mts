@@ -1,11 +1,5 @@
-export interface NativeEditOutcome {
-  readonly nativeCode?: 0 | 1 | 2 | 3;
-  readonly application: 'applied' | 'unapplied' | 'unknown';
-  readonly changed: boolean | null;
-  readonly error?: string;
-  readonly cleanupError?: string;
-  readonly refreshRequired?: true;
-}
+import type { NativeEditOutcome } from '../packages/core/src/contracts/native-edit-outcome.ts';
+export type { NativeEditOutcome } from '../packages/core/src/contracts/native-edit-outcome.ts';
 export interface NativeEditMemory {
   withBytes<T>(bytes: Uint8Array, invoke: (pointer: number, length: number) => T): T;
   error(): Error;

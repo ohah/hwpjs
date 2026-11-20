@@ -38,7 +38,7 @@ pub fn write(a: std.mem.Allocator, tree: *const Tree, paragraph: *const Paragrap
     return @import("runless_paragraph_xml.zig").write(a, tree, paragraph.template_element, paragraph.synthesized_run_character_id.?, paragraph.sites.items[0].text, limit);
 }
 
-pub fn validate(tree: *const Tree, paragraph: *const Paragraph) !void {
+pub fn validateReadSource(tree: *const Tree, paragraph: *const Paragraph) !void {
     if (paragraph.synthesized_run_character_id == null) return error.SourceBindingMismatch;
     if (incompatible(paragraph)) return error.SourceBindingMismatch;
     if (paragraph.sites.items.len != 1 or paragraph.template_element >= tree.elements.len) return error.SourceBindingMismatch;
@@ -52,6 +52,11 @@ pub fn validate(tree: *const Tree, paragraph: *const Paragraph) !void {
         if (index >= tree.elements.len or !tree.elements[index].is(uri, "linesegarray")) return error.SourceBindingMismatch;
         child = tree.elements[index].next_sibling;
     }
+}
+
+pub fn validate(tree: *const Tree, paragraph: *const Paragraph) !void {
+    try validateReadSource(tree, paragraph);
+    const site = paragraph.sites.items[0];
     if (paragraph.character_styles) |styles| {
         if (styles.len == 0) return error.InvalidTextSites;
         var cursor: usize = 0;

@@ -24,6 +24,7 @@ export const REPLACE_ALL_PLAN_LIMITS = Object.freeze({
 type Limits = { readonly [Key in keyof typeof REPLACE_ALL_PLAN_LIMITS]: number };
 export interface ReplaceAllCapabilities {
   readonly available: boolean;
+  readonly documentScope?: boolean;
   readonly reason?: string;
   readonly supportsNewlines: boolean;
 }

@@ -150,3 +150,157 @@ test "paragraph read scope raw Zig distinct sections have independent leases" {
     try std.testing.expect(sections[0].paragraph_query_cache == &first.cache);
     try std.testing.expect(sections[1].paragraph_query_cache == &second.cache);
 }
+
+// Two real package sections, deliberately identical form-node ordinals but
+// different values. A copied Session/Section is not the cross-section oracle.
+fn distinctSectionInput() ![]u8 {
+    const f = @import("test_package_fixture.zig");
+    const prefix = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run>";
+    const suffix = "</p:run></p:p></s:sec>";
+    return f.storedZip(a, &.{
+        .{ .name = "mimetype", .data = @import("package.zig").mime },
+        .{ .name = "META-INF/container.xml", .data = f.package_container },
+        .{ .name = "Contents/content.hpf", .data = f.structure_hpf },
+        .{ .name = "Contents/header.xml", .data = f.structure_header },
+        .{ .name = "Contents/chapter-A.xml", .data = prefix ++ "<p:checkBtn enabled='1' editable='1' value='CHECKED'/><p:t>section A</p:t>" ++ suffix },
+        .{ .name = "Contents/chapter-B.xml", .data = prefix ++ "<p:checkBtn enabled='1' editable='1' value='UNCHECKED'/><p:t>section B</p:t>" ++ suffix },
+        .{ .name = "Contents/extra.xml", .data = "<misc/>" },
+    });
+}
+
+fn checkDistinctForms(session: *editor.Session) !void {
+    // OPF spine order is B, A; querying both catches wrong-section slot reuse.
+    try std.testing.expectEqual(.unchecked, try session.checkBoxState(0, 3));
+    try std.testing.expectEqual(.checked, try session.checkBoxState(1, 3));
+}
+
+fn checkParagraphBorrow(session: *editor.Session, section: usize, scope: *Scope) !void {
+    var value = try display.read(a, &session.sections[section], session.options);
+    defer value.deinit(a);
+    try std.testing.expect(value.owned == null);
+    try std.testing.expect(value.paragraphs.ptr == scope.cache.paragraphs.ptr);
+}
+
+test "paragraph read scope distinct real sections preserve forms and paragraph owners in both teardown orders" {
+    for ([_]bool{ false, true }) |close_first_owner_first| {
+        const bytes = try distinctSectionInput();
+        defer a.free(bytes);
+        var session = try editor.open(a, bytes, .{});
+        defer session.deinit();
+        try std.testing.expectEqual(@as(usize, 2), session.sections.len);
+        try checkDistinctForms(&session);
+        var first = try Scope.init(&session, 0);
+        var first_live = true;
+        defer if (first_live) first.deinit();
+        // A scope prepared before another attach must recheck the same slot.
+        var same = try Scope.init(&session, 0);
+        defer same.deinit();
+        try first.attach();
+        try std.testing.expectError(error.ReadObservationScopeActive, same.attach());
+        try std.testing.expectError(error.ReadObservationScopeActive, Scope.init(&session, 0));
+        var second = try Scope.init(&session, 1);
+        var second_live = true;
+        defer if (second_live) second.deinit();
+        try second.attach();
+        try std.testing.expectError(error.ReadObservationScopeActive, Scope.init(&session, 1));
+        try std.testing.expect(session.form_read_context == &first.forms);
+        try checkDistinctForms(&session);
+        try std.testing.expect(first.forms.choices != null);
+        try std.testing.expect(second.forms.choices == null);
+        try checkParagraphBorrow(&session, 0, &first);
+        try checkParagraphBorrow(&session, 1, &second);
+        if (close_first_owner_first) {
+            first.deinit();
+            first_live = false;
+            try std.testing.expect(session.form_read_context == null);
+            try std.testing.expect(session.sections[0].paragraph_query_cache == null);
+            try checkParagraphBorrow(&session, 1, &second);
+            try checkDistinctForms(&session);
+            second.deinit();
+            second_live = false;
+        } else {
+            second.deinit();
+            second_live = false;
+            try std.testing.expect(session.form_read_context == &first.forms);
+            try std.testing.expect(session.sections[1].paragraph_query_cache == null);
+            try checkParagraphBorrow(&session, 0, &first);
+            try checkDistinctForms(&session);
+            first.deinit();
+            first_live = false;
+        }
+        try std.testing.expect(session.form_read_context == null);
+        try std.testing.expect(session.header_read_context == null);
+        try std.testing.expect(session.sections[0].paragraph_query_cache == null);
+        try std.testing.expect(session.sections[1].paragraph_query_cache == null);
+        try checkDistinctForms(&session);
+        const after = try session.save();
+        defer a.free(after);
+        try std.testing.expectEqualSlices(u8, bytes, after);
+    }
+}
+
+test "paragraph read scope distinct sections preserve foreign form slot in both teardown orders" {
+    for ([_]bool{ false, true }) |close_first_owner_first| {
+        const bytes = try distinctSectionInput();
+        defer a.free(bytes);
+        var session = try editor.open(a, bytes, .{});
+        defer session.deinit();
+        var first = try Scope.init(&session, 0);
+        var first_live = true;
+        defer if (first_live) first.deinit();
+        try first.attach();
+        var second = try Scope.init(&session, 1);
+        var second_live = true;
+        defer if (second_live) second.deinit();
+        try second.attach();
+        var foreign = @import("form_read_context.zig").Context.init(&session, 1);
+        defer foreign.deinit();
+        session.form_read_context = &foreign;
+        defer session.form_read_context = null;
+        if (close_first_owner_first) {
+            first.deinit();
+            first_live = false;
+            try std.testing.expect(session.form_read_context == &foreign);
+            second.deinit();
+            second_live = false;
+        } else {
+            second.deinit();
+            second_live = false;
+            try std.testing.expect(session.form_read_context == &foreign);
+            first.deinit();
+            first_live = false;
+        }
+        try std.testing.expect(session.form_read_context == &foreign);
+        try std.testing.expect(session.sections[0].paragraph_query_cache == null);
+        try std.testing.expect(session.sections[1].paragraph_query_cache == null);
+        try checkDistinctForms(&session);
+        // The still-published foreign slot continues to exclude its own section.
+        try std.testing.expectError(error.ReadObservationScopeActive, Scope.init(&session, 1));
+        session.mutation_serial += 1;
+        try std.testing.expectError(error.StaleParagraphReadScope, session.checkBoxState(1, 3));
+    }
+}
+
+test "paragraph read scope different section attach preserves an already published foreign form owner" {
+    const bytes = try distinctSectionInput();
+    defer a.free(bytes);
+    var session = try editor.open(a, bytes, .{});
+    defer session.deinit();
+    var foreign = @import("form_read_context.zig").Context.init(&session, 1);
+    defer foreign.deinit();
+    session.form_read_context = &foreign;
+    defer session.form_read_context = null;
+    try std.testing.expectError(error.ReadObservationScopeActive, Scope.init(&session, 1));
+    var scope = try Scope.init(&session, 0);
+    var live = true;
+    defer if (live) scope.deinit();
+    try scope.attach();
+    try std.testing.expect(session.form_read_context == &foreign);
+    try checkDistinctForms(&session);
+    try checkParagraphBorrow(&session, 0, &scope);
+    scope.deinit();
+    live = false;
+    try std.testing.expect(session.form_read_context == &foreign);
+    try std.testing.expect(session.sections[0].paragraph_query_cache == null);
+    try checkDistinctForms(&session);
+}

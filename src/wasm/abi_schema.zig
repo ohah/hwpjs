@@ -29,6 +29,45 @@ pub const CreatedTableGridAction = enum(u32) {
     delete_column = 3,
     _,
 };
+pub const hwp5_document_text_read_exports = [_][]const u8{
+    "hwp5_read_open",
+    "hwp5_read_close",
+    "hwp5_read_document_text_snapshot",
+    "hwp5_read_document_text_anchor",
+    "hwp5_read_document_text_selection",
+    "hwp5_read_document_text_read_binding",
+    "hwp5_read_output_ptr",
+    "hwp5_read_output_len",
+    "hwp5_read_output_free",
+    "hwp5_read_error_ptr",
+    "hwp5_read_error_len",
+};
+pub const hwpx_control_text_read_exports = [_][]const u8{
+    "hwpx_edit_paragraph_control_text_snapshot",
+    "hwpx_edit_paragraph_control_text_snapshot_current",
+    "hwpx_edit_control_text_read_identity",
+};
+pub const hwp5_chart_create_exports = [_][]const u8{
+    "hwp5_edit_chart_create_profile_version",
+    "hwp5_edit_chart_create_preview",
+    "hwp5_edit_create_chart_current",
+};
+pub const hwp5_chart_create_signatures = [_]OptionalFunctionSignature{
+    .{ .name = "hwp5_edit_chart_create_profile_version", .params = &.{}, .results = &.{"i32"} },
+    .{ .name = "hwp5_edit_chart_create_preview", .params = &.{ "i32", "i32", "i32", "i32" }, .results = &.{"i32"} },
+    .{ .name = "hwp5_edit_create_chart_current", .params = &.{ "i32", "i32", "i32", "i32", "i32", "i32" }, .results = &.{"i32"} },
+};
+pub const hwp5_chart_read_exports = [_][]const u8{
+    "hwp5_edit_chart_display_profile_version",
+    "hwp5_edit_chart_candidates",
+    "hwp5_edit_chart_display",
+};
+pub const OptionalFunctionSignature = struct { name: []const u8, params: []const []const u8, results: []const []const u8 };
+pub const hwp5_chart_read_signatures = [_]OptionalFunctionSignature{
+    .{ .name = "hwp5_edit_chart_display_profile_version", .params = &.{}, .results = &.{"i32"} },
+    .{ .name = "hwp5_edit_chart_candidates", .params = &.{}, .results = &.{"i32"} },
+    .{ .name = "hwp5_edit_chart_display", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+};
 pub const hwp5_text_transaction_exports = [_][]const u8{
     "hwp5_edit_text_transaction_capabilities",
     "hwp5_edit_query_text_transaction",
@@ -61,6 +100,8 @@ pub const hwp5_source_table_cell_split_exports = [_][]const u8{
 };
 pub const hwpx_chart_create_profile_exports = [_][]const u8{
     "hwpx_edit_chart_create_profile_version",
+    "hwpx_edit_inline_object_placement_version",
+    "hwpx_edit_inline_object_owner",
 };
 pub const document = struct {
     pub const header_bytes: usize = 8;

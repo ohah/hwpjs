@@ -15,7 +15,7 @@ pub fn write(a: std.mem.Allocator, source: []const u8, changes: []writer.Change,
         const first = changes[index];
         if (index + 1 < changes.len and first.start == changes[index + 1].start) {
             const second = changes[index + 1];
-            const text_before_removal = first.run_opening == null and !first.expand_empty_element and first.serialized_xml == null and first.start_tag == null and second.text.len == 0 and !second.expand_empty_element and second.serialized_xml == null and second.start_tag == null;
+            const text_before_removal = first.run_opening == null and !first.expand_empty_element and first.serialized_xml == null and first.start_tag == null and second.text.len == 0 and !second.expand_empty_element and second.serialized_xml == null and second.start_tag == null and second.serialized_content == null;
             if (first.start != first.end or (first.run_opening == null and !text_before_removal) or second.run_opening != null or second.end <= second.start) return error.DuplicateSourceSpan;
             const left = try writer.write(a, source, &.{first}, limit);
             defer a.free(left);

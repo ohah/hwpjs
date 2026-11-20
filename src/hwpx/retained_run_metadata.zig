@@ -46,6 +46,15 @@ pub fn paragraphOnly(tree: *const trees.Tree, run_index: usize) bool {
 }
 
 pub fn supported(tree: *const trees.Tree, index: usize) bool {
+    return supportedSettings(tree, index, false);
+}
+/// The caller owns current selected-run proof. No empty-run edit fallback uses this.
+pub fn readRunChildSupported(tree: *const trees.Tree, index: usize) bool {
+    if (index >= tree.elements.len) return false;
+    if (supportedSettings(tree, index, true)) return true;
+    return tree.elements[index].is(uri, "secPr") and gaps.empty(tree, index);
+}
+fn supportedSettings(tree: *const trees.Tree, index: usize, logical_read: bool) bool {
     if (index >= tree.elements.len) return false;
     const control = tree.elements[index];
     if (!control.is(uri, "ctrl") or !gaps.empty(tree, index)) return false;
@@ -54,7 +63,7 @@ pub fn supported(tree: *const trees.Tree, index: usize) bool {
         const setting = tree.elements[child];
         if (!gaps.empty(tree, child)) return false;
         if (setting.is(uri, "bookmark")) {
-            if (!@import("retained_bookmark.zig").settingSupported(tree, child) or !@import("retained_bookmark.zig").supported(tree, index)) return false;
+            if (!@import("retained_bookmark.zig").settingSupported(tree, child) or !(if (logical_read) @import("retained_bookmark.zig").readControlSettings(tree, index) else @import("retained_bookmark.zig").supported(tree, index))) return false;
         } else if (setting.is(uri, "pageNum")) {
             if (!@import("retained_page_number.zig").settingSupported(tree, child)) return false;
         } else if (setting.is(uri, "pageHiding")) {

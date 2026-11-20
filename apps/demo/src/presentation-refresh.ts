@@ -17,3 +17,25 @@ export function createPresentationRefresh(refresh: () => void) {
     },
   };
 }
+
+/** DOM 이벤트는 표시 갱신만 요청합니다. 실제 선택·권한은 기존 포트에서 다시 읽습니다. */
+export function observeSelectionPresentation(
+  root: EventTarget | null | undefined,
+  refresh: () => Promise<void> | undefined,
+  report: (error: unknown) => void,
+): () => void {
+  if (!root) return () => {};
+  const events = ['select', 'keyup', 'pointerup', 'pointercancel', 'input', 'focusout'];
+  const options = { capture: true };
+  const listener = () => {
+    try {
+      void refresh()?.catch(report);
+    } catch (error) {
+      report(error);
+    }
+  };
+  for (const event of events) root.addEventListener(event, listener, options);
+  return () => {
+    for (const event of events) root.removeEventListener(event, listener, options);
+  };
+}

@@ -95,7 +95,7 @@ test "HWP5 current paragraph flow actual split generated continuation and all al
     try std.testing.expect(rows[2].source_node == null);
     try std.testing.expectEqual(@as(u8, 0), rows[2].break_flags);
     try std.testing.expectEqual(before[1].template_node, rows[2].template_node);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, s: *const @import("style_preservation.zig").Session, expected: []const Flow) !void {
             const values = try s.paragraphFlow(allocator, 0);
             defer allocator.free(values);

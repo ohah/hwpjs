@@ -8,6 +8,9 @@ const links = @import("field_marker_links.zig");
 pub const Kind = enum { begin, end };
 
 pub const Options = struct {
+    /// Read contexts need linked facts, not duplicated nested subtree bytes.
+    retain_raw_xml: bool = true,
+    active_frames: ?[]const @import("xml_tree_selection.zig").Frame = null,
     max_markers: usize = 200_000,
     max_name_bytes: usize = 4096,
     max_attribute_bytes: usize = 4096,
@@ -81,6 +84,25 @@ fn markerKind(element: tree_mod.Element) ?Kind {
 /// Owns exact field marker XML and lexical attributes; pairs only explicit
 /// beginIDRef within a selected section, preserving missing and bad links.
 pub fn inspect(a: std.mem.Allocator, sections: []const tree_mod.Tree, options: Options) !Report {
+    return inspectAt(a, sections, 0, options, null);
+}
+
+/// Observe one physical section at its actual document ordinal. Uses the same
+/// marker ownership, linking, budgets and cleanup as the strict whole collection.
+pub fn inspectSection(a: std.mem.Allocator, tree: *const tree_mod.Tree, options: Options) !Report {
+    const ordinal = tree.section_ordinal orelse return error.InvalidPartKind;
+    return inspectAt(a, &.{tree.*}, ordinal, options, null);
+}
+
+/// Facts for one explicit frame set per physical section. Raw inspection and
+/// linking policy are unchanged; the caller still owns editing admission.
+pub fn inspectSelected(a: std.mem.Allocator, sections: []const tree_mod.Tree, frames: []const []const @import("xml_tree_selection.zig").Frame, options: Options) !Report {
+    if (frames.len != sections.len or options.active_frames != null) return error.SourceBindingMismatch;
+    return inspectAt(a, sections, 0, options, frames);
+}
+
+fn inspectAt(a: std.mem.Allocator, sections: []const tree_mod.Tree, first_ordinal: usize, base_options: Options, selected_frames: ?[]const []const @import("xml_tree_selection.zig").Frame) !Report {
+    const options = base_options;
     var arena = std.heap.ArenaAllocator.init(a);
     errdefer arena.deinit();
     const owned_a = arena.allocator();
@@ -94,10 +116,14 @@ pub fn inspect(a: std.mem.Allocator, sections: []const tree_mod.Tree, options: O
     var unexpected_children: usize = 0;
     var other_attributes: usize = 0;
     var link_summary: links.Summary = .{};
-    for (sections, 0..) |*tree, ordinal| {
+    for (sections, 0..) |*tree, index| {
+        const ordinal = std.math.add(usize, first_ordinal, index) catch return error.InvalidPartKind;
         if (tree.part_kind != .section or tree.section_ordinal != ordinal or tree.elements.len == 0) return error.InvalidPartKind;
         const first_marker = markers.items.len;
+        const active_frames = if (selected_frames) |frames| frames[index] else options.active_frames;
+        if (active_frames) |frames| if (frames.len != tree.elements.len) return error.SourceBindingMismatch;
         for (tree.elements, 0..) |element, element_index| {
+            if (active_frames) |frames| if (!frames[element_index].active) continue;
             const kind = markerKind(element) orelse continue;
             const parent_index = element.parent orelse continue;
             if (markers.items.len >= options.max_markers) return error.LimitExceeded;
@@ -118,7 +144,7 @@ pub fn inspect(a: std.mem.Allocator, sections: []const tree_mod.Tree, options: O
                 .parent_uri = try budget.copy(owned_a, parent_name.uri),
                 .parent_local_name = try budget.copy(owned_a, parent_local),
                 .kind = kind,
-                .raw_xml = try budget.copy(owned_a, tree.sourceOf(element_index)),
+                .raw_xml = if (options.retain_raw_xml) try budget.copy(owned_a, tree.sourceOf(element_index)) else "",
             };
             switch (kind) {
                 .begin => {

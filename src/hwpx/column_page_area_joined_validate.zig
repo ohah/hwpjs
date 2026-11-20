@@ -24,5 +24,5 @@ pub fn validate(a: std.mem.Allocator, tree: *const Tree, paragraph: *const Parag
     const segments = try @import("paragraph_joined_positions.zig").build(a, tree, &joined);
     defer a.free(segments);
     for (segments) |segment| if (segment.kind != .text) return error.UnsupportedMixedMetadataPlan;
-    try @import("page_area_current_validate.zig").validatePositions(paragraph, segments, inventory.items, true, false);
+    try @import("page_area_current_validate.zig").validatePositions(a, paragraph, segments, inventory.items, true, false);
 }
