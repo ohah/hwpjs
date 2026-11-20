@@ -15,8 +15,13 @@ test('profile query is optional ABI6 with identical current37f required/experime
   assert.equal(ABI_VERSION, before.ABI_VERSION);
   assert.deepEqual(REQUIRED_FUNCTIONS, before.REQUIRED_FUNCTIONS);
   assert.deepEqual(EXPERIMENTAL_EDITOR_FUNCTIONS, before.EXPERIMENTAL_EDITOR_FUNCTIONS);
-  assert.deepEqual(HWPX_CHART_CREATE_PROFILE_FUNCTIONS, ['hwpx_edit_chart_create_profile_version']);
-  assert.equal(REQUIRED_FUNCTIONS.includes(HWPX_CHART_CREATE_PROFILE_FUNCTIONS[0]), false);
+  assert.deepEqual(HWPX_CHART_CREATE_PROFILE_FUNCTIONS, [
+    'hwpx_edit_chart_create_profile_version',
+    'hwpx_edit_inline_object_placement_version',
+    'hwpx_edit_inline_object_owner',
+  ]);
+  for (const name of HWPX_CHART_CREATE_PROFILE_FUNCTIONS)
+    assert.equal(REQUIRED_FUNCTIONS.includes(name), false);
   const source = readFileSync(new URL('../../src/wasm/hwpx_edit.zig', import.meta.url), 'utf8');
   const addition =
     /\/\/ Optional pure version query\. No session\/history\/output allocation or mutation\.\n\/\/ This is candidate source, not a claim about the currently deployed engine\.\nexport fn hwpx_edit_chart_create_profile_version\(\) u32 \{\n    return @import\("\.\.\/hwpx\/chart_create_profile.zig"\)\.wire_version;\n\}\n/;

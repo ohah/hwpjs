@@ -261,7 +261,7 @@ jobs:
           grep -Eq '^[[:space:]]*0 fail$' "$RUNNER_TEMP/chart16-source-bun.log"
           ! grep -Eq '[1-9][0-9]* skip' "$RUNNER_TEMP/chart16-source-bun.log"
           node --test --test-concurrency=1 --test-reporter=tap tests/hwpx/chart-capability-runtime.test.mjs tests/hwpx/chart-create-decimal.test.mjs tests/hwpx/chart-family-completion.test.mjs tests/hwpx/chart-family-display-contract.test.mjs tests/hwpx/chart-kinds-js-contract.test.mjs tests/hwpx/chart-native-family-bridge.test.mjs tests/hwpx/chart-profile-abi.test.mjs tests/hwpx/chart-scatter-none.test.mjs tests/hwpx/chart-family-3d-linear.test.mjs 2>&1 | tee "$RUNNER_TEMP/chart16-source-node.tap"
-          grep -Eq '^# tests 82$' "$RUNNER_TEMP/chart16-source-node.tap"
+          grep -Eq '^# tests 84$' "$RUNNER_TEMP/chart16-source-node.tap"
           grep -Eq '^# fail 0$' "$RUNNER_TEMP/chart16-source-node.tap"
           grep -Eq '^# skipped 0$' "$RUNNER_TEMP/chart16-source-node.tap"
 
