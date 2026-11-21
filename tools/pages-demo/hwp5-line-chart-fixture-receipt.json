@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "feature": "hwp5-line-chart",
+  "baseCount": 128,
+  "targetCount": 129,
+  "baseManifestSHA256": "df02b5a0a53b8b363f3e859fc74f7583982b390122805134187b8d185ea4f378",
+  "basePolicySHA256": "6936857b2bcce1fbbf09621e56b127b970e68b398a109cc50f09e8528e3bd3be",
+  "baseCatalogSHA256": "ac3000b8c912338ac992e0dd8bca06b6fc2dca21dc4a1490f27958078de9520c",
+  "targetPolicyPath": "tools/pages-demo/hwp5-line-chart-fixture-policy.json",
+  "targetPolicySHA256": "c77d4c59e1c9c96891f41ca44daff3f2c4109f5def820ad4e30fcbeb78fdcc6f",
+  "targetCatalogSHA256": "dbb041d9f363e77633f1112febc121fcec6f549a9bb61b4d35d19cddc3b805b8",
+  "additions": [
+    {
+      "row": {
+        "id": "hwp5-chart-create-line.hwp",
+        "name": "hwp5-chart-create-line.hwp",
+        "label": "[기능 예제] HWP5 꺾은선 차트",
+        "path": "fixtures/hwp5-chart-create-line.hwp",
+        "bytes": 15360,
+        "sha256": "c4bcb277b5eca63878a984aef3592675dd132330ef8b9a05da779a9f357e2d63"
+      },
+      "sourcePath": "tools/pages-demo/fixtures/hwp5-chart-create-line.hwp",
+      "parentId": "image-insert-blank.hwp",
+      "parentBytes": 3584,
+      "parentSHA256": "3924fe5f437ffaa76f6696770cb4ae5fc19ffe485fb324bb21abc29b1f2cc689",
+      "provenanceSHA256": "c6aaf6f4f699f6677778815f2662e97892439c732b44b77326141bd5cc72f817"
+    }
+  ],
+  "producer": {
+    "sourceCommit": "ed9066e7eb9f858410046a23d459eebfec645b8e",
+    "wasmSHA256": "d252ac5a853fdd185aa31ee5445f985d358a04be0c0dcee1be527ae49f8929a9",
+    "independentRawReceiptSHA256": "ea3e31ad2bd09f9113415efd446c5f0e046b7110eaf163834b06901a6bc1ab75"
+  }
+}

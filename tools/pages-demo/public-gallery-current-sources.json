@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "policy": "public-gallery-fixtures.json",
-  "policySHA256": "6936857b2bcce1fbbf09621e56b127b970e68b398a109cc50f09e8528e3bd3be",
+  "policySHA256": "c77d4c59e1c9c96891f41ca44daff3f2c4109f5def820ad4e30fcbeb78fdcc6f",
   "sourcePaths": {
     "image-insert-blank.hwp": "apps/docs/docs/public/editor/fixtures/image-insert-blank.hwp",
     "image-insert-blank.hwpx": "apps/docs/docs/public/editor/fixtures/image-insert-blank.hwpx",
@@ -130,6 +130,7 @@
     "chart-create-surfaceChart.hwpx": "apps/docs/docs/public/editor/fixtures/chart-create-surfaceChart.hwpx",
     "chart-create-surface3DChart.hwpx": "apps/docs/docs/public/editor/fixtures/chart-create-surface3DChart.hwpx",
     "hwp5-picture-outer-margins.hwp": "tools/pages-demo/fixtures/hwp5-picture-outer-margins.hwp",
-    "hwp5-textbox-outer-margins.hwp": "tools/pages-demo/fixtures/hwp5-textbox-outer-margins.hwp"
+    "hwp5-textbox-outer-margins.hwp": "tools/pages-demo/fixtures/hwp5-textbox-outer-margins.hwp",
+    "hwp5-chart-create-line.hwp": "tools/pages-demo/fixtures/hwp5-chart-create-line.hwp"
   }
 }
