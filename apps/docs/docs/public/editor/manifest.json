@@ -187,7 +187,7 @@
     {
       "path": "api/main.js",
       "bytes": 21585,
-      "sha256": "166fa56c76e8f92414e0d0a2d8b78dbf8a5bc82c53a260b808fbecf8b40b136b"
+      "sha256": "0fd67dd49de25bd113e8e30cc90e394049bc8e64443b59a636fd303dd78d5026"
     },
     {
       "path": "api/playground.js",
@@ -990,6 +990,11 @@
       "sha256": "338e07d914927024e08053aedacf082752fba844c0a7d377b109eb09b5e7cacb"
     },
     {
+      "path": "assets/dist-Br6wixgh.js",
+      "bytes": 1382095,
+      "sha256": "3178984ecead1f8051741b24da3bb080cbb3dee6768a1181e9766dddfb840422"
+    },
+    {
       "path": "assets/dist-BRgOuWBl.js",
       "bytes": 57,
       "sha256": "1bf82d5c311da1e0627bbfcdd9e63d5c1df3dabd2028e25c4b9d34c85e7afa12"
@@ -1183,6 +1188,11 @@
       "path": "assets/dist-Chl-54Zs.js",
       "bytes": 1260449,
       "sha256": "d66444e4ca5383e6a6bec907b51f6330e2835758b98808fefde1a76de844413b"
+    },
+    {
+      "path": "assets/dist-CIQl22Pq.js",
+      "bytes": 57,
+      "sha256": "9f8bc8dc03084ed7c2c0e2b7dcba0f87254cc942b92a8189ef9e5d815bf14389"
     },
     {
       "path": "assets/dist-CIRhDcmU.js",
@@ -3280,6 +3290,11 @@
       "sha256": "bc49e30a359120e779059b25d722a2807231681fffb8e17a996560defeb682a8"
     },
     {
+      "path": "assets/main-CWmpQQQX.js",
+      "bytes": 888894,
+      "sha256": "65891598b4195eca03707f13f1ccc9fe8bdea8f49ce95643e1a54a82e92189fe"
+    },
+    {
       "path": "assets/main-DaTpOd5O.js",
       "bytes": 674241,
       "sha256": "44f2446dcf5d9c2e54134158ba053f219e2d4f5b03ea6a422ec90bc535994a75"
@@ -4302,22 +4317,22 @@
     {
       "path": "demo/headless/index.html",
       "bytes": 1283,
-      "sha256": "c9a45f50a38ea6b554f674a3306e4d165434759ed895bef0f4c77e5b2634408d"
+      "sha256": "7c352e659d75566c715dc6af4069859efd903c5e9cae010f5d72fe444921d111"
     },
     {
       "path": "demo/react/index.html",
       "bytes": 1283,
-      "sha256": "c9a45f50a38ea6b554f674a3306e4d165434759ed895bef0f4c77e5b2634408d"
+      "sha256": "7c352e659d75566c715dc6af4069859efd903c5e9cae010f5d72fe444921d111"
     },
     {
       "path": "demo/svelte/index.html",
       "bytes": 1283,
-      "sha256": "c9a45f50a38ea6b554f674a3306e4d165434759ed895bef0f4c77e5b2634408d"
+      "sha256": "7c352e659d75566c715dc6af4069859efd903c5e9cae010f5d72fe444921d111"
     },
     {
       "path": "demo/vanilla/index.html",
       "bytes": 1283,
-      "sha256": "c9a45f50a38ea6b554f674a3306e4d165434759ed895bef0f4c77e5b2634408d"
+      "sha256": "7c352e659d75566c715dc6af4069859efd903c5e9cae010f5d72fe444921d111"
     },
     {
       "path": "fixture-catalog.json",
@@ -4932,7 +4947,7 @@
     {
       "path": "index.html",
       "bytes": 1235,
-      "sha256": "2d8e5e88675e39f783b3bf15d3bc10ca01f38c4ba7c100e741d7d84a7d13726e"
+      "sha256": "47a53504b7bae85be234425cfd44212282a4469f70fc26a3612d9b73328f15c6"
     },
     {
       "path": "LICENSE.txt",
