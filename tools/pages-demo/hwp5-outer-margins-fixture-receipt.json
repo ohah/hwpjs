@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "feature": "hwp5-outer-margins",
+  "baseCount": 126,
+  "targetCount": 128,
+  "baseManifestSHA256": "25cf6fa3a7ae849ccf4a07873d43b5470c33a62002de1960acd33dd06fd37e27",
+  "basePolicySHA256": "ba5f02ea4edc945885f8d38f5a4a49e7405bdae201674d211972cf4a7ab52fb2",
+  "baseCatalogSHA256": "50c695ae61c3c9080b0b89655e26f460174f5b1857f547cdc3f4ed6363d990a1",
+  "targetPolicyPath": "tools/pages-demo/hwp5-outer-margins-fixture-policy.json",
+  "targetPolicySHA256": "6936857b2bcce1fbbf09621e56b127b970e68b398a109cc50f09e8528e3bd3be",
+  "targetCatalogSHA256": "ac3000b8c912338ac992e0dd8bca06b6fc2dca21dc4a1490f27958078de9520c",
+  "additions": [
+    {
+      "row": {
+        "id": "hwp5-picture-outer-margins.hwp",
+        "name": "hwp5-picture-outer-margins.hwp",
+        "label": "[기능 예제] HWP5 그림 바깥 여백",
+        "path": "fixtures/hwp5-picture-outer-margins.hwp",
+        "bytes": 5120,
+        "sha256": "f1d809c2f6ff56bf09ae3eb1578cf57261051308eb9e101d6ef51af08884ba76"
+      },
+      "sourcePath": "tools/pages-demo/fixtures/hwp5-picture-outer-margins.hwp",
+      "parentId": "picture-resize.hwp",
+      "parentBytes": 4096,
+      "parentSHA256": "6b2010227e9d6cd41c242e0a29281eddb58f8f618c5df137c4ca3d518665dda2",
+      "provenanceSHA256": "a71448448a72d52b74ae83a22784bb849474e57b1db10beeccef00cf857959e9"
+    },
+    {
+      "row": {
+        "id": "hwp5-textbox-outer-margins.hwp",
+        "name": "hwp5-textbox-outer-margins.hwp",
+        "label": "[기능 예제] HWP5 글상자 바깥 여백",
+        "path": "fixtures/hwp5-textbox-outer-margins.hwp",
+        "bytes": 14336,
+        "sha256": "2b8f1c51eb2505e911f20331c7e0d113e33c663451562bec63cc53f19bdd74d6"
+      },
+      "sourcePath": "tools/pages-demo/fixtures/hwp5-textbox-outer-margins.hwp",
+      "parentId": "textbox.hwp",
+      "parentBytes": 14336,
+      "parentSHA256": "905eeea44ec0a0bb59f1fc47d514cbc6c55207f588ec80813056d3a09e3219e7",
+      "provenanceSHA256": "5ceb0234beb20500ab34ecd51f440baf7ace3b87ab10d14d2858723ecf571308"
+    }
+  ],
+  "producer": {
+    "parentScope": "derived from already published allowlisted H5 files; not own blank documents",
+    "sourceTree": "2fe4a4d2be72759d80e7d599d01fb1832f3bce5d",
+    "helperSHA256": "c338529fb9b6dfb8f3e5f0853853d32a2af07500af2d964b46566de42bdfe5b3",
+    "emitterSourceSHA256": "c1696e02ece450a6b30e39ed4bea2a1649cda3dc3347262650c56d4732fcda3b",
+    "binarySHA256": "f2b88bfd930c3a83d41ea046158bb8ecc5820cedf9134c27b05d777d1a106c3a",
+    "independentRawReceiptSHA256": "64e181e5a8a1608202493b70b4ccf130eef75a66ca0d10acdaa72739f819bc33",
+    "changedStreamOnly": "BodyText/Section0",
+    "authoringStaleLayoutPermissionExplicit": true,
+    "marginEditsApplied": 0,
+    "layoutFreshnessClaim": false,
+    "GUIClaim": false
+  }
+}

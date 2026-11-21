@@ -160,3 +160,17 @@ Canvas에서 차트나 그림을 한 번 클릭하고 선택 테두리가 표시
 ## 글상자의 바깥 여백
 
 HWPX 문서에서 사각형 어울림이 지정된 글상자를 더블클릭해 **개체 속성**을 엽니다. **바깥 여백**에 왼쪽·오른쪽·위·아래 값을 mm로 입력하고 **바깥 여백 적용**을 누릅니다. 크기나 위치도 바꾸려면 한 항목을 적용한 뒤 속성 창을 다시 열어 다음 항목을 변경합니다. [SDK 조회와 적용](../api/editor.md#hwpx-글상자의-바깥-여백)
+
+## HWP5 바깥 여백 예제
+
+공개 예제 확장 정책이 적용된 데모에서는 `[기능 예제] HWP5 그림 바깥 여백`과 `[기능 예제] HWP5 글상자 바깥 여백`을 선택할 수 있습니다. 등록 ID는 `hwp5-picture-outer-margins.hwp`, `hwp5-textbox-outer-margins.hwp`입니다. 두 파일은 기존 공개 그림·글상자 문서에서 작성한 SQUARE 배치 예제이며 원본 예제는 유지합니다.
+
+<a href="__HWPJS_DOCS_BASE__editor/fixtures/hwp5-picture-outer-margins.hwp" download>그림 여백 예제 다운로드</a> · <a href="__HWPJS_DOCS_BASE__editor/fixtures/hwp5-textbox-outer-margins.hwp" download>글상자 여백 예제 다운로드</a>
+
+1. 그림이나 글상자의 테두리를 선택한 뒤 **개체 속성**을 엽니다.
+2. **바깥 여백**에서 왼쪽에 `2.646`, 오른쪽에 `5.292` mm를 입력하고 **바깥 여백 적용**을 누릅니다.
+3. 실행 취소와 다시 실행으로 변경을 확인합니다. 저장 시 줄 배치 안내가 나오면 내용을 확인하고, 허용하려는 경우에만 **파일** 메뉴를 열고 **줄 배치가 달라질 수 있는 HWP 저장 허용**을 선택한 뒤 다시 저장합니다. 저장한 파일을 다시 열어 여백을 확인합니다.
+
+[SDK에서 여백 조회·적용하기](../api/editor.md#hwp5-그림과-글상자의-바깥-여백)
+
+예제의 출처와 정책 반영 범위는 [공개 갤러리 파생 예제 계약](https://github.com/ohah/hwpjs/blob/main/docs/public-gallery-fixture-extensions.md)을 따릅니다.

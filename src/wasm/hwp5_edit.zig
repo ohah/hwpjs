@@ -2248,3 +2248,42 @@ export fn hwp5_edit_replace_picture(ptr: [*]const u8, size: usize, image_ptr: [*
     };
     return if (h.revision() == before) 2 else 1;
 }
+
+// Optional H5 outer margins. Generic geometry and HWPX exports are unchanged.
+export fn hwp5_edit_object_outer_margins_version() u32 {
+    const h = if (history) |*v| v else return 0;
+    return if (h.owned != null and !h.stats().poisoned) 1 else 0;
+}
+export fn hwp5_edit_object_outer_margins(section: u32, node: u32, kind: u32) u32 {
+    hwp5_edit_output_free();
+    const h = chartLiteralEditHistory() catch |err| return fail(err);
+    const selected: @import("../hwp5/edit/object_outer_margins.zig").Kind = switch (kind) {
+        0 => .picture,
+        1 => .textbox,
+        else => return fail(error.InvalidOuterMarginTarget),
+    };
+    const s = session() catch |err| return fail(err);
+    const observation = s.objectOuterMargins(.{ .section = section, .node = node, .kind = selected }) catch |err| return fail(err);
+    const wire = @import("hwp5_object_outer_margins_wire.zig");
+    const value = wire.Observation.from(observation, view_epoch.current() catch |err| return fail(err), h.revision());
+    output = @import("../json/bounded_stringify.zig").encode(a, value, wire.max_bytes) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_set_object_outer_margins(ptr: [*]const u8, len: usize) u32 {
+    hwp5_edit_output_free();
+    const h = chartLiteralEditHistory() catch |err| {
+        _ = fail(err);
+        return if (err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    const s = session() catch |err| return fail(err);
+    const wire = @import("hwp5_object_outer_margins_wire.zig");
+    var parsed = wire.parse(a, ptr[0..len]) catch |err| return fail(err);
+    defer parsed.deinit();
+    const request = parsed.value.validate(s.historyTicket() catch |err| return fail(err), view_epoch.current() catch |err| return fail(err), h.revision()) catch |err| return fail(err);
+    const before = h.revision();
+    apply(.{ .edit_object_outer_margins = request }) catch |err| {
+        _ = fail(err);
+        return if (h.stats().poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    return if (before == h.revision()) 2 else 1;
+}

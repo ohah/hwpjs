@@ -1,4 +1,13 @@
 import {
+  createObjectPropertiesEditGate,
+  type ObjectPropertiesEditGate,
+} from './object-properties-edit-gate.ts';
+import {
+  createHwp5PictureOuterMarginsTool,
+  captureHwp5PictureMarginsSelection,
+} from './hwp5-picture-outer-margins-tool.ts';
+import type { ObjectPropertiesCapture } from './object-properties-port.ts';
+import {
   createPictureReplacementPort,
   type PictureReplacementHost,
 } from './picture-replacement-port.ts';
@@ -17,14 +26,51 @@ export function createObjectPropertiesTool(options: {
   onPresentationChange?(): void;
   onError?(error: unknown): void;
 }) {
-  return createObjectPropertiesController({
+  const gates = new WeakMap<ObjectPropertiesCapture, ObjectPropertiesEditGate>();
+  const originalPort = createObjectPropertiesPort(options.editor, options.host);
+  const resizePort = {
+    ...originalPort,
+    async apply(capture: ObjectPropertiesCapture, draft: Parameters<typeof originalPort.apply>[1]) {
+      const gate = gates.get(capture);
+      if (gate && !gate.begin('geometry'))
+        return {
+          status: 'rejected-unapplied',
+          error: '바깥 여백과 크기는 한 번에 하나씩 변경하세요.',
+        };
+      try {
+        return await originalPort.apply(capture, draft);
+      } finally {
+        gate?.end('geometry');
+      }
+    },
+  };
+  const marginsOnly = createHwp5PictureOuterMarginsTool(options);
+  const controller = createObjectPropertiesController({
     ...options,
-    port: createObjectPropertiesPort(options.editor, options.host),
+    port: resizePort,
     createView: (capture, draft, callbacks) => {
       let view: ReturnType<typeof createObjectPropertiesView> | undefined;
+      const h5 = (capture.state.content as { format?: unknown } | undefined)?.format === 'hwp5';
+      const gate = h5 ? createObjectPropertiesEditGate() : undefined;
+      if (gate) gates.set(capture, gate);
+      const marginSelection = h5
+        ? captureHwp5PictureMarginsSelection(options.editor, options.host)
+        : null;
+      const replacementPort = createPictureReplacementPort(options.editor, options.host);
       const replacement = createPictureReplacementController({
         root: options.root,
-        port: createPictureReplacementPort(options.editor, options.host),
+        port: {
+          ...replacementPort,
+          async submit(owner, bytes) {
+            if (gate && !gate.begin('geometry'))
+              throw Error('바깥 여백과 이미지 파일은 한 번에 하나씩 변경하세요.');
+            try {
+              return await replacementPort.submit(owner, bytes);
+            } finally {
+              gate?.end('geometry');
+            }
+          },
+        },
         setAvailability: (enabled, reason) => view?.setReplacementAvailability?.(enabled, reason),
         setBusy: (value, sent) =>
           view?.setReplacementPending?.(value ? (sent ? 'sending' : 'reading') : null),
@@ -40,6 +86,20 @@ export function createObjectPropertiesTool(options: {
           ...callbacks,
           onReplace: () => replacement.choose(),
           replacementInput: replacement.input,
+          ...(h5 && gate && capture.target && marginSelection
+            ? {
+                outerMargins: {
+                  editor: options.editor,
+                  selector: marginSelection.selector,
+                  current: () =>
+                    marginSelection?.current() === true &&
+                    marginSelection.state === capture.state &&
+                    marginSelection.selector.section === capture.target?.section &&
+                    marginSelection.geometryPictureNode === capture.target?.pictureNode,
+                  gate,
+                },
+              }
+            : {}),
         });
       } catch (error) {
         replacement.dispose();
@@ -59,4 +119,43 @@ export function createObjectPropertiesTool(options: {
       };
     },
   });
+  return {
+    ...controller,
+    open() {
+      const state = options.editor.getEditorState();
+      if ((state.content as { format?: unknown } | undefined)?.format !== 'hwp5') {
+        marginsOnly.close();
+        controller.open();
+        return;
+      }
+      const marginCapture = marginsOnly.capture();
+      if (!marginCapture) {
+        controller.open();
+        return;
+      }
+      const resizeCapture = originalPort.capture();
+      if (
+        options.editor.getEditorState() !== state ||
+        (marginCapture && !marginCapture.current())
+      ) {
+        options.onStatus('그림 선택이나 문서가 바뀌었습니다. 다시 선택하세요.');
+        return;
+      }
+      if (resizeCapture.reason && marginCapture) {
+        controller.close();
+        marginsOnly.open(marginCapture);
+        return;
+      }
+      marginsOnly.close();
+      controller.open();
+    },
+    close() {
+      marginsOnly.close();
+      controller.close();
+    },
+    dispose() {
+      marginsOnly.dispose();
+      controller.dispose();
+    },
+  };
 }

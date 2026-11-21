@@ -1,0 +1,98 @@
+{
+  "section": 0,
+  "pictureNode": 10,
+  "recordNode": 11,
+  "resizeRecordNode": 11,
+  "resizeGeometry": null,
+  "sizeProtected": false,
+  "state": "located",
+  "paragraph": 0,
+  "anchorUnit": 337,
+  "owner": {
+    "anchorNode": 10,
+    "paragraph": 0,
+    "anchorUnit": 337
+  },
+  "geometry": {
+    "width": 7200,
+    "height": 3600,
+    "widthRelative": 4,
+    "heightRelative": 2,
+    "treatAsCharacter": false,
+    "horizontalOffset": 7200,
+    "verticalOffset": 0
+  },
+  "position": {
+    "relations": [2, 3, 0, 0],
+    "flags": [false, false, false, null]
+  },
+  "flow": {
+    "textWrap": 0,
+    "textFlow": 0,
+    "zOrder": 0,
+    "outsideMargins": [0, 0, 0, 0]
+  },
+  "crop": {
+    "clip": [0, 4800, 0, 2400],
+    "imageDimensions": [null, null],
+    "zeroSizeUnitsPerPixel": null
+  },
+  "transform": {
+    "identity": true,
+    "angle": 0,
+    "flip": [false, false],
+    "reverse": null,
+    "reverseApplicable": false,
+    "unknownMatrixNodes": 0,
+    "unknownComponentAttributes": 0
+  },
+  "renderingCorners": [
+    [0, 0],
+    [7200, 0],
+    [7200, 3600],
+    [0, 3600]
+  ],
+  "paintError": null,
+  "unselectedPictureTail": 0,
+  "source": {
+    "component_node": 10,
+    "owner_node": 9,
+    "picture_node": 11,
+    "border_color": 0,
+    "border_width": 0,
+    "border_attributes": 0,
+    "points": [
+      [0, 0],
+      [7200, 0],
+      [7200, 3600],
+      [0, 3600]
+    ],
+    "crop": [0, 0, 4800, 2400],
+    "margins": [0, 0, 0, 0],
+    "contrast": 0,
+    "brightness": 0,
+    "effect": 0,
+    "bin_data_id": 1,
+    "border_opacity": null,
+    "instance_id": null,
+    "extra_bytes": 9
+  },
+  "tailSource": {
+    "component_node": 10,
+    "owner_node": 9,
+    "picture_node": 11,
+    "border_opacity": 0,
+    "instance_id": 1,
+    "effects_flags": 0,
+    "shadow": null,
+    "image_width": null,
+    "image_height": null,
+    "image_alpha": null,
+    "extra_bytes": 0,
+    "section": 0,
+    "fileVersion": 83886848,
+    "layout": "effects_only"
+  },
+  "tailPolicy": "selected-tail",
+  "caption": null
+}

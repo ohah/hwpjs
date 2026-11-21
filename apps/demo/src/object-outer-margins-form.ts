@@ -16,7 +16,7 @@ export function createObjectOuterMarginsForm(
   root: HTMLElement,
   footer: HTMLElement,
   editor: ObjectOuterMarginsEditor | undefined,
-  selector: ObjectOuterMarginsSelector,
+  selector: ObjectOuterMarginsSelector | undefined,
   drawingCurrent: () => boolean,
   gate: ObjectPropertiesEditGate,
   onApplied: () => void,
@@ -31,6 +31,7 @@ export function createObjectOuterMarginsForm(
   group.append(legend);
   root.append(group);
   if (
+    !selector ||
     !editor ||
     typeof editor.getObjectOuterMargins !== 'function' ||
     typeof editor.dispatchCommand !== 'function'
@@ -38,6 +39,7 @@ export function createObjectOuterMarginsForm(
     status.textContent = '현재 개체의 바깥 여백은 변경할 수 없습니다.';
     group.append(status);
     return {
+      refresh() {},
       dispose() {
         group.remove();
       },
@@ -50,14 +52,40 @@ export function createObjectOuterMarginsForm(
   let original: ObjectOuterMargins | undefined,
     capture: ObjectOuterMarginsCapture | undefined,
     disposed = false,
-    busy = true;
+    busy = true,
+    composing = false,
+    legacyIME = false;
   const apply = doc.createElement('button');
   apply.type = 'button';
   apply.textContent = '바깥 여백 적용';
   apply.dataset.role = 'object-outer-margins-apply';
   const availability = () => {
     const valid = capture !== undefined && port.current(capture);
-    apply.disabled = disposed || busy || !valid || !gate.allowed('margins');
+    let validValues = false;
+    try {
+      if (original && capture) {
+        outerMarginValues(
+          {
+            left: inputs.left.value,
+            right: inputs.right.value,
+            top: inputs.top.value,
+            bottom: inputs.bottom.value,
+          },
+          dirty,
+          original,
+          capture.read.observation.format,
+        );
+        validValues = true;
+      }
+    } catch {}
+    apply.disabled =
+      disposed ||
+      busy ||
+      composing ||
+      legacyIME ||
+      !valid ||
+      !validValues ||
+      !gate.allowed('margins');
     for (const field of outerMarginFields)
       inputs[field].disabled = disposed || busy || !valid || gate.busy;
   };
@@ -76,11 +104,14 @@ export function createObjectOuterMarginsForm(
     input.dataset.role = 'object-outer-margins-' + field;
     inputs[field] = input;
     const onInput = () => {
-      dirty[field] = !original || input.value.trim() !== outerMarginDraft(original)[field];
+      dirty[field] =
+        !original ||
+        input.value.trim() !== outerMarginDraft(original, capture?.read.observation.format)[field];
       gate.setDirty(
         'margins',
         outerMarginFields.some((key) => dirty[key]),
       );
+      availability();
     };
     input.addEventListener('input', onInput);
     removals.push(() => input.removeEventListener('input', onInput));
@@ -92,7 +123,7 @@ export function createObjectOuterMarginsForm(
   footer.append(apply);
   const unsubscribe = gate.subscribe(availability);
   const onApply = async () => {
-    if (disposed || busy || !capture || !original) return;
+    if (disposed || busy || composing || legacyIME || !capture || !original) return;
     if (!port.current(capture)) {
       capture = undefined;
       status.textContent = '문서가 바뀌었습니다. 개체 속성을 다시 열어주세요.';
@@ -110,6 +141,7 @@ export function createObjectOuterMarginsForm(
         },
         dirty,
         original,
+        capture.read.observation.format,
       );
     } catch {
       status.textContent = '바깥 여백에 0 이상인 올바른 mm 값을 입력해주세요.';
@@ -117,7 +149,7 @@ export function createObjectOuterMarginsForm(
     }
     if (!gate.begin('margins')) {
       status.textContent =
-        '크기와 위치를 함께 변경할 수 없습니다. 다른 값을 되돌리거나 속성 창을 다시 열어주세요.';
+        '한 번에 크기와 위치, 바깥 여백, 본문 배치 중 하나만 변경하세요. 다른 값을 되돌리거나 속성 창을 다시 열어주세요.';
       return;
     }
     const owned = capture;
@@ -139,7 +171,33 @@ export function createObjectOuterMarginsForm(
       if (!disposed) availability();
     }
   };
-  const click = () => {
+  const compositionStart = () => {
+    composing = true;
+    availability();
+  };
+  const compositionEnd = () => {
+    composing = false;
+    legacyIME = false;
+    availability();
+  };
+  const keydown = (event: Event) => {
+    const e = event as KeyboardEvent;
+    if (e.isComposing || e.keyCode === 229 || e.which === 229) {
+      legacyIME = true;
+      availability();
+    }
+  };
+  const keyup = (event: Event) => {
+    legacyIME = (event as KeyboardEvent).isComposing === true;
+    availability();
+  };
+  root.addEventListener('compositionstart', compositionStart);
+  root.addEventListener('compositionend', compositionEnd);
+  root.addEventListener('keydown', keydown);
+  root.addEventListener('keyup', keyup);
+  const click = (event: Event) => {
+    const e = event as KeyboardEvent;
+    if (e.isComposing || e.keyCode === 229 || e.which === 229) return;
     void onApply();
   };
   apply.addEventListener('click', click);
@@ -148,15 +206,20 @@ export function createObjectOuterMarginsForm(
       const result = await port.read(selector);
       if (disposed) return;
       if (!result.available) {
-        status.textContent = '현재 개체의 바깥 여백은 변경할 수 없습니다.';
+        status.textContent =
+          result.reason === 'UnsupportedObjectOuterMargins'
+            ? '현재 배치에서는 바깥 여백 편집을 지원하지 않습니다.'
+            : '현재 개체의 바깥 여백은 변경할 수 없습니다.';
         return;
       }
       const values = result.capture.read.observation.margins,
-        labels = outerMarginDraft(values);
+        labels = outerMarginDraft(values, result.capture.read.observation.format);
       capture = result.capture;
       original = values;
       for (const field of outerMarginFields) inputs[field].value = labels[field];
-      status.textContent = '크기와 배치를 유지하며 글상자의 바깥 여백만 변경합니다.';
+      status.textContent = outerMarginFields.some((field) => values[field] < 0)
+        ? '원본의 음수 여백을 표시합니다. 모든 여백을 0 이상으로 수정한 뒤 적용해주세요.'
+        : '크기와 배치를 유지하며 개체의 바깥 여백만 변경합니다.';
     } catch {
       if (!disposed)
         status.textContent = '바깥 여백을 확인하지 못했습니다. 개체 속성을 다시 열어주세요.';
@@ -166,11 +229,17 @@ export function createObjectOuterMarginsForm(
     }
   })();
   return {
+    refresh: availability,
     dispose() {
       if (disposed) return;
       disposed = true;
       capture = undefined;
       unsubscribe();
+      gate.setDirty('margins', false);
+      root.removeEventListener('compositionstart', compositionStart);
+      root.removeEventListener('compositionend', compositionEnd);
+      root.removeEventListener('keydown', keydown);
+      root.removeEventListener('keyup', keyup);
       for (const remove of removals) remove();
       apply.removeEventListener('click', click);
       group.remove();

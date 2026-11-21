@@ -1,3 +1,4 @@
+import { isFixedNoOverlapTextboxWrap } from './fixed-textbox-wrap-policy.mjs';
 import { placeFloatingDrawing, drawingPagePlacementOptions } from './drawing-placement.mjs';
 import { drawingOutlinePoints } from './drawing-outline-paint.mjs';
 import { signedInt32 } from './signed-int32.mjs';
@@ -83,7 +84,8 @@ export function previewDrawingOutlineLayers(content, layout) {
     }
     const zOrder = signedInt32(source.flow?.z_order),
       wrap = source.flow?.text_wrap;
-    if (zOrder === null || !(inline ? wrap === 0 : [2, 3].includes(wrap))) {
+    const fixedWrap = isFixedNoOverlapTextboxWrap(source);
+    if (zOrder === null || !(inline ? wrap === 0 : [2, 3].includes(wrap) || fixedWrap)) {
       reject('UnsupportedDrawingOutlineFlow');
       continue;
     }
@@ -95,6 +97,24 @@ export function previewDrawingOutlineLayers(content, layout) {
         item.anchorUnit === drawing.anchorUnit &&
         item.pageOrdinal === hosts[0].pageOrdinal,
     );
+    if (fixedWrap) {
+      const reserved = (layout.drawingWrapReservations ?? []).filter(
+        (item) => item.section === drawing.section && item.drawingNode === drawing.drawingNode,
+      );
+      if (
+        layout.state !== 'paginated' ||
+        layout.pageLayoutMode !== 'measured-drawing-body' ||
+        current.length !== 1 ||
+        reserved.length !== 1 ||
+        reserved[0].pageOrdinal !== current[0].pageOrdinal ||
+        ['x', 'y', 'width', 'height'].some(
+          (key) => reserved[0].rectangle?.[key] !== current[0].rectangle?.[key],
+        )
+      ) {
+        reject('MissingFixedDrawingWrapPlacement');
+        continue;
+      }
+    }
     if (inline && current.length !== 1) {
       reject('AmbiguousInlineDrawingOutline');
       continue;

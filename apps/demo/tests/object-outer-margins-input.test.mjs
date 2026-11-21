@@ -5,7 +5,7 @@ const original = { left: 1, right: 32767, top: 0, bottom: 12345 };
 const clean = { left: false, right: false, top: false, bottom: false };
 test('margin display includes zero without replacing rounded original source integers', () => {
   const labels = outerMarginDraft(original);
-  assert.deepEqual(labels, { left: '0', right: '115.59', top: '0', bottom: '43.55' });
+  assert.deepEqual(labels, { left: '0.004', right: '115.595', top: '0', bottom: '43.55' });
   assert.deepEqual(outerMarginValues(labels, clean, original), original);
   assert.deepEqual(
     outerMarginValues(labels, { left: true, right: true, top: true, bottom: true }, original),
@@ -36,7 +36,7 @@ test('explicit zero differs from absent draft and has no negative-zero coercion'
     '1e2',
     'NaN',
     'Infinity',
-    '1.001',
+    '1.0001',
     '115.60',
     '9'.repeat(41),
   ])

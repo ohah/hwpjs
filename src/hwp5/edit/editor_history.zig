@@ -60,6 +60,7 @@ pub const History = struct {
         try self.bind(session);
         session.invalidateStrictLayout();
         if (self.owned) |h| return h.applyBatch(session, commands);
+        for (commands) |command| if (command == .edit_object_outer_margins) return error.HistoryProtocol2Required;
         try self.bind(session);
         const before = try session.createCheckpoint(self.max_checkpoint_bytes);
         var transferred = false;

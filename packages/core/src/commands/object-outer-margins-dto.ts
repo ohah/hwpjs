@@ -1,3 +1,4 @@
+import type { Hwp5OuterMarginsSelector, Hwp5OuterMarginsObservation, Hwp5OuterMarginsRequest } from './hwp5-object-outer-margins-dto.ts';
 import type {
   ObjectGeometryFrame,
   ObjectGeometryOwner,
@@ -11,23 +12,24 @@ export type ObjectOuterMargins = Readonly<{
   top: number;
   bottom: number;
 }>;
-export type ObjectOuterMarginsSelector = Readonly<{
+export type ObjectOuterMarginsSelector = Hwp5OuterMarginsSelector | Readonly<{
   kind: 'drawing';
   section: number;
   node: number;
 }>;
 /** Internal Native wire data; public callers cannot turn it into command authority. */
-export type NativeObjectOuterMarginsObservation = Readonly<{
+export type NativeObjectOuterMarginsObservation = Hwp5OuterMarginsObservation | HwpxObjectOuterMarginsObservation;
+export type HwpxObjectOuterMarginsObservation = Readonly<{
   geometry: ObjectGeometryObservation &
     Readonly<{
       format: 'hwpx';
-      selector: ObjectOuterMarginsSelector;
+      selector: Extract<ObjectOuterMarginsSelector, {kind: 'drawing'}>;
     }>;
   margins: ObjectOuterMargins;
 }>;
 export type NativeObjectOuterMarginsRequest = Readonly<{
   geometry: Readonly<{
-    selector: ObjectOuterMarginsSelector;
+    selector: Extract<ObjectOuterMarginsSelector, {kind: 'drawing'}>;
     owner: ObjectGeometryOwner;
     expected: ObjectGeometryFrame;
     historyRevision: number;
@@ -49,7 +51,8 @@ export type ObjectOuterMarginsRead =
       state: 'available';
       target: ObjectOuterMarginsTarget;
       observation: Readonly<{
-        format: 'hwpx';
+        format: 'hwpx' | 'hwp5';
+        kind?: 'drawing' | 'picture' | 'textbox';
         section: number;
         drawingNode: number;
         margins: ObjectOuterMargins;
@@ -61,5 +64,5 @@ export type SetObjectOuterMarginsPayload = Readonly<{
 }>;
 export type ObjectOuterMarginsMessage = {
   kind: 'object-outer-margins-set';
-  request: NativeObjectOuterMarginsRequest;
+  request: NativeObjectOuterMarginsRequest | Hwp5OuterMarginsRequest;
 };

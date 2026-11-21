@@ -1,3 +1,9 @@
+import {
+  createObjectOuterMarginsForm,
+  type ObjectOuterMarginsEditor,
+} from './object-outer-margins-form.ts';
+import type { ObjectPropertiesEditGate } from './object-properties-edit-gate.ts';
+import type { ObjectOuterMarginsSelector } from '@hwpjs/core';
 import { createDialogLayer } from './dialog-layer.ts';
 import {
   pictureSize,
@@ -18,6 +24,12 @@ export function createObjectPropertiesView(
     onDismiss(): void;
     onReplace?(): void;
     replacementInput?: HTMLInputElement;
+    outerMargins?: {
+      editor: ObjectOuterMarginsEditor;
+      selector: ObjectOuterMarginsSelector;
+      current(): boolean;
+      gate: ObjectPropertiesEditGate;
+    };
   },
 ): ObjectPropertiesView {
   if (!captured.target) throw Error('MissingPicturePropertyTarget');
@@ -78,8 +90,9 @@ export function createObjectPropertiesView(
   basics.append(lockRow);
   const hint = doc.createElement('p'),
     status = doc.createElement('p');
-  hint.textContent =
-    '선택한 그림의 크기를 변경합니다. 위치·회전·자르기 등 추가 속성은 현재 이 창에서 지원하지 않습니다.';
+  hint.textContent = callbacks.outerMargins
+    ? '크기, 바깥 여백, 이미지 파일은 한 번에 하나씩 변경합니다.'
+    : '선택한 그림의 크기를 변경합니다. 위치·회전·자르기 등 추가 속성은 현재 이 창에서 지원하지 않습니다.';
   hint.className = 'hwp-object-hint';
   status.id = `${prefix}-status`;
   status.dataset.role = 'object-status';
@@ -121,6 +134,8 @@ export function createObjectPropertiesView(
     dirty: { ...dirty },
     ...(lock.checked && dirty[lastEdited] ? { aspectRatio: lastEdited } : {}),
   });
+  const gate = callbacks.outerMargins?.gate;
+  let margins: ReturnType<typeof createObjectOuterMarginsForm> | undefined;
   const refresh = () => {
     if (disposed) return;
     let invalid: string | null = null;
@@ -138,21 +153,38 @@ export function createObjectPropertiesView(
       composing ||
       key229 ||
       reason !== null ||
-      invalid !== null;
+      invalid !== null ||
+      (gate !== undefined && !gate.allowed('geometry'));
     fields.width.disabled =
       fields.height.disabled =
       lock.disabled =
-        busy || replacementPhase !== null || reason !== null;
-    cancel.textContent = busy || replacementPhase === 'sending' ? '닫기 (적용은 계속)' : '취소';
+        busy || replacementPhase !== null || reason !== null || gate?.busy === true;
+    cancel.textContent =
+      busy || replacementPhase === 'sending' || gate?.busy === true ? '닫기 (적용은 계속)' : '취소';
     if (replace)
       replace.disabled =
-        busy || replacementPhase !== null || composing || key229 || !replacementEnabled;
-    layer.element.setAttribute('aria-busy', String(busy || replacementPhase !== null));
-    status.textContent = reason ?? invalid ?? notice;
+        busy ||
+        replacementPhase !== null ||
+        composing ||
+        key229 ||
+        !replacementEnabled ||
+        (gate !== undefined && !gate.allowed('geometry'));
+    layer.element.setAttribute(
+      'aria-busy',
+      String(busy || replacementPhase !== null || gate?.busy === true),
+    );
+    status.textContent =
+      reason ??
+      invalid ??
+      (gate?.conflict
+        ? '크기와 바깥 여백은 함께 적용할 수 없습니다. 다른 초안을 되돌리세요.'
+        : notice);
+    margins?.refresh();
   };
   const changed = (key: 'width' | 'height') => {
     lastEdited = key;
     dirty[key] = fields[key].value !== initial[key];
+    gate?.setDirty('geometry', busy || replacementPhase !== null || dirty.width || dirty.height);
     if (disposed || busy || reason || composing || key229) return;
     notice = '';
     ratioError = false;
@@ -171,6 +203,7 @@ export function createObjectPropertiesView(
         ratioError = true;
       }
     }
+    gate?.setDirty('geometry', busy || replacementPhase !== null || dirty.width || dirty.height);
     refresh();
   };
   for (const key of ['width', 'height'] as const) listen(fields[key], 'input', () => changed(key));
@@ -219,6 +252,18 @@ export function createObjectPropertiesView(
       refresh();
       if (!disposed && !replace.disabled) callbacks.onReplace?.();
     });
+  margins = callbacks.outerMargins
+    ? createObjectOuterMarginsForm(
+        layer.body,
+        layer.footer,
+        callbacks.outerMargins.editor,
+        callbacks.outerMargins.selector,
+        () => !busy && replacementPhase === null && callbacks.outerMargins!.current(),
+        callbacks.outerMargins.gate,
+        callbacks.onDismiss,
+      )
+    : undefined;
+  const stopGate = gate?.subscribe(refresh);
   refresh();
   layer.show(fields.width);
   return {
@@ -227,6 +272,7 @@ export function createObjectPropertiesView(
     },
     setBusy(value) {
       busy = value;
+      gate?.setDirty('geometry', busy || replacementPhase !== null || dirty.width || dirty.height);
       refresh();
     },
     setAvailability(value) {
@@ -239,6 +285,7 @@ export function createObjectPropertiesView(
     },
     setReplacementPending(value) {
       replacementPhase = value;
+      gate?.setDirty('geometry', busy || replacementPhase !== null || dirty.width || dirty.height);
       refresh();
     },
     setReplacementAvailability(enabled, text) {
@@ -249,6 +296,9 @@ export function createObjectPropertiesView(
     destroy() {
       if (disposed) return;
       disposed = true;
+      stopGate?.();
+      margins?.dispose();
+      gate?.setDirty('geometry', false);
       for (const remove of removals.splice(0)) remove();
       layer.destroy();
     },

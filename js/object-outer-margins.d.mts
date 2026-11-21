@@ -1,7 +1,7 @@
 import type {
   ObjectOuterMargins,
   ObjectOuterMarginsSelector,
-  NativeObjectOuterMarginsObservation,
+  HwpxObjectOuterMarginsObservation as NativeObjectOuterMarginsObservation,
   NativeObjectOuterMarginsRequest,
 } from '../packages/core/src/commands/object-outer-margins-dto.ts';
 import type { NativeEditOutcome } from '../packages/core/src/contracts/native-edit-outcome.ts';
@@ -12,7 +12,7 @@ export function checkedObjectOuterMarginsObservation(
 export function checkedObjectOuterMarginsRequest(value: unknown): NativeObjectOuterMarginsRequest;
 export interface ObjectOuterMarginsApi {
   supportsObjectOuterMargins(): boolean;
-  objectOuterMargins(selector: ObjectOuterMarginsSelector): NativeObjectOuterMarginsObservation;
+  objectOuterMargins(selector: Extract<ObjectOuterMarginsSelector, {kind: 'drawing'}>): NativeObjectOuterMarginsObservation;
   setObjectOuterMargins(request: NativeObjectOuterMarginsRequest): NativeEditOutcome;
 }
 export function createObjectOuterMarginsApi(options: {

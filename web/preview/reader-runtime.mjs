@@ -1362,7 +1362,7 @@ export function createReaderRuntime({
         return;
       }
       if (message.kind === 'object-outer-margins-query') {
-        if (format !== 'hwpx' || !historyEnabled || !editor?.supportsObjectOuterMargins?.()) {
+        if (!['hwpx', 'hwp5'].includes(format) || !historyEnabled || !editor?.supportsObjectOuterMargins?.()) {
           reply({
             kind: message.kind,
             outerMargins: null,
@@ -1375,7 +1375,7 @@ export function createReaderRuntime({
         return;
       }
       if (message.kind === 'object-outer-margins-set') {
-        if (format !== 'hwpx' || !historyEnabled || !editor?.supportsObjectOuterMargins?.())
+        if (!['hwpx', 'hwp5'].includes(format) || !historyEnabled || !editor?.supportsObjectOuterMargins?.())
           throw Error('ObjectOuterMarginsUnavailable');
         if (historyPoisoned) throw Error('HistoryMutationUncertain');
         atomicOutcome = editor.setObjectOuterMargins(message.request);
@@ -1389,10 +1389,14 @@ export function createReaderRuntime({
           return;
         }
         documentWindow = null;
-        reader = await createHwpxReader(module);
-        preview = reader.readTextEvents(editor.saveForDisplay());
+        if (format === 'hwpx') {
+          reader = await createHwpxReader(module);
+          preview = reader.readTextEvents(editor.saveForDisplay());
+        } else {
+          await refreshHwp5PreviewFallback();
+        }
         displayResources.invalidate();
-        reply({ kind: message.kind, content: hwpxDisplay() });
+        reply({ kind: message.kind, content: format === 'hwpx' ? hwpxDisplay() : hwp5Display() });
         return;
       }
       if (message.kind === 'object-body-flow-query') {

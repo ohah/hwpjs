@@ -258,3 +258,10 @@ export const HWPX_OBJECT_OUTER_MARGINS_ABI = Object.freeze({
   hwpx_edit_object_outer_margins: { params: ['i32', 'i32'], results: ['i32'] },
   hwpx_edit_set_object_outer_margins: { params: ['i32', 'i32'], results: ['i32'] },
 });
+
+// Optional H5-only transport; never part of the required engine profile.
+export const HWP5_OBJECT_OUTER_MARGINS_ABI = Object.freeze({
+  hwp5_edit_object_outer_margins_version: Object.freeze({ params: [], results: ['i32'] }),
+  hwp5_edit_object_outer_margins: Object.freeze({ params: ['i32', 'i32', 'i32'], results: ['i32'] }),
+  hwp5_edit_set_object_outer_margins: Object.freeze({ params: ['i32', 'i32'], results: ['i32'] }),
+});

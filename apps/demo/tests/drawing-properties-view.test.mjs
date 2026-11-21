@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { registerHooks } from 'node:module';
@@ -253,4 +254,108 @@ test('tool forwards fresh body-flow query and opaque target into integrated dial
   assert.equal(root.children.length, 0);
   tool.dispose();
   assert.equal(listeners.size, 0);
+});
+
+test('H5 drawing tool issues textbox margin selector for exact physical component instead of control', async () => {
+  const { root } = dom(),
+    content = JSON.parse(
+      readFileSync(new URL('./fixtures/h5-textbox-margins-observation.json', import.meta.url)),
+    ),
+    token = {
+      editorId: 'e',
+      documentId: 'h5',
+      generation: 0,
+      operationRevision: 0,
+      viewRevision: 0,
+    },
+    calls = [],
+    target = Object.freeze({}),
+    row = content.drawings[0];
+  content.readOnly = false;
+  const state = {
+    ...token,
+    token,
+    status: 'ready',
+    stateVersion: 1,
+    historyRecoveryRequired: false,
+    content,
+  };
+  const tool = createDrawingPropertiesTool({
+    root,
+    editor: {
+      getEditorState: () => state,
+      registerStateListener() {
+        return () => {};
+      },
+      async getObjectOuterMargins(selector) {
+        calls.push({ kind: 'read', selector });
+        return {
+          state: 'available',
+          target,
+          observation: {
+            format: 'hwp5',
+            kind: 'textbox',
+            section: row.section,
+            drawingNode: row.drawingNode,
+            margins: { left: -1, right: 12345, top: 0, bottom: 0 },
+          },
+        };
+      },
+      async dispatchCommand(command, payload) {
+        calls.push({ kind: 'write', command, payload });
+        return { status: 'committed-with-snapshot' };
+      },
+    },
+  });
+  tool.open({ section: row.section, drawingNode: row.drawingNode });
+  await new Promise((r) => setImmediate(r));
+  assert.deepEqual(calls[0].selector, {
+    kind: 'textbox',
+    section: row.section,
+    node: row.drawingNode,
+  });
+  assert.notEqual(calls[0].selector.node, row.controlNode);
+  const left = all(root, (n) => n.dataset.role === 'object-outer-margins-left')[0],
+    apply = all(root, (n) => n.dataset.role === 'object-outer-margins-apply')[0];
+  assert(left.value.startsWith('-'));
+  assert.equal(apply.disabled, true);
+  left.value = '0';
+  left.dispatchEvent(new Event('input'));
+  apply.dispatchEvent(new Event('click'));
+  await new Promise((r) => setImmediate(r));
+  assert.equal(calls.filter((v) => v.kind === 'write').length, 1);
+  assert.equal(calls.find((v) => v.kind === 'write').payload.target, target);
+  assert.deepEqual(calls.find((v) => v.kind === 'write').payload.margins, {
+    left: 0,
+    right: 12345,
+    top: 0,
+    bottom: 0,
+  });
+  tool.dispose();
+});
+test('missing capture format never defaults to a writable HX margin selector', async () => {
+  const { root } = dom();
+  let reads = 0;
+  const view = createDrawingPropertiesView(
+    root,
+    { target: { section: 0, drawingNode: 5 }, fields: [], text: null, textTruncated: false },
+    () => {},
+    undefined,
+    {
+      getEditorState() {
+        throw Error('NoFormatNoQuery');
+      },
+      getObjectOuterMargins() {
+        reads++;
+      },
+      dispatchCommand() {
+        throw Error('NoWrite');
+      },
+    },
+    () => true,
+  );
+  await new Promise((r) => setImmediate(r));
+  assert.equal(reads, 0);
+  assert.equal(all(root, (n) => n.dataset.role === 'object-outer-margins-apply').length, 0);
+  view.destroy();
 });

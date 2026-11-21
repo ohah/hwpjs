@@ -1,0 +1,1402 @@
+{
+  "format": "hwp5",
+  "version": "5.1.0.1",
+  "paragraphs": [
+    {
+      "section": 0,
+      "paragraph": 0,
+      "editable": true,
+      "label": "구역 1 · 문단 1 · 제어 표식 4개 (표시 의미 미적용)",
+      "text": "NativeMarginBody 0123456789 around the floating object. NativeMarginBody 0123456789 around the floating object. NativeMarginBody 0123456789 around the floating object. NativeMarginBody 0123456789 around the floating object. NativeMarginBody 0123456789 around the floating object. NativeMarginBody 0123456789 around the floating object.￼￼￼",
+      "selectionOwner": "section:0:body",
+      "sourceOffsets": [
+        {
+          "at": 0,
+          "source": 0
+        },
+        {
+          "at": 336,
+          "source": 343
+        },
+        {
+          "at": 337,
+          "source": 351
+        },
+        {
+          "at": 338,
+          "source": 359
+        }
+      ],
+      "currentReference": {
+        "epoch": "2",
+        "kind": "original",
+        "section": 0,
+        "id": "0",
+        "row": 0,
+        "column": 0,
+        "scope": "worker:2:1"
+      },
+      "textSourcePolicyError": null,
+      "characterRanges": [
+        {
+          "start": 0,
+          "end": 338,
+          "charShapeId": 1
+        }
+      ],
+      "paraShapeId": 1,
+      "paragraphShape": {
+        "id": 1,
+        "alignment": 0,
+        "left": 0,
+        "right": 0,
+        "indent": 0,
+        "before": 0,
+        "after": 0,
+        "legacySpacingKind": 0,
+        "legacySpacing": 160,
+        "modernSpacing": {
+          "attributes": 0,
+          "value": 160
+        },
+        "headingKind": 0,
+        "headingId": 0,
+        "packedHeadingLevel": 0,
+        "extendedHeadingLevel": 0,
+        "headingLevel": 0,
+        "headingMarker": null,
+        "spacingFormat": "hwp5"
+      },
+      "structuralAnchors": [
+        {
+          "kind": "section",
+          "control_node": 3,
+          "paragraph": 0,
+          "source_unit": 335,
+          "current_unit": 335,
+          "unit": 335
+        },
+        {
+          "kind": "column",
+          "control_node": 10,
+          "paragraph": 0,
+          "source_unit": 343,
+          "current_unit": 343,
+          "unit": 336
+        }
+      ],
+      "automaticNumbers": [],
+      "automaticNumberPrefixes": [],
+      "pageControls": [],
+      "equations": [],
+      "equationPaint": []
+    },
+    {
+      "section": 0,
+      "paragraph": 1,
+      "editable": true,
+      "label": "구역 1 · 문단 2 · 중첩 · 제어 표식 1개 (표시 의미 미적용)",
+      "text": "글상자",
+      "selectionOwner": null,
+      "currentReference": {
+        "epoch": "2",
+        "kind": "original",
+        "section": 0,
+        "id": "14",
+        "row": 0,
+        "column": 0,
+        "scope": "worker:2:1"
+      },
+      "textSourcePolicyError": null,
+      "characterRanges": [
+        {
+          "start": 0,
+          "end": 3,
+          "charShapeId": 1
+        }
+      ],
+      "paraShapeId": 2,
+      "paragraphShape": {
+        "id": 2,
+        "alignment": 0,
+        "left": 0,
+        "right": 0,
+        "indent": 0,
+        "before": 0,
+        "after": 0,
+        "legacySpacingKind": 0,
+        "legacySpacing": 160,
+        "modernSpacing": {
+          "attributes": 0,
+          "value": 160
+        },
+        "headingKind": 0,
+        "headingId": 0,
+        "packedHeadingLevel": 0,
+        "extendedHeadingLevel": 0,
+        "headingLevel": 0,
+        "headingMarker": null,
+        "spacingFormat": "hwp5"
+      },
+      "automaticNumbers": [],
+      "automaticNumberPrefixes": [],
+      "pageControls": [],
+      "drawingText": {
+        "drawingNode": 12,
+        "listNode": 13
+      },
+      "equations": [],
+      "equationPaint": []
+    }
+  ],
+  "totalParagraphs": 2,
+  "limited": false,
+  "editorSessionAvailable": true,
+  "imageInsertionAvailable": true,
+  "equationInsertionAvailable": true,
+  "hwp5ChartCreateProfileVersion": 1,
+  "chartCreationAvailable": true,
+  "hwp5ChartLiteralEditAvailable": true,
+  "sourceTableCellWidthAvailable": true,
+  "sourceTableCellHeightAvailable": true,
+  "sourceTableGridAvailable": true,
+  "sourceTableCellSplitAvailable": true,
+  "sourceTableCellSplitProfile": "single-source-cell-with-spans",
+  "observedDocInfoEditingAvailable": false,
+  "observedDocInfoDiagnostics": null,
+  "currentReferenceErrors": [],
+  "tableCreationAvailable": true,
+  "createdTableGridAvailable": true,
+  "createdCellPropertiesAvailable": true,
+  "tableCreationResources": {
+    "paragraph": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+    "character": [0, 1, 2, 3, 4],
+    "style": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+    "border_fill": [0, 1, 2]
+  },
+  "createdTables": [],
+  "normalizationEditingAvailable": false,
+  "normalizationInfo": {
+    "normalized": false,
+    "historyBaseline": "original",
+    "deviations": null
+  },
+  "documentWindowAvailable": true,
+  "distributionEditingAvailable": false,
+  "paragraphAlignmentAvailable": true,
+  "paragraphMarginsAvailable": true,
+  "paragraphSpacingAvailable": true,
+  "characterPropertiesAvailable": true,
+  "characterPropertiesRangesAvailable": true,
+  "paragraphReplacementAvailable": true,
+  "characterUnderlineAvailable": true,
+  "characterStrikeAvailable": true,
+  "characterStrikeRangesAvailable": true,
+  "characterUnderlineRangesAvailable": true,
+  "characterUnderlineColorAvailable": true,
+  "characterStrikeColorAvailable": true,
+  "characterTextColorAvailable": true,
+  "characterShadeAvailable": true,
+  "characterEffectAvailable": true,
+  "characterEffectExclusiveAvailable": true,
+  "characterEffectRangesExclusiveAvailable": true,
+  "characterOutlineAvailable": true,
+  "characterOutlineRangesAvailable": true,
+  "characterOutlineExtendedAvailable": true,
+  "characterOutlineRangesExtendedAvailable": true,
+  "characterEffectRangesAvailable": true,
+  "characterFontAvailable": true,
+  "characterFontNameAvailable": true,
+  "namedFontTextAvailable": true,
+  "characterPropertyTextAvailable": true,
+  "namedFontPropertyTextAvailable": true,
+  "namedFontReplacementAvailable": true,
+  "characterPropertyReplacementAvailable": true,
+  "namedFontPropertyReplacementAvailable": true,
+  "characterFontNameRangesAvailable": true,
+  "characterFontRangesAvailable": true,
+  "characterTextColorRangesAvailable": true,
+  "characterShadeRangesAvailable": true,
+  "textSourcePolicyAvailable": true,
+  "readOnly": false,
+  "characterShapes": [
+    {
+      "id": 0,
+      "height": 1000,
+      "bold": false,
+      "italic": false
+    },
+    {
+      "id": 1,
+      "height": 1000,
+      "bold": false,
+      "italic": false
+    },
+    {
+      "id": 2,
+      "height": 900,
+      "bold": false,
+      "italic": false
+    },
+    {
+      "id": 3,
+      "height": 900,
+      "bold": false,
+      "italic": false
+    },
+    {
+      "id": 4,
+      "height": 900,
+      "bold": false,
+      "italic": false
+    }
+  ],
+  "characterShapesError": null,
+  "characterUnderlines": [
+    {
+      "id": 0,
+      "kind": "none"
+    },
+    {
+      "id": 1,
+      "kind": "none"
+    },
+    {
+      "id": 2,
+      "kind": "none"
+    },
+    {
+      "id": 3,
+      "kind": "none"
+    },
+    {
+      "id": 4,
+      "kind": "none"
+    }
+  ],
+  "characterUnderlinesError": null,
+  "characterUnderlineStyles": [
+    {
+      "id": 0,
+      "raw_style": 0,
+      "raw_color": 0,
+      "shape": null,
+      "color": null
+    },
+    {
+      "id": 1,
+      "raw_style": 0,
+      "raw_color": 0,
+      "shape": null,
+      "color": null
+    },
+    {
+      "id": 2,
+      "raw_style": 0,
+      "raw_color": 0,
+      "shape": null,
+      "color": null
+    },
+    {
+      "id": 3,
+      "raw_style": 0,
+      "raw_color": 0,
+      "shape": null,
+      "color": null
+    },
+    {
+      "id": 4,
+      "raw_style": 0,
+      "raw_color": 0,
+      "shape": null,
+      "color": null
+    }
+  ],
+  "characterUnderlineStylesError": null,
+  "characterTextColors": [
+    {
+      "id": 0,
+      "color": 0
+    },
+    {
+      "id": 1,
+      "color": 0
+    },
+    {
+      "id": 2,
+      "color": 0
+    },
+    {
+      "id": 3,
+      "color": 0
+    },
+    {
+      "id": 4,
+      "color": 0
+    }
+  ],
+  "characterTextColorsError": null,
+  "fontFaces": [
+    {
+      "language": "hangul",
+      "id": 0,
+      "name": "굴림"
+    },
+    {
+      "language": "hangul",
+      "id": 1,
+      "name": "바탕"
+    },
+    {
+      "language": "latin",
+      "id": 0,
+      "name": "굴림"
+    },
+    {
+      "language": "latin",
+      "id": 1,
+      "name": "바탕"
+    },
+    {
+      "language": "hanja",
+      "id": 0,
+      "name": "굴림"
+    },
+    {
+      "language": "hanja",
+      "id": 1,
+      "name": "바탕"
+    },
+    {
+      "language": "japanese",
+      "id": 0,
+      "name": "굴림"
+    },
+    {
+      "language": "japanese",
+      "id": 1,
+      "name": "바탕"
+    },
+    {
+      "language": "other",
+      "id": 0,
+      "name": "굴림"
+    },
+    {
+      "language": "other",
+      "id": 1,
+      "name": "바탕"
+    },
+    {
+      "language": "symbol",
+      "id": 0,
+      "name": "굴림"
+    },
+    {
+      "language": "symbol",
+      "id": 1,
+      "name": "바탕"
+    },
+    {
+      "language": "user",
+      "id": 0,
+      "name": "굴림"
+    },
+    {
+      "language": "user",
+      "id": 1,
+      "name": "바탕"
+    }
+  ],
+  "fontFacesError": null,
+  "fontFaceMetadata": [
+    {
+      "language": "hangul",
+      "id": 0,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [2, 11, 6, 0, 0, 1, 1, 1, 1, 1],
+      "defaultName": "Gulim"
+    },
+    {
+      "language": "hangul",
+      "id": 1,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [2, 3, 6, 0, 0, 1, 1, 1, 1, 1],
+      "defaultName": "Batang"
+    },
+    {
+      "language": "latin",
+      "id": 0,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [2, 11, 6, 0, 0, 1, 1, 1, 1, 1],
+      "defaultName": "Gulim"
+    },
+    {
+      "language": "latin",
+      "id": 1,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [2, 3, 6, 0, 0, 1, 1, 1, 1, 1],
+      "defaultName": "Batang"
+    },
+    {
+      "language": "hanja",
+      "id": 0,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [2, 11, 6, 0, 0, 1, 1, 1, 1, 1],
+      "defaultName": "Gulim"
+    },
+    {
+      "language": "hanja",
+      "id": 1,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [2, 3, 6, 0, 0, 1, 1, 1, 1, 1],
+      "defaultName": "Batang"
+    },
+    {
+      "language": "japanese",
+      "id": 0,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [2, 11, 6, 0, 0, 1, 1, 1, 1, 1],
+      "defaultName": "Gulim"
+    },
+    {
+      "language": "japanese",
+      "id": 1,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [2, 3, 6, 0, 0, 1, 1, 1, 1, 1],
+      "defaultName": "Batang"
+    },
+    {
+      "language": "other",
+      "id": 0,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [2, 11, 6, 0, 0, 1, 1, 1, 1, 1],
+      "defaultName": "Gulim"
+    },
+    {
+      "language": "other",
+      "id": 1,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [2, 11, 6, 4, 2, 2, 2, 2, 2, 4],
+      "defaultName": "Batang"
+    },
+    {
+      "language": "symbol",
+      "id": 0,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [2, 11, 6, 0, 0, 1, 1, 1, 1, 1],
+      "defaultName": "Gulim"
+    },
+    {
+      "language": "symbol",
+      "id": 1,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [2, 3, 6, 0, 0, 1, 1, 1, 1, 1],
+      "defaultName": "Batang"
+    },
+    {
+      "language": "user",
+      "id": 0,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [2, 11, 6, 0, 0, 1, 1, 1, 1, 1],
+      "defaultName": "Gulim"
+    },
+    {
+      "language": "user",
+      "id": 1,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [2, 3, 6, 0, 0, 1, 1, 1, 1, 1],
+      "defaultName": "Batang"
+    }
+  ],
+  "fontFaceMetadataError": null,
+  "characterFontReferences": [
+    {
+      "id": 0,
+      "fontIds": [0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "id": 1,
+      "fontIds": [1, 1, 1, 1, 1, 1, 1]
+    },
+    {
+      "id": 2,
+      "fontIds": [0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "id": 3,
+      "fontIds": [1, 1, 1, 1, 1, 1, 1]
+    },
+    {
+      "id": 4,
+      "fontIds": [0, 0, 0, 0, 0, 0, 0]
+    }
+  ],
+  "characterFontReferencesError": null,
+  "characterFontMetrics": [
+    {
+      "id": 0,
+      "values": {
+        "ratio": [100, 100, 100, 100, 100, 100, 100],
+        "spacing": [0, 0, 0, 0, 0, 0, 0],
+        "relativeSize": [100, 100, 100, 100, 100, 100, 100],
+        "offset": [0, 0, 0, 0, 0, 0, 0]
+      }
+    },
+    {
+      "id": 1,
+      "values": {
+        "ratio": [100, 100, 100, 100, 100, 100, 100],
+        "spacing": [0, 0, 0, 0, 0, 0, 0],
+        "relativeSize": [100, 100, 100, 100, 100, 100, 100],
+        "offset": [0, 0, 0, 0, 0, 0, 0]
+      }
+    },
+    {
+      "id": 2,
+      "values": {
+        "ratio": [100, 100, 100, 100, 100, 100, 100],
+        "spacing": [0, 0, 0, 0, 0, 0, 0],
+        "relativeSize": [100, 100, 100, 100, 100, 100, 100],
+        "offset": [0, 0, 0, 0, 0, 0, 0]
+      }
+    },
+    {
+      "id": 3,
+      "values": {
+        "ratio": [95, 95, 95, 95, 95, 95, 95],
+        "spacing": [-5, -5, -5, -5, -5, -5, -5],
+        "relativeSize": [100, 100, 100, 100, 100, 100, 100],
+        "offset": [0, 0, 0, 0, 0, 0, 0]
+      }
+    },
+    {
+      "id": 4,
+      "values": {
+        "ratio": [95, 95, 95, 95, 95, 95, 95],
+        "spacing": [-5, -5, -5, -5, -5, -5, -5],
+        "relativeSize": [100, 100, 100, 100, 100, 100, 100],
+        "offset": [0, 0, 0, 0, 0, 0, 0]
+      }
+    }
+  ],
+  "characterFontMetricsError": null,
+  "characterStrikes": [
+    {
+      "id": 0,
+      "enabled": false
+    },
+    {
+      "id": 1,
+      "enabled": false
+    },
+    {
+      "id": 2,
+      "enabled": false
+    },
+    {
+      "id": 3,
+      "enabled": false
+    },
+    {
+      "id": 4,
+      "enabled": false
+    }
+  ],
+  "characterStrikesError": null,
+  "characterStrikeStyles": [
+    {
+      "id": 0,
+      "raw_style": 0,
+      "raw_color": 0,
+      "shape": null,
+      "color": null
+    },
+    {
+      "id": 1,
+      "raw_style": 0,
+      "raw_color": 0,
+      "shape": null,
+      "color": null
+    },
+    {
+      "id": 2,
+      "raw_style": 0,
+      "raw_color": 0,
+      "shape": null,
+      "color": null
+    },
+    {
+      "id": 3,
+      "raw_style": 0,
+      "raw_color": 0,
+      "shape": null,
+      "color": null
+    },
+    {
+      "id": 4,
+      "raw_style": 0,
+      "raw_color": 0,
+      "shape": null,
+      "color": null
+    }
+  ],
+  "characterStrikeStylesError": null,
+  "characterShades": [
+    {
+      "id": 0,
+      "state": "none",
+      "color": null
+    },
+    {
+      "id": 1,
+      "state": "none",
+      "color": null
+    },
+    {
+      "id": 2,
+      "state": "none",
+      "color": null
+    },
+    {
+      "id": 3,
+      "state": "none",
+      "color": null
+    },
+    {
+      "id": 4,
+      "state": "none",
+      "color": null
+    }
+  ],
+  "characterShadesError": null,
+  "characterEffects": [
+    {
+      "id": 0,
+      "emboss": false,
+      "engrave": false,
+      "superscript": false,
+      "subscript": false
+    },
+    {
+      "id": 1,
+      "emboss": false,
+      "engrave": false,
+      "superscript": false,
+      "subscript": false
+    },
+    {
+      "id": 2,
+      "emboss": false,
+      "engrave": false,
+      "superscript": false,
+      "subscript": false
+    },
+    {
+      "id": 3,
+      "emboss": false,
+      "engrave": false,
+      "superscript": false,
+      "subscript": false
+    },
+    {
+      "id": 4,
+      "emboss": false,
+      "engrave": false,
+      "superscript": false,
+      "subscript": false
+    }
+  ],
+  "characterEffectsError": null,
+  "characterOutlines": [
+    {
+      "id": 0,
+      "state": "none",
+      "rawKind": 0
+    },
+    {
+      "id": 1,
+      "state": "none",
+      "rawKind": 0
+    },
+    {
+      "id": 2,
+      "state": "none",
+      "rawKind": 0
+    },
+    {
+      "id": 3,
+      "state": "none",
+      "rawKind": 0
+    },
+    {
+      "id": 4,
+      "state": "none",
+      "rawKind": 0
+    }
+  ],
+  "characterOutlinesError": null,
+  "tables": [],
+  "tableBindingsErrors": [],
+  "hwp5BorderFillSources": null,
+  "hwp5BorderFillSourceError": null,
+  "tablePlacementsErrors": [],
+  "tableLayoutSourceErrors": [],
+  "cellLayoutSourceErrors": [],
+  "tableAnchorErrors": [],
+  "tableGeometryErrors": [],
+  "paragraphFormatAvailable": true,
+  "paragraphShapeCount": 12,
+  "paragraphShapeOptions": [
+    {
+      "value": "0",
+      "label": "ID 0 · 양쪽 정렬 · 들여쓰기 -2620 HWPUNIT · 줄 간격 130%"
+    },
+    {
+      "value": "1",
+      "label": "ID 1 · 양쪽 정렬 · 들여쓰기 0 HWPUNIT · 줄 간격 160%"
+    },
+    {
+      "value": "2",
+      "label": "ID 2 · 양쪽 정렬 · 들여쓰기 0 HWPUNIT · 줄 간격 160%"
+    },
+    {
+      "value": "3",
+      "label": "ID 3 · 양쪽 정렬 · 들여쓰기 0 HWPUNIT · 줄 간격 160%"
+    },
+    {
+      "value": "4",
+      "label": "ID 4 · 양쪽 정렬 · 들여쓰기 0 HWPUNIT · 줄 간격 160%"
+    },
+    {
+      "value": "5",
+      "label": "ID 5 · 양쪽 정렬 · 들여쓰기 0 HWPUNIT · 줄 간격 160%"
+    },
+    {
+      "value": "6",
+      "label": "ID 6 · 양쪽 정렬 · 들여쓰기 0 HWPUNIT · 줄 간격 160%"
+    },
+    {
+      "value": "7",
+      "label": "ID 7 · 양쪽 정렬 · 들여쓰기 0 HWPUNIT · 줄 간격 160%"
+    },
+    {
+      "value": "8",
+      "label": "ID 8 · 양쪽 정렬 · 들여쓰기 0 HWPUNIT · 줄 간격 160%"
+    },
+    {
+      "value": "9",
+      "label": "ID 9 · 양쪽 정렬 · 들여쓰기 0 HWPUNIT · 줄 간격 160%"
+    },
+    {
+      "value": "10",
+      "label": "ID 10 · 양쪽 정렬 · 들여쓰기 0 HWPUNIT · 줄 간격 160%"
+    },
+    {
+      "value": "11",
+      "label": "ID 11 · 양쪽 정렬 · 들여쓰기 0 HWPUNIT · 줄 간격 150%"
+    }
+  ],
+  "pageSources": [
+    {
+      "section": 0,
+      "source_node": 4,
+      "width": 59528,
+      "height": 84188,
+      "left": 8504,
+      "right": 8504,
+      "top": 5668,
+      "bottom": 4252,
+      "header": 4252,
+      "footer": 4252,
+      "gutter": 0,
+      "flags": 0,
+      "orientation": "narrowly",
+      "binding": "one_side",
+      "extra_bytes": 0
+    }
+  ],
+  "pageSourceErrors": [],
+  "sectionSources": [
+    {
+      "section": 0,
+      "source_node": 3,
+      "flags": 0,
+      "column_gap": 1134,
+      "vertical_grid": 0,
+      "horizontal_grid": 0,
+      "tab_spacing": 8000,
+      "numbering_id": 1,
+      "page_start": 0,
+      "picture_start": 0,
+      "table_start": 0,
+      "equation_start": 0,
+      "language": 0,
+      "extra_bytes": 17,
+      "extra_nonzero": false,
+      "extra_raw": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "observed_extension": {
+        "leading_count_raw": 0,
+        "memo_shape_id_ref": 0,
+        "flags_raw": 0,
+        "text_direction_raw": 0,
+        "text_direction": "HORIZONTAL",
+        "text_vertical_width_head": false,
+        "unknown_flags": 0,
+        "line_number_restart_raw": 0,
+        "line_number_count_by": 0,
+        "line_number_distance_raw": 0,
+        "line_number_start": 0,
+        "trailing_raw": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      },
+      "memo_shape_count": 0,
+      "memo_list_count": 0,
+      "fileVersion": 83951617
+    }
+  ],
+  "sectionSourceErrors": [],
+  "currentParagraphFlows": [
+    {
+      "paragraph": 0,
+      "source_node": 0,
+      "template_node": 0,
+      "parent_node": null,
+      "generated": false,
+      "top_level": true,
+      "break_flags": 3,
+      "section_break": true,
+      "multicolumn_break": true,
+      "page_break": false,
+      "column_break": false,
+      "host": "body",
+      "list_node": null,
+      "memo_index": null,
+      "memo_node": null,
+      "empty_line_eligible": false,
+      "section": 0
+    },
+    {
+      "paragraph": 1,
+      "source_node": 14,
+      "template_node": 14,
+      "parent_node": 12,
+      "generated": false,
+      "top_level": false,
+      "break_flags": 0,
+      "section_break": false,
+      "multicolumn_break": false,
+      "page_break": false,
+      "column_break": false,
+      "host": "drawing",
+      "list_node": 13,
+      "memo_index": null,
+      "memo_node": null,
+      "empty_line_eligible": false,
+      "section": 0
+    }
+  ],
+  "columnSources": [
+    {
+      "current_paragraph": 0,
+      "current_unit": 343,
+      "source_node": 10,
+      "paragraph_node": 0,
+      "flags": 4100,
+      "count": 1,
+      "kind": 0,
+      "direction": 0,
+      "same_width": true,
+      "spacing": 0,
+      "columns": [],
+      "line_type": 0,
+      "line_width": 0,
+      "color": 0,
+      "extra_bytes": 0,
+      "section": 0
+    }
+  ],
+  "flowSourceErrors": [],
+  "hwp5Memos": [],
+  "hwp5MemoErrors": [],
+  "structuralAnchorErrors": [],
+  "pageAreaSources": [],
+  "pageAreaSourceErrors": [],
+  "masterPageSources": [],
+  "masterPageSourceErrors": [],
+  "hwp5Notes": [],
+  "hwp5NoteErrors": [],
+  "hwp5NoteShapes": [],
+  "hwp5NotePolicies": [],
+  "hwp5NoteShapeErrors": [],
+  "hwp5Captions": [],
+  "hwp5CaptionErrors": [],
+  "hwp5CaptionGeometryErrors": [],
+  "hwp5Drawings": [
+    {
+      "section": 0,
+      "controlNode": 11,
+      "componentNode": 12,
+      "hostParagraph": 0,
+      "anchorUnit": 337,
+      "source": {
+        "control_node": 11,
+        "component_node": 12,
+        "paragraph_node": 0,
+        "kind_id": 611476835,
+        "flags": 656144,
+        "offset_x": 7200,
+        "offset_y": 0,
+        "width": 11763,
+        "height": 5476,
+        "instance_id": 1732707051,
+        "z_order": 4,
+        "outer_margins": [0, 0, 0, 0],
+        "prevent_page_break": 0,
+        "description_bytes": 0,
+        "object_extra_bytes": 0,
+        "component_offset_x": 0,
+        "component_offset_y": 0,
+        "original_width": 11763,
+        "original_height": 5476,
+        "current_width": 11763,
+        "current_height": 5476,
+        "component_attributes": 16777216,
+        "rotation_angle": 0,
+        "matrix_pairs": 1,
+        "component_extra_bytes": 43
+      },
+      "anchor": {
+        "control_node": 11,
+        "component_node": 12,
+        "paragraph": 0,
+        "source_unit": 351,
+        "current_unit": 351
+      }
+    }
+  ],
+  "hwp5DrawingErrors": [],
+  "hwp5DrawingObjectExtraErrors": [],
+  "hwp5PolygonPoints": [],
+  "hwp5PolygonPointErrors": [],
+  "hwp5CurvePoints": [],
+  "hwp5CurvePointErrors": [],
+  "hwp5DrawingComponents": [
+    {
+      "component_node": 12,
+      "owner_node": 11,
+      "kind_id": 611476835,
+      "second_id": 611476835,
+      "offset_x": 0,
+      "offset_y": 0,
+      "group_count": 0,
+      "local_version": 1,
+      "original_width": 11763,
+      "original_height": 5476,
+      "current_width": 11763,
+      "current_height": 5476,
+      "attributes": 16777216,
+      "rotation_angle": 0,
+      "rotation_x": 5881,
+      "rotation_y": 2738,
+      "matrix_pairs": 1,
+      "extra_bytes": 43,
+      "section": 0
+    }
+  ],
+  "hwp5DrawingComponentErrors": [],
+  "hwp5DrawingBodies": [
+    {
+      "section": 0,
+      "kind": "body",
+      "controlNode": 11,
+      "ownerNode": 12,
+      "listNode": 13,
+      "paragraphs": [1],
+      "source": {
+        "kind": "body",
+        "control_node": 11,
+        "owner_node": 12,
+        "list_node": 13,
+        "paragraph_count": 1,
+        "attributes": 32,
+        "unknown": 0,
+        "extra_bytes": 25,
+        "extra_nonzero": true,
+        "margins": [283, 283, 283, 283],
+        "last_width": 11763,
+        "body_extra_bytes": 13,
+        "caption": null
+      }
+    }
+  ],
+  "hwp5DrawingBodyErrors": [],
+  "hwp5DrawingMatrices": [
+    {
+      "component_node": 12,
+      "owner_node": 11,
+      "kind": "translation",
+      "pair": null,
+      "bits": [
+        [0, 1072693248],
+        [0, 0],
+        [0, 0],
+        [0, 0],
+        [0, 1072693248],
+        [0, 0]
+      ],
+      "section": 0
+    },
+    {
+      "component_node": 12,
+      "owner_node": 11,
+      "kind": "scale",
+      "pair": 0,
+      "bits": [
+        [0, 1072693248],
+        [0, 0],
+        [0, 0],
+        [0, 0],
+        [0, 1072693248],
+        [0, 0]
+      ],
+      "section": 0
+    },
+    {
+      "component_node": 12,
+      "owner_node": 11,
+      "kind": "rotation",
+      "pair": 0,
+      "bits": [
+        [0, 1072693248],
+        [0, 0],
+        [0, 0],
+        [0, 0],
+        [0, 1072693248],
+        [0, 0]
+      ],
+      "section": 0
+    }
+  ],
+  "hwp5DrawingMatrixErrors": [],
+  "hwp5DrawingLocalTransforms": [
+    {
+      "component_node": 12,
+      "owner_node": 11,
+      "matrix": [1, 0, 0, 0, 1, 0],
+      "section": 0
+    }
+  ],
+  "hwp5DrawingLocalErrors": [],
+  "hwp5DrawingCorners": [
+    {
+      "component_node": 12,
+      "rectangle_node": 18,
+      "round_rate": 0,
+      "points": [
+        [0, 0],
+        [11763, 0],
+        [11763, 5476],
+        [0, 5476]
+      ],
+      "raw_points": [
+        [0, 0],
+        [11763, 0],
+        [11763, 5476],
+        [0, 5476]
+      ],
+      "section": 0
+    }
+  ],
+  "hwp5DrawingCornerErrors": [],
+  "hwp5DrawingGeometry": [
+    {
+      "section": 0,
+      "controlNode": 11,
+      "componentNode": 12,
+      "source": {
+        "size_protected": false,
+        "geometry": {
+          "width": 11763,
+          "height": 5476,
+          "width_relative": 4,
+          "height_relative": 2,
+          "treat_as_character": false,
+          "horizontal_offset": 7200,
+          "vertical_offset": 0
+        },
+        "position": {
+          "relations": [2, 3, 0, 0],
+          "flags": [false, false, false, null]
+        },
+        "flow": {
+          "text_wrap": 0,
+          "text_flow": 0,
+          "z_order": 4,
+          "outside_margins": [0, 0, 0, 0]
+        },
+        "text_wrap": 0,
+        "text_flow": 0,
+        "flow_with_text": false,
+        "allow_overlap": false,
+        "affect_line_spacing": false,
+        "hold_anchor": null,
+        "has_caption": false,
+        "out_margin": [0, 0, 0, 0],
+        "z_order": 4
+      }
+    }
+  ],
+  "hwp5DrawingGeometryErrors": [],
+  "hwp5DrawingStyles": [
+    {
+      "component_node": 12,
+      "owner_node": 11,
+      "border": {
+        "color": 0,
+        "width": 33,
+        "attributes": {
+          "raw": 3506438209
+        },
+        "outline": 0
+      },
+      "fill_flags": 0,
+      "fill_known": true,
+      "pattern": null,
+      "gradient_colors": null,
+      "gradient": null,
+      "image": null,
+      "additional_bytes": 0,
+      "alpha": {
+        "pattern": null,
+        "gradient": null,
+        "image": null
+      },
+      "shadow": {
+        "kind": 0,
+        "color": 0,
+        "offset_x": 0,
+        "offset_y": 0
+      },
+      "metadata": {
+        "instance_id": 1017952105,
+        "reserved": 0,
+        "shadow_alpha": 0
+      },
+      "extra_bytes": 0,
+      "section": 0,
+      "fileVersion": 83951617,
+      "borderLayout": "observed13",
+      "tailLayout": "alpha_shadow_metadata"
+    }
+  ],
+  "hwp5DrawingStyleErrors": [],
+  "columnDisplaySources": [
+    {
+      "current_paragraph": 0,
+      "current_unit": 343,
+      "source_node": 10,
+      "paragraph_node": 0,
+      "flags": 4100,
+      "count": 1,
+      "kind": 0,
+      "direction": 0,
+      "same_width": true,
+      "spacing": 0,
+      "columns": [],
+      "line_type": 0,
+      "line_width": 0,
+      "color": 0,
+      "extra_bytes": 0,
+      "section": 0,
+      "display_unit": 336,
+      "display_end": 337
+    }
+  ],
+  "columnDisplayErrors": [],
+  "automaticNumberErrors": [],
+  "pageControlSources": [],
+  "pageControlSourceErrors": [],
+  "documentPropertySource": null,
+  "documentPropertySourceError": null,
+  "hwp5Pictures": [],
+  "hwp5PictureErrors": [],
+  "hwp5PictureTails": [],
+  "hwp5PictureTailErrors": [],
+  "hwp5PictureAbsentTails": [],
+  "hwp5GroupGeometry": {
+    "state": "projected",
+    "containers": [],
+    "rectangles": [],
+    "polygons": [],
+    "pictureBindings": [],
+    "lineBindings": []
+  },
+  "hwp5FormSourcesAvailable": true,
+  "hwp5Forms": [],
+  "hwp5FormErrors": [],
+  "hwp5FormPropertiesAvailable": true,
+  "hwp5FormPropertyErrors": [],
+  "hwp5FormTextEditAvailable": true,
+  "hwp5FormTextLayoutRetentionAvailable": true,
+  "hwp5CheckBoxStateEditAvailable": true,
+  "hwp5RadioSelectAvailable": true,
+  "hwp5UnnamedRadioSelectAvailable": true,
+  "lines": [],
+  "lineErrors": [],
+  "formulas": [],
+  "formulaErrors": [],
+  "formulaDefinitionAvailable": true,
+  "hwp5ChartDisplayAvailable": true,
+  "hwp5ChartTargets": [],
+  "hwp5ChartUnresolved": [],
+  "hwp5ChartSourceEpoch": "2",
+  "hwp5ChartHistoryRevision": 0,
+  "drawings": [
+    {
+      "section": 0,
+      "drawingNode": 12,
+      "controlNode": 11,
+      "hostParagraph": 0,
+      "anchorUnit": 337,
+      "source": {
+        "size_protected": false,
+        "geometry": {
+          "width": 11763,
+          "height": 5476,
+          "width_relative": 4,
+          "height_relative": 2,
+          "treat_as_character": false,
+          "horizontal_offset": 7200,
+          "vertical_offset": 0
+        },
+        "position": {
+          "relations": [2, 3, 0, 0],
+          "flags": [false, false, false, null]
+        },
+        "flow": {
+          "text_wrap": 0,
+          "text_flow": 0,
+          "z_order": 4,
+          "outside_margins": [0, 0, 0, 0]
+        },
+        "text_wrap": 0,
+        "text_flow": 0,
+        "flow_with_text": false,
+        "allow_overlap": false,
+        "affect_line_spacing": false,
+        "hold_anchor": null,
+        "has_caption": false,
+        "out_margin": [0, 0, 0, 0],
+        "z_order": 4,
+        "group_context": null,
+        "rendering": {
+          "matrix": [1, 0, 0, 0, 1, 0],
+          "angle": 0,
+          "flip": [false, false],
+          "reverse": null,
+          "unknown_component_attributes": 16777216
+        },
+        "rendering_corners": [
+          [0, 0],
+          [11763, 0],
+          [11763, 5476],
+          [0, 5476]
+        ],
+        "rectangle": {
+          "points": [
+            [0, 0],
+            [11763, 0],
+            [11763, 5476],
+            [0, 5476]
+          ]
+        },
+        "round_rate": 0,
+        "text": {
+          "list_node": 13,
+          "text_direction": 0,
+          "line_wrap": 0,
+          "vertical_alignment": 1,
+          "margin_present": true,
+          "margins": [283, 283, 283, 283],
+          "extra_bytes": 13
+        },
+        "caption": null,
+        "stroke": {
+          "color": 0,
+          "width": 33,
+          "style": 1
+        },
+        "paint": {
+          "shadow_type": 0
+        }
+      },
+      "hwp5Style": {
+        "component_node": 12,
+        "owner_node": 11,
+        "border": {
+          "color": 0,
+          "width": 33,
+          "attributes": {
+            "raw": 3506438209
+          },
+          "outline": 0
+        },
+        "fill_flags": 0,
+        "fill_known": true,
+        "pattern": null,
+        "gradient_colors": null,
+        "gradient": null,
+        "image": null,
+        "additional_bytes": 0,
+        "alpha": {
+          "pattern": null,
+          "gradient": null,
+          "image": null
+        },
+        "shadow": {
+          "kind": 0,
+          "color": 0,
+          "offset_x": 0,
+          "offset_y": 0
+        },
+        "metadata": {
+          "instance_id": 1017952105,
+          "reserved": 0,
+          "shadow_alpha": 0
+        },
+        "extra_bytes": 0,
+        "section": 0,
+        "fileVersion": 83951617,
+        "borderLayout": "observed13",
+        "tailLayout": "alpha_shadow_metadata"
+      },
+      "fillPlan": {
+        "state": "none"
+      }
+    }
+  ],
+  "containers": [],
+  "equationAvailable": true,
+  "equationErrors": [],
+  "equationPaintAvailable": true,
+  "equationSourceStylesAvailable": true,
+  "equationPaintErrors": [],
+  "equationPaintWarnings": [],
+  "strictMeasuredSaveAvailable": true,
+  "createdCellTypingScope": 1,
+  "richTypingScope": 1
+}

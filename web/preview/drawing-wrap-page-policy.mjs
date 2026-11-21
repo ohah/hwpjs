@@ -1,7 +1,8 @@
+import { isFixedNoOverlapTextboxWrap } from './fixed-textbox-wrap-policy.mjs';
 import { drawingAxisGeometry } from './drawing-axis-geometry.mjs';
 
 // 본문 어울림에 필요한 추가 조건만 소유합니다. 공통 도형/paint 검사는 호출자 책임입니다.
-export function drawingWrapPagePolicyError(source, placement, grouped) {
+export function drawingWrapPagePolicyError(source, placement, grouped, allowRestricted = false) {
   if (
     ![0, 1].includes(placement?.flow?.text_wrap) ||
     grouped ||
@@ -19,6 +20,7 @@ export function drawingWrapPagePolicyError(source, placement, grouped) {
     )
       return null;
   }
+  if (allowRestricted && source === placement && isFixedNoOverlapTextboxWrap(source)) return null;
   if (placement.position?.flags?.[1] !== false) return 'UnsupportedDrawingFlowWithText';
   if (placement.position?.flags?.[2] !== true) return 'UnsupportedDrawingOverlapPolicy';
   return null;

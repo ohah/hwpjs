@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "catalogSHA256": "50c695ae61c3c9080b0b89655e26f460174f5b1857f547cdc3f4ed6363d990a1",
+  "catalogSHA256": "ac3000b8c912338ac992e0dd8bca06b6fc2dca21dc4a1490f27958078de9520c",
   "files": [
     {
       "id": "image-insert-blank.hwp",
@@ -1009,6 +1009,22 @@
       "path": "fixtures/chart-create-surface3DChart.hwpx",
       "bytes": 15794,
       "sha256": "8b4523b4b057c3e9ed7f59088a689af58a46e9e6b29d36162896d8fab9126f0b"
+    },
+    {
+      "id": "hwp5-picture-outer-margins.hwp",
+      "name": "hwp5-picture-outer-margins.hwp",
+      "label": "[기능 예제] HWP5 그림 바깥 여백",
+      "path": "fixtures/hwp5-picture-outer-margins.hwp",
+      "bytes": 5120,
+      "sha256": "f1d809c2f6ff56bf09ae3eb1578cf57261051308eb9e101d6ef51af08884ba76"
+    },
+    {
+      "id": "hwp5-textbox-outer-margins.hwp",
+      "name": "hwp5-textbox-outer-margins.hwp",
+      "label": "[기능 예제] HWP5 글상자 바깥 여백",
+      "path": "fixtures/hwp5-textbox-outer-margins.hwp",
+      "bytes": 14336,
+      "sha256": "2b8f1c51eb2505e911f20331c7e0d113e33c663451562bec63cc53f19bdd74d6"
     }
   ]
 }

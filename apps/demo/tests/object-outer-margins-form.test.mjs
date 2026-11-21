@@ -127,7 +127,7 @@ test('form uses fresh separate margin query and exact target, converting only ed
   try {
     await tick();
     assert.deepEqual(h.calls[0].selector, { kind: 'drawing', section: 0, node: 12 });
-    assert.equal(h.input('right').value, '115.59');
+    assert.equal(h.input('right').value, '115.595');
     h.set('top', '2.54');
     h.apply.dispatchEvent(new Event('click'));
     await tick();
@@ -161,7 +161,7 @@ test('typo never dispatches or changes original values; unchanged request uses N
     h.form.dispose();
   }
 });
-test('readonly and H5 never turn display or geometry availability into margin authority', async () => {
+test('readonly or mismatched H5 drawing selector never turns display geometry into margin authority', async () => {
   for (const options of [{ readOnly: true }, { format: 'hwp5' }, { unavailable: true }]) {
     const h = fixture(options);
     try {
@@ -262,7 +262,7 @@ test('geometry and margins dirty together reject both real form handlers and rec
     apply.dispatchEvent(new Event('click'));
     await tick();
     assert.equal(h.calls.filter((x) => x.kind === 'write').length, 0);
-    h.set('left', '0');
+    h.set('left', '0.004');
     assert.equal(h.gate.conflict, false);
     apply.dispatchEvent(new Event('click'));
     await tick();

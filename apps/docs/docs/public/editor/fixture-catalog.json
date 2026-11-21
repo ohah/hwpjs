@@ -754,5 +754,17 @@
     "name": "chart-create-surface3DChart.hwpx",
     "label": "[기능 예제] 3차원 표면형 · 와이어프레임",
     "available": true
+  },
+  {
+    "id": "hwp5-picture-outer-margins.hwp",
+    "name": "hwp5-picture-outer-margins.hwp",
+    "label": "[기능 예제] HWP5 그림 바깥 여백",
+    "available": true
+  },
+  {
+    "id": "hwp5-textbox-outer-margins.hwp",
+    "name": "hwp5-textbox-outer-margins.hwp",
+    "label": "[기능 예제] HWP5 글상자 바깥 여백",
+    "available": true
   }
 ]

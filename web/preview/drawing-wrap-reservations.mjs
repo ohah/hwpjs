@@ -1,3 +1,4 @@
+import { isFixedNoOverlapTextboxWrap } from './fixed-textbox-wrap-policy.mjs';
 import { drawingPageReference } from './drawing-page-reference.mjs';
 import { placeFloatingDrawing, drawingPagePlacementOptions } from './drawing-placement.mjs';
 import { drawingCollisionInventory } from './drawing-collision-inventory.mjs';
@@ -9,9 +10,10 @@ import { withInlineDrawingCollisionSources } from './inline-drawing-collision-so
 /** Reservation and final drawing use the same nominal placement and restriction policy. */
 export function resolveDrawingWrapReservations(drawings, paragraphs, body, content) {
   const fail = (error) => ({ state: 'unavailable', error });
-  const restricted = drawings.some(
-    (d) => drawingHasOwnWrap(d) && d.source.position?.flags?.[1] === true,
-  );
+  const needsRestriction = (drawing) =>
+    drawingHasOwnWrap(drawing) &&
+    (drawing.source.position?.flags?.[1] === true || isFixedNoOverlapTextboxWrap(drawing.source));
+  const restricted = drawings.some(needsRestriction);
   const selected = restricted ? drawings : drawings.filter(drawingHasOwnWrap);
   const prepared = [];
   for (const drawing of selected) {
@@ -36,8 +38,7 @@ export function resolveDrawingWrapReservations(drawings, paragraphs, body, conte
     const inventory = drawingCollisionInventory(collisionContent, layout);
     if (inventory.state !== 'collected') return inventory;
     for (const [index, item] of prepared.entries()) {
-      if (!drawingHasOwnWrap(item.drawing) || item.drawing.source.position.flags[1] !== true)
-        continue;
+      if (!needsRestriction(item.drawing)) continue;
       const scope = drawingCellCollisionScope(item.drawing, collisionContent, layout, inventory);
       if (scope.state !== 'scoped') return scope;
       const result = restrictDrawingLayout(item.drawing, item.result, scope.inventory, scope.body);

@@ -53,6 +53,7 @@ pub const Command = union(enum) {
     set_paragraph_format: @import("paragraph_format.zig").Edit,
     set_paragraph_bullet: struct { section: usize, paragraph: usize, value: @import("../../model/formatting_patch.zig").Bullet },
     edit_object_geometry: *const @import("../../model/object_geometry.zig").Request,
+    edit_object_outer_margins: @import("object_outer_margins.zig").Request,
     edit_page_settings: *const @import("page_settings_types.zig").Request,
     edit_bullet_definition: @import("../../model/paragraph_bullet_definition.zig").Request,
     set_paragraph_alignment: struct { section: usize, paragraph: usize, alignment: u32 },
@@ -979,6 +980,15 @@ pub const Session = opaque {
         const state = self.stateConst();
         if (section >= state.document.sections.len) return error.InvalidSection;
         return @import("form_anchor_positions.zig").read(a, state.decoded[section], state.source.header.version(), state.document.sections[section].paragraphs);
+    }
+    /// Native-only physical target. Existing public geometry and image APIs are unchanged.
+    pub fn objectOuterMargins(self: *const Session, selector: @import("object_outer_margins.zig").Selector) !@import("object_outer_margins.zig").Observation {
+        try self.materializeLiveText();
+        const state = self.stateConst();
+        if (selector.section >= state.document.sections.len) return error.InvalidSection;
+        const ticket = try self.historyTicket();
+        const read_only = state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview);
+        return @import("object_outer_margins.zig").read(state.allocator, state.decoded[selector.section], state.source.header.version(), state.document.sections[selector.section], selector, ticket, read_only);
     }
     pub fn objectGeometry(self: *const Session, a: std.mem.Allocator, selector: @import("../../model/object_geometry.zig").Selector, revision: u64, binding: @import("../../model/object_geometry.zig").Binding) !@import("../../model/object_geometry.zig").Observation {
         try self.materializeLiveText();
@@ -2138,6 +2148,26 @@ pub const Session = opaque {
                 const prepared = try self.originalInfo();
                 defer if (prepared.owned) state.allocator.free(prepared.bytes);
                 try @import("bullet_apply.zig").applyReference(state.allocator, &state.document, prepared.bytes, state.source.header.version(), state.para_count, state.char_count, value.section, value.paragraph, value.value, max_stream);
+            },
+            .edit_object_outer_margins => |request| {
+                const state = self.getState();
+                if (state.formatting_batch != null) return error.MutationInProgress;
+                const ticket = try self.historyTicket();
+                if (!std.meta.eql(ticket, request.target.ticket)) return error.StaleMutationEpoch;
+                const index = request.target.selector.section;
+                if (index >= state.document.sections.len) return error.InvalidSection;
+                const section = &state.document.sections[index];
+                const read_only = state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview);
+                const bytes = (try @import("object_outer_margins.zig").write(state.allocator, state.decoded[index], state.source.header.version(), section.*, request, ticket, read_only)) orelse return;
+                errdefer state.allocator.free(bytes);
+                if (bytes.len != state.decoded[index].len) return error.SourceBindingMismatch;
+                // Prepare every fallible allocation before publishing. Existing checkpoints own
+                // the previous basis; all current paragraphs and pending resource intents stay live.
+                const offsets = try state.allocator.dupe(usize, state.style_offsets[index]);
+                var old = section.rebased_source;
+                section.rebased_source = .{ .bytes = bytes, .style_offsets = offsets, .original_record_count = if (old) |basis| basis.original_record_count else section.source_record_count };
+                state.refreshSourceViews();
+                if (old) |*basis| basis.deinit(state.allocator);
             },
             .edit_object_geometry => |request| {
                 const state = self.getState();

@@ -1,3 +1,4 @@
+import { checkedOuterMarginsSelector, checkedOuterMarginsObservation, outerMarginsIdentity } from '../commands/object-outer-margins.ts';
 import {
   SET_OBJECT_BODY_FLOW_COMMAND,
   captureObjectBodyFlowPayload,
@@ -1653,7 +1654,7 @@ export function createEditor(options: CreateEditorOptions) {
           requireReady(pending.token, true);
           if (state !== owned.state || active !== owned.runtime)
             throw Error('StaleObjectOuterMarginsTarget');
-          if (state.nativeHistoryRevision !== owned.native.geometry.historyRevision)
+          if (state.nativeHistoryRevision !== outerMarginsIdentity(owned.native).historyRevision)
             throw Error('StaleObjectOuterMarginsBinding');
           if (!hasRuntimeAdmission(active, 'object-outer-margins-set'))
             throw Error('UnsupportedObjectOuterMarginsRuntime');
@@ -3052,8 +3053,7 @@ export function createEditor(options: CreateEditorOptions) {
   ): Promise<ObjectOuterMarginsRead> {
     assertPublicMutation();
     const snapshot = state;
-    const selected = checkedObjectGeometrySelector(selector);
-    if (selected.kind !== 'drawing') throw Error('InvalidObjectOuterMarginsSelector');
+    const selected = checkedOuterMarginsSelector(selector);
     const settings = copyOwned(options);
     if (
       !settings ||
@@ -3077,8 +3077,9 @@ export function createEditor(options: CreateEditorOptions) {
       const capabilities = snapshot.capabilities as Record<string, unknown> | undefined;
       if (content?.readOnly === true || capabilities?.readOnly === true)
         return { state: 'unavailable', reason: 'ReadOnlyDocument' };
-      if (!content || content.format !== 'hwpx' || content.limited || content.window)
+      if (!content || !['hwpx', 'hwp5'].includes(String(content.format)) || content.limited || content.window)
         return { state: 'unavailable', reason: 'ObjectOuterMarginsRequiresFullDocument' };
+      if ((content.format === 'hwpx') !== (selected.kind === 'drawing')) return { state: 'unavailable', reason: 'ObjectOuterMarginsSelectorFormatMismatch' };
       if (
         snapshot.nativeHistoryStats?.protocolVersion !== 2 ||
         !Number.isSafeInteger(snapshot.nativeHistoryRevision) ||
@@ -3100,12 +3101,16 @@ export function createEditor(options: CreateEditorOptions) {
           state: 'unavailable',
           reason: typeof reply.reason === 'string' ? reply.reason : 'ObjectOuterMarginsUnavailable',
         };
-      const native = checkedObjectOuterMarginsObservation(reply.outerMargins);
+      const native = checkedOuterMarginsObservation(reply.outerMargins);
+      const identity = outerMarginsIdentity(native);
+      if ((identity.format === 'hwpx') !== (selected.kind === 'drawing')) throw Error('ObjectOuterMarginsBindingMismatch');
+      if ('format' in native && !native.editable) return { state: 'unavailable', reason: native.reason ?? 'ObjectOuterMarginsUnavailable' };
       if (
-        native.geometry.format !== content.format ||
-        native.geometry.selector.section !== selected.section ||
-        native.geometry.selector.node !== selected.node ||
-        native.geometry.historyRevision !== snapshot.nativeHistoryRevision
+        identity.format !== content.format ||
+        identity.selector.section !== selected.section ||
+        identity.selector.node !== selected.node ||
+        identity.selector.kind !== selected.kind ||
+        identity.historyRevision !== snapshot.nativeHistoryRevision
       )
         throw Error('ObjectOuterMarginsBindingMismatch');
       guard();
@@ -3115,9 +3120,10 @@ export function createEditor(options: CreateEditorOptions) {
         state: 'available',
         target,
         observation: Object.freeze({
-          format: native.geometry.format,
-          section: native.geometry.selector.section,
-          drawingNode: native.geometry.selector.node,
+          format: identity.format,
+          section: identity.selector.section,
+          drawingNode: identity.selector.node,
+          ...(identity.format === 'hwp5' ? { kind: identity.selector.kind } : {}),
           margins: native.margins,
         }),
       });

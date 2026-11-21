@@ -1,0 +1,11 @@
+{
+  "source": "Peirce immutable actual854-headful-once/TEXTBOX-FIRST-SCENE.json",
+  "sourceSHA256": "abc4822ec6c6863b67349dcd5be8ac251eff4c5816f15d16021a73cd043d1b3f",
+  "extraction": "renderers[0].content; semantic values unchanged",
+  "derivedFixtureSHA256": "30d9d24901d9f89a29463741f2785cede16f9db6d5e700f55be2ba04a38d1505",
+  "sourceFormat": "hwp5 approved Square textbox baseline2b8f1c",
+  "readonlySourceReplayOnly": true,
+  "measurement": "synthetic deterministic text.length*7 width, 16 height; not actual Canvas font metrics",
+  "productFlagsChanged": false,
+  "newNativeWasmBrowserExecutions": 0
+}

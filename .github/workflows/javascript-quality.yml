@@ -934,11 +934,17 @@ jobs:
           set -euo pipefail
           node --experimental-transform-types --max-old-space-size=384 \
             --import ./tools/tests/picture-resize-source-provider.mjs \
+            --import ./apps/demo/tests/object-outer-margins-style-preload.mjs \
             --test --test-concurrency=1 --test-reporter=tap \
             ./apps/demo/tests/object-outer-margins-{form,input,port,wrap}.test.mjs \
+            ./apps/demo/tests/outer-margins-three-decimal.test.mjs \
+            ./apps/demo/tests/hwp5-picture-canonical-tool.test.mjs \
+            ./apps/demo/tests/hwp5-picture-margins-selection.test.mjs \
+            ./apps/demo/tests/hwp5-margins-core-ui.test.mjs \
             ./apps/demo/tests/object-properties-edit-gate.test.mjs \
             ./tools/tests/object-outer-margins{,-abi}.test.mjs \
             ./tools/tests/object-body-flow-abi.test.mjs \
+            ./tests/hwpx/fixed-textbox-wrap.test.mjs \
             ./tests/canvas/behind-textbox-renderer.test.mjs \
             ./tests/canvas/behind-textbox-scene.test.mjs \
             ./tests/canvas/table-existing-minimal-fill.test.mjs \
@@ -952,6 +958,7 @@ jobs:
             2>&1 | tee "$RUNNER_TEMP/object-outer-margins.tap"
           grep -Eq '^# skipped 0$' "$RUNNER_TEMP/object-outer-margins.tap"
           bun test ./packages/core/tests/commands/object-outer-margins.test.ts ./packages/core/tests/transport/object-outer-margins-admission.test.ts
+          bun test ./packages/core/tests/commands/hwp5-object-outer-margins.test.ts ./packages/core/tests/runtime/hwp5-outer-margins-profile.test.ts ./tools/tests/hwp5-object-outer-margins.test.mjs
           node node_modules/typescript/lib/tsc.js --noEmit -p ./tools/tests/tsconfig.object-outer-margins.json
       - name: Test textbox body flow command and property controls
         timeout-minutes: 2
@@ -1225,7 +1232,8 @@ jobs:
       - name: 공개 예제 정책 정규 회귀
         run: |
           test -f ./tests/tools/pages-demo-fixture-policy.test.mjs || exit 1
-          node --test --test-concurrency=1 ./tests/tools/pages-demo-fixture-policy.test.mjs
+          test -f ./tools/pages-demo/gallery-policy-activation.test.mjs || exit 1
+          node --test --test-concurrency=1 ./tests/tools/pages-demo-fixture-policy.test.mjs ./tools/pages-demo/fixture-extension.test.mjs ./tools/pages-demo/gallery-policy-activation.test.mjs
       - name: 문단 측정과 배치 분리 source 회귀
         run: |
           node --test --test-concurrency=1 \

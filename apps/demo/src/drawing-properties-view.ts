@@ -85,11 +85,11 @@ export function createDrawingPropertiesView(
     layer.body,
     layer.footer,
     marginsEditor,
-    {
-      kind: 'drawing',
-      section: capture.target.section,
-      node: capture.target.drawingNode,
-    },
+    capture.format === 'hwp5'
+      ? { kind: 'textbox', section: capture.target.section, node: capture.target.drawingNode }
+      : capture.format === 'hwpx'
+        ? { kind: 'drawing', section: capture.target.section, node: capture.target.drawingNode }
+        : undefined,
     drawingCurrent,
     editGate,
     onDismiss,

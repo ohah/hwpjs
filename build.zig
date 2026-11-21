@@ -107,7 +107,7 @@ pub fn build(b: *std.Build) void {
     editor_extensions_step.dependOn(equation_display_step);
     editor_extensions_step.dependOn(control_text_read_step);
     for ([_]struct { path: []const u8, filters: []const []const u8, step: []const u8, description: []const u8 }{
-        .{ .path = "src/object_geometry_probe.zig", .filters = &.{"object geometry"}, .step = "test-object-geometry", .description = "Verify source-owned object geometry, history and allocation failure rollback" },
+        .{ .path = "src/object_geometry_probe.zig", .filters = &.{ "object geometry", "H5 outer margins", "H5 margins top bottom" }, .step = "test-object-geometry", .description = "Verify source-owned object geometry, history and allocation failure rollback" },
         .{ .path = "src/generated_cell_rich_transfer_probe.zig", .filters = &.{"generated cell rich"}, .step = "test-generated-cell-rich", .description = "Verify canonical generated-cell rich typing, serializer transfer and owned history" },
         .{ .path = "src/caret_rich_native_probe.zig", .filters = &.{"caret rich"}, .step = "test-caret-rich", .description = "Verify HWP5 and HWPX source body and cell rich typing" },
         .{ .path = "src/caret_eof_native_probe.zig", .filters = &.{"caret EOF"}, .step = "test-caret-eof", .description = "Verify character-style inheritance at the visible paragraph end" },

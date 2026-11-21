@@ -28,7 +28,7 @@ export function drawingPagePolicyError(
   if (!drawingHasNoShadow(source.paint)) return 'UnsupportedDrawingPageShadow';
   if ([0, 1].includes(placement.flow?.text_wrap)) {
     return allowWrap
-      ? drawingWrapPagePolicyError(source, placement, grouped)
+      ? drawingWrapPagePolicyError(source, placement, grouped, allowRestricted)
       : 'UnsupportedDrawingPageWrap';
   } else if (placement.flow?.text_wrap === 2) {
     if (

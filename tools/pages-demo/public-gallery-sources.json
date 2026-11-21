@@ -121,15 +121,11 @@
     "image-insert-blank.hwp": "apps/docs/docs/public/editor/fixtures/image-insert-blank.hwp",
     "image-insert-blank.hwpx": "apps/docs/docs/public/editor/fixtures/image-insert-blank.hwpx",
     "picture-resize.hwp": "apps/docs/docs/public/editor/fixtures/picture-resize.hwp",
-    "picture-resize.hwpx": "apps/docs/docs/public/editor/fixtures/picture-resize.hwpx"
+    "picture-resize.hwpx": "apps/docs/docs/public/editor/fixtures/picture-resize.hwpx",
+    "hwp5-picture-outer-margins.hwp": "tools/pages-demo/fixtures/hwp5-picture-outer-margins.hwp",
+    "hwp5-textbox-outer-margins.hwp": "tools/pages-demo/fixtures/hwp5-textbox-outer-margins.hwp"
   },
-  "nooriAliases": [
-    "noori.hwp",
-    "noori.hwpx"
-  ],
-  "excludedPassword": [
-    "password-12345.hwp",
-    "password-12345.hwpx"
-  ],
+  "nooriAliases": ["noori.hwp", "noori.hwpx"],
+  "excludedPassword": ["password-12345.hwp", "password-12345.hwpx"],
   "excludedReferenceCount": 16
 }

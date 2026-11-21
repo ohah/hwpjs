@@ -14,6 +14,10 @@ import {
 } from './pages-demo/bundle-validation.mjs';
 import { validateProductionBundle } from './pages-demo/bundle-production.mjs';
 import { validateExplicitFixturePolicy } from './pages-demo/fixture-policy.mjs';
+import {
+  loadPublicFixtureExtension,
+  loadPublicFixtureBaselinePolicy,
+} from './pages-demo/fixture-extension.mjs';
 import { canonicalWorkerURLPlugin } from './pages-demo/canonical-worker-url.mjs';
 import { installWorkerAssets, discoverActiveRuntimePaths } from './pages-demo/worker-assets.mjs';
 import { publicFixtureModules } from './pages-demo/public-fixture-modules.mjs';
@@ -22,13 +26,20 @@ import { collectUiLicenseInputs } from './pages-demo/ui-license-inputs.mjs';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const args = process.argv.slice(2),
   options = new Map();
-if (args.length % 2) throw Error('Usage: --source DIR --wasm FILE --out NEW_VERIFICATION_DIR');
+if (args.length % 2)
+  throw Error(
+    'Usage: --source DIR --wasm FILE --out NEW_VERIFICATION_DIR [--fixture-extension APPROVED_RECEIPT]',
+  );
 for (let i = 0; i < args.length; i += 2) {
-  if (!['--source', '--wasm', '--out'].includes(args[i]) || options.has(args[i]))
+  if (
+    !['--source', '--wasm', '--out', '--fixture-extension'].includes(args[i]) ||
+    options.has(args[i])
+  )
     throw Error('InvalidOption');
   options.set(args[i], resolve(args[i + 1]));
 }
-if (options.size !== 3) throw Error('ExplicitInputsRequired');
+if (!['--source', '--wasm', '--out'].every((key) => options.has(key)))
+  throw Error('ExplicitInputsRequired');
 const source = options.get('--source'),
   output = options.get('--out'),
   wasmPath = options.get('--wasm');
@@ -41,19 +52,33 @@ try {
 } catch (e) {
   if (e.code !== 'ENOENT') throw e;
 }
-const policy = JSON.parse(
-  await readFile(resolve(root, 'tools/pages-demo/public-gallery-fixtures.json')),
-);
+const baselinePolicyBytes = await loadPublicFixtureBaselinePolicy({
+  root,
+  receiptPath: options.get('--fixture-extension'),
+  read: readFile,
+});
+let policy = JSON.parse(baselinePolicyBytes);
 const baseline = await validateProductionBundle(resolve(root, 'apps/docs/docs/public/editor'), {
   root,
   fixturePolicy: policy,
 });
-const files = new Map([...baseline.files].filter(([p]) => p !== 'manifest.json'));
+let files = new Map([...baseline.files].filter(([p]) => p !== 'manifest.json'));
 const inputs = [];
 async function input(path) {
   const bytes = await readFile(path);
   inputs.push({ sha256: digest(bytes), bytes: bytes.length });
   return bytes;
+}
+const fixtureExtension = await loadPublicFixtureExtension({
+  root,
+  receiptPath: options.get('--fixture-extension'),
+  baseline,
+  baselinePolicyBytes,
+  read: input,
+});
+if (fixtureExtension) {
+  policy = fixtureExtension.policy;
+  files = fixtureExtension.files;
 }
 const wasm = await input(wasmPath),
   core = resolve(source, 'packages/core/dist');
@@ -253,6 +278,8 @@ for (const [path, bytes] of files) {
 }
 const manifest = {
   ...baseline.manifest,
+  ...(fixtureExtension ? { fixtureExtension: fixtureExtension.binding } : {}),
+  fixtures: policy.files.map(({ id }) => id),
   licenses: uiLicenses.manifest,
   workerAssets,
   wasmSha256: digest(wasm),

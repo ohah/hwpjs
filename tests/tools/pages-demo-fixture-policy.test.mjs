@@ -12,15 +12,13 @@ const root = process.env.HWPJS_FIXTURE_POLICY_TEST_ROOT ?? projectRoot;
 const baselineDirectory =
   process.env.HWPJS_FIXTURE_POLICY_TEST_BASELINE ??
   resolve(projectRoot, 'apps/docs/docs/public/editor');
-const policy = JSON.parse(
-  await readFile(
-    new URL('../../tools/pages-demo/public-gallery-fixtures.json', import.meta.url),
-    'utf8',
-  ),
+const policyBytes = await readFile(
+  new URL('../../tools/pages-demo/public-gallery-fixtures.json', import.meta.url),
 );
+const policy = JSON.parse(policyBytes);
 const data = JSON.parse(
   await readFile(
-    new URL('../../tools/pages-demo/public-gallery-sources.json', import.meta.url),
+    new URL('../../tools/pages-demo/public-gallery-current-sources.json', import.meta.url),
     'utf8',
   ),
 );
@@ -34,6 +32,13 @@ const noori2Directory = join(workspace, 'noori2');
 after(() => rm(workspace, { recursive: true, force: true }));
 const files = new Map();
 const sha = (bytes) => createHash('sha256').update(bytes).digest('hex');
+if (
+  data.schemaVersion !== 1 ||
+  data.policy !== 'public-gallery-fixtures.json' ||
+  data.policySHA256 !== sha(policyBytes)
+)
+  throw Error('FixtureSourcePolicyBindingMismatch');
+
 const safe = (path) => {
   if (
     typeof path !== 'string' ||

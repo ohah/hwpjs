@@ -1,3 +1,4 @@
+import { createHwp5OuterMarginsApi } from './hwp5-object-outer-margins.mjs';
 import { createCreatedCellPropertiesApi } from './created-cell-properties-api.mjs';
 import { registerStrictLayoutTransport } from './hwp5-strict-layout-transport.mjs';
 import { createBrowserStrictLayoutSaver } from './hwp5-browser-strict-layout.mjs';
@@ -271,6 +272,7 @@ export async function createExperimentalHwp5Editor(
       unavailable: 'Hwp5SourceTableGridAbiUnavailable',
     }),
     ...createObjectGeometryApi({ wasm, memory, check: check, format: 'hwp5' }),
+    ...createHwp5OuterMarginsApi({ wasm, memory, check }),
     ...createPageSettingsEditApi({ wasm, memory, check, format: 'hwp5' }),
     ...createHwp5SourceTableCellSplitApi({ wasm, memory, check }),
     ...createAtomicFormattingApi({ wasm, memory, check: check, prefix: 'hwp5_edit' }),

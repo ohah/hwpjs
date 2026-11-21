@@ -137,6 +137,10 @@ pub const History = struct {
     }
     pub fn applyBatch(self: *Self, s: *edit.Session, commands: []const edit.Command) !bool {
         try self.bind(s);
+        for (commands) |command| if (command == .edit_object_outer_margins) {
+            if (commands.len != 1 or !self.managed) return error.HistoryProtocol2Required;
+            if (!std.meta.eql(command.edit_object_outer_margins.target.ticket, try s.historyTicket())) return error.StaleMutationEpoch;
+        };
         for (commands) |command| if (command == .edit_object_geometry) {
             if (commands.len != 1) return error.InvalidObjectGeometryBatch;
             if (command.edit_object_geometry.historyRevision != self.stack.current.revision) return error.StaleObjectGeometryBinding;

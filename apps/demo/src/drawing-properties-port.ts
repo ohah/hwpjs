@@ -15,6 +15,7 @@ export interface DrawingPropertiesTarget {
   readonly token?: DrawingPropertiesToken;
 }
 export interface DrawingPropertiesCapture {
+  readonly format: 'hwp5' | 'hwpx';
   readonly target: Readonly<{ section: number; drawingNode: number }>;
   readonly token: DrawingPropertiesToken;
   readonly fields: readonly Readonly<{ label: string; value: string }>[];
@@ -159,6 +160,7 @@ export function createDrawingPropertiesPort(
       if (!fields.length && text === null)
         return refuse('이 개체에서 확인할 수 있는 정보가 없습니다.');
       const capture: DrawingPropertiesCapture = Object.freeze({
+        format: content.format,
         target: Object.freeze({ section, drawingNode }),
         token,
         fields: Object.freeze(fields.map((field) => Object.freeze(field))),
