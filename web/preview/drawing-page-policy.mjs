@@ -12,6 +12,7 @@ export function drawingPagePolicyError(
   fill,
   allowRestricted = false,
   allowWrap = false,
+  allowBehind = false,
 ) {
   if (
     !grouped &&
@@ -29,6 +30,16 @@ export function drawingPagePolicyError(
     return allowWrap
       ? drawingWrapPagePolicyError(source, placement, grouped)
       : 'UnsupportedDrawingPageWrap';
+  } else if (placement.flow?.text_wrap === 2) {
+    if (
+      allowBehind !== true ||
+      grouped ||
+      !drawingAxisGeometry(source) ||
+      source.group_context !== null ||
+      source.caption !== null ||
+      source.geometry?.treat_as_character !== false
+    )
+      return 'UnsupportedDrawingPageWrap';
   } else if (placement.flow?.text_wrap !== 3) return 'UnsupportedDrawingPageWrap';
   if (allowRestricted && !grouped && drawingCollisionPolicy(source).state === 'selected')
     return null;

@@ -1,5 +1,6 @@
 import { createDrawingObservationQuery } from './drawing-observation.mjs';
 import { currentHwp5ChartTarget, sameHwp5ChartOwner } from './hwp5-chart-resources.mjs';
+import { rowAtPoint } from './row-geometry.mjs';
 const uint = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 0xffffffff;
 const contains = (r, x, y) =>
   r &&
@@ -13,11 +14,13 @@ const contains = (r, x, y) =>
 
 /** Actual painted object frames only; this query grants no mutation authority. */
 export function objectActivationTarget(
-  { content, layout, charts, picture, outlines, borderTolerance = 5 },
+  { content, layout, charts, picture, outlines, borderTolerance = 5, behindTextOnly = false },
   x,
   y,
 ) {
   if (![x, y].every(Number.isFinite)) return null;
+  const explicitBehind = behindTextOnly === true;
+  if (explicitBehind && content?.format !== 'hwpx') return null;
   const hits = new Map();
   const add = (target) => {
     if (!uint(target.section)) return;
@@ -31,6 +34,7 @@ export function objectActivationTarget(
             : target.drawingNode;
     if (uint(node)) hits.set(`${target.kind}:${target.section}:${node}`, Object.freeze(target));
   };
+  if (explicitBehind && picture?.picture) return null;
   if (picture?.picture)
     add({
       kind: 'picture',
@@ -47,8 +51,16 @@ export function objectActivationTarget(
         add({ kind: 'hwp5-chart', section: row.section, controlNode: row.controlNode });
     } else add({ kind: 'chart', section: item.target.section, wrapper: item.target.wrapper });
   }
-  if (hits.size) return hits.size === 1 ? hits.values().next().value : null;
+  if (hits.size) return !explicitBehind && hits.size === 1 ? hits.values().next().value : null;
   const query = createDrawingObservationQuery(content);
+  const behindOwners = new Set(
+    (layout.placedDrawings ?? [])
+      .filter((p) => p.behindTextbox === true)
+      .map((p) => `${p.section}:${p.drawingNode}`),
+  );
+  let hitRow,
+    hitRowReady = false,
+    foregroundBorder = false;
   const border = (rectangle) =>
     contains(rectangle, x, y) &&
     Number.isFinite(borderTolerance) &&
@@ -70,11 +82,27 @@ export function objectActivationTarget(
       !border(rectangle)
     )
       return;
+    if (explicitBehind && !behindOwners.has(`${item.section}:${item.drawingNode}`)) {
+      foregroundBorder = true;
+      return;
+    }
+    if (!explicitBehind && behindOwners.has(`${item.section}:${item.drawingNode}`)) {
+      if (!hitRowReady) {
+        hitRow = layout.rows[rowAtPoint(layout, x, y)];
+        hitRowReady = true;
+      }
+      if (
+        hitRow &&
+        hitRow.drawingPaintLayer !== 'behind' &&
+        (hitRow.section !== item.section || hitRow.drawingNode !== item.drawingNode)
+      )
+        return;
+    }
     add({ kind: 'drawing', section: owner.section, drawingNode: owner.drawingNode });
   };
   for (const item of layout.placedDrawings ?? []) drawing(item, item.rectangle);
   for (const item of [...(outlines?.front ?? []), ...(outlines?.behind ?? [])])
     drawing(item.drawing, item.origin);
   // An overlapping different object is ambiguous; do not open a different owner's dialog.
-  return hits.size === 1 ? hits.values().next().value : null;
+  return !foregroundBorder && hits.size === 1 ? hits.values().next().value : null;
 }

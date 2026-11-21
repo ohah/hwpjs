@@ -1,18 +1,21 @@
-export type ObjectPropertiesEditLane = 'geometry' | 'margins';
+export type ObjectPropertiesEditLane = 'geometry' | 'margins' | 'bodyFlow';
 /** One dialog intent and one in-flight mutation. This does not issue edit authority. */
 export function createObjectPropertiesEditGate() {
-  const dirty = { geometry: false, margins: false };
+  const dirty = { geometry: false, margins: false, bodyFlow: false };
   const listeners = new Set<() => void>();
   let active: ObjectPropertiesEditLane | null = null;
   const notify = () => {
     for (const listener of listeners) listener();
   };
   const allowed = (lane: ObjectPropertiesEditLane) =>
-    active === null && !dirty[lane === 'geometry' ? 'margins' : 'geometry'];
+    active === null &&
+    (Object.keys(dirty) as ObjectPropertiesEditLane[]).every(
+      (other) => other === lane || !dirty[other],
+    );
   return {
     allowed,
     get conflict() {
-      return dirty.geometry && dirty.margins;
+      return Object.values(dirty).filter(Boolean).length > 1;
     },
     get busy() {
       return active !== null;

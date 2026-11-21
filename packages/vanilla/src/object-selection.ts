@@ -151,8 +151,24 @@ export function objectSelectionOwner(source: any, target: CanvasObjectTarget): b
 export function createObjectSelection<State extends ObjectSelectionState>(options: {
   capture(): ObjectSelectionScene<State> | null;
   hit(scene: ObjectSelectionScene<State>, x: number, y: number): CanvasObjectTarget | null;
+  /** Explicit one-shot behind-text selection only; default text hit preference is unchanged. */
+  behindTextHit?(
+    scene: ObjectSelectionScene<State>,
+    x: number,
+    y: number,
+  ): CanvasObjectTarget | null;
+  pendingBehindTextHit?(
+    scene: ObjectSelectionScene<State>,
+    x: number,
+    y: number,
+  ): CanvasObjectTarget | null;
   /** Original-frame query for a pending second gesture; intent only, never confirmation. */
   pendingHit?(scene: ObjectSelectionScene<State>, x: number, y: number): CanvasObjectTarget | null;
+  /** Mode intent only: accept a completed repaint certified to preserve the same scene. */
+  acknowledgeArmedPaint?(
+    previous: ObjectSelectionScene<State>,
+    next: ObjectSelectionScene<State>,
+  ): boolean;
   /** Private completed-paint acknowledgement; never used for pointer intent or commit confirmation. */
   acknowledgePaint?(
     previous: ObjectSelectionScene<State>,
@@ -165,6 +181,7 @@ export function createObjectSelection<State extends ObjectSelectionState>(option
     readonly target: CanvasObjectTarget;
     readonly x: number;
     readonly y: number;
+    readonly behindTextOnly: boolean;
     current(): boolean;
     confirm(scene: ObjectSelectionScene<State>): object | null;
   }): Promise<object | null>;
@@ -179,8 +196,10 @@ export function createObjectSelection<State extends ObjectSelectionState>(option
     token: StateToken;
     target: CanvasObjectTarget;
     pointer: ObjectSelectionPointer;
+    behindTextOnly: boolean;
     reuse: Selected | null;
   };
+  let armedBehind: { scene: ObjectSelectionScene<State>; token: StateToken } | null = null;
   let closed = false,
     epoch = 0,
     down: Candidate | null = null,
@@ -216,6 +235,7 @@ export function createObjectSelection<State extends ObjectSelectionState>(option
     const changed = selected !== null;
     epoch++;
     down = committing = observed = selected = null;
+    armedBehind = null;
     continuation = null;
     finishPending?.();
     if (_reason !== 'pointerdown') options.onClear?.();
@@ -240,9 +260,31 @@ export function createObjectSelection<State extends ObjectSelectionState>(option
     !e.shiftKey &&
     [e.x, e.y, e.clientX, e.clientY].every(Number.isFinite) &&
     Number.isInteger(e.pointerId);
-  const hit = (scene: ObjectSelectionScene<State>, x: number, y: number) => {
+  const hit = (
+    scene: ObjectSelectionScene<State>,
+    x: number,
+    y: number,
+    behindTextOnly = false,
+  ) => {
     try {
-      const target = ownTarget(options.hit(scene, x, y));
+      const target = ownTarget(
+        behindTextOnly ? (options.behindTextHit?.(scene, x, y) ?? null) : options.hit(scene, x, y),
+      );
+      if (behindTextOnly) {
+        const source = scene.source as any;
+        if (
+          source?.format !== 'hwpx' ||
+          target?.kind !== 'drawing' ||
+          !Array.isArray(source.drawings) ||
+          !source.drawings.some(
+            (r: any) =>
+              r.section === target.section &&
+              r.drawingNode === target.drawingNode &&
+              r.source?.flow?.text_wrap === 2,
+          )
+        )
+          return null;
+      }
       return target && objectSelectionOwner(scene.source, target) ? target : null;
     } catch {
       return null;
@@ -251,8 +293,9 @@ export function createObjectSelection<State extends ObjectSelectionState>(option
   const pendingHit = (candidate: Candidate, event: ObjectSelectionPointer) => {
     const ticket = epoch;
     try {
-      const target = options.pendingHit
-        ? ownTarget(options.pendingHit(candidate.scene, event.x, event.y))
+      const pending = candidate.behindTextOnly ? options.pendingBehindTextHit : options.pendingHit;
+      const target = pending
+        ? ownTarget(pending(candidate.scene, event.x, event.y))
         : event.x === candidate.pointer.x && event.y === candidate.pointer.y
           ? candidate.target
           : null;
@@ -346,6 +389,24 @@ export function createObjectSelection<State extends ObjectSelectionState>(option
   }
 
   return {
+    armBehindTextSelection(): boolean {
+      if (
+        closed ||
+        commitBusy ||
+        down ||
+        dispatching ||
+        typeof options.behindTextHit !== 'function'
+      )
+        return false;
+      const scene = safeCapture();
+      const source = scene?.source as any;
+      if (!scene || !options.hostFocused() || source?.format !== 'hwpx' || source.readOnly === true)
+        return false;
+      const token = Object.freeze({ ...scene.state.token });
+      if (!exactCurrent(scene, token)) return false;
+      armedBehind = { scene: Object.freeze({ ...scene }), token };
+      return true;
+    },
     quarantinePendingKey(event: ObjectPropertiesKey): boolean {
       // Pending intent is not selected-object mode. Quarantine only its own
       // unmodified printable P before direct input can type into the old caret.
@@ -422,20 +483,34 @@ export function createObjectSelection<State extends ObjectSelectionState>(option
         continuation = { ...event };
         return true;
       }
+      const armed = armedBehind;
       const reusable = current() ? selected : null,
         blocked = commitBusy;
       clear('pointerdown');
       if (closed || blocked || dispatching || !validPointer(event)) return false;
       const scene = safeCapture();
-      if (!scene) return false;
+      if (
+        !scene ||
+        (armed &&
+          (!options.hostFocused() ||
+            armed.scene.state !== scene.state ||
+            armed.scene.lease !== scene.lease ||
+            armed.scene.source !== scene.source ||
+            armed.scene.modalRevision !== scene.modalRevision ||
+            (armed.scene.frame !== scene.frame &&
+              options.acknowledgeArmedPaint?.(armed.scene, scene) !== true) ||
+            !sameToken(armed.token, scene.state.token)))
+      )
+        return false;
       const token = Object.freeze({ ...scene.state.token }),
-        target = hit(scene, event.x, event.y);
+        target = hit(scene, event.x, event.y, !!armed);
       if (!target || !exactCurrent(scene, token)) return false;
       down = {
         scene: Object.freeze({ ...scene }),
         token,
         target,
         pointer: { ...event },
+        behindTextOnly: !!armed,
         reuse:
           reusable &&
           sceneEqual(scene, reusable.scene) &&
@@ -486,7 +561,10 @@ export function createObjectSelection<State extends ObjectSelectionState>(option
           event.clientY - candidate.pointer.clientY,
         ) > 4 ||
         !exactCurrent(candidate.scene, candidate.token) ||
-        !equalTarget(hit(candidate.scene, event.x, event.y), candidate.target)
+        !equalTarget(
+          hit(candidate.scene, event.x, event.y, candidate.behindTextOnly),
+          candidate.target,
+        )
       ) {
         clear('pointerup');
         return;
@@ -521,6 +599,7 @@ export function createObjectSelection<State extends ObjectSelectionState>(option
           target: candidate.target,
           x: event.x,
           y: event.y,
+          behindTextOnly: candidate.behindTextOnly,
           current: () =>
             !closed && ticket === epoch && exactCurrent(candidate.scene, candidate.token),
           confirm(scene) {
@@ -537,7 +616,7 @@ export function createObjectSelection<State extends ObjectSelectionState>(option
               scene.frame === candidate.scene.frame ||
               !sameToken(scene.state.token, candidate.token) ||
               !exactCurrent(scene, candidate.token) ||
-              !equalTarget(hit(scene, event.x, event.y), candidate.target)
+              !equalTarget(hit(scene, event.x, event.y, candidate.behindTextOnly), candidate.target)
             )
               return null;
             const result = Object.freeze({});
@@ -578,6 +657,7 @@ export function createObjectSelection<State extends ObjectSelectionState>(option
     },
     observeState(state: State) {
       if (closed) return;
+      if (armedBehind && state !== armedBehind.scene.state) clear('armed-state');
       if (committing && observed && state === committing.scene.state) {
         clear('rollback');
         return;

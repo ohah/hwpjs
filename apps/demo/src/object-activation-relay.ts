@@ -8,6 +8,7 @@ type PropertiesListener = (event: CanvasObjectPropertiesRequest) => void;
 type Host = {
   getSelectedObject?(): CanvasSelectedObject | null;
   requestSelectedObjectProperties?(): boolean;
+  requestBehindTextObjectSelection?(): boolean;
   registerObjectPropertiesControl?(element: HTMLElement): () => void;
   subscribeObjectSelection?(listener: () => void): () => void;
   registerObjectActivation(listener: Listener): () => void;
@@ -79,6 +80,11 @@ export function createObjectActivationRelay() {
     },
     requestSelectedObjectProperties() {
       return !disposed && (host?.requestSelectedObjectProperties?.() ?? false);
+    },
+    requestBehindTextObjectSelection() {
+      const current = host;
+      const accepted = !disposed && current?.requestBehindTextObjectSelection?.() === true;
+      return !disposed && host === current && accepted;
     },
     registerObjectPropertiesControl(element: HTMLElement) {
       if (disposed) return () => {};

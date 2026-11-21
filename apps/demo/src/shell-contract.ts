@@ -49,6 +49,7 @@ export type DemoCommand =
   | 'page-settings'
   | 'paragraph-bullets'
   | 'object-properties'
+  | 'select-behind-text-object'
   | 'insert-header'
   | 'insert-footer'
   | 'toggle-marks'

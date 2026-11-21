@@ -1,3 +1,7 @@
+import {
+  behindTextObjectSelectionAvailability,
+  requestBehindTextObjectSelection,
+} from './behind-text-object-selection.ts';
 import { createImageInsertTool } from './image-insert-tool.ts';
 import { mountStrictLayoutSaveTool } from './strict-layout-save-tool.ts';
 import { createMeasuredPlainLayoutSaver } from '@hwpjs/core/runtime';
@@ -121,6 +125,7 @@ export interface DemoHost
     | null;
   getSelectedObject?(): import('@hwpjs/vanilla').CanvasSelectedObject | null;
   requestSelectedObjectProperties?(): boolean;
+  requestBehindTextObjectSelection?(): boolean;
   registerObjectPropertiesControl?(element: HTMLElement): () => void;
   subscribeObjectSelection?(listener: () => void): () => void;
   registerObjectPropertiesRequest?(
@@ -591,6 +596,7 @@ export async function mountDemo(
         enabled: host?.captureSourceTableCellMerge?.() != null,
         reason: '편집 가능한 HWPX 표에서 연속된 셀을 두 개 이상 선택하세요.',
       },
+      'select-behind-text-object': behindTextObjectSelectionAvailability(state, host),
       'object-properties': {
         enabled: host?.getSelectedObject?.() != null,
         reason: '문서에서 차트, 그림 또는 글상자 테두리를 선택하세요.',
@@ -884,6 +890,10 @@ export async function mountDemo(
     }
     if (action.command === 'insert-table') {
       tableInsert.open();
+      return;
+    }
+    if (action.command === 'select-behind-text-object') {
+      requestBehindTextObjectSelection(() => editor.getEditorState(), host, note);
       return;
     }
     if (action.command === 'object-properties') {

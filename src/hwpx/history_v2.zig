@@ -195,7 +195,7 @@ pub const History = struct {
         s.history_transaction_active = true;
         defer s.history_transaction_active = false;
         try self.stack.prepare();
-        for (commands) |command| if (command.kind == .note_delete or command.kind == .note_create or command.kind == .insert_document or command.kind == .equation_insert or command.kind == .chart_create or command.kind == .image_insert or command.kind == .picture_replace or command.kind == .bullet_definition or command.kind == .page_settings or command.kind == .object_geometry or command.kind == .object_outer_margins) {
+        for (commands) |command| if (command.kind == .note_delete or command.kind == .note_create or command.kind == .insert_document or command.kind == .equation_insert or command.kind == .chart_create or command.kind == .image_insert or command.kind == .picture_replace or command.kind == .bullet_definition or command.kind == .page_settings or command.kind == .object_geometry or command.kind == .object_outer_margins or command.kind == .object_body_flow) {
             if (commands.len != 1 or command.break_before != null or command.deleted != 0)
                 return error.InvalidInsertDocumentBatch;
             if (!self.managed) return error.HistoryProtocol2Required;
@@ -210,7 +210,7 @@ pub const History = struct {
     fn insertDocument(self: *Self, command: commands_mod.Command) !bool {
         const s = self.owner;
         const inline_creation = command.kind == .equation_insert or command.kind == .chart_create or command.kind == .image_insert or command.kind == .note_create;
-        if (!inline_creation and command.kind != .note_delete and command.kind != .picture_replace and command.kind != .object_outer_margins and command.section != 0) return error.UnsupportedInsertSections;
+        if (!inline_creation and command.kind != .note_delete and command.kind != .picture_replace and command.kind != .object_outer_margins and command.kind != .object_body_flow and command.section != 0) return error.UnsupportedInsertSections;
         // Inline creation proves logical-to-physical owners using serializer
         // receipts. Geometry keeps its separately validated source-frame path.
         // Every other document transaction retains the pending-owner refusal.
@@ -259,6 +259,14 @@ pub const History = struct {
             try @import("object_outer_margins.zig").validate(s.allocator, s, request.*);
             // Validate even identical values; preserve the current redo edge without preparing a candidate.
             if (std.meta.eql(request.margins, request.expectedMargins)) return false;
+        }
+        if (command.kind == .object_body_flow) {
+            const request = command.object_body_flow orelse return error.InvalidObjectBodyFlow;
+            if (command.section != request.geometry.selector.section or command.inserted.len != 0 or command.start != 0) return error.InvalidObjectBodyFlow;
+            if (request.geometry.historyRevision != self.stack.current.revision or try @import("../model/formatting_binding.zig").decimal(request.geometry.binding.serial) != s.mutation_serial) return error.StaleObjectGeometryBinding;
+            try @import("object_body_flow.zig").validate(s.allocator, s, request.*);
+            // Validate even identical values; preserve the current redo edge without preparing a candidate.
+            if (std.meta.eql(request.flow, request.expectedFlow)) return false;
         }
         if (command.kind == .page_settings) try @import("page_settings_edit_owners.zig").validateTargets(s.allocator, s, (command.page_settings orelse return error.InvalidPageSettingsRequest).*);
         var placements: @import("created_table_placement_receipts.zig").Receipts = .{};
@@ -319,6 +327,8 @@ pub const History = struct {
             break :blk try editor.open(s.allocator, prepared.bytes, s.options);
         } else if (command.kind == .object_outer_margins) blk: {
             break :blk (try @import("object_outer_margins_write.zig").prepare(s.allocator, before, command.object_outer_margins.?.*, s.options)) orelse return false;
+        } else if (command.kind == .object_body_flow) blk: {
+            break :blk (try @import("object_body_flow_write.zig").prepare(s.allocator, before, command.object_body_flow.?.*, s.options)) orelse return false;
         } else if (command.kind == .object_geometry) blk: {
             break :blk (try @import("object_geometry_write.zig").prepare(s.allocator, before, command.object_geometry.?.*, s.options)) orelse return false;
         } else if (command.kind == .page_settings) blk: {

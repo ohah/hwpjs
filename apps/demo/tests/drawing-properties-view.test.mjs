@@ -173,3 +173,84 @@ test('an observed empty textbox is distinguished from unavailable content', () =
   assert(!root.textContent.includes('내용 정보를 확인할 수 없습니다.'));
   v.destroy();
 });
+
+test('tool forwards fresh body-flow query and opaque target into integrated dialog', async () => {
+  const { root } = dom(),
+    listeners = new Set(),
+    calls = [],
+    target = Object.freeze({});
+  const token = {
+    editorId: 'e',
+    documentId: 'd',
+    generation: 0,
+    operationRevision: 0,
+    viewRevision: 0,
+  };
+  const state = {
+    ...token,
+    token,
+    status: 'ready',
+    stateVersion: 1,
+    content: {
+      format: 'hwpx',
+      readOnly: false,
+      drawings: [
+        {
+          section: 0,
+          drawingNode: 5,
+          hostParagraph: 0,
+          anchorUnit: 0,
+          source: {
+            drawing_node: 5,
+            paragraph: 1,
+            anchor_unit: 0,
+            geometry: { width: 7200, height: 3600, width_relative: 4, height_relative: 2 },
+          },
+        },
+      ],
+    },
+  };
+  const tool = createDrawingPropertiesTool({
+    root,
+    editor: {
+      getEditorState: () => state,
+      registerStateListener(fn) {
+        listeners.add(fn);
+        return () => listeners.delete(fn);
+      },
+      async getObjectBodyFlow(selector, settings) {
+        calls.push({ kind: 'read', selector, settings });
+        return {
+          state: 'available',
+          target,
+          observation: {
+            format: 'hwpx',
+            section: 0,
+            drawingNode: 5,
+            flow: { textWrap: 'SQUARE', textFlow: 'RIGHT_ONLY' },
+          },
+        };
+      },
+      async dispatchCommand(command, payload) {
+        calls.push({ kind: 'write', command, payload });
+        return { status: 'committed-with-snapshot' };
+      },
+    },
+  });
+  tool.open({ section: 0, drawingNode: 5 });
+  await new Promise((r) => setImmediate(r));
+  assert.equal(calls.filter((v) => v.kind === 'read').length, 1);
+  assert.deepEqual(calls[0].selector, { kind: 'drawing', section: 0, node: 5 });
+  const side = all(root, (n) => n.dataset.role === 'object-body-flow-side')[0],
+    apply = all(root, (n) => n.dataset.role === 'object-body-flow-apply')[0];
+  assert.equal(side.value, 'RIGHT_ONLY');
+  side.value = 'LEFT_ONLY';
+  side.dispatchEvent(new Event('change'));
+  apply.dispatchEvent(new Event('click'));
+  await new Promise((r) => setImmediate(r));
+  assert.equal(calls.filter((v) => v.kind === 'write').length, 1);
+  assert.equal(calls.find((v) => v.kind === 'write').payload.target, target);
+  assert.equal(root.children.length, 0);
+  tool.dispose();
+  assert.equal(listeners.size, 0);
+});

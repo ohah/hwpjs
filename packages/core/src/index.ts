@@ -377,6 +377,14 @@ export type {
 } from './commands/picture-replacement.ts';
 
 export { SET_OBJECT_OUTER_MARGINS_COMMAND } from './commands/object-outer-margins.ts';
+export { SET_OBJECT_BODY_FLOW_COMMAND } from './commands/object-body-flow.ts';
+export type {
+  ObjectBodyFlow,
+  ObjectBodyFlowSelector,
+  ObjectBodyFlowTarget,
+  ObjectBodyFlowRead,
+  SetObjectBodyFlowPayload,
+} from './commands/object-body-flow.ts';
 export type {
   ObjectOuterMargins,
   ObjectOuterMarginsSelector,

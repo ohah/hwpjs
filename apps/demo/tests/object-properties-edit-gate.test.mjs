@@ -29,3 +29,21 @@ test('a pristine other form cannot race a pending mutation and disposal removes 
   assert.equal(seen, 1);
   assert.equal(g.begin('margins'), true);
 });
+
+test('all three lane pairs conflict and no second lane races a mutation', () => {
+  for (const a of ['geometry', 'margins', 'bodyFlow'])
+    for (const b of ['geometry', 'margins', 'bodyFlow']) {
+      if (a === b) continue;
+      const g = createObjectPropertiesEditGate();
+      g.setDirty(a, true);
+      g.setDirty(b, true);
+      assert.equal(g.conflict, true);
+      assert.equal(g.begin(a), false);
+      assert.equal(g.begin(b), false);
+      g.setDirty(a, false);
+      assert.equal(g.begin(b), true);
+      for (const c of ['geometry', 'margins', 'bodyFlow']) assert.equal(g.begin(c), false);
+      g.end(b);
+      assert.equal(g.busy, false);
+    }
+});

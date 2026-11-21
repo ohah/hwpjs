@@ -1,6 +1,7 @@
 /** Internal compatibility inventory from reader-runtime and canvas-editor, not a general JSON API. */
 export const SURFACE_READ_KINDS = Object.freeze([
   'object-outer-margins-query',
+  'object-body-flow-query',
   'picture-replacement-query',
   'formatting-capabilities',
   'query-formatting',
@@ -34,6 +35,7 @@ export const SURFACE_READ_KINDS = Object.freeze([
 ] as const);
 export const SURFACE_MUTATION_KINDS = Object.freeze([
   'object-outer-margins-set',
+  'object-body-flow-set',
   'insert-equation',
   'create-chart',
   'delete-note',

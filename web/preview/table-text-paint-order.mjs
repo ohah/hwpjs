@@ -24,8 +24,20 @@ export function topTablePaintRowIndex(rows, matches) {
 }
 
 function paintKey(item) {
-  const rank = paintRank(item.tablePaintLayer),
-    z = item.tablePaintZOrder === undefined ? 0 : item.tablePaintZOrder;
+  paintRank(item.tablePaintLayer);
+  if (
+    item.drawingPaintLayer !== undefined &&
+    (item.drawingPaintLayer !== 'behind' ||
+      (item.tablePaintLayer !== undefined && item.tablePaintLayer !== 'behind'))
+  )
+    throw new RangeError('InvalidDrawingTextPaintLayer');
+  const tableZ = item.tablePaintZOrder === undefined ? 0 : item.tablePaintZOrder;
+  if (!Number.isSafeInteger(tableZ) || tableZ < -2147483648 || tableZ > 4294967295)
+    throw new RangeError('InvalidTablePaintOrder');
+  if (item.drawingPaintLayer === undefined && item.drawingPaintZOrder !== undefined)
+    throw new RangeError('InvalidDrawingTextPaintLayer');
+  const rank = paintRank(item.drawingPaintLayer ?? item.tablePaintLayer),
+    z = item.drawingPaintLayer === undefined ? tableZ : item.drawingPaintZOrder;
   if (!Number.isSafeInteger(z) || z < -2147483648 || z > 4294967295)
     throw new RangeError('InvalidTablePaintOrder');
   return [rank, rank === 1 ? 0 : z];

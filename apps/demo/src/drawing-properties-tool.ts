@@ -1,3 +1,4 @@
+import type { ObjectBodyFlowEditor } from './object-body-flow-form.ts';
 import type { ObjectOuterMarginsEditor } from './object-outer-margins-form.ts';
 import type { ObjectGeometryEditor } from './object-geometry-form.ts';
 import {
@@ -9,7 +10,8 @@ import { createDrawingPropertiesView } from './drawing-properties-view.ts';
 
 export interface DrawingPropertiesToolOptions {
   root: HTMLElement;
-  editor: DrawingPropertiesEditor & Partial<ObjectGeometryEditor & ObjectOuterMarginsEditor>;
+  editor: DrawingPropertiesEditor &
+    Partial<ObjectGeometryEditor & ObjectOuterMarginsEditor & ObjectBodyFlowEditor>;
   onStatus?(text: string): void;
   onClose?(): void;
   onPresentationChange?(): void;
@@ -43,6 +45,10 @@ export function createDrawingPropertiesTool(
           ? (options.editor as ObjectOuterMarginsEditor)
           : undefined,
         () => port.current(capture),
+        typeof options.editor.getObjectBodyFlow === 'function' &&
+          typeof options.editor.dispatchCommand === 'function'
+          ? (options.editor as ObjectBodyFlowEditor)
+          : undefined,
       ),
   });
   return {

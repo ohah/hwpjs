@@ -172,6 +172,7 @@ import { previewRectangleLayers } from './rectangle-layers.mjs';
 import { paintEllipse } from './ellipse-paint.mjs';
 import { paintCurve } from './curve-paint.mjs';
 import { groupedPaintOrder } from './grouped-paint-order.mjs';
+import { behindTextboxScene, paintBehindTextboxScene } from './behind-textbox-scene.mjs';
 import { groupedLayoutCoverage } from './grouped-layout-coverage.mjs';
 import { paintPagePaper } from './page-paper-paint.mjs';
 import { paintPageNumberGlyphs } from './page-number-glyphs.mjs';
@@ -711,6 +712,7 @@ export function createRenderer(
     );
     const rectangleLayers = previewRectangleLayers(pictureDisplay, layout);
     const groupCommands = groupedPaintOrder(pictureDisplay, layout, rectangleLayers, pagePictures);
+    const behindTextboxes = behindTextboxScene(layout, drawingOutlineLayers);
     const groupTextKeys = new Set(
       groupCommands
         .filter((c) => c.kind === 'text' || c.kind === 'curve')
@@ -777,9 +779,11 @@ export function createRenderer(
     for (const item of lineLayers.behind)
       paintLine(ctx, item.line, item.origin, viewport.scrollTop);
     for (const item of drawingOutlineLayers.behind)
-      paintDrawingOutline(ctx, item.drawing.source, item.origin, viewport.scrollTop);
+      if (!behindTextboxes.owners.has(`${item.drawing.section}:${item.drawing.drawingNode}`))
+        paintDrawingOutline(ctx, item.drawing.source, item.origin, viewport.scrollTop);
     for (const drawing of layout.placedDrawings ?? []) {
       if (groupTextKeys.has(`${drawing.section}:${drawing.drawingNode}`)) continue;
+      if (behindTextboxes.owners.has(`${drawing.section}:${drawing.drawingNode}`)) continue;
       paintDrawingFill(ctx, drawing, viewport.scrollTop);
     }
     ctx.font = FONT;
@@ -1362,6 +1366,15 @@ export function createRenderer(
           );
       });
     };
+    paintBehindTextboxScene(behindTextboxes, {
+      fill(item) {
+        if (paintDrawingFill(ctx, item, viewport.scrollTop)) recordFill(item);
+      },
+      outline(item) {
+        paintDrawingOutline(ctx, item.drawing.source, item.origin, viewport.scrollTop);
+      },
+      row: paintTextRow,
+    });
     const scene =
       output?.scene.commands ??
       tablePaintScene(
@@ -1391,6 +1404,7 @@ export function createRenderer(
       }
       const row = command.item,
         i = command.index;
+      if (behindTextboxes.owners.has(`${row.section}:${row.drawingNode}`)) continue;
       if (groupTextKeys.has(`${row.section}:${row.drawingNode}`)) continue;
       paintTextRow(row, i);
     }
@@ -1588,6 +1602,18 @@ export function createRenderer(
         objectActivationTarget(
           {
             ...intentSources,
+            picture: hitPictureLayers(intentSources.pictures, x, y, () => true, {
+              paintOrder: intentSources.paintOrder,
+            }),
+          },
+          x,
+          y,
+        ),
+      behindTextObjectIntentAtLogicalPoint: (x, y) =>
+        objectActivationTarget(
+          {
+            ...intentSources,
+            behindTextOnly: true,
             picture: hitPictureLayers(intentSources.pictures, x, y, () => true, {
               paintOrder: intentSources.paintOrder,
             }),
@@ -2252,6 +2278,25 @@ export function createRenderer(
       selectedObjectEpoch = target ? resourceEpoch : null;
       schedule();
     },
+    // Mode intent has no target or selection receipt. Only an identical scene certificate
+    // can survive an intervening completed caret/presentation repaint before pointerdown.
+    canAcknowledgeObjectSelectionMode(previousFrame, nextFrame) {
+      if (
+        nextFrame !== paintedFrame ||
+        !isPaintedFrameCurrent() ||
+        draft ||
+        interaction.historyPending ||
+        interaction.composition
+      )
+        return false;
+      const before = selectionPaintFrames.get(previousFrame),
+        after = selectionPaintFrames.get(nextFrame);
+      return (
+        !!before?.certificate &&
+        before.certificate === after?.certificate &&
+        after.certificate === paintSceneCertificate
+      );
+    },
     canAcknowledgeObjectSelectionPaint(previousFrame, nextFrame, target) {
       if (
         nextFrame !== paintedFrame ||
@@ -2769,6 +2814,24 @@ export function createRenderer(
       if (!isPaintedFrameCurrent() || draft) return null;
       return objectActivationTarget(
         {
+          content,
+          layout,
+          charts: paintedCharts,
+          picture: hitPictureLayers(paintedPictures, x, y, () => true, {
+            paintOrder: picturePaintOrder,
+          }),
+          outlines: drawingOutlineLayers,
+          borderTolerance: 5 / viewScale,
+        },
+        x,
+        y,
+      );
+    },
+    behindTextObjectAtLogicalPoint(x, y) {
+      if (!isPaintedFrameCurrent() || draft) return null;
+      return objectActivationTarget(
+        {
+          behindTextOnly: true,
           content,
           layout,
           charts: paintedCharts,

@@ -938,6 +938,9 @@ jobs:
             ./apps/demo/tests/object-outer-margins-{form,input,port,wrap}.test.mjs \
             ./apps/demo/tests/object-properties-edit-gate.test.mjs \
             ./tools/tests/object-outer-margins{,-abi}.test.mjs \
+            ./tools/tests/object-body-flow-abi.test.mjs \
+            ./tests/canvas/behind-textbox-renderer.test.mjs \
+            ./tests/canvas/behind-textbox-scene.test.mjs \
             ./tests/canvas/table-existing-minimal-fill.test.mjs \
             ./tests/hwpx/inline-table-empty-cell-hit.test.mjs \
             ./tests/hwpx/inline-table-host-run.test.mjs \
@@ -950,6 +953,12 @@ jobs:
           grep -Eq '^# skipped 0$' "$RUNNER_TEMP/object-outer-margins.tap"
           bun test ./packages/core/tests/commands/object-outer-margins.test.ts ./packages/core/tests/transport/object-outer-margins-admission.test.ts
           node node_modules/typescript/lib/tsc.js --noEmit -p ./tools/tests/tsconfig.object-outer-margins.json
+      - name: Test textbox body flow command and property controls
+        timeout-minutes: 2
+        run: |
+          node --experimental-transform-types --import ./apps/demo/tests/body-flow-core-preload.mjs --test ./tests/js/object-body-flow.test.mjs ./apps/demo/tests/object-body-flow-{form,input,port}.test.mjs
+          bun test ./packages/core/tests/commands/object-body-flow.test.ts ./packages/core/tests/transport/object-body-flow-admission.test.ts
+          node node_modules/typescript/lib/tsc.js --noEmit -p ./apps/demo/tests/tsconfig.object-body-flow.json
       - name: Test selected table object and formatting command regressions
         timeout-minutes: 2
         run: |

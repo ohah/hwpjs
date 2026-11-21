@@ -1,0 +1,667 @@
+{
+  "provenance": {
+    "kind": "own approved HWPX public projection, actual 829d retained frame subset",
+    "sourceSHA256": "1771a379eda0d5c81887f89989c58205ccd003a5765a907a44e836ac1ef21a0a",
+    "source": "BODYFLOW-AFTER-SAVE-HIT.json",
+    "notFullDocument": true
+  },
+  "content": {
+    "format": "hwpx",
+    "drawings": [
+      {
+        "section": 0,
+        "drawingNode": 31,
+        "hostParagraph": 0,
+        "anchorUnit": 0,
+        "source": {
+          "drawing_node": 31,
+          "paragraph": 1,
+          "anchor_unit": 0,
+          "geometry": {
+            "width": 11763,
+            "height": 5476,
+            "width_relative": 4,
+            "height_relative": 2,
+            "treat_as_character": false,
+            "horizontal_offset": 26504,
+            "vertical_offset": 11163
+          },
+          "position": {
+            "flags": [false, false, true, false],
+            "relations": [0, 0, 0, 0]
+          },
+          "flow": {
+            "text_wrap": 2,
+            "text_flow": 0,
+            "z_order": 4,
+            "outside_margins": [0, 0, 0, 0]
+          },
+          "transform_identity": true,
+          "rendering": {
+            "matrix": [1, 0, 0, 0, 1, 0],
+            "matrix_error": null,
+            "flip": [false, false],
+            "angle": 0,
+            "reverse": null,
+            "center": [null, null],
+            "rotate_image": null
+          },
+          "rectangle": {
+            "present": true,
+            "points": [
+              [0, 0],
+              [11763, 0],
+              [11763, 5476],
+              [0, 5476]
+            ],
+            "point_present": [true, true, true, true],
+            "unknown_children": 0
+          },
+          "rendering_corners": [
+            [0, 0],
+            [11763, 0],
+            [11763, 5476],
+            [0, 5476]
+          ],
+          "stroke": {
+            "color": 0,
+            "width": 33,
+            "style": 1
+          },
+          "stroke_error": null,
+          "paint": {
+            "fill_node": null,
+            "shadow_node": 42,
+            "shadow_type": 0
+          },
+          "text": {
+            "node": 43,
+            "list_node": 44,
+            "margin_present": true,
+            "margins": [283, 283, 283, 283],
+            "editable": false,
+            "last_width": 11763,
+            "text_direction": 0,
+            "line_wrap": 0,
+            "vertical_alignment": 1
+          },
+          "caption": null,
+          "group_context": null
+        }
+      }
+    ],
+    "paragraphs": [
+      {
+        "section": 0,
+        "paragraph": 2,
+        "editable": true,
+        "label": "구역 1 · 문단 3 · HWPX 일반 텍스트 편집",
+        "text": "L01 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 ",
+        "selectionOwner": "section:0:body",
+        "nextMergeParagraph": 3,
+        "previousMergeParagraph": 0,
+        "plainEditable": true,
+        "fieldLabels": [],
+        "manualFormulaResults": [],
+        "anchorEditable": false,
+        "anchoredSplitAvailable": false,
+        "automaticNumbers": [],
+        "automaticNumberPrefixes": [],
+        "dutmal": [],
+        "equations": [],
+        "equationPaint": [],
+        "characterRanges": [
+          {
+            "start": 0,
+            "end": 472,
+            "charShapeId": 1
+          }
+        ],
+        "selectable": true,
+        "tabSources": null,
+        "paraShapeId": 1,
+        "paragraphShape": {
+          "spacingFormat": "hwpx",
+          "heading": {
+            "kind": "none",
+            "marker": null,
+            "id": null,
+            "level": null,
+            "placement": null
+          },
+          "breakSettings": {
+            "widow_orphan": false,
+            "keep_with_next": false,
+            "keep_lines": false,
+            "page_break_before": false
+          },
+          "alignment": 0,
+          "indent": 0,
+          "left": 0,
+          "right": 0,
+          "before": 0,
+          "after": 0,
+          "legacySpacingKind": 0,
+          "legacySpacing": 160
+        },
+        "tabDefinitionId": 0,
+        "tabDefinition": null,
+        "sectionTabSources": null,
+        "sectionTabInterval": null
+      },
+      {
+        "section": 0,
+        "paragraph": 1,
+        "editable": true,
+        "label": "구역 1 · 문단 2 · 중첩 · HWPX 일반 텍스트 편집",
+        "text": "글상자",
+        "selectionOwner": null,
+        "nextMergeParagraph": null,
+        "previousMergeParagraph": null,
+        "plainEditable": true,
+        "fieldLabels": [],
+        "manualFormulaResults": [],
+        "anchorEditable": false,
+        "anchoredSplitAvailable": false,
+        "automaticNumbers": [],
+        "automaticNumberPrefixes": [],
+        "dutmal": [],
+        "equations": [],
+        "equationPaint": [],
+        "drawingText": {
+          "drawingNode": 31,
+          "textNode": 43,
+          "listNode": 44
+        },
+        "characterRanges": [
+          {
+            "start": 0,
+            "end": 3,
+            "charShapeId": 1
+          }
+        ],
+        "selectable": true,
+        "tabSources": null,
+        "paraShapeId": 2,
+        "paragraphShape": {
+          "spacingFormat": "hwpx",
+          "heading": {
+            "kind": "none",
+            "marker": null,
+            "id": null,
+            "level": null,
+            "placement": null
+          },
+          "breakSettings": {
+            "widow_orphan": false,
+            "keep_with_next": false,
+            "keep_lines": false,
+            "page_break_before": false
+          },
+          "alignment": 0,
+          "indent": 0,
+          "left": 0,
+          "right": 0,
+          "before": 0,
+          "after": 0,
+          "legacySpacingKind": 0,
+          "legacySpacing": 160
+        },
+        "tabDefinitionId": 0,
+        "tabDefinition": null,
+        "sectionTabSources": null,
+        "sectionTabInterval": null
+      }
+    ]
+  },
+  "layout": {
+    "spatialRows": true,
+    "placedDrawings": [
+      {
+        "section": 0,
+        "drawingNode": 31,
+        "hostParagraph": 0,
+        "anchorUnit": 0,
+        "rectangle": {
+          "x": 373.38666666666666,
+          "y": 168.84,
+          "width": 156.84,
+          "height": 73.01333333333334
+        },
+        "pageOrdinal": 0,
+        "fill": {
+          "state": "none"
+        },
+        "behindTextbox": true,
+        "layer": "behind",
+        "zOrder": 4
+      }
+    ],
+    "rows": [
+      {
+        "text": "WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM0123456789 WM",
+        "kind": "text",
+        "section": 0,
+        "paragraph": 2,
+        "editable": true,
+        "selectable": true,
+        "startUnit": 69,
+        "endUnit": 136,
+        "boundaries": [
+          {
+            "unit": 69,
+            "x": 0
+          },
+          {
+            "unit": 70,
+            "x": 12.80059814453125
+          },
+          {
+            "unit": 71,
+            "x": 24.35150146484375
+          },
+          {
+            "unit": 72,
+            "x": 32.64801025390625
+          },
+          {
+            "unit": 73,
+            "x": 38.731536865234375
+          },
+          {
+            "unit": 74,
+            "x": 46.67657470703125
+          },
+          {
+            "unit": 75,
+            "x": 54.93403625488281
+          },
+          {
+            "unit": 76,
+            "x": 63.41279602050781
+          },
+          {
+            "unit": 77,
+            "x": 71.5531005859375
+          },
+          {
+            "unit": 78,
+            "x": 79.94073486328125
+          },
+          {
+            "unit": 79,
+            "x": 87.43016052246094
+          },
+          {
+            "unit": 80,
+            "x": 95.84382629394531
+          },
+          {
+            "unit": 81,
+            "x": 104.23146057128906
+          },
+          {
+            "unit": 82,
+            "x": 108.51636637369793
+          },
+          {
+            "unit": 83,
+            "x": 121.31696451822918
+          },
+          {
+            "unit": 84,
+            "x": 132.86786783854168
+          },
+          {
+            "unit": 85,
+            "x": 141.16437662760418
+          },
+          {
+            "unit": 86,
+            "x": 147.2479032389323
+          },
+          {
+            "unit": 87,
+            "x": 155.19294108072918
+          },
+          {
+            "unit": 88,
+            "x": 163.45040262858075
+          },
+          {
+            "unit": 89,
+            "x": 171.92916239420575
+          },
+          {
+            "unit": 90,
+            "x": 180.06946695963543
+          },
+          {
+            "unit": 91,
+            "x": 188.45710123697918
+          },
+          {
+            "unit": 92,
+            "x": 195.94652689615887
+          },
+          {
+            "unit": 93,
+            "x": 204.36019266764325
+          },
+          {
+            "unit": 94,
+            "x": 212.747826944987
+          },
+          {
+            "unit": 95,
+            "x": 217.03273274739587
+          },
+          {
+            "unit": 96,
+            "x": 229.83333089192712
+          },
+          {
+            "unit": 97,
+            "x": 241.38423421223962
+          },
+          {
+            "unit": 98,
+            "x": 249.68074300130212
+          },
+          {
+            "unit": 99,
+            "x": 255.76426961263024
+          },
+          {
+            "unit": 100,
+            "x": 263.7093074544271
+          },
+          {
+            "unit": 101,
+            "x": 271.9667690022787
+          },
+          {
+            "unit": 102,
+            "x": 280.4455287679037
+          },
+          {
+            "unit": 103,
+            "x": 288.58583333333337
+          },
+          {
+            "unit": 104,
+            "x": 296.9734676106771
+          },
+          {
+            "unit": 105,
+            "x": 304.4628932698568
+          },
+          {
+            "unit": 106,
+            "x": 312.8765590413412
+          },
+          {
+            "unit": 107,
+            "x": 321.26419331868493
+          },
+          {
+            "unit": 108,
+            "x": 325.5490991210938
+          },
+          {
+            "unit": 109,
+            "x": 338.349697265625
+          },
+          {
+            "unit": 110,
+            "x": 349.9006005859375
+          },
+          {
+            "unit": 111,
+            "x": 358.197109375
+          },
+          {
+            "unit": 112,
+            "x": 364.28063598632815
+          },
+          {
+            "unit": 113,
+            "x": 372.225673828125
+          },
+          {
+            "unit": 114,
+            "x": 380.4831353759766
+          },
+          {
+            "unit": 115,
+            "x": 388.9618951416016
+          },
+          {
+            "unit": 116,
+            "x": 397.1021997070313
+          },
+          {
+            "unit": 117,
+            "x": 405.489833984375
+          },
+          {
+            "unit": 118,
+            "x": 412.9792596435547
+          },
+          {
+            "unit": 119,
+            "x": 421.3929254150391
+          },
+          {
+            "unit": 120,
+            "x": 429.78055969238284
+          },
+          {
+            "unit": 121,
+            "x": 434.06546549479174
+          },
+          {
+            "unit": 122,
+            "x": 446.866063639323
+          },
+          {
+            "unit": 123,
+            "x": 458.4169669596355
+          },
+          {
+            "unit": 124,
+            "x": 466.713475748698
+          },
+          {
+            "unit": 125,
+            "x": 472.7970023600261
+          },
+          {
+            "unit": 126,
+            "x": 480.742040201823
+          },
+          {
+            "unit": 127,
+            "x": 488.99950174967455
+          },
+          {
+            "unit": 128,
+            "x": 497.47826151529955
+          },
+          {
+            "unit": 129,
+            "x": 505.61856608072924
+          },
+          {
+            "unit": 130,
+            "x": 514.006200358073
+          },
+          {
+            "unit": 131,
+            "x": 521.4956260172527
+          },
+          {
+            "unit": 132,
+            "x": 529.909291788737
+          },
+          {
+            "unit": 133,
+            "x": 538.2969260660808
+          },
+          {
+            "unit": 134,
+            "x": 542.5818318684896
+          },
+          {
+            "unit": 135,
+            "x": 555.3824300130209
+          },
+          {
+            "unit": 136,
+            "x": 566.9333333333334
+          }
+        ],
+        "textHeight": 13.333333333333332,
+        "textTop": 0,
+        "paragraphShape": {
+          "spacingFormat": "hwpx",
+          "heading": {
+            "kind": "none",
+            "marker": null,
+            "id": null,
+            "level": null,
+            "placement": null
+          },
+          "breakSettings": {
+            "widow_orphan": false,
+            "keep_with_next": false,
+            "keep_lines": false,
+            "page_break_before": false
+          },
+          "alignment": 0,
+          "indent": 0,
+          "left": 0,
+          "right": 0,
+          "before": 0,
+          "after": 0,
+          "legacySpacingKind": 0,
+          "legacySpacing": 160
+        },
+        "paragraphX": 0,
+        "paragraphReferenceX": 0,
+        "width": 566.9333333333334,
+        "y": 194.93333333333334,
+        "height": 21.33333333333333,
+        "x": 133.38666666666666,
+        "columnOrdinal": 0,
+        "zoneOrdinal": 0,
+        "pageOrdinal": 0,
+        "referenceBoxes": {
+          "paper": {
+            "x": 20,
+            "y": 20,
+            "width": 793.7066666666667,
+            "height": 1122.5066666666667
+          },
+          "page": {
+            "x": 133.38666666666666,
+            "y": 152.26666666666668,
+            "width": 566.9333333333334,
+            "height": 876.8533333333334
+          },
+          "column": {
+            "x": 133.38666666666666,
+            "y": 152.26666666666668,
+            "width": 566.9333333333334,
+            "height": 876.8533333333334
+          }
+        }
+      },
+      {
+        "kind": "text",
+        "section": 0,
+        "paragraph": 1,
+        "text": "글상자",
+        "startUnit": 0,
+        "endUnit": 3,
+        "boundaries": [
+          {
+            "unit": 0,
+            "x": 0
+          },
+          {
+            "unit": 1,
+            "x": 11.530441284179688
+          },
+          {
+            "unit": 2,
+            "x": 23.060882568359375
+          },
+          {
+            "unit": 3,
+            "x": 34.59132385253906
+          }
+        ],
+        "textHeight": 13.333333333333332,
+        "height": 13.333333333333332,
+        "paragraphShape": {
+          "spacingFormat": "hwpx",
+          "heading": {
+            "kind": "none",
+            "marker": null,
+            "id": null,
+            "level": null,
+            "placement": null
+          },
+          "breakSettings": {
+            "widow_orphan": false,
+            "keep_with_next": false,
+            "keep_lines": false,
+            "page_break_before": false
+          },
+          "alignment": 0,
+          "indent": 0,
+          "left": 0,
+          "right": 0,
+          "before": 0,
+          "after": 0,
+          "legacySpacingKind": 0,
+          "legacySpacing": 160
+        },
+        "paragraphX": 0,
+        "width": 149.29333333333332,
+        "editable": true,
+        "selectable": true,
+        "textTop": 0,
+        "x": 377.15999999999997,
+        "y": 198.68,
+        "columnOrdinal": 0,
+        "drawingNode": 31,
+        "listNode": 44,
+        "pageOrdinal": 0,
+        "referenceBoxes": {
+          "paper": {
+            "x": 20,
+            "y": 20,
+            "width": 793.7066666666667,
+            "height": 1122.5066666666667
+          },
+          "page": {
+            "x": 133.38666666666666,
+            "y": 152.26666666666668,
+            "width": 566.9333333333334,
+            "height": 876.8533333333334
+          },
+          "column": {
+            "x": 133.38666666666666,
+            "y": 152.26666666666668,
+            "width": 566.9333333333334,
+            "height": 876.8533333333334
+          }
+        },
+        "drawingPaintLayer": "behind",
+        "drawingPaintZOrder": 4
+      }
+    ]
+  }
+}

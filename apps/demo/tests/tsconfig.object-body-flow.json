@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "skipLibCheck": true,
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["esnext", "dom", "dom.iterable"],
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "types": [],
+    "paths": {
+      "@hwpjs/core": ["../../../packages/core/src/index.ts"]
+    }
+  },
+  "files": ["../src/assets.d.ts", "../src/drawing-properties-tool.ts"]
+}

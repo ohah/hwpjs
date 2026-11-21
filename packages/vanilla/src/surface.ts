@@ -836,6 +836,14 @@ export function createCanvasSurface({
         ? null
         : renderer.objectAtLogicalPoint(x, y),
     pendingHit: (scene, x, y) => (scene.frame as any).objectIntentAtLogicalPoint?.(x, y) ?? null,
+    behindTextHit: (_scene, x, y) =>
+      renderer.readOnlyPreviewAtLogicalPoint?.(x, y) === true
+        ? null
+        : (renderer.behindTextObjectAtLogicalPoint?.(x, y) ?? null),
+    pendingBehindTextHit: (scene, x, y) =>
+      (scene.frame as any).behindTextObjectIntentAtLogicalPoint?.(x, y) ?? null,
+    acknowledgeArmedPaint: (previous, next) =>
+      renderer.canAcknowledgeObjectSelectionMode(previous.frame, next.frame),
     acknowledgePaint: (previous, next, target) =>
       renderer.canAcknowledgeObjectSelectionPaint(previous.frame, next.frame, target),
     hostFocused: objectHostFocused,
@@ -857,7 +865,13 @@ export function createCanvasSurface({
       committingObjectState = request.scene.state;
       try {
         if (
-          !direct.selectPaintedObject(request.target, request.x, request.y, request.current) ||
+          !direct.selectPaintedObject(
+            request.target,
+            request.x,
+            request.y,
+            request.current,
+            request.behindTextOnly,
+          ) ||
           editor.getEditorState() !== request.scene.state ||
           !ownedLease.isActive() ||
           modalOpen()
@@ -3192,6 +3206,23 @@ export function createCanvasSurface({
       return objectSelection?.current() ?? null;
     },
     /** Explicit UI command, with the same current selection and callback owner as focused P. */
+    requestBehindTextObjectSelection() {
+      const scene = captureObjectScene();
+      if (
+        !scene ||
+        !rangeWritable(scene.state) ||
+        (scene.source as any).format !== 'hwpx' ||
+        !(scene.frame as any).layout?.placedDrawings?.some((p: any) => p.behindTextbox === true)
+      )
+        return false;
+      canvas.focus({ preventScroll: true });
+      const armed = objectSelection?.armBehindTextSelection() === true;
+      if (armed)
+        status(
+          '글 뒤 개체의 테두리를 한 번 클릭한 뒤 P 또는 개체 속성을 선택하세요. Esc로 취소합니다.',
+        );
+      return armed;
+    },
     requestSelectedObjectProperties() {
       return objectSelection?.requestProperties() ?? false;
     },

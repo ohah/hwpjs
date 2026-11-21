@@ -122,6 +122,7 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       registerObjectPropertiesRequest: objectActivations.registerProperties,
       getSelectedObject: objectActivations.getSelectedObject,
       requestSelectedObjectProperties: objectActivations.requestSelectedObjectProperties,
+      requestBehindTextObjectSelection: objectActivations.requestBehindTextObjectSelection,
       registerObjectPropertiesControl: objectActivations.registerObjectPropertiesControl,
       subscribeObjectSelection: objectActivations.subscribeObjectSelection,
       captureSourceTableCellSplit: () =>
@@ -222,6 +223,7 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       registerObjectPropertiesRequest: objectActivations.registerProperties,
       getSelectedObject: objectActivations.getSelectedObject,
       requestSelectedObjectProperties: objectActivations.requestSelectedObjectProperties,
+      requestBehindTextObjectSelection: objectActivations.requestBehindTextObjectSelection,
       registerObjectPropertiesControl: objectActivations.registerObjectPropertiesControl,
       subscribeObjectSelection: objectActivations.subscribeObjectSelection,
       captureSourceTableCellSplit: () => surface?.captureSourceTableCellSplit() ?? null,

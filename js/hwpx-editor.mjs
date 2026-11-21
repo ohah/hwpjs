@@ -1,3 +1,4 @@
+import { createObjectBodyFlowApi } from './object-body-flow.mjs';
 import { createObjectOuterMarginsApi } from './object-outer-margins.mjs';
 import { createLivePictureReplacementApi } from './live-picture-replacement.mjs';
 import { createLiveImageInsertApi } from './live-image-insertion.mjs';
@@ -241,6 +242,7 @@ export async function createHwpxEditor(source) {
     ...createCreatedCellPropertiesApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
     ...createObjectGeometryApi({ wasm, memory, check: ready, format: 'hwpx' }),
     ...createObjectOuterMarginsApi({ wasm, memory, check: ready }),
+    ...createObjectBodyFlowApi({ wasm, memory, check: ready }),
     ...createLivePictureReplacementApi({
       format: 'hwpx',
       wasm,

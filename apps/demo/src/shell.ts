@@ -58,6 +58,7 @@ const toolGroups: readonly (readonly [string, readonly Tool[]])[] = [
       ['insert-shape', '도형', 'insert-shape'],
       ['insert-image', '그림', 'insert-image'],
       ['object-properties', '개체 속성', 'object-properties'],
+      ['select-behind-text-object', '글 뒤 개체 선택', 'object-properties'],
     ],
   ],
   [
@@ -161,6 +162,7 @@ const menus: readonly [string, readonly DemoCommand[]][] = [
       'generated-table-insert-column',
       'generated-table-delete-column',
       'object-properties',
+      'select-behind-text-object',
     ],
   ],
   ['검토', ['insert-comment']],
@@ -395,7 +397,7 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
         id,
         undefined,
         undefined,
-        opensDialog
+        opensDialog || id === 'select-behind-text-object'
           ? () => {
               details.open = false;
               summary.focus();

@@ -1,4 +1,15 @@
 import {
+  SET_OBJECT_BODY_FLOW_COMMAND,
+  captureObjectBodyFlowPayload,
+  objectBodyFlowMessage,
+  type SetObjectBodyFlowPayload,
+  type ObjectBodyFlowTarget,
+  type ObjectBodyFlowSelector,
+  type ObjectBodyFlowRead,
+} from '../commands/object-body-flow.ts';
+import type { NativeObjectBodyFlowObservation } from '../commands/object-body-flow-dto.ts';
+import { checkedObjectBodyFlowObservation } from '../../../../js/object-body-flow.mjs';
+import {
   SET_OBJECT_OUTER_MARGINS_COMMAND,
   captureObjectOuterMarginsPayload,
   objectOuterMarginsMessage,
@@ -1464,6 +1475,10 @@ export function createEditor(options: CreateEditorOptions) {
     ObjectOuterMarginsTarget,
     { state: EditorState; runtime: EditorRuntime; native: NativeObjectOuterMarginsObservation }
   >();
+  const objectBodyFlowTargets = new WeakMap<
+    ObjectBodyFlowTarget,
+    { state: EditorState; runtime: EditorRuntime; native: NativeObjectBodyFlowObservation }
+  >();
   const pictureReplacementTargets = new WeakMap<
     PictureReplacementTarget,
     { state: EditorState; runtime: EditorRuntime; native: PictureReplacementOwner }
@@ -1493,6 +1508,7 @@ export function createEditor(options: CreateEditorOptions) {
     const pageSettings = command.id === EDIT_PAGE_SETTINGS_COMMAND.id;
     const objectGeometry = command.id === SET_OBJECT_GEOMETRY_COMMAND.id;
     const outerMargins = command.id === SET_OBJECT_OUTER_MARGINS_COMMAND.id;
+    const bodyFlow = command.id === SET_OBJECT_BODY_FLOW_COMMAND.id;
     const pictureReplacement = command.id === REPLACE_PICTURE_COMMAND.id;
     const tableCell =
       merge ||
@@ -1502,7 +1518,8 @@ export function createEditor(options: CreateEditorOptions) {
       pageSettings ||
       objectGeometry ||
       pictureReplacement ||
-      outerMargins;
+      outerMargins ||
+      bodyFlow;
     const inlineKind =
       command.id === INSERT_EQUATION_COMMAND.id
         ? 'equation'
@@ -1521,36 +1538,38 @@ export function createEditor(options: CreateEditorOptions) {
         : command.id === INSERT_ENDNOTE_COMMAND.id
           ? 'end'
           : undefined;
-    const owned = outerMargins
-      ? captureObjectOuterMarginsPayload(payload)
-      : pictureReplacement
-        ? captureReplacePicturePayload(payload)
-        : command.id === INSERT_IMAGE_COMMAND.id
-          ? captureImageInsertPayload(payload)
-          : command.id === DELETE_NOTE_COMMAND.id
-            ? captureNoteDeletePayload(payload)
-            : noteKind
-              ? captureNoteInsertPayload(payload)
-              : logicalSplice
-                ? captureCreatedCellSplicePayload(payload)
-                : objectGeometry
-                  ? captureObjectGeometryPayload(payload)
-                  : inlineKind
-                    ? captureInlineObjectInsertPayload(payload, inlineKind)
-                    : pageSettings
-                      ? capturePageSettingsPayload(payload)
-                      : split
-                        ? captureSourceTableCellSplitPayload(payload)
-                        : merge || width || height
-                          ? payload
-                          : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
-                            ? captureSourceTableGridRequest(
-                                payload,
-                                (snapshot.content as any)?.format,
-                              )
-                            : command.id === INSERT_DOCUMENT_COMMAND.id
-                              ? captureDocumentInsertPayload(payload)
-                              : copyOwned(payload);
+    const owned = bodyFlow
+      ? captureObjectBodyFlowPayload(payload)
+      : outerMargins
+        ? captureObjectOuterMarginsPayload(payload)
+        : pictureReplacement
+          ? captureReplacePicturePayload(payload)
+          : command.id === INSERT_IMAGE_COMMAND.id
+            ? captureImageInsertPayload(payload)
+            : command.id === DELETE_NOTE_COMMAND.id
+              ? captureNoteDeletePayload(payload)
+              : noteKind
+                ? captureNoteInsertPayload(payload)
+                : logicalSplice
+                  ? captureCreatedCellSplicePayload(payload)
+                  : objectGeometry
+                    ? captureObjectGeometryPayload(payload)
+                    : inlineKind
+                      ? captureInlineObjectInsertPayload(payload, inlineKind)
+                      : pageSettings
+                        ? capturePageSettingsPayload(payload)
+                        : split
+                          ? captureSourceTableCellSplitPayload(payload)
+                          : merge || width || height
+                            ? payload
+                            : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
+                              ? captureSourceTableGridRequest(
+                                  payload,
+                                  (snapshot.content as any)?.format,
+                                )
+                              : command.id === INSERT_DOCUMENT_COMMAND.id
+                                ? captureDocumentInsertPayload(payload)
+                                : copyOwned(payload);
     return {
       command: command as EditorCommand<unknown>,
       payload: owned,
@@ -1642,6 +1661,27 @@ export function createEditor(options: CreateEditorOptions) {
         guard();
         return await mutate(
           objectOuterMarginsMessage(owned.native, payload.margins),
+          pending.token,
+          false,
+          guard,
+        );
+      }
+      if (pending.command.id === SET_OBJECT_BODY_FLOW_COMMAND.id) {
+        const payload = pending.payload as SetObjectBodyFlowPayload;
+        const owned = objectBodyFlowTargets.get(payload.target);
+        if (!owned) throw Error('ForeignObjectBodyFlowTarget');
+        const guard = () => {
+          requireReady(pending.token, true);
+          if (state !== owned.state || active !== owned.runtime)
+            throw Error('StaleObjectBodyFlowTarget');
+          if (state.nativeHistoryRevision !== owned.native.geometry.historyRevision)
+            throw Error('StaleObjectBodyFlowBinding');
+          if (!hasRuntimeAdmission(active, 'object-body-flow-set'))
+            throw Error('UnsupportedObjectBodyFlowRuntime');
+        };
+        guard();
+        return await mutate(
+          objectBodyFlowMessage(owned.native, payload.flow),
           pending.token,
           false,
           guard,
@@ -2322,6 +2362,13 @@ export function createEditor(options: CreateEditorOptions) {
       if (state !== owned.state || active !== owned.runtime)
         return Promise.resolve(reject(context(pending.token), 'StaleObjectOuterMarginsTarget'));
     }
+    if (command.id === SET_OBJECT_BODY_FLOW_COMMAND.id) {
+      const owned = objectBodyFlowTargets.get((pending.payload as SetObjectBodyFlowPayload).target);
+      if (!owned)
+        return Promise.resolve(reject(context(pending.token), 'ForeignObjectBodyFlowTarget'));
+      if (state !== owned.state || active !== owned.runtime)
+        return Promise.resolve(reject(context(pending.token), 'StaleObjectBodyFlowTarget'));
+    }
     if (command.id === REPLACE_PICTURE_COMMAND.id) {
       const owned = pictureReplacementTargets.get(
         (pending.payload as ReplacePicturePayload).target,
@@ -2770,6 +2817,8 @@ export function createEditor(options: CreateEditorOptions) {
         'created-cell-text-target',
         'object-outer-margins-query',
         'object-outer-margins-set',
+        'object-body-flow-query',
+        'object-body-flow-set',
         'picture-replacement-query',
         'picture-replace',
         'object-geometry-query',
@@ -3070,6 +3119,83 @@ export function createEditor(options: CreateEditorOptions) {
           section: native.geometry.selector.section,
           drawingNode: native.geometry.selector.node,
           margins: native.margins,
+        }),
+      });
+    });
+  }
+  function getObjectBodyFlow(
+    selector: ObjectBodyFlowSelector,
+    options: { token?: StateToken } = {},
+  ): Promise<ObjectBodyFlowRead> {
+    assertPublicMutation();
+    const snapshot = state;
+    const selected = checkedObjectGeometrySelector(selector);
+    if (selected.kind !== 'drawing') throw Error('InvalidObjectBodyFlowSelector');
+    const settings = copyOwned(options);
+    if (
+      !settings ||
+      typeof settings !== 'object' ||
+      Array.isArray(settings) ||
+      Object.keys(settings).some((key) => key !== 'token') ||
+      settings.token === null
+    )
+      throw Error('InvalidObjectBodyFlowOptions');
+    const token = copyOwned(settings.token ?? snapshot.token);
+    if (state !== snapshot) throw Error('StaleObjectBodyFlowTarget');
+    return enqueue(async () => {
+      requireReady(token, true);
+      const runtime = active;
+      const guard = () => {
+        requireReady(token, true);
+        if (state !== snapshot || active !== runtime) throw Error('StaleObjectBodyFlowTarget');
+      };
+      guard();
+      const content = snapshot.content as Record<string, unknown> | undefined;
+      const capabilities = snapshot.capabilities as Record<string, unknown> | undefined;
+      if (content?.readOnly === true || capabilities?.readOnly === true)
+        return { state: 'unavailable', reason: 'ReadOnlyDocument' };
+      if (!content || content.format !== 'hwpx' || content.limited || content.window)
+        return { state: 'unavailable', reason: 'ObjectBodyFlowRequiresFullDocument' };
+      if (
+        snapshot.nativeHistoryStats?.protocolVersion !== 2 ||
+        !Number.isSafeInteger(snapshot.nativeHistoryRevision) ||
+        snapshot.nativeHistoryRevision! < 0 ||
+        snapshot.nativeHistoryRevision! >= 0xffffffff
+      )
+        return { state: 'unavailable', reason: 'HistoryProtocol2Required' };
+      if (!runtime || !hasRuntimeAdmission(runtime, 'object-body-flow-query'))
+        return { state: 'unavailable', reason: 'UnsupportedObjectBodyFlowRuntime' };
+      const reply = await readRequest(
+        { kind: 'object-body-flow-query', selector: selected },
+        token,
+        guard,
+        true,
+      );
+      guard();
+      if (reply.bodyFlow === null)
+        return {
+          state: 'unavailable',
+          reason: typeof reply.reason === 'string' ? reply.reason : 'ObjectBodyFlowUnavailable',
+        };
+      const native = checkedObjectBodyFlowObservation(reply.bodyFlow);
+      if (
+        native.geometry.format !== content.format ||
+        native.geometry.selector.section !== selected.section ||
+        native.geometry.selector.node !== selected.node ||
+        native.geometry.historyRevision !== snapshot.nativeHistoryRevision
+      )
+        throw Error('ObjectBodyFlowBindingMismatch');
+      guard();
+      const target = Object.freeze({}) as ObjectBodyFlowTarget;
+      objectBodyFlowTargets.set(target, { state: snapshot, runtime, native });
+      return Object.freeze({
+        state: 'available',
+        target,
+        observation: Object.freeze({
+          format: native.geometry.format,
+          section: native.geometry.selector.section,
+          drawingNode: native.geometry.selector.node,
+          flow: native.flow,
         }),
       });
     });
@@ -4255,6 +4381,7 @@ export function createEditor(options: CreateEditorOptions) {
     getInlineObjectInsertTarget: geometryGuard(getInlineObjectInsertTarget),
     getCreatedCellTextTarget: geometryGuard(getCreatedCellTextTarget),
     getObjectOuterMargins: geometryGuard(getObjectOuterMargins),
+    getObjectBodyFlow: geometryGuard(getObjectBodyFlow),
     getPictureReplacement: geometryGuard(getPictureReplacement),
     getObjectGeometry: geometryGuard(getObjectGeometry),
     getPageSettings: geometryGuard(getPageSettings),

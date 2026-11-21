@@ -4707,7 +4707,7 @@ export function createCanvasEditor({
       return true;
     },
     // Internal UX transition only. This never returns a Native/edit target.
-    selectPaintedObject(identity, x, y, current) {
+    selectPaintedObject(identity, x, y, current, behindTextOnly = false) {
       if (
         events.signal.aborted ||
         !this.settled() ||
@@ -4720,7 +4720,10 @@ export function createCanvasEditor({
         !current()
       )
         return false;
-      const actual = renderer.objectAtLogicalPoint?.(x, y);
+      if (behindTextOnly && identity?.kind !== 'drawing') return false;
+      const actual = behindTextOnly
+        ? renderer.behindTextObjectAtLogicalPoint?.(x, y)
+        : renderer.objectAtLogicalPoint?.(x, y);
       const field =
         identity?.kind === 'chart'
           ? 'wrapper'

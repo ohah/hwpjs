@@ -284,7 +284,9 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
         'picture-replacement-query',
         'picture-replace',
         'object-outer-margins-query',
+        'object-body-flow-query',
         'object-outer-margins-set',
+        'object-body-flow-set',
       ].includes(kind ?? '') ||
         valid()) &&
       // This command re-resolves its complete value target inside the worker.

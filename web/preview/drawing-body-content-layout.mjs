@@ -24,6 +24,7 @@ import { resolveDrawingWrapReservations } from './drawing-wrap-reservations.mjs'
 import { withInlineDrawingCollisionSources } from './inline-drawing-collision-sources.mjs';
 import { retainedGroupDrawingOwnership } from './retained-group-drawing-ownership.mjs';
 import { drawingNeedsCollision } from './drawing-collision-policy.mjs';
+import { behindTextboxScopeError } from './behind-textbox-scene.mjs';
 
 // 본문 페이지 계산은 기존 경로에 위임하고 도형 내부 목록은 별도로 조판합니다.
 export function layoutDrawingBodyContent(
@@ -94,6 +95,7 @@ function layoutDrawingBodyAttempt(
       fill.state,
       true,
       true,
+      content.format === 'hwpx',
     );
     if (policyReason)
       return {
@@ -103,6 +105,8 @@ function layoutDrawingBodyAttempt(
         policyReason,
       };
   }
+  const behindScope = behindTextboxScopeError(content, retainedDrawings, retainedContainers);
+  if (behindScope) return unavailable(behindScope);
   const bodyParagraphs = content.paragraphs.filter(
     (p) => (!p.drawingText || retainedText(p)) && (!p.drawingCaption || retainedCaption(p)),
   );
@@ -297,9 +301,16 @@ function layoutDrawingBodyAttempt(
       };
     preparedDrawings.push({ drawing, result });
     rows.push(
-      ...result.rows.map((row) =>
-        result.overflowed === true ? { ...row, drawingTextOverflow: 'extend-last-column' } : row,
-      ),
+      ...result.rows.map((row) => ({
+        ...row,
+        ...(result.overflowed === true ? { drawingTextOverflow: 'extend-last-column' } : {}),
+        ...(root.source.flow.text_wrap === 2
+          ? {
+              drawingPaintLayer: 'behind',
+              drawingPaintZOrder: signedInt32(root.source.flow.z_order),
+            }
+          : {}),
+      })),
     );
     placedDrawings.push({
       section: drawing.section,
@@ -309,6 +320,13 @@ function layoutDrawingBodyAttempt(
       rectangle: result.rectangle,
       pageOrdinal: result.pageOrdinal,
       fill: drawingFillPlan(content, drawing),
+      ...(root.source.flow.text_wrap === 2
+        ? {
+            behindTextbox: true,
+            layer: 'behind',
+            zOrder: signedInt32(root.source.flow.z_order),
+          }
+        : {}),
     });
   }
   if (preparedDrawings.some((item) => drawingNeedsCollision(item.drawing.source))) {

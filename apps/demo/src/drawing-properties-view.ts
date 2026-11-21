@@ -1,3 +1,4 @@
+import { createObjectBodyFlowForm, type ObjectBodyFlowEditor } from './object-body-flow-form.ts';
 import { createObjectPropertiesEditGate } from './object-properties-edit-gate.ts';
 import {
   createObjectOuterMarginsForm,
@@ -15,6 +16,7 @@ export function createDrawingPropertiesView(
   editor?: ObjectGeometryEditor,
   marginsEditor?: ObjectOuterMarginsEditor,
   drawingCurrent: () => boolean = () => true,
+  bodyFlowEditor?: ObjectBodyFlowEditor,
 ): DrawingPropertiesView {
   const doc = root.ownerDocument;
   const layer = createDialogLayer(root, {
@@ -25,7 +27,7 @@ export function createDrawingPropertiesView(
   });
   const scope = doc.createElement('p');
   scope.textContent =
-    '아래 내용은 현재 문서에서 조회한 정보입니다. 크기와 위치는 편집 가능한 경우 적용할 수 있습니다.';
+    '아래 내용은 현재 문서에서 조회한 정보입니다. 크기와 위치, 바깥 여백, 본문 배치는 편집 가능한 경우 하나씩 적용할 수 있습니다.';
   const values = doc.createElement('dl');
   for (const field of capture.fields) {
     const term = doc.createElement('dt'),
@@ -64,14 +66,18 @@ export function createDrawingPropertiesView(
   layer.body.append(editStatus);
   const unsubscribeGate = editGate.subscribe(() => {
     editStatus.textContent = editGate.conflict
-      ? '한 번에 크기와 위치 또는 바깥 여백 중 하나만 변경하세요. 다른 값을 되돌리거나 속성 창을 다시 열어주세요.'
+      ? '한 번에 크기와 위치, 바깥 여백, 본문 배치 중 하나만 변경하세요. 다른 값을 되돌리거나 속성 창을 다시 열어주세요.'
       : '';
   });
   const geometry = createObjectGeometryForm(
     layer.body,
     layer.footer,
     editor,
-    { kind: 'drawing', section: capture.target.section, node: capture.target.drawingNode },
+    {
+      kind: 'drawing',
+      section: capture.target.section,
+      node: capture.target.drawingNode,
+    },
     onDismiss,
     editGate,
   );
@@ -79,7 +85,24 @@ export function createDrawingPropertiesView(
     layer.body,
     layer.footer,
     marginsEditor,
-    { kind: 'drawing', section: capture.target.section, node: capture.target.drawingNode },
+    {
+      kind: 'drawing',
+      section: capture.target.section,
+      node: capture.target.drawingNode,
+    },
+    drawingCurrent,
+    editGate,
+    onDismiss,
+  );
+  const bodyFlow = createObjectBodyFlowForm(
+    layer.body,
+    layer.footer,
+    bodyFlowEditor,
+    {
+      kind: 'drawing',
+      section: capture.target.section,
+      node: capture.target.drawingNode,
+    },
     drawingCurrent,
     editGate,
     onDismiss,
@@ -96,6 +119,7 @@ export function createDrawingPropertiesView(
       unsubscribeGate();
       geometry.dispose();
       margins.dispose();
+      bodyFlow.dispose();
       layer.destroy();
     },
   };

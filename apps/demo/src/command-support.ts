@@ -58,6 +58,7 @@ export const DEMO_COMMAND_REGISTRY = Object.freeze({
   'paragraph-properties': entry('문단 속성', '서식', true),
   'paragraph-bullets': entry('글머리표 적용/해제', '서식', true),
   'object-properties': entry('개체 속성', '서식'),
+  'select-behind-text-object': entry('글 뒤 개체 선택', '개체'),
   'insert-header': entry('머리말', '삽입'),
   'insert-footer': entry('꼬리말', '삽입'),
   'toggle-paragraph-marks': entry('문단 부호', '보기'),

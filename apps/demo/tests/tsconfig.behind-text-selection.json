@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "skipLibCheck": true,
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["esnext", "dom", "dom.iterable"],
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "types": [],
+    "baseUrl": "../../..",
+    "paths": {
+      "@hwpjs/core": ["packages/core/src/index.ts"],
+      "@hwpjs/core/*": ["packages/core/src/*"],
+      "@hwpjs/vanilla": ["packages/vanilla/src/index.ts"]
+    }
+  },
+  "files": [
+    "../src/assets.d.ts",
+    "../src/behind-text-object-selection.ts",
+    "../src/object-activation-relay.ts",
+    "../src/demo-controller.ts",
+    "../src/shell.ts",
+    "./behind-text-selection-test-env.d.ts"
+  ]
+}
