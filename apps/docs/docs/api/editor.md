@@ -292,6 +292,27 @@ HWP5의 `options`에는 `profile: 'spec24-registered-png-presentation-v1'`, HWPU
 
 일반 저장이 `LayoutReflowRequired`를 반환하면 레이아웃 변경 가능성을 확인하고 `save({ allowStaleLayout: true })`로 저장할 수 있습니다. [HWP5 차트 데모](../guide/demo.md#새-차트수식-만들기)에서 생성과 재열기 절차를 확인할 수 있습니다.
 
+## 기존 HWP5 차트 데이터 편집
+
+검증한 격리 소스의 `createHwp5ChartDataEditor(editor)`는 내장 Worker에서 현재 Native 소유권이 확인된 own 표준 2D 세로 묶은 막대 차트의 값과 기존 범주 이름을 편집합니다. npm 게시 상태와는 별개입니다. 먼저 `presentation().enabled`를 확인하고, `targets()`로 얻은 현재 대상을 `capture()`한 뒤 같은 capture에 변경 목록을 한 번 적용합니다.
+
+```ts
+import { createHwp5ChartDataEditor, type HeadlessEditor } from '@ohah/hwpjs';
+
+export async function editChartValue(editor: HeadlessEditor) {
+  const tool = createHwp5ChartDataEditor(editor);
+  if (!tool.presentation().enabled) return;
+  const target = tool.targets()[0];
+  if (!target) return;
+  const capture = await tool.capture(target);
+  const expected = capture.literals.series[0]?.values[0];
+  if (expected === undefined) return;
+  return tool.apply(capture, [{ value: { series: 0, category: 0, expected, value: '15' } }]);
+}
+```
+
+숫자는 검증되는 문자열로 전달합니다. 범주 변경은 `{ category: { category, expected, value } }`이며 계열 이름과 개수를 바꾸지 않습니다. capture는 JSON으로 복원하거나 다른 편집기에 옮길 수 없습니다. 상태가 바뀌면 다시 조회하며 PNG와 painter를 호출자 입력으로 받지 않습니다. 사용할 수 없는 상태에서 `targets()`와 `capture()`는 오류로 거부합니다. [입력 한도와 검증 계약](https://github.com/ohah/hwpjs/blob/main/docs/hwp5-chart-literal-edit.md), [더블클릭부터 저장까지의 사용법](../guide/demo.md#hwp5-기존-차트-데이터-편집)을 확인하세요.
+
 ## 차트·글상자의 크기와 위치 {#object-geometry}
 
 최신 소스의 `getObjectGeometry(selector)`는 현재 Native 소유자와 크기·위치를 조회하고 불투명한 편집 대상을 반환합니다. 선택자에는 현재 문서에서 관측한 `kind`, `section`, `node`를 사용합니다. 이전 파일의 번호나 Canvas 사각형을 수정 권한으로 사용하지 않습니다. npm 게시 상태는 소스 지원과 별도로 확인하세요.

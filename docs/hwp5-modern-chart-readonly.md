@@ -1,6 +1,6 @@
 # 기존 HWP5 OOXML 차트 읽기와 미리보기
 
-이 후속은 기존 파일의 알려진 차트 자원과 물리 소유권을 읽어 표시하는 소스 후보다. HWP5 차트 생성 writer, 생성 권한 또는 두 표현의 값 편집을 추가하지 않는다. `Contents`는 존재 여부만 관측하며 해석하거나 새 문서의 템플릿으로 복사하지 않는다. 생성 파일의 외부 열기 `4100` 문제는 별도 미해결이다.
+이 문서는 기존 파일의 알려진 차트 자원과 물리 소유권을 읽어 표시하는 경로 및 당시 후속 이력을 기록한다. 현재 제한된 own HWP5 차트 데이터 편집은 별도 [편집 계약](hwp5-chart-literal-edit.md)을 따른다. 아래 읽기 전용 속성 후보의 과거 기록을 현재 데이터 편집 전체의 미지원 선언으로 읽지 않는다. HWP5 차트 생성 writer, 생성 권한 또는 두 표현의 값 편집을 추가하지 않는다. `Contents`는 존재 여부만 관측하며 해석하거나 새 문서의 템플릿으로 복사하지 않는다. 생성 파일의 외부 열기 `4100` 문제는 별도 미해결이다.
 
 ## 읽기 경로
 
@@ -42,7 +42,6 @@ JS facade는 같은 그룹 전체 존재와 profile1을 요구한다. 구엔진�
 
 정규 소스 타입 회귀는 `bunx --no-install tsc --noEmit --project tools/tests/tsconfig.hwp5-chart-optional-read.json`이다. 직접 공개한 선언의 숫자 인자·두 좌표 필수·DTO version1을 검사하며 정상 umbrella SDK 타입 소비자 검증을 대신하지 않는다.
 
-
 ## 필드 검색과 선택형 ABI의 합성 후보
 
 b972 통합 tree에 필드3bbb 후보를 포트할 때 HWP5 차트 signature map·profile1·read3 및 required ABI6는 그대로 유지한다. 필드 후보는 HWPX 선택형 control-read 목록에 current/identity 두 함수를 추가하고 기존 legacy endpoint는 유지한다. 이름 목록을 별도로 하드코딩하지 않고 원본 JS 스키마에서 차트 시그니처와 readonly/current 읽기 목록을 함께 생성한다.
@@ -50,7 +49,6 @@ b972 통합 tree에 필드3bbb 후보를 포트할 때 HWP5 차트 signature map
 기존 차트 registry digest 시험은 HWPX 선택형 목록의 이 의도된 확장에서도 실패했다. 최초 실패 로그와 원 digest를 보존하고, 새 세 항목의 정확한 전체 배열을 단언한 뒤 legacy 한 항목으로 투영한 과거 registry 전체에 같은 digest를 검사한다. legacy/current/identity 각각의 누락·추가·순서 변경 및 required/다른 optional 변경을 거부하는 음성 회귀도 추가한다. digest를 새 값으로 바꾸거나 선택형 목록 검사를 제외하지 않는다.
 
 이는 합성 소스의 경계 검사다. 기존 frame fixture는 이전 자체 관측 소스 회귀로만 사용하며 공식77c의 새 Native/SDK/Canvas 증거로 세지 않는다. 필드3bbb의 별도 집중 Native boundary5와 budget6 성공은 새 b972 포트의 컴파일·Native 성공으로 승계하지 않는다. 포트 이후 새 Native 실행은0이다.
-
 
 ## HWP5 차트 더블클릭 읽기 전용 속성 후보
 

@@ -15,10 +15,12 @@ const signature = [137, 80, 78, 71, 13, 10, 26, 10];
  * and test fixture images are never accepted as inputs or used as a fallback.
  * This remains an approximate own preview, not a promise of source-style fidelity.
  */
-export async function renderHwp5ChartCreatePreview(
+async function renderPreview(
   wire,
   { width, height },
   { createCanvas, current },
+  scope,
+  payloadScope,
 ) {
   if (!(wire instanceof Uint8Array) || wire.byteLength === 0 || wire.byteLength > 16 * 1024 * 1024)
     fail('InvalidChartCreatePreview');
@@ -30,7 +32,7 @@ export async function renderHwp5ChartCreatePreview(
   const preview = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(wire.slice()));
   if (
     preview.schemaVersion !== 1 ||
-    preview.scope !== 'hwp5-chart-create-preview' ||
+    preview.scope !== scope ||
     preview.executionAuthority !== false ||
     !Array.isArray(preview.xml_sha256) ||
     preview.xml_sha256.length !== 32 ||
@@ -86,7 +88,7 @@ export async function renderHwp5ChartCreatePreview(
       fail('InvalidChartCreatePreviewPNG');
     return Object.freeze({
       schemaVersion: 1,
-      scope: 'hwp5-chart-create-preview-payload',
+      scope: payloadScope,
       executionAuthority: false,
       source_xml_sha256: Object.freeze([...preview.xml_sha256]),
       rendering: 'hwpjs-preview-approximation',
@@ -100,4 +102,27 @@ export async function renderHwp5ChartCreatePreview(
     // Release the actual transient raster surface; never keep it in a document cache.
     canvas.width = canvas.height = 0;
   }
+}
+
+export function renderHwp5ChartCreatePreview(wire, size, host) {
+  return renderPreview(
+    wire,
+    size,
+    host,
+    'hwp5-chart-create-preview',
+    'hwp5-chart-create-preview-payload',
+  );
+}
+export function renderHwp5ChartLiteralEditPreview(wire, host) {
+  if (!(wire instanceof Uint8Array) || !wire.byteLength || wire.byteLength > 16 * 1024 * 1024)
+    throw Error('InvalidChartLiteralPreview');
+  const p = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(wire));
+  if (p.changed !== true) throw Error('InvalidChartLiteralPreview');
+  return renderPreview(
+    wire,
+    { width: p.pixel_width, height: p.pixel_height },
+    host,
+    'hwp5-chart-literal-edit-preview',
+    'hwp5-chart-literal-edit-preview-payload',
+  );
 }

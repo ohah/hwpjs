@@ -16,6 +16,7 @@ const created_table_limits: @import("created_table_records.zig").Limits = .{ .ma
 
 pub const ParagraphInfo = struct { source_node: ?u32, parent_node: ?u32, style_id: u8 };
 pub const Command = union(enum) {
+    edit_chart_literals: @import("../chart/literal_edit_request.zig").Request,
     insert_chart: @import("../chart/create_request.zig").Request,
     insert_equation: @import("equation_create_request.zig").Request,
     stage_table: @import("created_table_stage.zig").Edit,
@@ -1074,6 +1075,102 @@ pub const Session = opaque {
     pub fn hwp5ChartDisplay(self: *const Session, a: std.mem.Allocator, section: usize, control: usize) !@import("../chart/display_snapshot.zig").Snapshot {
         return self.hwp5ChartDisplaySelected(a, section, control, .structural);
     }
+    /// Capture editability through the same native admission used by preview/apply.
+    /// Does not infer a History ticket from a display revision or return PNG authority.
+    pub fn hwp5ChartLiteralEditLease(self: *const Session, a: std.mem.Allocator, section: usize, control: usize) !@import("../chart/literal_edit_lease.zig").Lease {
+        if (self.historyTransactionActive()) return error.MutationInProgress;
+        const rows = try self.hwp5ChartCandidates(a);
+        defer a.free(rows);
+        var selected: ?@import("../chart/literal_edit_request.zig").Target = null;
+        for (rows) |row| {
+            if (row.section != section or row.owner.control_node != control) continue;
+            if (selected != null) return error.SourceBindingMismatch;
+            if (row.resource.state != .modern_chart) return error.UnsupportedChartLiteralEditProfile;
+            selected = .{ .section = section, .owner = row.owner, .physical_id = row.resource.physical_id orelse return error.SourceBindingMismatch, .resource_sha256 = row.resource.resource_sha256 orelse return error.SourceBindingMismatch };
+        }
+        const target = selected orelse return error.SourceBindingMismatch;
+        const resource = try self.binaryResource(a, target.owner.ordinal, max_stream);
+        defer a.free(resource);
+        var input = try @import("../chart/literal_edit_resource.zig").open(a, resource, target.resource_sha256, max_stream);
+        defer input.deinit();
+        var hash: [32]u8 = undefined;
+        std.crypto.hash.sha2.Sha256.hash(input.xml(), &hash, .{});
+        var current = try @import("../chart/literal_edit_xml.zig").prepare(a, input.xml(), hash, &.{}, max_stream);
+        defer current.deinit(a);
+        const expected = current.data.data.series[0].values[0];
+        const noop: @import("../chart/literal_edit_request.zig").Edit = .{ .value = .{ .series = 0, .category = 0, .expected = expected, .value = expected } };
+        const binding = try self.historyTicket();
+        const context = try self.prepareChartLiteralEdit(a, .{ .profile = .spec24_clustered_column_literals_v1, .binding = binding, .owners = &.{target}, .source_xml_sha256 = hash, .edits = &.{noop} });
+        return .{ .binding = binding, .target = target, .source_xml_sha256 = hash, .context = context };
+    }
+    /// ABI v1 uses an explicit output cap, independently of source XML/read retention.
+    pub fn hwp5ChartLiteralEditPreviewBound(self: *const Session, a: std.mem.Allocator, plan: @import("../chart/literal_edit_request.zig").Plan, width: u32, height: u32, output_limit: usize) ![]u8 {
+        if (self.historyTransactionActive()) return error.MutationInProgress;
+        var context = try self.prepareChartLiteralEdit(a, plan);
+        defer context.deinit(a);
+        if (context.input.width != width or context.input.height != height) return error.SourceBindingMismatch;
+        return @import("../chart/literal_edit_preview.zig").write(a, &context.patch, width, height, output_limit);
+    }
+    /// Final ABI pre-apply check; Command admission repeats the full ticket/witness.
+    pub fn validateHwp5ChartLiteralEditLease(self: *const Session, a: std.mem.Allocator, plan: @import("../chart/literal_edit_request.zig").Plan, width: u32, height: u32) !void {
+        if (self.historyTransactionActive()) return error.MutationInProgress;
+        var context = try self.prepareChartLiteralEdit(a, plan);
+        defer context.deinit(a);
+        if (context.input.width != width or context.input.height != height) return error.SourceBindingMismatch;
+    }
+    /// Source-only Native v1. No optional ABI/capability is enabled by this declaration.
+    pub fn hwp5ChartLiteralEditPreview(self: *const Session, a: std.mem.Allocator, plan: @import("../chart/literal_edit_request.zig").Plan) ![]u8 {
+        if (self.historyTransactionActive()) return error.MutationInProgress;
+        var prepared = try self.prepareChartLiteralEdit(a, plan);
+        defer prepared.deinit(a);
+        return @import("../chart/literal_edit_preview.zig").write(a, &prepared.patch, prepared.input.width, prepared.input.height, max_stream);
+    }
+    fn prepareChartLiteralEdit(self: *const Session, a: std.mem.Allocator, plan: @import("../chart/literal_edit_request.zig").Plan) !@import("../chart/literal_edit_context.zig").Prepared {
+        try self.materializeLiveText();
+        const state = self.stateConst();
+        if (state.formatting_batch != null) return error.MutationInProgress;
+        inline for (.{ .distribution, .encrypted, .drm, .certificate_encryption, .certificate_drm, .history, .digital_signature, .signature_preview }) |flag| {
+            if (state.source.header.has(flag)) return error.UnsupportedChartSaveFeatures;
+        }
+        try @import("../chart/literal_edit_request.zig").validate(plan);
+        const ticket = try self.historyTicket();
+        if (!std.meta.eql(plan.binding.binding, ticket.binding)) return error.SourceBindingMismatch;
+        if (plan.binding.epoch != ticket.epoch) return error.StaleMutationEpoch;
+        const observations = try self.hwp5ChartCandidates(a);
+        defer a.free(observations);
+        for (plan.owners) |target| {
+            if (target.section >= state.document.sections.len) return error.InvalidSection;
+            var matches: usize = 0;
+            for (observations) |row| {
+                if (row.section != target.section) continue;
+                if (row.owner.geometry.instance_id == target.owner.geometry.instance_id and row.owner.control_node != target.owner.control_node) return error.UnsupportedChartLiteralEditAmbiguousOwner;
+                if (row.owner.control_node != target.owner.control_node) continue;
+                if (!std.meta.eql(row.owner, target.owner) or row.resource.state != .modern_chart or row.resource.physical_id == null or row.resource.resource_sha256 == null or row.resource.physical_id.? != target.physical_id or !std.mem.eql(u8, &row.resource.resource_sha256.?, &target.resource_sha256)) return error.SourceBindingMismatch;
+                matches += 1;
+            }
+            if (matches != 1) return error.SourceBindingMismatch;
+            const part = state.document.sections[target.section];
+            if (target.owner.paragraph >= part.paragraphs.len or part.paragraphs[target.owner.paragraph].parent_node != null) return error.UnsupportedChartHost;
+            var protection = try @import("text_source_protection.zig").read(a, state.decoded, state.source.header.version(), target.section, part);
+            defer protection.deinit(a);
+            if (target.owner.paragraph >= protection.protected_paragraphs.len or protection.protected_paragraphs[target.owner.paragraph]) return error.UnsupportedChartProtectedHost;
+            const spans = try @import("local_field_spans.zig").collectReadableBound(a, state.decoded[target.section], state.source.header.version(), part);
+            defer a.free(spans);
+            for (spans) |span| {
+                const paragraph_index = target.owner.paragraph;
+                const unit = target.owner.current_unit;
+                if (paragraph_index < span.begin.paragraph or paragraph_index > span.end.paragraph) continue;
+                if ((paragraph_index != span.begin.paragraph or unit >= span.begin.unit) and (paragraph_index != span.end.paragraph or unit <= span.end.unit)) return error.UnsupportedChartFieldHost;
+            }
+        }
+        const bytes = try self.binaryResource(a, plan.owners[0].owner.ordinal, max_stream);
+        defer a.free(bytes);
+        var input = try @import("../chart/literal_edit_resource.zig").open(a, bytes, plan.owners[0].resource_sha256, max_stream);
+        errdefer input.deinit();
+        var patch = try @import("../chart/literal_edit_xml.zig").prepare(a, input.xml(), plan.source_xml_sha256, plan.edits, max_stream);
+        errdefer patch.deinit(a);
+        return .{ .input = input, .patch = patch };
+    }
     pub fn hwp5ChartDisplayWithLayout(self: *const Session, a: std.mem.Allocator, section: usize, control: usize, layout: @import("../body/ole.zig").Layout) !@import("../chart/display_snapshot.zig").Snapshot {
         return self.hwp5ChartDisplaySelected(a, section, control, .{ .explicit = layout });
     }
@@ -1622,6 +1719,46 @@ pub const Session = opaque {
                         return @import("created_cell_text.zig").applySplice(state.allocator, state.decoded, &state.document, state.created_tables, state.source.header.version(), .{ .point = point, .start = edit.start_unit, .end = edit.end_unit, .utf8 = edit.utf8 }, self.createdTableResources(), created_table_limits);
                     },
                 }
+            },
+            .edit_chart_literals => |request| {
+                const state = self.getState();
+                var context = try self.prepareChartLiteralEdit(state.allocator, request.plan);
+                defer context.deinit(state.allocator);
+                if (!context.patch.changed) {
+                    // A no-op cannot smuggle a raster-only update into History.
+                    if (request.rendered != null) return error.UnexpectedChartLiteralEditNoopRaster;
+                    return;
+                }
+                const rendered = request.rendered orelse return error.MissingChartLiteralEditRaster;
+                const before_file = try self.save(state.allocator, .{ .allow_stale_layout = true, .max_output_bytes = max_bytes });
+                defer state.allocator.free(before_file.bytes);
+                const info = if (state.chart_resources.docinfo) |bytes| try state.allocator.dupe(u8, bytes) else try state.source.decodeDocInfo(state.allocator, max_stream);
+                defer state.allocator.free(info);
+                var assets = try @import("../chart/literal_edit_resource.zig").prepare(state.allocator, &state.source.file, state.chart_resources, info, state.source.header.version(), &context.input, &context.patch, rendered, max_bytes);
+                defer assets.deinit(state.allocator);
+                var prepared = try @import("../chart/literal_edit_sections.zig").prepare(state.allocator, state.decoded, state.document.sections, state.style_offsets, state.source.header.version(), request.plan.owners, assets.ordinal);
+                defer prepared.deinit(state.allocator);
+                var prospective = state.*;
+                const sections = try state.allocator.dupe(model.Section, state.document.sections);
+                defer state.allocator.free(sections);
+                for (prepared.sections) |part| sections[part.index] = part.value;
+                prospective.document.sections = sections;
+                const decoded = try state.allocator.dupe([]u8, state.decoded);
+                defer state.allocator.free(decoded);
+                const offsets = try state.allocator.dupe([]usize, state.style_offsets);
+                defer state.allocator.free(offsets);
+                prospective.decoded = decoded;
+                prospective.style_offsets = offsets;
+                prospective.chart_resources = assets.values;
+                prospective.refreshSourceViews();
+                const draft: *const Session = @ptrCast(&prospective);
+                const saved = try draft.save(state.allocator, .{ .allow_stale_layout = true, .max_output_bytes = max_bytes });
+                defer state.allocator.free(saved.bytes);
+                try @import("../chart/literal_edit_verify.zig").verify(state.allocator, before_file.bytes, saved.bytes, request.plan.owners, assets.values.entries[assets.values.entries.len - 1], max_bytes, max_stream);
+                // Exactly one publication. Existing History owns source bytes and COW resources together.
+                for (prepared.sections) |*part| std.mem.swap(model.Section, &state.document.sections[part.index], &part.value);
+                std.mem.swap(@import("../chart/created_resources.zig").Values, &state.chart_resources, &assets.values);
+                state.refreshSourceViews();
             },
             .insert_chart => |request| {
                 const state = self.getState();

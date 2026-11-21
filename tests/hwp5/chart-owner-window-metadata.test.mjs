@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ownObservation } from '../../packages/core/src/state/owned.ts';
 import { isPlainOwnerBaseline } from '../../packages/core/src/internal/owner-window-cow.ts';
+import { EditorState } from '../../packages/core/src/state/editor-state.ts';
+import { getInlineObjectInsertAvailability } from '../../packages/core/src/commands/inline-object-insert.ts';
 import { attachHwp5Charts } from '../../web/preview/hwp5-chart-content.mjs';
 
 // Synthetic schema and COW-consumer tests; no Native module, origin or lease is minted.
@@ -82,16 +84,82 @@ test('old H5 chart-unavailable producer metadata preserves an otherwise plain CO
   assert.equal(produced.hwp5ChartDisplayAvailable, false);
   assert.equal(eligible(produced), true);
 });
-test('read-only chart metadata never grants creation capability or profile keys', () => {
+test('unknown chart create profile metadata remains outside the H5 COW schema', () => {
   for (const extra of [
     { chartCreationAvailable: false, chartCreateProfileVersion: 0 },
     { chartCreationAvailable: true, chartCreateProfileVersion: 1 },
-    { chartCreationAvailable: true },
     { chartCreateProfileVersion: 1 },
     { chartCreationAvailable: 0, chartCreateProfileVersion: 0 },
     { chartCreationAvailable: true, chartCreateProfileVersion: 0 },
   ])
     assert.equal(eligible({ ...baseline(), ...extra }), false);
+});
+test('H5 chart boolean metadata reuse is distinct from actual creation admission', () => {
+  const target = {
+    editorId: 'e',
+    documentId: 'd',
+    generation: 1,
+    operationRevision: 0,
+    viewRevision: 0,
+    coordinateSpace: 'display',
+    format: 'hwp5',
+    owner: 'section:0:body',
+    section: 0,
+    paragraph: 0,
+    startUnit: 0,
+    endUnit: 0,
+    affinity: 'forward',
+  };
+  const availability = (extra) =>
+    getInlineObjectInsertAvailability(
+      new EditorState({
+        ...target,
+        status: 'ready',
+        stateVersion: 1,
+        selection: target,
+        nativeHistoryRevision: 0,
+        nativeHistoryStats: { protocolVersion: 2 },
+        content: {
+          ...baseline(),
+          paragraphs: baseline().paragraphs.map((row) => ({
+            ...row,
+            selectionOwner: 'section:0:body',
+          })),
+          ...extra,
+        },
+      }),
+      'chart',
+    );
+  for (const value of [false, true]) {
+    const extra = { chartCreationAvailable: value };
+    assert.equal(eligible({ ...baseline(), ...extra }), true);
+    assert.equal(availability(extra).enabled, false);
+  }
+  assert.deepEqual(availability({ chartCreationAvailable: true }), {
+    enabled: false,
+    reason: 'ChartCreateProfileUnavailable',
+  });
+  for (const profile of [undefined, null, 0, 2, true, '1'])
+    assert.deepEqual(
+      availability({ chartCreationAvailable: true, hwp5ChartCreateProfileVersion: profile }),
+      {
+        enabled: false,
+        reason: 'ChartCreateProfileUnavailable',
+      },
+    );
+  assert.equal(
+    availability({ chartCreationAvailable: true, hwp5ChartCreateProfileVersion: 1 }).enabled,
+    true,
+  );
+  assert.equal(
+    availability({ chartCreationAvailable: false, hwp5ChartCreateProfileVersion: 1 }).enabled,
+    false,
+  );
+  assert.equal(
+    availability({ chartCreationAvailable: true, hwp5ChartCreateProfileVersion: 1, readOnly: true })
+      .enabled,
+    false,
+  );
 });
 test('chart read metadata preserves the current canonical created-cell typing scope guard', () => {
   assert.equal(

@@ -1,3 +1,7 @@
+import {
+  createNativeReadSourceLifecycle,
+  bindNativeReadSourceRuntime,
+} from './internal/native-read-source-origin.ts';
 import { requestNamedFields } from './editor/named-fields.ts';
 // @ts-ignore The shared constructor allocates a fresh Native instance.
 import { createNewDocumentBytes } from '../../../js/new-document.mjs';
@@ -96,6 +100,7 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
       transportWitness.current(worker)
     );
   };
+  const readSources = createNativeReadSourceLifecycle(() => contract, valid);
   const rejectAll = (e: Error) => {
     for (const item of pending.values()) item.reject(e);
     pending.clear();
@@ -117,6 +122,7 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
   function shutdown(reason: Error) {
     if (closed) return;
     closed = true;
+    readSources.revoke();
     failure = reason;
     rejectAll(reason);
     if (worker) {
@@ -228,6 +234,7 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
     const owned = insertion ?? copyOwned(message),
       captured = context ? { ...context } : undefined,
       kind = owned.kind;
+    const readTicket = readSources.begin(kind, captured);
     await ready;
     const raw = await send(
       owned,
@@ -250,6 +257,7 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
       publication++;
     const trusted = trustedReplies.has(raw);
     trustedReplies.delete(raw);
+    readSources.publish(readTicket, reply, captured, publication, trusted);
     const proof = trusted
       ? nativeOrigin(kind, reply, captured, publication, contract, valid)
       : undefined;
@@ -290,6 +298,7 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
       return proof && sameRequestContext(proof.context, ctx) ? proof : undefined;
     },
   });
+  bindNativeReadSourceRuntime(runtime, readSources.consume);
   bindNativeRuntimeOrigin(runtime, (reply, ctx) =>
     consumeWorkerNativeGeometryOrigin(runtime, reply, ctx),
   );

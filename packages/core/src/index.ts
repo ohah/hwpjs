@@ -347,3 +347,12 @@ export type {
   NotePolicyShape,
   NoteKind,
 } from './commands/note-insert.ts';
+
+export { createHwp5ChartDataEditor } from './commands/hwp5-chart-data.ts';
+export type {
+  Hwp5ChartDataTarget,
+  Hwp5ChartLiterals,
+  Hwp5ChartLiteralEdit,
+  Hwp5ChartDataCapture,
+  Hwp5ChartDataEditor,
+} from './commands/hwp5-chart-data.ts';

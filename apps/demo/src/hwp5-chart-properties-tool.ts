@@ -12,6 +12,8 @@ export function createHwp5ChartPropertiesTool(options: {
   editor: HeadlessEditor;
   onStatus(text: string): void;
   onClose(): void;
+  onEditData?(target: Hwp5ChartPropertiesTarget): void;
+  canEditData?(target: Hwp5ChartPropertiesTarget): Promise<boolean>;
 }) {
   const port = createHwp5ChartPropertiesPort(options.editor);
   type Observation = ReturnType<typeof port.observe>;
@@ -89,6 +91,24 @@ export function createHwp5ChartPropertiesTool(options: {
           row('너비', pictureMillimeters(capture.width) + ' mm');
           row('높이', pictureMillimeters(capture.height) + ' mm');
           status.textContent = '읽기 전용 차트 속성입니다. 크기와 데이터 편집은 지원하지 않습니다.';
+          if (options.canEditData && options.onEditData)
+            void options
+              .canEditData(target)
+              .then((enabled) => {
+                if (!enabled || closed || session !== current || !port.current(observation)) return;
+                const edit = doc.createElement('button');
+                edit.type = 'button';
+                edit.textContent = '차트 데이터 편집';
+                edit.addEventListener('click', () => {
+                  if (session !== current || !port.current(observation)) return;
+                  close();
+                  options.onEditData?.(target);
+                });
+                layer.footer.append(edit);
+                status.textContent =
+                  '차트 크기는 읽기 전용입니다. 값과 범주는 데이터 편집에서 수정할 수 있습니다.';
+              })
+              .catch(() => {});
         })
         .catch((error) => {
           if (!closed && session === current) {

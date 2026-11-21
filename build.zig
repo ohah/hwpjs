@@ -132,6 +132,8 @@ pub fn build(b: *std.Build) void {
             "Noori fifth HWP5 original columns save reopen retains pictures text styles and heights",
             "Noori fifth HWPX original columns save reopen retains raw picture comments and bounds",
         }, .step = "test-noori-source-columns", .description = "Verify bounded source column edits, retained pictures and pinned public Noori originals" },
+        .{ .path = "src/hwp5_chart_literal_edit_probe.zig", .filters = &.{"H5 chart literal edit"}, .step = "test-hwp5-chart-literal-edit", .description = "Verify synthetic HWP5 chart literal edits, resource COW and atomic history" },
+        .{ .path = "src/hwp5_chart_literal_edit_lease_probe.zig", .filters = &.{"H5 chart literal lease ABI"}, .step = "test-hwp5-chart-literal-edit-lease", .description = "Verify synthetic HWP5 chart literal lease fences and optional wire transport" },
         .{ .path = "src/hwp5_chart_read_only_probe.zig", .filters = &.{
             "H5 OOXML resource reads owned tree and reports backups without interpreting or changing them",
             "H5 OOXML resource rejects missing modern stream and foreign chart namespace without fallback",

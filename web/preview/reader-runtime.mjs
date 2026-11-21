@@ -1,3 +1,4 @@
+import { createHwp5ChartDataCommands } from './hwp5-chart-data-command.mjs';
 import { createStrictLayoutWorker, strictLayoutKinds } from './strict-layout-worker.mjs';
 import { attachHwp5Charts } from './hwp5-chart-content.mjs';
 import { attachHwp5EquationRendering } from './hwp5-equation-content.mjs';
@@ -282,6 +283,15 @@ export function createReaderRuntime({
       hwp5PreviewDirty = false;
     }
   }
+  const hwp5ChartData = createHwp5ChartDataCommands(
+    () => editor,
+    () =>
+      format === 'hwp5' &&
+      historyEnabled &&
+      !historyPoisoned &&
+      editor?.historyStats?.()?.protocolVersion === 2 &&
+      typeof globalThis.OffscreenCanvas === 'function',
+  );
   function hwp5Display(projected = null) {
     refreshCurrentHwp5Preview();
     if (typeof projected === 'function') projected = projected();
@@ -315,6 +325,12 @@ export function createReaderRuntime({
       !historyPoisoned &&
       editor?.historyStats?.()?.protocolVersion === 2 &&
       content.hwp5ChartCreateProfileVersion === 1 &&
+      typeof globalThis.OffscreenCanvas === 'function';
+    content.hwp5ChartLiteralEditAvailable =
+      historyEnabled &&
+      !historyPoisoned &&
+      editor?.historyStats?.()?.protocolVersion === 2 &&
+      editor?.supportsHwp5ChartLiteralEditAbi?.() === true &&
       typeof globalThis.OffscreenCanvas === 'function';
     content.sourceTableCellWidthAvailable =
       Boolean(editor) &&
@@ -2004,6 +2020,7 @@ export function createReaderRuntime({
         return;
       }
       if (message.kind === 'load') {
+        hwp5ChartData.reset();
         const availableSectionsOnly = availableSectionsRequest(message);
         const availableSectionCopy = availableSectionCopyRequest(message);
         const requestedPolicy =
@@ -2973,6 +2990,16 @@ export function createReaderRuntime({
           requestId: message.requestId,
           preview: editor.chartCreatePreview(message.request),
         });
+      } else if (message.kind === 'hwp5-chart-data-capture') {
+        reply(hwp5ChartData.capture(message));
+      } else if (message.kind === 'hwp5-chart-data-apply') {
+        atomicOutcome = await hwp5ChartData.apply(message);
+        applied = atomicOutcome.application === 'applied';
+        mutationUncertain = atomicOutcome.application === 'unknown';
+        if (mutationUncertain) historyPoisoned = true;
+        if (atomicOutcome.error || atomicOutcome.cleanupError)
+          throw Error(atomicOutcome.error || atomicOutcome.cleanupError);
+        reply({ kind: message.kind, changed: applied, content: hwp5Display() });
       } else if (message.kind === 'hwp5-chart-display') {
         if (format !== 'hwp5' || !editor || editor.supportsHwp5ChartDisplayAbi?.() !== true)
           throw Error('Hwp5ChartDisplayAbiUnavailable');
@@ -3959,6 +3986,7 @@ export function createReaderRuntime({
   let loaded = false;
   let disposal;
   function clear() {
+    hwp5ChartData.reset();
     hwp5PreviewDirty = false;
     hwpxRichTypingOwners = null;
     displayResources.reset();

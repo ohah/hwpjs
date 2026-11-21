@@ -4,6 +4,8 @@ import {
   HWP5_DOCUMENT_TEXT_READ_FUNCTIONS,
   HWP5_CHART_READ_ABI,
   HWP5_CHART_CREATE_ABI,
+  HWP5_CHART_LITERAL_EDIT_ABI,
+  HWP5_CHART_LITERAL_EDIT_FUNCTIONS,
   HWP5_CHART_CREATE_FUNCTIONS,
   HWP5_CHART_READ_FUNCTIONS,
   HWPX_CONTROL_TEXT_READ_FUNCTIONS,
@@ -49,6 +51,17 @@ const generated =
   '};\n' +
   'pub const hwp5_chart_create_signatures = [_]OptionalFunctionSignature{\n' +
   Object.entries(HWP5_CHART_CREATE_ABI)
+    .map(
+      ([name, signature]) =>
+        `    .{ .name = ${JSON.stringify(name)}, .params = ${signatureTypes(signature.params)}, .results = ${signatureTypes(signature.results)} },\n`,
+    )
+    .join('') +
+  '};\n' +
+  'pub const hwp5_chart_literal_edit_exports = [_][]const u8{\n' +
+  HWP5_CHART_LITERAL_EDIT_FUNCTIONS.map((name) => `    ${JSON.stringify(name)},\n`).join('') +
+  '};\n' +
+  'pub const hwp5_chart_literal_edit_signatures = [_]OptionalFunctionSignature{\n' +
+  Object.entries(HWP5_CHART_LITERAL_EDIT_ABI)
     .map(
       ([name, signature]) =>
         `    .{ .name = ${JSON.stringify(name)}, .params = ${signatureTypes(signature.params)}, .results = ${signatureTypes(signature.results)} },\n`,

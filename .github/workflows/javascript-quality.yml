@@ -177,6 +177,17 @@ jobs:
           grep -Eq '^# skipped 0$' "$RUNNER_TEMP/object-activation.tap"
           bunx --no-install tsc --noEmit -p tools/tsconfig.object-activation.json
           bunx --no-install tsc --noEmit -p apps/demo/tests/tsconfig.drawing-properties.json
+      - name: HWP5 chart literal edit source contracts
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          node node_modules/typescript/bin/tsc --noEmit -p tools/tests/tsconfig.hwp5-chart-data.json
+          node --experimental-transform-types --import ./tools/tests/hwp5-chart-data-source-provider.mjs --test --test-concurrency=1 --test-reporter=tap tests/own-chart-create/literal-edit-api.test.mjs tests/own-chart-create/preview-payload.test.mjs apps/demo/tests/hwp5-chart-data.test.mjs apps/demo/tests/chart-data-controller.test.mjs apps/demo/tests/chart-data-view.test.mjs apps/demo/tests/chart-data-port.test.mjs apps/demo/tests/hwp5-chart-properties.test.mjs 2>&1 | tee "$RUNNER_TEMP/hwp5-chart-literal-source.tap"
+          grep -Eq '^# tests 59$' "$RUNNER_TEMP/hwp5-chart-literal-source.tap"
+          grep -Eq '^# pass 59$' "$RUNNER_TEMP/hwp5-chart-literal-source.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/hwp5-chart-literal-source.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/hwp5-chart-literal-source.tap"
       - name: HWP5 chart anchor source and current owner boundaries
         timeout-minutes: 2
         shell: bash

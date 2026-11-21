@@ -43,6 +43,7 @@ import { consumeNativeReadSourceOrigin } from '../internal/native-read-source-or
 import type { NativeReadSourceOrigin } from '../internal/native-read-source-origin.ts';
 import {
   observeNativeReadSource,
+  readNativeReadSourceEvidence,
   inheritNativeReadSource,
 } from '../internal/native-read-source-evidence.ts';
 import {
@@ -512,6 +513,11 @@ export function createEditor(options: CreateEditorOptions) {
     transition?: { kind: string; capture?: object },
     readSource?: NativeReadSourceOrigin,
     readSourceCandidate?: RuntimeRequestContext,
+    readSourceCommit?: Readonly<{
+      context: RuntimeRequestContext;
+      operationRevision: number;
+      kind: string;
+    }>,
   ) {
     if (terminal) return;
     // Capture both sets before any callback changes registrations.
@@ -541,8 +547,13 @@ export function createEditor(options: CreateEditorOptions) {
     else if (!mutation && Object.keys(patch).length === 1 && Object.hasOwn(patch, 'selection'))
       geometry.inherit(previousState, state);
     else geometry.invalidate();
-    if (readSource) observeNativeReadSource(state, readSource, readSourceCandidate);
-    else if (!mutation && Object.keys(patch).length === 1 && Object.hasOwn(patch, 'selection'))
+    if (readSource)
+      observeNativeReadSource(state, readSource, readSourceCandidate, readSourceCommit);
+    else if (
+      !mutation &&
+      Object.keys(patch).length === 1 &&
+      (Object.hasOwn(patch, 'selection') || Object.hasOwn(patch, 'savedOperationRevision'))
+    )
       inheritNativeReadSource(previousState, state);
     selectionHistory.observe(state);
     const snapshot = state;
@@ -1052,6 +1063,8 @@ export function createEditor(options: CreateEditorOptions) {
     admissionGuard?: () => void,
   ): Promise<CommandResult> {
     const ctx = context(token);
+    const beforeMutation = state;
+    const beforeReadSource = readNativeReadSourceEvidence(state);
     let reserved: number | undefined, reply: RuntimeReply | undefined;
     try {
       requireReady(token);
@@ -1144,6 +1157,44 @@ export function createEditor(options: CreateEditorOptions) {
           failure,
           reply,
         );
+      }
+      if (
+        beforeReadSource &&
+        state === beforeMutation &&
+        (application === 'unapplied' ||
+          (!reply.error && (reply.meta?.changed === false || reply.changed === false)))
+      ) {
+        // No history replay or synthetic authority: ask the same qualified
+        // adapter for its current Native binding before publishing a new state.
+        try {
+          const readContext = context(token);
+          const observed = await active!.request(
+            { kind: 'document-text-read-binding' },
+            readContext,
+          );
+          verifyReply(observed, readContext);
+          requireReady(token);
+          const source = consumeNativeReadSourceOrigin(active!, observed, readContext);
+          if (
+            state === beforeMutation &&
+            !observed.error &&
+            source &&
+            (Object.keys(beforeReadSource) as (keyof typeof beforeReadSource)[]).every(
+              (key) => beforeReadSource[key] === source.binding[key],
+            )
+          ) {
+            install(
+              { selection: state.selection },
+              false,
+              readContext,
+              undefined,
+              undefined,
+              source,
+            );
+          }
+        } catch {
+          // Keep the first command outcome; a failed observation cannot restore authority.
+        }
       }
       if (application === 'unapplied') {
         if (
@@ -1309,6 +1360,9 @@ export function createEditor(options: CreateEditorOptions) {
           ctx,
           origin,
           { kind: message.kind, capture: historyCapture },
+          consumeNativeReadSourceOrigin(active!, reply, ctx),
+          undefined,
+          { context: ctx, operationRevision: reserved, kind: message.kind },
         );
         // Canonical origin was consumed from raw reply once. Compatibility receives full DTO.
         if (
@@ -2255,6 +2309,9 @@ export function createEditor(options: CreateEditorOptions) {
           { ...contentPatch(reply), status: poisoned ? 'refresh-required' : 'ready' },
           true,
           ctx,
+          undefined,
+          undefined,
+          consumeNativeReadSourceOrigin(active, reply, ctx),
         );
         if (poisoned) throw Error('HistoryReloadRequired');
         return state;

@@ -596,3 +596,7 @@
 - [HWP5 조판 저장 후보 계약](hwp5-layout-save-contract.md)
 
 - [HWP5 strict plain 조판 저장 연결 후보](hwp5-strict-layout-integration.md) — Session·History·ABI·브라우저 소유 측정, 아직 통합 Native/브라우저 미실행.
+
+- [HWP5 own chart literal edit source candidate](hwp5-chart-literal-edit.md)
+
+- [HWP5 literal editor optional lease and ABI successor](hwp5-chart-literal-edit-abi.md)

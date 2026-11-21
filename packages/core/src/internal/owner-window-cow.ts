@@ -13,6 +13,7 @@ import { validateFullSnapshotTextDelta, exactDisplayValue } from './full-snapsho
 const PLAIN_BOOLEAN_CAPABILITY_KEYS = [
   'equationInsertionAvailable',
   'chartCreationAvailable',
+  'hwp5ChartLiteralEditAvailable',
   'strictMeasuredSaveAvailable',
 ] as const;
 const ROOT_KEYS = new Set([

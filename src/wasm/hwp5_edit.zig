@@ -2052,3 +2052,62 @@ export fn hwp5_edit_create_chart_current(ref_ptr: [*]const u8, ref_size: usize, 
     };
     return 1;
 }
+
+// Optional fixed-shape chart literal editing. No existing export body is changed.
+fn chartLiteralEditHistory() !*History {
+    _ = try session();
+    const h = if (history) |*value| value else return error.HistoryNotEnabled;
+    if (h.owned == null) return error.HistoryV2Required;
+    if (h.owned.?.poisoned) return error.HistoryMutationUncertain;
+    try h.owned.?.validateCurrentForLayout(try session());
+    return h;
+}
+export fn hwp5_edit_chart_literal_edit_profile_version() u32 {
+    return @import("hwp5_chart_literal_edit_wire.zig").version;
+}
+export fn hwp5_edit_chart_literal_edit_lease(section: u32, control: u32) u32 {
+    hwp5_edit_output_free();
+    const h = chartLiteralEditHistory() catch |err| return fail(err);
+    const s = session() catch |err| return fail(err);
+    const view = view_epoch.current() catch |err| return fail(err);
+    var lease = s.hwp5ChartLiteralEditLease(a, section, control) catch |err| return fail(err);
+    defer lease.deinit(a);
+    output = @import("hwp5_chart_literal_edit_wire.zig").lease(a, &lease, view, h.revision()) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_chart_literal_edit_preview(ptr: [*]const u8, size: usize) u32 {
+    hwp5_edit_output_free();
+    const wire = @import("hwp5_chart_literal_edit_wire.zig");
+    const h = chartLiteralEditHistory() catch |err| return fail(err);
+    const s = session() catch |err| return fail(err);
+    if (size == 0 or size > wire.max_request_bytes) return fail(error.LimitExceeded);
+    const parsed = wire.parse(wire.Preview, a, ptr[0..size]) catch |err| return fail(err);
+    defer parsed.deinit();
+    const w = parsed.value;
+    wire.validateFence(w.witness, s.historyTicket() catch |err| return fail(err), view_epoch.current() catch |err| return fail(err), h.revision()) catch |err| return fail(err);
+    output = s.hwp5ChartLiteralEditPreviewBound(a, w.witness.plan(w.edits), w.witness.pixel_width, w.witness.pixel_height, wire.max_reply_bytes) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_chart_literal_edit_commit(ptr: [*]const u8, size: usize, image_ptr: [*]const u8, image_size: usize) u32 {
+    hwp5_edit_output_free();
+    const wire = @import("hwp5_chart_literal_edit_wire.zig");
+    const h = chartLiteralEditHistory() catch |err| {
+        _ = fail(err);
+        return if (err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    const s = session() catch |err| return fail(err);
+    if (size == 0 or size > wire.max_request_bytes or image_size > wire.max_png_bytes) return fail(error.LimitExceeded);
+    const parsed = wire.parse(wire.Commit, a, ptr[0..size]) catch |err| return fail(err);
+    defer parsed.deinit();
+    const w = parsed.value;
+    wire.validateFence(w.witness, s.historyTicket() catch |err| return fail(err), view_epoch.current() catch |err| return fail(err), h.revision()) catch |err| return fail(err);
+    const plan = w.witness.plan(w.edits);
+    s.validateHwp5ChartLiteralEditLease(a, plan, w.witness.pixel_width, w.witness.pixel_height) catch |err| return fail(err);
+    const raster = wire.rendered(w.rendered, image_ptr[0..image_size]) catch |err| return fail(err);
+    const before = h.revision();
+    apply(.{ .edit_chart_literals = .{ .plan = plan, .rendered = raster } }) catch |err| {
+        _ = fail(err);
+        return if (h.owned.?.poisoned or err == error.HistoryMutationUncertain or err == error.MutationUncertain) 3 else 0;
+    };
+    return if (h.revision() == before) 2 else 1;
+}

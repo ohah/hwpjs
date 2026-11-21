@@ -10,6 +10,8 @@ export function createChartPointGrid({
   nextColumns,
   note,
   getChart,
+  projectModel = chartPointGridModel,
+  rowLabel = '포인트',
   getSelected,
   getDraft = () => undefined,
   accepts,
@@ -29,7 +31,7 @@ export function createChartPointGrid({
       selected = closed ? null : getSelected();
     let model;
     try {
-      model = chartPointGridModel(chart);
+      model = projectModel(chart);
     } catch {
       model = null;
     }
@@ -46,7 +48,7 @@ export function createChartPointGrid({
       firstRow = rowPage * rowsPerPage;
     const columns = model?.columns.slice(firstColumn, firstColumn + columnsPerPage) ?? [];
     const header = element('tr'),
-      corner = element('th', '포인트 번호');
+      corner = element('th', `${rowLabel} 번호`);
     corner.setAttribute('scope', 'col');
     header.append(corner);
     for (const column of columns) {
@@ -72,7 +74,7 @@ export function createChartPointGrid({
           button.dataset.chartGridPoint = String(ordinal);
           button.setAttribute(
             'aria-label',
-            `${columns[offset].label} · 포인트 ${row.index} · ${draft ?? point.value}${draft === undefined ? '' : ' · 미적용 초안'}`,
+            `${columns[offset].label} · ${rowLabel} ${row.index} · ${draft ?? point.value}${draft === undefined ? '' : ' · 미적용 초안'}`,
           );
           if (draft !== undefined) button.dataset.chartDraft = 'true';
           button.setAttribute('aria-current', String(ordinal === selected));
@@ -94,7 +96,7 @@ export function createChartPointGrid({
       ? '차트 표 데이터를 구성할 수 없습니다. 원본 값 목록을 확인하세요.'
       : !model.rows.length
         ? '표시할 차트 값이 없습니다.'
-        : `행 ${rowPage + 1}/${rowPages}쪽 · 열 ${columnPage + 1}/${columnPages}쪽 · ${model.rows.length}포인트 · ${model.columns.length}원본 열 · 셀을 선택한 뒤 값을 적용하세요. —는 원본에 값이 없는 자리입니다.`;
+        : `행 ${rowPage + 1}/${rowPages}쪽 · 열 ${columnPage + 1}/${columnPages}쪽 · ${model.rows.length}${rowLabel} · ${model.columns.length}원본 열 · 셀을 선택한 뒤 값을 적용하세요. —는 원본에 값이 없는 자리입니다.`;
   };
   const pick = (event) => {
     const button = event.target.closest?.('button[data-chart-grid-point]');

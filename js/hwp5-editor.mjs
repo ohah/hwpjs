@@ -1,5 +1,6 @@
 import { registerStrictLayoutTransport } from './hwp5-strict-layout-transport.mjs';
 import { createBrowserStrictLayoutSaver } from './hwp5-browser-strict-layout.mjs';
+import { createHwp5ChartLiteralEditApi } from './hwp5-chart-literal-edit.mjs';
 import { createHwp5ChartDisplayApi } from './hwp5-chart-display-api.mjs';
 import { createHwp5EquationApi } from './hwp5-equation-sources.mjs';
 import { createEquationEngine } from './equation-engine.mjs';
@@ -346,6 +347,7 @@ export async function createExperimentalHwp5Editor(
     }),
     ...createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u32, referenceScope }),
     ...createHwp5ChartDisplayApi({ wasm, check, output, u32 }),
+    ...createHwp5ChartLiteralEditApi({ wasm, memory, check, output, u32 }),
     ...createHwp5TableCreationApi({ wasm, memory, check, output, u32 }),
     supportsCurrentTextPreview() {
       check();

@@ -1,3 +1,5 @@
+import { surfaceOperation } from '../commands/surface-protocol.ts';
+import { sameRequestContext } from './native-runtime-origin.ts';
 import { validDocumentTextReadStamp } from '../../../../js/document-text-read-stamp.mjs';
 import type { RuntimeReply, RuntimeRequestContext, EditorRuntime } from '../contracts.ts';
 import type { NativeModuleContract } from './native-runtime-origin.ts';
@@ -75,4 +77,107 @@ export function consumeNativeReadSourceOrigin(
   ctx: RuntimeRequestContext,
 ) {
   return runtimes.get(runtime)?.(reply, ctx);
+}
+
+/** Private adapter lifecycle. A wire binding is descriptive, never its own issuer.
+ * The caller must authenticate the module and (for Worker) the reply transport. */
+export function createNativeReadSourceLifecycle(
+  contract: () => NativeModuleContract | undefined,
+  valid: () => boolean,
+) {
+  const replies = new WeakMap<object, NativeReadSourceOrigin>();
+  let fence: object = Object.freeze({});
+  let scope: object | undefined;
+  let last: NativeReadSourceOrigin | undefined;
+  let retired: NativeReadSourceOrigin | undefined;
+  let recoverable: NativeReadSourceOrigin | undefined;
+  let retiredRequest: RuntimeRequestContext | undefined;
+  let recoverableRequest: RuntimeRequestContext | undefined;
+  const revoke = () => {
+    scope = undefined;
+    last = retired = recoverable = undefined;
+    retiredRequest = recoverableRequest = undefined;
+    fence = Object.freeze({});
+  };
+  return {
+    begin(kind: string, context?: RuntimeRequestContext): object {
+      if (surfaceOperation(kind) !== 'read' && kind !== 'save') {
+        const previous = scope && last?.authority() ? last : undefined;
+        revoke();
+        if (surfaceOperation(kind) === 'mutation') {
+          retired = previous;
+          retiredRequest = context ? { ...context } : undefined;
+        }
+      }
+      return fence;
+    },
+    publish(
+      ticket: object,
+      reply: RuntimeReply,
+      context: RuntimeRequestContext | undefined,
+      sequence: number,
+      trusted: boolean,
+    ): void {
+      if (ticket !== fence) return;
+      if (reply.content !== undefined) scope = undefined;
+      if (!trusted || !valid()) return;
+      if (surfaceOperation(reply.kind) === 'mutation') {
+        const unchanged =
+          reply.meta?.application === 'unapplied' ||
+          (!reply.error && (reply.meta?.changed === false || reply.changed === false));
+        recoverable =
+          unchanged && retiredRequest && sameRequestContext(retiredRequest, context)
+            ? retired
+            : undefined;
+        recoverableRequest = recoverable ? retiredRequest : undefined;
+        retired = undefined;
+        retiredRequest = undefined;
+      }
+      // A qualified unchanged reply plus a fresh exact Native binding may renew
+      // the current Core observation. The retired scope itself never revives.
+      if (!scope && reply.kind === 'document-text-read-binding' && !reply.error && recoverable) {
+        const binding = ownNativeReadBinding(reply.documentTextReadBinding);
+        const prior = recoverable;
+        const priorRequest = recoverableRequest;
+        recoverable = undefined;
+        recoverableRequest = undefined;
+        if (
+          binding &&
+          context &&
+          priorRequest &&
+          (['editorId', 'documentId', 'generation', 'operationRevision'] as const).every(
+            (key) => priorRequest[key] === context[key],
+          ) &&
+          (Object.keys(prior.binding) as (keyof NativeReadBinding)[]).every(
+            (key) => prior.binding[key] === binding[key],
+          )
+        )
+          scope = Object.freeze({});
+      }
+      if (reply.content !== undefined && !reply.error) scope = Object.freeze({});
+      else if (reply.meta?.changed === true) scope = undefined;
+      const captured = scope;
+      if (!captured) return;
+      const origin = nativeReadSourceOrigin(
+        reply,
+        context,
+        sequence,
+        contract(),
+        captured,
+        () => valid() && scope === captured,
+      );
+      if (origin) {
+        replies.set(reply, origin);
+        last = origin;
+      }
+    },
+    consume(reply: RuntimeReply, context: RuntimeRequestContext) {
+      const origin = replies.get(reply);
+      replies.delete(reply);
+      return origin && valid() && origin.authority() && sameRequestContext(origin.context, context)
+        ? origin
+        : undefined;
+    },
+    revoke,
+  };
 }

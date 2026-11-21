@@ -1,3 +1,5 @@
+import { surfaceOperation } from '../commands/surface-protocol.ts';
+import { sameRequestContext } from './native-runtime-origin.ts';
 import type { RuntimeRequestContext } from '../contracts.ts';
 import type { EditorState } from '../state/editor-state.ts';
 import type { NativeReadSourceOrigin, NativeReadBinding } from './native-read-source-origin.ts';
@@ -11,19 +13,27 @@ export function observeNativeReadSource(
   state: EditorState,
   origin: NativeReadSourceOrigin | undefined,
   candidate?: RuntimeRequestContext,
+  committed?: Readonly<{ context: RuntimeRequestContext; operationRevision: number; kind: string }>,
 ): void {
   if (!origin || !origin.authority() || state.status !== 'ready' || state.content === undefined)
     return;
   const c = origin.context;
   if (c.operationRevision !== state.operationRevision) {
-    if (
-      !candidate ||
-      !['load', 'unlock', 'enable'].includes(origin.kind) ||
-      !(['editorId', 'documentId', 'generation', 'requestId', 'operationRevision'] as const).every(
-        (k) => candidate[k] === c[k],
-      )
-    )
-      return;
+    const initial =
+      candidate &&
+      ['load', 'unlock', 'enable'].includes(origin.kind) &&
+      sameRequestContext(c, candidate);
+    // Core supplies this only after an applied mutation and an accepted fresh
+    // snapshot (including its read-only refresh fallback), never from a wire flag.
+    const applied =
+      committed &&
+      sameRequestContext(c, committed.context) &&
+      committed.operationRevision === state.operationRevision &&
+      Number.isSafeInteger(committed.operationRevision) &&
+      committed.operationRevision > c.operationRevision &&
+      ((origin.kind === committed.kind && surfaceOperation(origin.kind) === 'mutation') ||
+        origin.kind === 'refresh');
+    if (!initial && !applied) return;
   }
 
   if (

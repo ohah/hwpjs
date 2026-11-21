@@ -18,6 +18,12 @@
     "available": true
   },
   {
+    "id": "hwp5-chart-data-edit.hwp",
+    "name": "hwp5-chart-data-edit.hwp",
+    "label": "[기능 예제] HWP5 차트 데이터 편집",
+    "available": true
+  },
+  {
     "id": "hwp5-equation-create.hwp",
     "name": "hwp5-equation-create.hwp",
     "label": "[기능 예제] HWP5 수식 생성과 표시",

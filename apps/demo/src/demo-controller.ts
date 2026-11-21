@@ -382,6 +382,8 @@ export async function mountDemo(
     root,
     editor,
     onStatus: note,
+    onEditData: (target) => chartData.open(target),
+    canEditData: (target) => chartData.canEditHwp5(target),
     onClose: () => {
       host?.focus?.();
     },
@@ -864,7 +866,12 @@ export async function mountDemo(
       return;
     }
     if (action.command === 'edit-chart-data') {
-      chartData.open();
+      const selected = host?.getSelectedObject?.();
+      chartData.open(
+        selected?.target.kind === 'hwp5-chart'
+          ? { section: selected.target.section, controlNode: selected.target.controlNode }
+          : undefined,
+      );
       return;
     }
     if (action.command === 'edit-equation') {

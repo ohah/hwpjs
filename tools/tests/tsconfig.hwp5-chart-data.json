@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@hwpjs/core": ["../../packages/core/src/index.ts"],
+      "@hwpjs/core/*": ["../../packages/core/src/*"],
+      "@hwpjs/vanilla": ["../../packages/vanilla/src/index.ts"]
+    }
+  },
+  "files": [
+    "../../apps/demo/src/assets.d.ts",
+    "../../apps/demo/src/hwp5-chart-data-tool.ts",
+    "hwp5-chart-data-types.ts"
+  ],
+  "include": []
+}

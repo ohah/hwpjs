@@ -189,3 +189,27 @@ export const HWP5_CHART_CREATE_ABI = Object.freeze({
   }),
 });
 export const HWP5_CHART_CREATE_FUNCTIONS = Object.freeze(Object.keys(HWP5_CHART_CREATE_ABI));
+
+// Optional HWP5 fixed-shape literal editor. Does not enable a qualified artifact.
+export const HWP5_CHART_LITERAL_EDIT_PROFILE_VERSION = 1;
+export const HWP5_CHART_LITERAL_EDIT_ABI = Object.freeze({
+  hwp5_edit_chart_literal_edit_profile_version: Object.freeze({
+    params: Object.freeze([]),
+    results: Object.freeze(['i32']),
+  }),
+  hwp5_edit_chart_literal_edit_lease: Object.freeze({
+    params: Object.freeze(['i32', 'i32']),
+    results: Object.freeze(['i32']),
+  }),
+  hwp5_edit_chart_literal_edit_preview: Object.freeze({
+    params: Object.freeze(['i32', 'i32']),
+    results: Object.freeze(['i32']),
+  }),
+  hwp5_edit_chart_literal_edit_commit: Object.freeze({
+    params: Object.freeze(['i32', 'i32', 'i32', 'i32']),
+    results: Object.freeze(['i32']),
+  }),
+});
+export const HWP5_CHART_LITERAL_EDIT_FUNCTIONS = Object.freeze(
+  Object.keys(HWP5_CHART_LITERAL_EDIT_ABI),
+);

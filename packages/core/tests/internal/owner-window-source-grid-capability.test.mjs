@@ -300,6 +300,7 @@ test('created cell typing scope remains exact metadata across COW and full-snaps
 for (const key of [
   'equationInsertionAvailable',
   'chartCreationAvailable',
+  'hwp5ChartLiteralEditAvailable',
   'strictMeasuredSaveAvailable',
 ]) {
   test(`typed producer capability ${key} retains COW without issuing authority`, () => {
@@ -341,6 +342,7 @@ test('complete current producer capabilities preserve strict unknown-key and own
     equationInsertionAvailable: true,
     hwp5ChartCreateProfileVersion: 1,
     chartCreationAvailable: false,
+    hwp5ChartLiteralEditAvailable: true,
     strictMeasuredSaveAvailable: true,
   };
   const f = fixture(keys);
@@ -351,4 +353,51 @@ test('complete current producer capabilities preserve strict unknown-key and own
   const unknown = fixture({ ...keys, futureInsertionCapability: true });
   assert.equal(isPlainOwnerBaseline(unknown.before, 0, 0), false);
   assert.equal(unknown.merge(), null);
+});
+
+test('chart literal capability is exact metadata, not independent edit authority', () => {
+  for (const value of [false, true]) {
+    const f = fixture({ hwp5ChartLiteralEditAvailable: value });
+    const next = f.merge();
+    assert(next);
+    assert.equal(next.hwp5ChartLiteralEditAvailable, value);
+    assert.equal(validateFullSnapshotTextDelta(f.before, next, f.packet), true);
+    for (const changed of [!value, undefined, null, 0, 1, 'true', {}, []]) {
+      assert.equal(
+        validateFullSnapshotTextDelta(
+          f.before,
+          ownObservation({ ...next, hwp5ChartLiteralEditAvailable: changed })(),
+          f.packet,
+        ),
+        false,
+      );
+    }
+    const removed = { ...next };
+    delete removed.hwp5ChartLiteralEditAvailable;
+    assert.equal(
+      validateFullSnapshotTextDelta(f.before, ownObservation(removed)(), f.packet),
+      false,
+    );
+    for (const extra of [
+      { readOnly: true },
+      { futureInsertionCapability: true },
+      { hwp5ChartLiteralEditAvailableExtra: true },
+    ]) {
+      const bad = fixture({ hwp5ChartLiteralEditAvailable: value, ...extra });
+      assert.equal(isPlainOwnerBaseline(bad.before, 0, 0), false);
+      assert.equal(bad.merge(), null);
+    }
+  }
+  const f = fixture(),
+    next = f.merge();
+  assert(next);
+  for (const value of [false, true])
+    assert.equal(
+      validateFullSnapshotTextDelta(
+        f.before,
+        ownObservation({ ...next, hwp5ChartLiteralEditAvailable: value })(),
+        f.packet,
+      ),
+      false,
+    );
 });

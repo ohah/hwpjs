@@ -57,6 +57,18 @@ pub const hwp5_chart_create_signatures = [_]OptionalFunctionSignature{
     .{ .name = "hwp5_edit_chart_create_preview", .params = &.{ "i32", "i32", "i32", "i32" }, .results = &.{"i32"} },
     .{ .name = "hwp5_edit_create_chart_current", .params = &.{ "i32", "i32", "i32", "i32", "i32", "i32" }, .results = &.{"i32"} },
 };
+pub const hwp5_chart_literal_edit_exports = [_][]const u8{
+    "hwp5_edit_chart_literal_edit_profile_version",
+    "hwp5_edit_chart_literal_edit_lease",
+    "hwp5_edit_chart_literal_edit_preview",
+    "hwp5_edit_chart_literal_edit_commit",
+};
+pub const hwp5_chart_literal_edit_signatures = [_]OptionalFunctionSignature{
+    .{ .name = "hwp5_edit_chart_literal_edit_profile_version", .params = &.{}, .results = &.{"i32"} },
+    .{ .name = "hwp5_edit_chart_literal_edit_lease", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+    .{ .name = "hwp5_edit_chart_literal_edit_preview", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+    .{ .name = "hwp5_edit_chart_literal_edit_commit", .params = &.{ "i32", "i32", "i32", "i32" }, .results = &.{"i32"} },
+};
 pub const hwp5_chart_read_exports = [_][]const u8{
     "hwp5_edit_chart_display_profile_version",
     "hwp5_edit_chart_candidates",
