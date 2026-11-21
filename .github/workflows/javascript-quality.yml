@@ -170,8 +170,8 @@ jobs:
         run: |
           set -euo pipefail
           node --experimental-transform-types --test --test-concurrency=1 --test-reporter=tap tests/canvas/object-activation-target.test.mjs tests/canvas/drawing-observation.test.mjs tests/canvas/drawing-observation-body-completeness.test.mjs packages/vanilla/tests/object-activation.test.mjs apps/demo/tests/object-activation-relay.test.mjs apps/demo/tests/chart-data-controller.test.mjs apps/demo/tests/chart-data-view.test.mjs apps/demo/tests/drawing-properties.test.mjs apps/demo/tests/drawing-properties-view.test.mjs apps/demo/tests/chart-properties.test.mjs 2>&1 | tee "$RUNNER_TEMP/object-activation.tap"
-          # H5 query/body cohort is 89. The P relay and behind-object relay add 6 tests.
-          object_expected_tests=$((89 + 6))
+          # H5 query/body cohort is 89, the relays add 6, and HWP5 margin properties add 2.
+          object_expected_tests=$((89 + 6 + 2))
           grep -Eq "^# tests ${object_expected_tests}$" "$RUNNER_TEMP/object-activation.tap"
           grep -Eq '^# fail 0$' "$RUNNER_TEMP/object-activation.tap"
           grep -Eq '^# skipped 0$' "$RUNNER_TEMP/object-activation.tap"
