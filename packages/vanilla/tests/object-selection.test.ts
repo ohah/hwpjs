@@ -454,6 +454,17 @@ test('P only consumes selected object plus current Canvas focus and emits one im
   }
 });
 
+test('pressing Shift on a selected picture keeps the selection receipt for aspect-locked drag', async () => {
+  const f = fixture(picture());
+  await f.select();
+  const selected = f.actor.current();
+  assert.ok(selected);
+  assert.equal(f.actor.keyDown(p({ key: 'Shift', keyCode: 16, shiftKey: true })), false);
+  assert.equal(f.actor.current(), selected);
+  assert.equal(f.actor.keyDown(p({ key: 'Escape', keyCode: 27, shiftKey: true })), false);
+  assert.equal(f.actor.current(), null);
+});
+
 test('IME, repeat, modifiers, cancelled key and foreign input never grab P', async () => {
   for (const delta of [
     { trusted: false },

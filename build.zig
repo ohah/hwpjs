@@ -53,6 +53,20 @@ pub fn build(b: *std.Build) void {
     const original_cell_block_step = b.step("test-original-cell-alignment-block", "Verify original table-cell alignment batches");
     original_cell_block_step.dependOn(&run_original_cell_block_tests.step);
 
+    const picture_anchor_tests = b.addTest(.{
+        .use_llvm = true,
+        .filters = &.{ "H5 anchored picture", "anchored H5 request", "anchored picture HX", "managed picture anchoring HX" },
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/picture_anchor_combined_probe.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    const run_picture_anchor_tests = b.addRunArtifact(picture_anchor_tests);
+    run_picture_anchor_tests.step.dependOn(&abi_check.step);
+    const picture_anchor_step = b.step("test-picture-anchored-resize", "Verify anchored picture geometry, history, and optional wire contracts");
+    picture_anchor_step.dependOn(&run_picture_anchor_tests.step);
+
     // Corpus is required by the regular full test target, not an optional skip.
     const package_corpus_options = b.addOptions();
     package_corpus_options.addOption([]const u8, "root", b.option([]const u8, "hwpx-package-corpus-root", "Absolute isolated historical raw484 dataset path; required by test") orelse "");

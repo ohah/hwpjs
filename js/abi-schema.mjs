@@ -322,3 +322,14 @@ export const ORIGINAL_CELL_VERTICAL_ALIGNMENT_BATCH_ABI = Object.freeze(
     ]),
   ),
 );
+
+// Optional exact fixed-point resize. Legacy picture size writers stay available.
+export const PICTURE_ANCHORED_RESIZE_ABI = Object.freeze(
+  Object.fromEntries(
+    ['hwp5_edit', 'hwpx_edit'].flatMap((prefix) => [
+      [`${prefix}_picture_resize_anchor_version`, { params: [], results: ['i32'] }],
+      [`${prefix}_picture_resize_anchor_query`, { params: ['i32', 'i32'], results: ['i32'] }],
+      [`${prefix}_picture_resize_anchor_set`, { params: ['i32', 'i32'], results: ['i32'] }],
+    ]),
+  ),
+);

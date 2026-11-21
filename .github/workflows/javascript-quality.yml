@@ -210,7 +210,7 @@ jobs:
           set -euo pipefail
           export HWPJS_TEST_CORE_DIST="$PWD/packages/core/dist"
           node --experimental-transform-types --import ./tools/renderer-test-core-provider.mjs --test --test-concurrency=1 --test-reporter=tap packages/vanilla/tests/object-selection.test.ts tests/canvas/object-selection-paint.test.mjs tests/canvas/object-selection-direct-input.test.mjs 2>&1 | tee "$RUNNER_TEMP/object-selection-p.tap"
-          grep -Eq '^# tests 38$' "$RUNNER_TEMP/object-selection-p.tap"
+          grep -Eq '^# tests 39$' "$RUNNER_TEMP/object-selection-p.tap"
           grep -Eq '^# fail 0$' "$RUNNER_TEMP/object-selection-p.tap"
           grep -Eq '^# skipped 0$' "$RUNNER_TEMP/object-selection-p.tap"
           node --experimental-transform-types --import ./tools/renderer-test-core-provider.mjs --test --test-concurrency=1 --test-reporter=tap tests/canvas/object-selection-frame-currentness.test.mjs tests/canvas/picture-resize-completed-paint.test.mjs 2>&1 | tee "$RUNNER_TEMP/object-selection-frame10.tap"
@@ -889,6 +889,9 @@ jobs:
             --import ./tools/tests/picture-resize-source-provider.mjs \
             --test --test-concurrency=1 \
             ./packages/vanilla/tests/picture-resize-controls.test.mjs \
+            ./packages/vanilla/tests/picture-anchored-resize-controls.test.mjs \
+            ./tests/canvas/picture-fixed-anchor-geometry.test.mjs \
+            ./tests/canvas/picture-fixed-anchor-renderer.test.mjs \
             ./packages/vanilla/tests/surface.test.ts \
             ./packages/vanilla/tests/undo-onset-surface-integration.test.mjs
           node --experimental-transform-types --max-old-space-size=384 \
@@ -899,6 +902,7 @@ jobs:
             ./packages/vanilla/tests/non-text-history-rejected-picture.test.mjs \
             ./packages/vanilla/tests/non-text-history-rejected-picture-negative.test.mjs
           node node_modules/typescript/lib/tsc.js --noEmit -p ./tools/tests/tsconfig.picture-resize.json
+          bun test ./packages/core/tests/commands/picture-anchored-resize.test.ts ./packages/core/tests/transport/picture-anchored-resize-admission.test.ts
       - name: Test selected picture replacement
         timeout-minutes: 2
         shell: bash
@@ -1333,9 +1337,9 @@ jobs:
             assert((await readFile(`${shipped}/${name}`)).equals(await readFile(`zig-out/verification/ci-agent-skill/${name}`)), `SkillAssetOutOfDate:${name}`);
           }
           JS
-      - name: Test public SDK image insertion and HWP5 vertical margins
+      - name: Test public SDK picture editing and HWP5 vertical margins
         timeout-minutes: 2
-        run: node --test --test-concurrency=1 tests/image/public-image-insertion.test.mjs tests/image/public-hwp5-vertical-margins.test.mjs
+        run: node --test --test-concurrency=1 tests/image/public-image-insertion.test.mjs tests/image/public-hwp5-vertical-margins.test.mjs tests/image/public-picture-anchored-resize.test.mjs
       - name: Test portable fixture author and independent oracle
         run: |
           python3 -B tools/testing/portable_five/test_portable_five.py

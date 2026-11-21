@@ -951,6 +951,21 @@ pub const Session = struct {
         const plan = try @import("picture_resize_plan.zig").build(self, section_index, picture_node, size);
         return @import("picture_geometry_transaction.zig").applyWithFrame(self, section_index, picture_node, plan.dimensions, &plan.matrices, plan.frame, self.options.max_output_bytes);
     }
+    pub fn resizePictureAnchored(self: *Session, section_index: usize, picture_node: usize, size: [2]u32, intent: @import("picture_anchored_resize.zig").Intent) !bool {
+        if (!self.history_delta_managed) return error.HistoryProtocol2Required;
+        if (!self.history_delta_managed or self.history_transaction_active) return self.resizePictureAnchoredHistoryBody(section_index, picture_node, size, intent);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.resizePictureAnchoredHistoryBody(section_index, picture_node, size, intent);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn resizePictureAnchoredHistoryBody(self: *Session, section_index: usize, picture_node: usize, size: [2]u32, intent: @import("picture_anchored_resize.zig").Intent) !bool {
+        const plan = try @import("picture_anchored_resize.zig").build(self, section_index, picture_node, size, intent);
+        return @import("picture_geometry_transaction.zig").applyWithFrame(self, section_index, picture_node, plan.dimensions, &plan.matrices, plan.frame, self.options.max_output_bytes);
+    }
     pub fn setCellSizeForList(self: *Session, section_index: usize, list_node: usize, size: @import("table_cell_size_write.zig").Size) !bool {
         if (!self.history_delta_managed or self.history_transaction_active) return self.setCellSizeForListHistoryBody(section_index, list_node, size);
         if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;

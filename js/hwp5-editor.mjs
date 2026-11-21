@@ -1,3 +1,4 @@
+import { createPictureAnchoredResizeApi } from './picture-anchored-resize-api.mjs';
 import { createOriginalCellVerticalAlignmentBatchApi } from './original-cell-vertical-alignment-batch.mjs';
 import { createOriginalCellVerticalAlignmentApi } from './original-cell-vertical-alignment.mjs';
 import { createHwp5VerticalMarginsApi } from './hwp5-vertical-outer-margins.mjs';
@@ -258,6 +259,7 @@ export async function createExperimentalHwp5Editor(
   };
   const api = {
     ...createOriginalCellVerticalAlignmentApi({ wasm, memory, check: check, prefix: 'hwp5_edit' }),
+    ...createPictureAnchoredResizeApi({ wasm, memory, check, prefix: 'hwp5_edit' }),
     ...createOriginalCellVerticalAlignmentBatchApi({
       wasm,
       memory,

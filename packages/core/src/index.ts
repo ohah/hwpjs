@@ -418,3 +418,16 @@ export type {
   OriginalCellAlignmentBlockTarget,
   SetOriginalCellAlignmentBlockPayload,
 } from './commands/original-cell-vertical-alignment-batch.ts';
+
+export {
+  RESIZE_PICTURE_ANCHORED_COMMAND,
+  PICTURE_RESIZE_ANCHORS,
+} from './commands/picture-anchored-resize.ts';
+export type {
+  PictureResizeAnchor,
+  PictureAnchoredResizeSelector,
+  PictureAnchoredResizeTarget,
+  PictureAnchoredResizeObservation,
+  ResizePictureAnchoredPayload,
+  PictureAnchoredResizeRead,
+} from './commands/picture-anchored-resize.ts';

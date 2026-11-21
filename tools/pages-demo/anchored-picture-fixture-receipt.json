@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "feature": "anchored-picture-resize",
+  "baseCount": 131,
+  "targetCount": 133,
+  "baseManifestSHA256": "17b5553ef4d7ca4c03ce7e6ccd217761beb3d6c1e0204e4f92be27b0711b2327",
+  "basePolicySHA256": "559be118c0cff5a12265077f2d3e4ba40cdaf992a6aecaab90fd9878eaef2bb1",
+  "baseCatalogSHA256": "65b4a52f58436e319a8a933fc2eaedc97ee8c213bbd22da7c0bcedb30265dd71",
+  "targetPolicyPath": "tools/pages-demo/anchored-picture-fixture-policy.json",
+  "targetPolicySHA256": "47ad45ae1432b9bf695c9a8e0464ce5cadece91846bcde50c9c7c5822a869435",
+  "targetCatalogSHA256": "212a0e461fa372c70097bd026c3a472021984850b03c433c4a126c494a76c088",
+  "additions": [
+    {
+      "row": {
+        "id": "anchored-picture.hwp",
+        "name": "anchored-picture.hwp",
+        "label": "[기능 예제] HWP5 그림 고정점 크기 조절",
+        "path": "fixtures/anchored-picture.hwp",
+        "bytes": 5120,
+        "sha256": "06f558d278cb6886866ab743ee2230f45d54f4042a70579f8795bd3ed6057036"
+      },
+      "sourcePath": "tools/pages-demo/fixtures/anchored-picture.hwp",
+      "parentId": "picture-resize.hwp",
+      "parentBytes": 4096,
+      "parentSHA256": "6b2010227e9d6cd41c242e0a29281eddb58f8f618c5df137c4ca3d518665dda2",
+      "provenanceSHA256": "844fbec8dd18ffca9ec72ff40de9caed23ff4b6dd76508c4dbc9fa453ed650b9"
+    },
+    {
+      "row": {
+        "id": "anchored-picture.hwpx",
+        "name": "anchored-picture.hwpx",
+        "label": "[기능 예제] HWPX 그림 고정점 크기 조절",
+        "path": "fixtures/anchored-picture.hwpx",
+        "bytes": 8514,
+        "sha256": "91a6ddb492823d450b1b10432224074d804ff6feca8a37b78fce86bf5282cbfd"
+      },
+      "sourcePath": "tools/pages-demo/fixtures/anchored-picture.hwpx",
+      "parentId": "picture-resize.hwpx",
+      "parentBytes": 8508,
+      "parentSHA256": "3beb9964f3a194f9d54ecac8ccc11949d1289fa141487028f6d070fd2b4ef255",
+      "provenanceSHA256": "844fbec8dd18ffca9ec72ff40de9caed23ff4b6dd76508c4dbc9fa453ed650b9"
+    }
+  ],
+  "producer": {
+    "policyBaseCommit": "5beb757e35071f918049a12c9366f752d836cf73",
+    "provenanceSHA256": "844fbec8dd18ffca9ec72ff40de9caed23ff4b6dd76508c4dbc9fa453ed650b9",
+    "independentRawGateSHA256": "5f8f0202e8edcfd384d330c70443e19bb55ba1e870fb7039a1c204e7868bdd30",
+    "independentRawAncestryReceiptSHA256": "514ea2b2c8ef4f853f0bbdeb69e71556bfd9b47c2a7e9771d5491a11721c8b25",
+    "generatedGalleryClaim": false
+  }
+}

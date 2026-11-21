@@ -1,3 +1,4 @@
+import { createPictureAnchoredResizeApi } from './picture-anchored-resize-api.mjs';
 import { createOriginalCellVerticalAlignmentBatchApi } from './original-cell-vertical-alignment-batch.mjs';
 import { createOriginalCellVerticalAlignmentApi } from './original-cell-vertical-alignment.mjs';
 import { createObjectBodyFlowApi } from './object-body-flow.mjs';
@@ -242,6 +243,7 @@ export async function createHwpxEditor(source) {
   const documentInsert = createHwpxDocumentInsertApi({ wasm, memory, check: ready });
   return {
     ...createOriginalCellVerticalAlignmentApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
+    ...createPictureAnchoredResizeApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
     ...createOriginalCellVerticalAlignmentBatchApi({
       wasm,
       memory,

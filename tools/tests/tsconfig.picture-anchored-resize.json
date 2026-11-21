@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.picture-replacement.json",
+  "include": [
+    "../../packages/core/src/**/*.ts",
+    "../../packages/core/tests/commands/picture-anchored-resize.test.ts",
+    "../../packages/core/tests/transport/picture-anchored-resize-admission.test.ts"
+  ],
+  "exclude": []
+}

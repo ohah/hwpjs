@@ -421,3 +421,23 @@ export async function typeInCreatedCell(
 `INSERT_IMAGE_COMMAND`는 Native history v2가 활성화된 HWP5·HWPX 편집 세션에서 PNG 또는 JPEG를 삽입합니다. 요청의 `options`에는 `imageBytes`와 양의 정수인 `width`, `height`를 전달합니다. 두 크기의 단위는 HWPUNIT이며 1mm는 약 283.46 HWPUNIT입니다. 이미지 입력 한도는 8MiB입니다.
 
 HWP5는 현재 본문 캐럿의 `selection`을 `target`으로, 그 상태의 `stateVersion`을 `selectionVersion`으로 사용합니다. HWPX는 Native에서 조회한 현재 본문 삽입 대상이 필요합니다. 대상과 상태가 바뀌면 새로 포착해야 합니다. [데모 사용법](../guide/demo.md#새-그림-삽입)
+
+## 그림의 고정점을 유지하며 크기 변경
+
+`getAnchoredPictureResize({ section, pictureNode })`로 현재 그림의 크기와 위치를 조회합니다. HWP5의 `pictureNode`에는 화면 컴포넌트 번호와 구분되는 물리 그림 레코드 번호를 전달합니다. HWPX는 현재 섹션의 그림 노드 번호를 사용합니다. 지원하는 배치이면 반환값의 `target`을 같은 편집기에서 한 번 사용할 수 있습니다. 문서나 편집 상태가 달라지면 다시 조회합니다.
+
+```ts
+import { RESIZE_PICTURE_ANCHORED_COMMAND } from '@ohah/hwpjs';
+
+const read = await editor.getAnchoredPictureResize({ section, pictureNode });
+if (read.state === 'available') {
+  await editor.dispatchCommand(RESIZE_PICTURE_ANCHORED_COMMAND, {
+    target: read.target,
+    width: 6000,
+    height: 3000,
+    anchor: 'bottom_right',
+  });
+}
+```
+
+값은 HWPUNIT입니다. 예제의 `bottom_right`는 고정할 점이므로 왼쪽 위를 이동해 크기를 바꿉니다. 크기와 위치는 한 번의 문서 이력으로 기록됩니다. 페이지 기준 절대 위치를 가진 일부 떠 있는 그림을 지원합니다.

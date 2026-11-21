@@ -291,3 +291,17 @@ test('explicit loader rejects tampered source receipt and receipt symlink', asyn
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+test('anchored receipt approval reuses exact assembly and failure-atomic guards', () => {
+  const input = fixture();
+  input.receipt.feature = 'anchored-picture-resize';
+  const approval = { feature: 'anchored-picture-resize', additions: 2, sha256: 'a'.repeat(64) };
+  const before = new Map(input.files);
+  const output = extendPublicFixtureFiles({ ...input, approval });
+  assert.deepEqual(input.files, before);
+  assert.equal(output.binding.feature, 'anchored-picture-resize');
+  assert.equal(output.binding.receiptSHA256, approval.sha256);
+  input.artifacts.set(input.receipt.additions[0].row.id, Buffer.from('wrong'));
+  assert.throws(() => extendPublicFixtureFiles({ ...input, approval }), /FixtureArtifactMismatch/);
+  assert.deepEqual(input.files, before);
+});

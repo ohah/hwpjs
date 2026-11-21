@@ -50,6 +50,7 @@ pub const Command = union(enum) {
     set_cell_styles: []const @import("h5cell_style_batch.zig").Request,
     set_picture_current_size: @import("picture_current_size_values.zig").Edit,
     resize_picture: @import("picture_resize_values.zig").Edit,
+    resize_picture_anchored: @import("picture_anchored_resize.zig").Request,
     set_paragraph_format: @import("paragraph_format.zig").Edit,
     set_paragraph_bullet: struct { section: usize, paragraph: usize, value: @import("../../model/formatting_patch.zig").Bullet },
     edit_object_geometry: *const @import("../../model/object_geometry.zig").Request,
@@ -657,12 +658,14 @@ pub const Session = opaque {
     /// Checkpoint must represent the current model; history reserves first.
     pub fn applyCheckpointed(self: *Session, checkpoint: *Checkpoint, limit: usize, command: Command) !bool {
         if (command == .set_cell_vertical_alignment_block) try self.requireManagedCellBlock();
+        try self.requireManagedAnchoredDispatch(command);
         try self.materializeLiveText();
         return self.applyBatchCheckpointed(checkpoint, limit, &.{command});
     }
 
     pub fn applyBatchCheckpointed(self: *Session, checkpoint: *Checkpoint, limit: usize, commands: []const Command) !bool {
         for (commands) |command| if (command == .set_cell_vertical_alignment_block) try self.requireManagedCellBlock();
+        for (commands) |command| try self.requireManagedAnchoredDispatch(command);
         try self.materializeLiveText();
         const before = try self.externalHistoryBegin();
         const result = self.applyBatchCheckpointedBody(checkpoint, limit, commands) catch |err| {
@@ -1039,6 +1042,33 @@ pub const Session = opaque {
         const ticket = try self.historyTicket();
         const read_only = state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview);
         return @import("object_outer_margins.zig").readObservedVertical(state.allocator, state.decoded[selector.section], state.source.header.version(), state.document.sections[selector.section], selector, ticket, read_only);
+    }
+    /// Caller transfers bytes/optional intent ownership only after this succeeds.
+    /// The source topology, record offsets and all unrelated live model intents stay fixed.
+    fn publishFixedSection(self: *Session, index: usize, bytes: []u8, sizes: union(enum) { keep, replace: ?[]model.PictureCurrentSize }) !void {
+        const state = self.getState();
+        if (bytes.len != state.decoded[index].len) return error.SourceBindingMismatch;
+        const offsets = try state.allocator.dupe(usize, state.style_offsets[index]);
+        const section = &state.document.sections[index];
+        var old = section.rebased_source;
+        const old_sizes = section.picture_current_sizes;
+        section.rebased_source = .{ .bytes = bytes, .style_offsets = offsets, .original_record_count = if (old) |basis| basis.original_record_count else section.source_record_count };
+        switch (sizes) {
+            .keep => {},
+            .replace => |values| section.picture_current_sizes = values,
+        }
+        state.refreshSourceViews();
+        if (old) |*basis| basis.deinit(state.allocator);
+        if (sizes == .replace) if (old_sizes) |values| state.allocator.free(values);
+    }
+    pub fn anchoredPictureGeometry(self: *const Session, selector: @import("object_outer_margins.zig").Selector) !@import("picture_anchored_resize.zig").Observation {
+        if (self.historyTransactionActive()) return error.MutationInProgress;
+        try self.materializeLiveText();
+        const state = self.stateConst();
+        if (selector.section >= state.document.sections.len) return error.InvalidSection;
+        const ticket = try self.historyTicket();
+        const read_only = state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview);
+        return @import("picture_anchored_resize.zig").observe(state.allocator, state.decoded[selector.section], state.source.header.version(), state.document.sections[selector.section], selector, ticket, read_only);
     }
     pub fn objectGeometry(self: *const Session, a: std.mem.Allocator, selector: @import("../../model/object_geometry.zig").Selector, revision: u64, binding: @import("../../model/object_geometry.zig").Binding) !@import("../../model/object_geometry.zig").Observation {
         try self.materializeLiveText();
@@ -1809,12 +1839,19 @@ pub const Session = opaque {
         try @import("h5cell_fill_batch.zig").apply(state.allocator, &state.cell_backgrounds, state.decoded, state.source.header.version(), &state.document, original.bytes, edits, max_stream);
     }
 
+    /// Check before any external-history barrier, lazy materialization or cache invalidation.
+    fn requireManagedAnchoredDispatch(self: *const Session, command: Command) !void {
+        if (command != .resize_picture_anchored) return;
+        if (!self.historyTransactionActive() or self.stateConst().history_poison_observer == null) return error.HistoryProtocol2Required;
+    }
     pub fn apply(self: *Session, command: Command) !void {
         if (command == .set_cell_vertical_alignment_block) return error.HistoryProtocol2Required;
+        if (command == .resize_picture_anchored) return error.HistoryProtocol2Required;
         return self.applyWithFontCache(command, null);
     }
     pub fn applyWithFontCache(self: *Session, command: Command, font_cache: ?*@import("../../model/batch_font_lookup.zig").Cache) !void {
         if (command == .set_cell_vertical_alignment_block) try self.requireManagedCellBlock();
+        try self.requireManagedAnchoredDispatch(command);
         self.invalidateStrictLayout();
         // Helpers may replace a whole Section clone. Refresh borrowed bases before returning.
         defer if (self.getState().has_source_rebases) self.getState().refreshSourceViews();
@@ -2284,14 +2321,7 @@ pub const Session = opaque {
                     break :chart (try @import("chart_object_geometry.zig").write(state.allocator, self, &state.source, !state.chart_resources.empty(), current orelse state.decoded[section_index], state.decoded, state.source.header.version(), section.*, request.*, read_only)) orelse return;
                 } else (try @import("object_geometry.zig").write(state.allocator, state.decoded[section_index], state.source.header.version(), section.paragraphs, request.*, read_only)) orelse return;
                 errdefer state.allocator.free(bytes);
-                // Fixed topology, length and record offsets: retain all live model intents.
-                // History already owns the preimage Section basis through its checkpoint.
-                if (bytes.len != state.decoded[section_index].len) return error.SourceBindingMismatch;
-                const offsets = try state.allocator.dupe(usize, state.style_offsets[section_index]);
-                var old = section.rebased_source;
-                section.rebased_source = .{ .bytes = bytes, .style_offsets = offsets, .original_record_count = if (old) |basis| basis.original_record_count else section.source_record_count };
-                state.refreshSourceViews();
-                if (old) |*basis| basis.deinit(state.allocator);
+                try self.publishFixedSection(section_index, bytes, .keep);
             },
             .edit_page_settings => |request| {
                 const state = self.getState();
@@ -2407,6 +2437,20 @@ pub const Session = opaque {
                 const state = self.getState();
                 if (edit.section >= state.document.sections.len) return error.InvalidSection;
                 try @import("picture_current_size_values.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section], edit);
+            },
+            .resize_picture_anchored => |request| {
+                if (!self.historyTransactionActive()) return error.HistoryProtocol2Required;
+                const state = self.getState();
+                const index = request.target.selector.section;
+                if (index >= state.document.sections.len) return error.InvalidSection;
+                if (state.formatting_batch != null) return error.MutationInProgress;
+                const section = &state.document.sections[index];
+                const read_only = state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview);
+                const bytes = (try @import("picture_anchored_resize.zig").write(state.allocator, state.decoded[index], state.source.header.version(), section.*, request, try self.historyTicket(), read_only)) orelse return;
+                errdefer state.allocator.free(bytes);
+                const remaining = try @import("picture_anchored_resize.zig").withoutSelected(state.allocator, section.*, request.target.selector.node);
+                errdefer if (remaining) |values| state.allocator.free(values);
+                try self.publishFixedSection(index, bytes, .{ .replace = remaining });
             },
             .resize_picture => |edit| {
                 const state = self.getState();

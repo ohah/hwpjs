@@ -1,5 +1,7 @@
 // @ts-ignore Canonical geometry/drag implementation; this module only owns Surface admission.
 import { createPictureResizeControls } from '../../../web/preview/picture-resize-controls.mjs';
+// @ts-ignore Canonical physical-selector mapping, shared by the Surface adapter.
+import { anchoredPictureResizeSelector } from '../../../web/preview/picture-resize-target.mjs';
 
 export interface SurfacePictureResizeScope {
   readonly state: object;
@@ -7,6 +9,8 @@ export interface SurfacePictureResizeScope {
   readonly lease: object;
   readonly source: object;
   readonly modalRevision: unknown;
+  readonly legacyAvailable?: boolean;
+  readonly anchoredCurrent?: () => boolean;
   readonly target: Readonly<{
     section: number;
     pictureNode: number;
@@ -15,6 +19,33 @@ export interface SurfacePictureResizeScope {
     height: number;
   }>;
 }
+export type SurfacePictureResizeAnchor =
+  | 'top_left'
+  | 'top_center'
+  | 'top_right'
+  | 'center_left'
+  | 'center_right'
+  | 'bottom_left'
+  | 'bottom_center'
+  | 'bottom_right';
+export type SurfaceAnchoredPictureRead =
+  | { state: 'unavailable'; reason?: string }
+  | {
+      state: 'available';
+      target: object;
+      observation: {
+        profileVersion: 1;
+        format: 'hwp5' | 'hwpx';
+        section: number;
+        pictureNode: number;
+        width: number;
+        height: number;
+        horizontalOffset: number;
+        verticalOffset: number;
+        historyRevision: number;
+      };
+    };
+type IssuedAnchor = { scope: SurfacePictureResizeScope; target: object };
 /** A certified current picture is required; hit testing alone never issues this scope. */
 export function createSurfacePictureResizeControls(options: {
   canvas: HTMLCanvasElement;
@@ -23,6 +54,14 @@ export function createSurfacePictureResizeControls(options: {
   renderer: object;
   capture(): SurfacePictureResizeScope | null;
   request(width: number, height: number): boolean;
+  queryAnchored?(scope: SurfacePictureResizeScope): Promise<SurfaceAnchoredPictureRead>;
+  requestAnchored?(
+    target: object,
+    width: number,
+    height: number,
+    anchor: SurfacePictureResizeAnchor,
+    scope: SurfacePictureResizeScope,
+  ): boolean | Promise<unknown>;
   note: { textContent: string };
 }) {
   const events = new AbortController();
@@ -31,20 +70,33 @@ export function createSurfacePictureResizeControls(options: {
     enabled = false,
     resetting = false;
   let observed: unknown;
-  let down: { scope: SurfacePictureResizeScope; pointerId: number } | null = null;
+  let down: {
+    scope: SurfacePictureResizeScope;
+    pointerId: number;
+    anchored?: IssuedAnchor;
+  } | null = null;
+  let releasingAnchor: IssuedAnchor | null = null;
+  let anchorQuery: {
+    scope: SurfacePictureResizeScope;
+    state: 'pending' | 'ready' | 'unavailable' | 'blocked';
+    issued?: IssuedAnchor;
+  } | null = null;
+  let commitPending: object | null = null;
   let releasing: SurfacePictureResizeScope | null = null;
   const read = () => {
-    if (closed || !enabled) return null;
+    if (closed || !enabled || commitPending) return null;
     try {
       return options.capture();
     } catch {
       return null;
     }
   };
-  const current = (scope: SurfacePictureResizeScope) => {
-    const next = read();
+  const sameScope = (next: SurfacePictureResizeScope | null, scope: SurfacePictureResizeScope) => {
     return (
       !!next &&
+      next.legacyAvailable === scope.legacyAvailable &&
+      next.anchoredCurrent?.() !== false &&
+      scope.anchoredCurrent?.() !== false &&
       ['state', 'selection', 'lease', 'source', 'modalRevision'].every(
         (key) =>
           next[key as keyof SurfacePictureResizeScope] ===
@@ -57,8 +109,59 @@ export function createSurfacePictureResizeControls(options: {
       )
     );
   };
+  const current = (scope: SurfacePictureResizeScope) => sameScope(read(), scope);
+  const invalidateAnchor = () => {
+    anchorQuery = null;
+  };
+  const prefetch = (scope = read()) => {
+    if (!options.queryAnchored || !options.requestAnchored || !scope) return;
+    if (anchorQuery && sameScope(scope, anchorQuery.scope)) return;
+    const query: NonNullable<typeof anchorQuery> = { scope, state: 'pending' };
+    anchorQuery = query;
+    void Promise.resolve()
+      .then(() => options.queryAnchored!(scope))
+      .then((answer) => {
+        if (closed || anchorQuery !== query || !current(scope)) return;
+        if (answer.state === 'unavailable') {
+          query.state = 'unavailable';
+          return;
+        }
+        const o = answer.observation;
+        const format = (scope.state as { content?: { format?: unknown } }).content?.format;
+        if (
+          answer.state !== 'available' ||
+          !answer.target ||
+          typeof answer.target !== 'object' ||
+          !o ||
+          o.profileVersion !== 1 ||
+          o.format !== format ||
+          o.section !== scope.target.section ||
+          o.pictureNode !== anchoredPictureResizeSelector(scope.target, format)?.pictureNode ||
+          o.width !== scope.target.width ||
+          o.height !== scope.target.height ||
+          !Number.isSafeInteger(o.historyRevision) ||
+          o.historyRevision < 0 ||
+          ![o.horizontalOffset, o.verticalOffset].every(
+            (v) => Number.isInteger(v) && v >= -0x80000000 && v <= 0x7fffffff,
+          )
+        ) {
+          query.state = 'blocked';
+          return;
+        }
+        query.issued = Object.freeze({ scope, target: answer.target });
+        query.state = 'ready';
+        if (!closed && scope.legacyAvailable === false)
+          (options.renderer as { pictureResizeGuide?: (value: null) => void }).pictureResizeGuide?.(
+            null,
+          );
+      })
+      .catch(() => {
+        if (anchorQuery === query) query.state = 'blocked';
+      });
+  };
   const cancel = () => {
     down = null;
+    invalidateAnchor();
     if (resetting || !shared) return;
     resetting = true;
     try {
@@ -119,11 +222,14 @@ export function createSurfacePictureResizeControls(options: {
                 if (!down) return;
                 const scope = down.scope;
                 releasing = scope;
+                releasingAnchor = down.anchored ?? null;
                 try {
                   listener(event);
                 } finally {
                   releasing = null;
+                  releasingAnchor = null;
                   down = null;
+                  invalidateAnchor();
                 }
                 return;
               }
@@ -138,7 +244,83 @@ export function createSurfacePictureResizeControls(options: {
   shared = createPictureResizeControls({
     ...options,
     canvas: guarded,
-    selected: () => read()?.target ?? null,
+    selected: () => {
+      const scope = read();
+      prefetch(scope);
+      if (
+        scope?.legacyAvailable === false &&
+        (!anchorQuery || anchorQuery.state !== 'ready' || !sameScope(scope, anchorQuery.scope))
+      )
+        return null;
+      return scope?.target ?? null;
+    },
+    anchoredResize:
+      options.queryAnchored && options.requestAnchored
+        ? {
+            capture() {
+              const scope = down?.scope;
+              if (!scope || !current(scope)) return null;
+              prefetch(scope);
+              if (!anchorQuery || !sameScope(scope, anchorQuery.scope)) return null;
+              if (anchorQuery.state === 'unavailable')
+                return scope.legacyAvailable === false ? null : undefined;
+              if (anchorQuery.state !== 'ready' || !anchorQuery.issued) return null;
+              down!.anchored = anchorQuery.issued;
+              return anchorQuery.issued;
+            },
+            request(
+              issued: IssuedAnchor,
+              width: number,
+              height: number,
+              anchor: SurfacePictureResizeAnchor,
+            ) {
+              const scope = releasing;
+              if (
+                !scope ||
+                issued !== releasingAnchor ||
+                !current(scope) ||
+                !sameScope(scope, issued.scope) ||
+                commitPending
+              )
+                return false;
+              const pending = {};
+              commitPending = pending;
+              invalidateAnchor();
+              const settled = () => {
+                if (commitPending !== pending) return;
+                commitPending = null;
+                // A no-op or rejection may publish no new state. Restore the current
+                // handle/query paint after retiring the provisional pending gate.
+                if (!closed)
+                  (
+                    options.renderer as { pictureResizeGuide?: (value: null) => void }
+                  ).pictureResizeGuide?.(null);
+              };
+              try {
+                const result = options.requestAnchored!(
+                  issued.target,
+                  width,
+                  height,
+                  anchor,
+                  scope,
+                );
+                if (result === false) {
+                  settled();
+                  return false;
+                }
+                void Promise.resolve(result).then(settled, () => {
+                  settled();
+                  if (!closed)
+                    options.note.textContent = '그림 반대점 고정 크기 변경을 적용할 수 없습니다.';
+                });
+                return true;
+              } catch {
+                settled();
+                return false;
+              }
+            },
+          }
+        : undefined,
     request(width: number, height: number) {
       const scope = releasing;
       if (!scope || !current(scope)) return false;
@@ -183,6 +365,8 @@ export function createSurfacePictureResizeControls(options: {
       enabled = false;
       down = null;
       releasing = null;
+      releasingAnchor = null;
+      invalidateAnchor();
       events.abort();
       shared.close();
     },

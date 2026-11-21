@@ -50,3 +50,46 @@ node --test --test-concurrency=1 \
 ```
 
 정책·메타데이터·합성 바이트 조립과 실패 원자성 검사입니다. `tests/tools/pages-demo-fixture-policy.test.mjs`는 현재 source-map과 정책 SHA를 확인한 뒤 실제 baseline bytes로 임시 gallery를 조립하는 별도 시험입니다. gallery 복사가 금지된 source-only 준비에서는 이 시험을 실행하지 않습니다. 전체 producer, Native, SDK, browser, 공개 복사·배포 및 한글 수용 검증과 각각 구분합니다.
+
+## Anchored picture examples: source-only 131 to 133 successor
+
+The active policy candidate appends only `anchored-picture.hwp` and
+`anchored-picture.hwpx`, two pre-edit derivatives of the existing approved
+`picture-resize.hwp` and `picture-resize.hwpx` examples. The former 131-file
+policy is preserved byte for byte as `public-gallery-fixtures-131.json`.
+The historical 126, 128, 129 and vertical-margin receipts remain unchanged.
+Earlier count-specific sections describe their respective historical cohorts.
+
+`anchored-picture-fixture-receipt.json` binds exactly the 131-file base manifest,
+the two parents, the two new files, the target policy and the catalog bytes.
+`anchored-picture-fixture-provenance.json` records bounded independent parent
+and resize-save checks. The edited reference saves are not public assets.
+The HWP5 example includes repository-owned synthetic body text and source layout
+caches; this does not establish fresh reflow or successful default saving.
+When saving requires stale-layout consent, use the existing visible consent flow.
+The HWPX derivative changes only the existing picture positioning attributes.
+No external image, font, implementation or private example is added.
+
+The Pages picker receives public IDs and labels through the existing
+`publicFixtureModules(policy)` build boundary. Do not append files to a generated
+gallery, hand-edit its manifest, or weaken the baseline validator. Until the
+133-file bundle is adopted, rebuild from the exact 131-file baseline with the
+registered extension and a separately qualified anchored-picture SDK source and
+WASM. The policy patch alone does not qualify that product source or WASM.
+
+```sh
+node tools/build-public-demo.mjs \
+  --source zig-out/verification/QUALIFIED-anchored-source \
+  --wasm /absolute/pinned/anchored/hwpjs.wasm \
+  --out zig-out/verification/NEW-anchored-gallery133 \
+  --fixture-extension "$PWD/tools/pages-demo/anchored-picture-fixture-receipt.json"
+node tools/build-pages-demo.mjs \
+  --bundle-dir zig-out/verification/NEW-anchored-gallery133 \
+  --fixture-policy tools/pages-demo/anchored-picture-fixture-policy.json \
+  --out zig-out/verification/NEW-anchored-pages133
+```
+
+These commands are a handoff recipe, not evidence of a build or publication.
+Activate policy, source metadata and the exact official 133-file output together.
+An ordinary producer still rejects a 131-file public baseline against the new
+133-file policy; that strict mismatch remains intentional.

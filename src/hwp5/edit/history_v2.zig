@@ -137,6 +137,10 @@ pub const History = struct {
     }
     pub fn applyBatch(self: *Self, s: *edit.Session, commands: []const edit.Command) !bool {
         try self.bind(s);
+        for (commands) |command| if (command == .resize_picture_anchored) {
+            if (commands.len != 1 or !self.managed) return error.HistoryProtocol2Required;
+            if (!std.meta.eql(command.resize_picture_anchored.target.ticket, try s.historyTicket())) return error.StaleMutationEpoch;
+        };
         for (commands) |command| if (command == .edit_object_outer_margins or command == .edit_object_vertical_margins) {
             if (commands.len != 1 or !self.managed) return error.HistoryProtocol2Required;
             const target = if (command == .edit_object_vertical_margins) command.edit_object_vertical_margins.target else command.edit_object_outer_margins.target;

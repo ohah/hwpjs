@@ -181,6 +181,14 @@ pub const original_cell_vertical_alignment_batch_signatures = [_]OptionalFunctio
     .{ .name = "hwpx_edit_original_cell_vertical_alignment_batch", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
     .{ .name = "hwpx_edit_set_original_cell_vertical_alignment_batch", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
 };
+pub const picture_anchored_resize_signatures = [_]OptionalFunctionSignature{
+    .{ .name = "hwp5_edit_picture_resize_anchor_version", .params = &.{}, .results = &.{"i32"} },
+    .{ .name = "hwp5_edit_picture_resize_anchor_query", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+    .{ .name = "hwp5_edit_picture_resize_anchor_set", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+    .{ .name = "hwpx_edit_picture_resize_anchor_version", .params = &.{}, .results = &.{"i32"} },
+    .{ .name = "hwpx_edit_picture_resize_anchor_query", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+    .{ .name = "hwpx_edit_picture_resize_anchor_set", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+};
 pub const document = struct {
     pub const header_bytes: usize = 8;
     pub const node_bytes: usize = 56;

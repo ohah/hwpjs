@@ -50,6 +50,7 @@ pub const Command = struct {
     picture_node: usize = 0,
     picture_dimensions: @import("picture_dimension_write.zig").Update = .{},
     picture_size: [2]u32 = .{ 0, 0 },
+    picture_resize_anchor: ?@import("picture_anchored_resize.zig").Intent = null,
     form_node: usize = 0,
     checkbox_state: @import("form_checkbox_state_session.zig").State = .unchecked,
     created_table: ?*const @import("../model/created_table.zig").Table = null,
@@ -140,6 +141,7 @@ pub const History = struct {
         if (self.owned) |h| return h.applyBatch(session, commands);
         try self.bind(session);
         for (commands) |command| {
+            if (command.picture_resize_anchor != null) return error.HistoryProtocol2Required;
             if (command.kind == .note_delete or command.kind == .note_create or command.kind == .document_text or command.kind == .insert_document or command.kind == .equation_insert or command.kind == .chart_create or command.kind == .image_insert or command.kind == .picture_replace or command.kind == .bullet_definition or command.kind == .page_settings or command.kind == .object_geometry or command.kind == .object_outer_margins or command.kind == .object_body_flow or command.kind == .named_field_create or command.kind == .named_field_parameters or command.kind == .cell_vertical_alignment or command.kind == .cell_vertical_alignment_block)
                 return error.HistoryProtocol2Required;
         }
@@ -377,7 +379,7 @@ pub const History = struct {
             },
             .picture_resize => block: {
                 if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidPictureResizeCommand;
-                break :block try session.resizePicture(command.section, command.picture_node, command.picture_size);
+                break :block if (command.picture_resize_anchor) |intent| try session.resizePictureAnchored(command.section, command.picture_node, command.picture_size, intent) else try session.resizePicture(command.section, command.picture_node, command.picture_size);
             },
             .format => block: {
                 if (command.inserted.len != 0) return error.InvalidFormatCommand;

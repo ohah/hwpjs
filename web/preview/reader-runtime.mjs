@@ -1,4 +1,8 @@
 import {
+  queryPictureAnchoredResize,
+  commitPictureAnchoredResize,
+} from './picture-anchored-resize-command.mjs';
+import {
   queryHwp5VerticalMargins,
   commitHwp5VerticalMargins,
 } from './hwp5-vertical-margins-command.mjs';
@@ -1608,6 +1612,64 @@ export function createReaderRuntime({
           throw Error('PictureReplacementUnavailable');
         if (historyPoisoned) throw Error('HistoryMutationUncertain');
         atomicOutcome = editor.replacePicture(message.owner, message.imageBytes);
+        applied = atomicOutcome.application === 'applied';
+        mutationUncertain = atomicOutcome.application === 'unknown';
+        if (mutationUncertain) historyPoisoned = true;
+        if (atomicOutcome.error || atomicOutcome.cleanupError)
+          throw Error(atomicOutcome.error || atomicOutcome.cleanupError);
+        if (atomicOutcome.nativeCode === 2) {
+          reply({ kind: message.kind, changed: false });
+          return;
+        }
+        documentWindow = null;
+        if (format === 'hwpx') {
+          reader = await createHwpxReader(module);
+          preview = reader.readTextEvents(editor.saveForDisplay());
+        } else {
+          hwp5PreviewDirty = true;
+          await refreshHwp5PreviewFallback();
+        }
+        displayResources.invalidate();
+        reply({ kind: message.kind, content: format === 'hwpx' ? hwpxDisplay() : hwp5Display() });
+        return;
+      }
+      if (message.kind === 'picture-anchored-resize-query') {
+        if (
+          !['hwpx', 'hwp5'].includes(format) ||
+          !historyEnabled ||
+          documentWindow ||
+          readonlyTextReader ||
+          preview?.readOnly === true ||
+          preview?.limited ||
+          editor?.historyStats?.()?.protocolVersion !== 2 ||
+          !editor?.supportsPictureAnchoredResize?.()
+        ) {
+          reply({
+            kind: message.kind,
+            pictureResizeBefore: null,
+            reason: 'AnchoredPictureResizeUnavailable',
+          });
+          return;
+        }
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        const before = queryPictureAnchoredResize(editor, format, message.selector);
+        reply({ kind: message.kind, pictureResizeBefore: before });
+        return;
+      }
+      if (message.kind === 'picture-anchored-resize-set') {
+        if (
+          !['hwpx', 'hwp5'].includes(format) ||
+          !historyEnabled ||
+          documentWindow ||
+          readonlyTextReader ||
+          preview?.readOnly === true ||
+          preview?.limited ||
+          editor?.historyStats?.()?.protocolVersion !== 2 ||
+          !editor?.supportsPictureAnchoredResize?.()
+        )
+          throw Error('AnchoredPictureResizeUnavailable');
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        atomicOutcome = commitPictureAnchoredResize(editor, format, message.request);
         applied = atomicOutcome.application === 'applied';
         mutationUncertain = atomicOutcome.application === 'unknown';
         if (mutationUncertain) historyPoisoned = true;

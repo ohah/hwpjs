@@ -21,6 +21,7 @@
 | HWP5 차트 데이터 편집     | 직접 생성·편집한 막대 차트의 10/73/40 값을 확인하고, 선택한 차트의 속성에서 기존 데이터 편집을 엽니다.                                                                               | <a href="__HWPJS_DOCS_BASE__editor/fixtures/hwp5-chart-data-edit.hwp" download>hwp5-chart-data-edit.hwp</a>                                                                                         |
 | HWP5 수식 생성과 표시     | 직접 생성한 `x over y` 분수 한 개를 확인합니다. 새 수식 생성·실행 취소·다시 실행·저장 순서는 아래를 따릅니다.                                                                        | <a href="__HWPJS_DOCS_BASE__editor/fixtures/hwp5-equation-create.hwp" download>hwp5-equation-create.hwp</a>                                                                                         |
 | 그림 크기 조절            | 그림을 클릭한 뒤 모서리 또는 변 가운데 조절점을 드래그합니다. 모서리는 두 방향, 변 가운데는 한 방향의 크기를 바꿉니다. 숫자로 조절하려면 **개체 속성**에서 너비와 높이를 입력하세요. | <a href="__HWPJS_DOCS_BASE__editor/fixtures/picture-resize.hwp" download>picture-resize.hwp</a> · <a href="__HWPJS_DOCS_BASE__editor/fixtures/picture-resize.hwpx" download>picture-resize.hwpx</a> |
+| 그림 고정점 크기 조절 | 그림을 클릭하고 모서리나 변 가운데를 끌어 보세요. 반대쪽은 같은 자리에 남습니다. | <a href="__HWPJS_DOCS_BASE__editor/fixtures/anchored-picture.hwp" download>anchored-picture.hwp</a> · <a href="__HWPJS_DOCS_BASE__editor/fixtures/anchored-picture.hwpx" download>anchored-picture.hwpx</a> |
 
 차트 데이터 편집과 수식 편집 예제에는 사용 안내와 편집할 개체가 들어 있습니다. 적용한 뒤 실행 취소/다시 실행을 해 보고, **파일 > 저장하기**로 내려받은 파일을 다시 열어 결과를 확인할 수 있습니다. HWP5 차트 예제는 직접 생성해 저장한 차트의 표시를 확인하는 파일입니다. 검증한 최신 격리 소스는 지원 조건을 만족하는 HWP5 차트의 값과 기존 범주 이름도 편집합니다. 아래의 별도 순서와 제한을 확인하세요. 직접 작성한 예제이며 개인정보를 포함하지 않습니다.
 
@@ -114,6 +115,12 @@ Canvas 데모에서 HWP5 또는 HWPX 표의 셀 안을 클릭한 뒤 아래 기�
 ## 개체 더블클릭
 
 지원되는 차트와 그림을 더블클릭하면 개체 속성 창이 열립니다. 지원되는 HWPX와 HWP5 차트의 데이터 편집 버튼은 클릭한 차트에 연결됩니다. HWP5는 위의 [기존 차트 데이터 편집](#hwp5-기존-차트-데이터-편집) 조건을 만족할 때만 버튼을 제공합니다. 그림은 지원 조건에서 크기를 바꿀 수 있습니다. 글상자는 테두리 더블클릭으로 정보를 보고 내부 더블클릭으로 텍스트를 편집합니다. 지원되는 HWPX 차트/글상자와 HWP5 글상자의 크기/위치 편집은 [현재 개체 편집 범위](./limitations.md#최신-소스의-수식-표시와-개체-편집)를 따르며 그룹/회전 개체의 범용 편집을 뜻하지 않습니다. [상세 경계](https://github.com/ohah/hwpjs/blob/main/docs/canvas-object-activation.md)를 참고하세요.
+
+### 그림의 반대쪽을 고정하고 크기 바꾸기
+
+**파일 → 예제 문서**에서 **HWP5 그림 고정점 크기 조절** 또는 **HWPX 그림 고정점 크기 조절**을 엽니다. 그림을 한 번 클릭하면 모서리 네 곳과 변 가운데 네 곳에 조절점이 나타납니다. 왼쪽 위 모서리를 안쪽으로 끌면 오른쪽 아래 모서리는 같은 위치에 남습니다. Shift를 누르고 드래그하면 그림의 비율이 유지됩니다. 드래그를 끝낸 뒤 한 번 실행 취소하면 크기와 위치가 함께 복원됩니다.
+
+이 동작은 페이지 기준으로 배치된 일부 떠 있는 그림에서 사용할 수 있습니다. 글자처럼 배치된 그림과 기존 크기 조절 예제는 원래 배치 규칙을 따릅니다.
 
 ### 선택한 개체의 속성
 

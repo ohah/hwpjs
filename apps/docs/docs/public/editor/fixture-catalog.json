@@ -784,5 +784,17 @@
     "name": "hwp5-textbox-vertical-margins.hwp",
     "label": "[기능 예제] HWP5 글상자 위아래 여백",
     "available": true
+  },
+  {
+    "id": "anchored-picture.hwp",
+    "name": "anchored-picture.hwp",
+    "label": "[기능 예제] HWP5 그림 고정점 크기 조절",
+    "available": true
+  },
+  {
+    "id": "anchored-picture.hwpx",
+    "name": "anchored-picture.hwpx",
+    "label": "[기능 예제] HWPX 그림 고정점 크기 조절",
+    "available": true
   }
 ]

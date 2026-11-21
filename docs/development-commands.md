@@ -2263,6 +2263,7 @@ SDK, Canvas 입력과 독립 raw oracle 증거는 별도 승인이 필요하다.
 
 ```sh
 zig build test-original-cell-alignment-block -Doptimize=ReleaseSafe -j1
+zig build test-picture-anchored-resize -Doptimize=ReleaseSafe -j1
 node --test packages/core/tests/commands/original-cell-alignment-block.test.mjs tests/original-cell-block/handshake.test.mjs
 ```
 

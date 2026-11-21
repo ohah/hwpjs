@@ -118,3 +118,83 @@ export function resizedPicture(
     height: Math.max(1, Math.min(0xffffffff, height)),
   };
 }
+
+// Fixed point is the opposite of the dragged handle; values match Native names.
+const fixedPictureResizeAnchors = Object.freeze({
+  top_left: [0, 0],
+  top_center: [0.5, 0],
+  top_right: [1, 0],
+  center_left: [0, 0.5],
+  center_right: [1, 0.5],
+  bottom_left: [0, 1],
+  bottom_center: [0.5, 1],
+  bottom_right: [1, 1],
+});
+
+export function pictureResizeFixedAnchor(handle) {
+  if (
+    !handle ||
+    ![-1, 0, 1].includes(handle.xSide) ||
+    ![-1, 0, 1].includes(handle.ySide) ||
+    (handle.xSide === 0 && handle.ySide === 0)
+  )
+    return null;
+  const x = (1 - handle.xSide) / 2,
+    y = (1 - handle.ySide) / 2;
+  return (
+    Object.entries(fixedPictureResizeAnchors).find(
+      ([, point]) => point[0] === x && point[1] === y,
+    )?.[0] ?? null
+  );
+}
+
+// Paint-only geometry. This does not issue an owner or admit a Native mutation.
+// Omitted mode retains the legacy origin and bottom-right guide exactly.
+export function pictureResizeGuideGeometry({ basis, size, mode = 'legacy', anchor } = {}) {
+  if (
+    !basis ||
+    !size ||
+    ![basis.width, basis.height, size.width, size.height].every(
+      (value) => Number.isInteger(value) && value > 0 && value <= 0xffffffff,
+    ) ||
+    ![basis.origin, basis.x, basis.y].every(
+      (point) => Array.isArray(point) && point.length === 2 && point.every(Number.isFinite),
+    )
+  )
+    return null;
+  const x = basis.x.map((value) => (value * size.width) / basis.width),
+    y = basis.y.map((value) => (value * size.height) / basis.height);
+  let origin = [...basis.origin],
+    moving = [1, 1];
+  if (mode === 'anchored') {
+    if (typeof anchor !== 'string' || !Object.hasOwn(fixedPictureResizeAnchors, anchor))
+      return null;
+    const fixed = fixedPictureResizeAnchors[anchor];
+    origin = origin.map(
+      (value, axis) =>
+        value + fixed[0] * (basis.x[axis] - x[axis]) + fixed[1] * (basis.y[axis] - y[axis]),
+    );
+    moving = fixed.map((value) => 1 - value);
+  } else if (mode !== 'legacy') return null;
+  const point = origin.map((value, axis) => value + moving[0] * x[axis] + moving[1] * y[axis]);
+  if (![...origin, ...x, ...y, ...point].every(Number.isFinite)) return null;
+  return { origin, x, y, point };
+}
+
+// Native midpoint anchors require exact integer offsets, never hidden rounding.
+export function pictureResizeAnchorSizeSupported(basis, size, anchor) {
+  if (typeof anchor !== 'string' || !Object.hasOwn(fixedPictureResizeAnchors, anchor)) return false;
+  if (
+    !basis ||
+    !size ||
+    ![basis.width, basis.height, size.width, size.height].every(
+      (value) => Number.isInteger(value) && value > 0 && value <= 0xffffffff,
+    )
+  )
+    return false;
+  const fixed = fixedPictureResizeAnchors[anchor];
+  return (
+    (fixed[0] !== 0.5 || (basis.width - size.width) % 2 === 0) &&
+    (fixed[1] !== 0.5 || (basis.height - size.height) % 2 === 0)
+  );
+}

@@ -58,9 +58,10 @@ pub const History = struct {
     }
     pub fn applyBatch(self: *History, session: *edit.Session, commands: []const edit.Command) !bool {
         try self.bind(session);
+        if (self.owned == null) for (commands) |command| if (command == .resize_picture_anchored) return error.HistoryProtocol2Required;
         session.invalidateStrictLayout();
         if (self.owned) |h| return h.applyBatch(session, commands);
-        for (commands) |command| if (command == .edit_object_outer_margins or command == .edit_object_vertical_margins or command == .set_cell_vertical_alignment or command == .set_cell_vertical_alignment_block) return error.HistoryProtocol2Required;
+        for (commands) |command| if (command == .edit_object_outer_margins or command == .edit_object_vertical_margins or command == .set_cell_vertical_alignment or command == .set_cell_vertical_alignment_block or command == .resize_picture_anchored) return error.HistoryProtocol2Required;
         try self.bind(session);
         const before = try session.createCheckpoint(self.max_checkpoint_bytes);
         var transferred = false;

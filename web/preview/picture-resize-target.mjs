@@ -85,3 +85,45 @@ export function pictureResizeTarget(picture) {
     height: geometry.height,
   };
 }
+
+// Public query selectors: H5 uses pictureSources.picture_node, HX uses pictureSites.pictureNode.
+// H5 display/component identity must never substitute for the physical picture record.
+export function anchoredPictureResizeSelector(target, format) {
+  if (!target || !['hwp5', 'hwpx'].includes(format)) return null;
+  const pictureNode = format === 'hwp5' ? target.resizeRecordNode : target.pictureNode;
+  if (
+    ![target.section, pictureNode].every(
+      (value) =>
+        Number.isInteger(value) && value >= 0 && value <= 0xffffffff && !Object.is(value, -0),
+    )
+  )
+    return null;
+  return { section: target.section, pictureNode };
+}
+
+// Read-only bootstrap when legacy resize refuses an otherwise selected picture.
+// The renderer witness certifies membership/physical identity, never edit authority.
+export function anchoredPictureResizeDisplayTarget(picture, format, witness) {
+  const selector = anchoredPictureResizeSelector(picture, format);
+  const geometry = picture?.geometry;
+  if (
+    !selector ||
+    !witness ||
+    typeof witness.current !== 'function' ||
+    !witness.current() ||
+    witness.section !== selector.section ||
+    witness.pictureNode !== selector.pictureNode ||
+    !geometry ||
+    ![geometry.width, geometry.height].every(
+      (value) => Number.isInteger(value) && value > 0 && value <= 0xffffffff,
+    )
+  )
+    return null;
+  return {
+    section: picture.section,
+    pictureNode: picture.pictureNode,
+    ...(format === 'hwp5' ? { resizeRecordNode: selector.pictureNode } : {}),
+    width: geometry.width,
+    height: geometry.height,
+  };
+}

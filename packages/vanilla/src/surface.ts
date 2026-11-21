@@ -10,7 +10,15 @@ import { prepareDocumentTextReadView } from './document-text-read-view.ts';
 import { readNativeReadSourceEvidence } from '@hwpjs/core/_internal/native-read-source';
 import { captureDocumentTextCaret } from './document-text-caret.ts';
 import { createObjectPropertiesControls } from './object-properties-controls.ts';
-import { createSurfacePictureResizeControls } from './picture-resize-controls.ts';
+import {
+  createSurfacePictureResizeControls,
+  type SurfaceAnchoredPictureRead,
+} from './picture-resize-controls.ts';
+// @ts-ignore Uses the existing certified H5 record/HX site selector without guessing.
+import {
+  anchoredPictureResizeSelector,
+  anchoredPictureResizeDisplayTarget,
+} from '../../../web/preview/picture-resize-target.mjs';
 import {
   createObjectSelection,
   bindObjectSelectionEvents,
@@ -66,6 +74,7 @@ import type { SelectionTarget } from '@hwpjs/core';
 import type { RuntimeMessage, RuntimeReply } from '@hwpjs/core';
 import {
   SPLICE_TEXT_COMMAND,
+  RESIZE_PICTURE_ANCHORED_COMMAND,
   getHistoryAvailability,
   createParagraphSelection,
   getSelectionFormatting,
@@ -1327,7 +1336,13 @@ export function createCanvasSurface({
         const content = scene.state.content as { format?: unknown; limited?: unknown };
         if (!['hwp5', 'hwpx'].includes(String(content.format)) || content.limited === true)
           return null;
-        const target = direct.selectedPicture();
+        const legacy = direct.selectedPicture();
+        const witness: PictureSelectionCapture | null = legacy
+          ? null
+          : (renderer.capturePictureSelection?.() ?? null);
+        const target =
+          legacy ??
+          anchoredPictureResizeDisplayTarget(renderer.selectedPicture?.(), content.format, witness);
         const after = captureObjectScene();
         if (
           !target ||
@@ -1348,10 +1363,56 @@ export function createCanvasSurface({
           lease: scene.lease,
           source: scene.source,
           modalRevision: scene.modalRevision,
+          legacyAvailable: legacy != null,
+          ...(witness ? { anchoredCurrent: () => witness.current() } : {}),
           target: Object.freeze({ ...target }),
         });
       },
       request: (width, height) => !closed && direct.resizePicture(width, height),
+      async queryAnchored(scope) {
+        const format = ((scope.state as ObjectSceneState).content as { format?: unknown } | null)
+          ?.format;
+        const selector = anchoredPictureResizeSelector(scope.target, format);
+        const api = editor as HeadlessEditor & {
+          getAnchoredPictureResize?: (
+            selector: { section: number; pictureNode: number },
+            options: { token: ObjectSceneState['token'] },
+          ) => Promise<SurfaceAnchoredPictureRead>;
+        };
+        if (!selector || typeof api.getAnchoredPictureResize !== 'function')
+          return { state: 'unavailable', reason: 'AnchoredPictureResizeUnavailable' };
+        return api.getAnchoredPictureResize(selector, {
+          token: (scope.state as ObjectSceneState).token,
+        });
+      },
+      requestAnchored(target, width, height, anchor, scope) {
+        const scene = captureObjectScene();
+        if (
+          !scene ||
+          scene.state !== scope.state ||
+          scene.lease !== scope.lease ||
+          scene.source !== scope.source ||
+          scene.modalRevision !== scope.modalRevision ||
+          objectSelection?.current() !== scope.selection ||
+          !objectHostFocused() ||
+          !rangeWritable(scene.state)
+        )
+          return false;
+        // Core retains the Native witness; no raw request or separate position write.
+        const task = editor.dispatchCommand(RESIZE_PICTURE_ANCHORED_COMMAND, {
+          target: target as import('@hwpjs/core').PictureAnchoredResizeTarget,
+          width,
+          height,
+          anchor,
+        });
+        return trackFormattingTask(
+          task.then((result) => {
+            if (!closed && result.status === 'rejected-unapplied')
+              status('그림 반대점 고정 크기 변경을 적용할 수 없습니다.');
+            return result;
+          }),
+        );
+      },
     });
     unbindObjectSelection = bindObjectSelection();
     const resource = async (kind: string, payload: Record<string, number>, field: string) => {

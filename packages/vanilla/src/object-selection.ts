@@ -689,6 +689,13 @@ export function createObjectSelection<State extends ObjectSelectionState>(option
         clear('composition');
         return false;
       }
+      if (
+        key === 'shift' &&
+        event.trusted &&
+        event.onCanvas &&
+        current()?.target.kind === 'picture'
+      )
+        return false;
       if (key !== 'p') {
         clear('key');
         return false;

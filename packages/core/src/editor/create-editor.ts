@@ -1,4 +1,18 @@
 import {
+  RESIZE_PICTURE_ANCHORED_COMMAND,
+  captureResizePictureAnchoredPayload,
+  type PictureAnchoredResizeTarget,
+  type ResizePictureAnchoredPayload,
+  type PictureAnchoredResizeRead,
+  type PictureAnchoredResizeSelector,
+} from '../commands/picture-anchored-resize.ts';
+import {
+  checkedPictureResizeSelector,
+  checkedPictureResizeBefore,
+  pictureResizeObservation,
+  type NativePictureResizeBefore,
+} from '../../../../js/picture-anchored-resize-transport.mjs';
+import {
   SET_ORIGINAL_CELL_ALIGNMENT_BLOCK_COMMAND,
   captureOriginalCellAlignmentBlockPayload,
   observeOriginalCellAlignmentBlock,
@@ -1200,6 +1214,7 @@ export function createEditor(options: CreateEditorOptions) {
         verifyReply(reply, ctx);
         if (
           [
+            'picture-anchored-resize-set',
             'insert-image',
             'insert-equation',
             'create-chart',
@@ -1556,6 +1571,16 @@ export function createEditor(options: CreateEditorOptions) {
     PictureReplacementTarget,
     { state: EditorState; runtime: EditorRuntime; native: PictureReplacementOwner }
   >();
+  let pictureResizeQueryGeneration = 0;
+  const pictureResizeTargets = new WeakMap<
+    PictureAnchoredResizeTarget,
+    {
+      state: EditorState;
+      runtime: EditorRuntime;
+      native: NativePictureResizeBefore;
+      generation: number;
+    }
+  >();
   const objectGeometryTargets = new WeakMap<
     ObjectGeometryTarget,
     { state: EditorState; native: ReturnType<typeof checkedObjectGeometryObservation> }
@@ -1581,6 +1606,7 @@ export function createEditor(options: CreateEditorOptions) {
     const width = command.id === EQUALIZE_SOURCE_TABLE_CELL_WIDTH_COMMAND.id;
     const height = command.id === EQUALIZE_SOURCE_TABLE_CELL_HEIGHT_COMMAND.id;
     const pageSettings = command.id === EDIT_PAGE_SETTINGS_COMMAND.id;
+    const anchoredPicture = command.id === RESIZE_PICTURE_ANCHORED_COMMAND.id;
     const objectGeometry = command.id === SET_OBJECT_GEOMETRY_COMMAND.id;
     const outerMargins = command.id === SET_OBJECT_OUTER_MARGINS_COMMAND.id;
     const verticalMargins = command.id === SET_HWP5_VERTICAL_MARGINS_COMMAND.id;
@@ -1594,6 +1620,7 @@ export function createEditor(options: CreateEditorOptions) {
       width ||
       height ||
       pageSettings ||
+      anchoredPicture ||
       objectGeometry ||
       pictureReplacement ||
       outerMargins ||
@@ -1617,44 +1644,46 @@ export function createEditor(options: CreateEditorOptions) {
         : command.id === INSERT_ENDNOTE_COMMAND.id
           ? 'end'
           : undefined;
-    const owned = originalCellBlock
-      ? captureOriginalCellAlignmentBlockPayload(payload)
-      : originalCellAlignment
-        ? captureOriginalCellAlignmentPayload(payload)
-        : verticalMargins
-          ? captureHwp5VerticalMarginsPayload(payload)
-          : bodyFlow
-            ? captureObjectBodyFlowPayload(payload)
-            : outerMargins
-              ? captureObjectOuterMarginsPayload(payload)
-              : pictureReplacement
-                ? captureReplacePicturePayload(payload)
-                : command.id === INSERT_IMAGE_COMMAND.id
-                  ? captureImageInsertPayload(payload)
-                  : command.id === DELETE_NOTE_COMMAND.id
-                    ? captureNoteDeletePayload(payload)
-                    : noteKind
-                      ? captureNoteInsertPayload(payload)
-                      : logicalSplice
-                        ? captureCreatedCellSplicePayload(payload)
-                        : objectGeometry
-                          ? captureObjectGeometryPayload(payload)
-                          : inlineKind
-                            ? captureInlineObjectInsertPayload(payload, inlineKind)
-                            : pageSettings
-                              ? capturePageSettingsPayload(payload)
-                              : split
-                                ? captureSourceTableCellSplitPayload(payload)
-                                : merge || width || height
-                                  ? payload
-                                  : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
-                                    ? captureSourceTableGridRequest(
-                                        payload,
-                                        (snapshot.content as any)?.format,
-                                      )
-                                    : command.id === INSERT_DOCUMENT_COMMAND.id
-                                      ? captureDocumentInsertPayload(payload)
-                                      : copyOwned(payload);
+    const owned = anchoredPicture
+      ? captureResizePictureAnchoredPayload(payload)
+      : originalCellBlock
+        ? captureOriginalCellAlignmentBlockPayload(payload)
+        : originalCellAlignment
+          ? captureOriginalCellAlignmentPayload(payload)
+          : verticalMargins
+            ? captureHwp5VerticalMarginsPayload(payload)
+            : bodyFlow
+              ? captureObjectBodyFlowPayload(payload)
+              : outerMargins
+                ? captureObjectOuterMarginsPayload(payload)
+                : pictureReplacement
+                  ? captureReplacePicturePayload(payload)
+                  : command.id === INSERT_IMAGE_COMMAND.id
+                    ? captureImageInsertPayload(payload)
+                    : command.id === DELETE_NOTE_COMMAND.id
+                      ? captureNoteDeletePayload(payload)
+                      : noteKind
+                        ? captureNoteInsertPayload(payload)
+                        : logicalSplice
+                          ? captureCreatedCellSplicePayload(payload)
+                          : objectGeometry
+                            ? captureObjectGeometryPayload(payload)
+                            : inlineKind
+                              ? captureInlineObjectInsertPayload(payload, inlineKind)
+                              : pageSettings
+                                ? capturePageSettingsPayload(payload)
+                                : split
+                                  ? captureSourceTableCellSplitPayload(payload)
+                                  : merge || width || height
+                                    ? payload
+                                    : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
+                                      ? captureSourceTableGridRequest(
+                                          payload,
+                                          (snapshot.content as any)?.format,
+                                        )
+                                      : command.id === INSERT_DOCUMENT_COMMAND.id
+                                        ? captureDocumentInsertPayload(payload)
+                                        : copyOwned(payload);
     return {
       command: command as EditorCommand<unknown>,
       payload: owned,
@@ -1865,6 +1894,45 @@ export function createEditor(options: CreateEditorOptions) {
         guard();
         return await mutate(
           pictureReplacementMessage(owned.native, payload.imageBytes),
+          pending.token,
+          false,
+          guard,
+        );
+      }
+      if (pending.command.id === RESIZE_PICTURE_ANCHORED_COMMAND.id) {
+        const payload = pending.payload as ResizePictureAnchoredPayload;
+        const owned = pictureResizeTargets.get(payload.target);
+        if (!owned) throw Error('ForeignAnchoredPictureResizeTarget');
+        const guard = () => {
+          requireReady(pending.token, true);
+          if (
+            state !== owned.state ||
+            active !== owned.runtime ||
+            owned.generation !== pictureResizeQueryGeneration
+          )
+            throw Error('StaleAnchoredPictureResizeTarget');
+          if (!hasRuntimeAdmission(active, 'picture-anchored-resize-set'))
+            throw Error('UnsupportedAnchoredPictureResizeRuntime');
+          const observation = pictureResizeObservation(
+            owned.native,
+            (state.content as any)?.format,
+          );
+          if (observation.historyRevision !== state.nativeHistoryRevision)
+            throw Error('StaleAnchoredPictureResizeBinding');
+        };
+        guard();
+        // Consume once even when Native reports no-op or an uncertain/cleanup outcome.
+        pictureResizeTargets.delete(payload.target);
+        return await mutate(
+          {
+            kind: 'picture-anchored-resize-set',
+            request: {
+              before: owned.native,
+              width: payload.width,
+              height: payload.height,
+              anchor: payload.anchor,
+            },
+          },
           pending.token,
           false,
           guard,
@@ -2549,6 +2617,21 @@ export function createEditor(options: CreateEditorOptions) {
       if (state !== owned.state || active !== owned.runtime)
         return Promise.resolve(reject(context(pending.token), 'StalePictureReplacementTarget'));
     }
+    if (command.id === RESIZE_PICTURE_ANCHORED_COMMAND.id) {
+      const owned = pictureResizeTargets.get(
+        (pending.payload as ResizePictureAnchoredPayload).target,
+      );
+      if (!owned)
+        return Promise.resolve(
+          reject(context(pending.token), 'ForeignAnchoredPictureResizeTarget'),
+        );
+      if (
+        state !== owned.state ||
+        active !== owned.runtime ||
+        owned.generation !== pictureResizeQueryGeneration
+      )
+        return Promise.resolve(reject(context(pending.token), 'StaleAnchoredPictureResizeTarget'));
+    }
     if (command.id === SET_OBJECT_GEOMETRY_COMMAND.id) {
       const owned = objectGeometryTargets.get((pending.payload as SetObjectGeometryPayload).target);
       if (!owned)
@@ -2996,6 +3079,8 @@ export function createEditor(options: CreateEditorOptions) {
         'hwp5-vertical-object-margins-set',
         'object-body-flow-query',
         'object-body-flow-set',
+        'picture-anchored-resize-query',
+        'picture-anchored-resize-set',
         'picture-replacement-query',
         'picture-replace',
         'object-geometry-query',
@@ -3668,6 +3753,89 @@ export function createEditor(options: CreateEditorOptions) {
           resourceLink: native.resourceLink,
           historyRevision: native.historyRevision,
         }),
+      });
+    });
+  }
+  function getAnchoredPictureResize(
+    selector: PictureAnchoredResizeSelector,
+    options: { token?: StateToken } = {},
+  ): Promise<PictureAnchoredResizeRead> {
+    assertPublicMutation();
+    const snapshot = state,
+      queryRuntime = active;
+    const generation = ++pictureResizeQueryGeneration;
+    const selected = checkedPictureResizeSelector(selector);
+    const settings = copyOwned(options);
+    if (
+      !settings ||
+      typeof settings !== 'object' ||
+      Array.isArray(settings) ||
+      Object.keys(settings).some((key) => key !== 'token')
+    )
+      throw Error('InvalidPictureAnchoredResizeOptions');
+    const token = copyOwned(settings.token ?? snapshot.token);
+    if (state !== snapshot) throw Error('StalePictureAnchoredResizeTarget');
+    return enqueue(async () => {
+      requireReady(token, true);
+      const runtime = queryRuntime;
+      const guard = () => {
+        requireReady(token, true);
+        if (state !== snapshot || active !== runtime || generation !== pictureResizeQueryGeneration)
+          throw Error('StalePictureAnchoredResizeTarget');
+      };
+      guard();
+      const content = snapshot.content as Record<string, unknown> | undefined;
+      const capabilities = snapshot.capabilities as Record<string, unknown> | undefined;
+      if (content?.readOnly === true || capabilities?.readOnly === true)
+        return { state: 'unavailable', reason: 'ReadOnlyDocument' };
+      if (
+        !content ||
+        !['hwp5', 'hwpx'].includes(String(content.format)) ||
+        content.limited ||
+        content.window
+      )
+        return { state: 'unavailable', reason: 'PictureAnchoredResizeRequiresFullDocument' };
+      if (
+        snapshot.nativeHistoryStats?.protocolVersion !== 2 ||
+        !Number.isSafeInteger(snapshot.nativeHistoryRevision) ||
+        snapshot.nativeHistoryRevision! < 0 ||
+        snapshot.nativeHistoryRevision! >= 0xffffffff
+      )
+        return { state: 'unavailable', reason: 'HistoryProtocol2Required' };
+      if (!runtime || !hasRuntimeAdmission(runtime, 'picture-anchored-resize-query'))
+        return { state: 'unavailable', reason: 'UnsupportedPictureAnchoredResizeRuntime' };
+      const reply = await readRequest(
+        { kind: 'picture-anchored-resize-query', selector: selected },
+        token,
+        guard,
+        true,
+      );
+      guard();
+      if (!hasRuntimeAdmission(runtime, 'picture-anchored-resize-query'))
+        throw Error('UnsupportedAnchoredPictureResizeRuntime');
+      if (reply.kind !== 'picture-anchored-resize-query') throw Error('MismatchedRuntimeReply');
+      if (reply.pictureResizeBefore === null)
+        return {
+          state: 'unavailable',
+          reason:
+            typeof reply.reason === 'string' ? reply.reason : 'PictureAnchoredResizeUnavailable',
+        };
+      const native = checkedPictureResizeBefore(reply.pictureResizeBefore, content.format);
+      const observation = pictureResizeObservation(native, content.format);
+      if (
+        observation.format !== content.format ||
+        observation.section !== selected.section ||
+        observation.pictureNode !== selected.pictureNode ||
+        observation.historyRevision !== snapshot.nativeHistoryRevision
+      )
+        throw Error('PictureAnchoredResizeBindingMismatch');
+      guard();
+      const target = Object.freeze({}) as PictureAnchoredResizeTarget;
+      pictureResizeTargets.set(target, { state: snapshot, runtime, native, generation });
+      return Object.freeze({
+        state: 'available',
+        target,
+        observation,
       });
     });
   }
@@ -4853,6 +5021,7 @@ export function createEditor(options: CreateEditorOptions) {
     getHwp5VerticalMargins: geometryGuard(getHwp5VerticalMargins),
     getObjectBodyFlow: geometryGuard(getObjectBodyFlow),
     getPictureReplacement: geometryGuard(getPictureReplacement),
+    getAnchoredPictureResize: geometryGuard(getAnchoredPictureResize),
     getObjectGeometry: geometryGuard(getObjectGeometry),
     getPageSettings: geometryGuard(getPageSettings),
     getSourceTableCellSplitCapabilities: geometryGuard(getSourceTableCellSplitCapabilities),

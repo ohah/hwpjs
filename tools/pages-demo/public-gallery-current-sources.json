@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "policy": "public-gallery-fixtures.json",
-  "policySHA256": "559be118c0cff5a12265077f2d3e4ba40cdaf992a6aecaab90fd9878eaef2bb1",
+  "policySHA256": "47ad45ae1432b9bf695c9a8e0464ce5cadece91846bcde50c9c7c5822a869435",
   "sourcePaths": {
     "image-insert-blank.hwp": "apps/docs/docs/public/editor/fixtures/image-insert-blank.hwp",
     "image-insert-blank.hwpx": "apps/docs/docs/public/editor/fixtures/image-insert-blank.hwpx",
@@ -133,6 +133,8 @@
     "hwp5-textbox-outer-margins.hwp": "tools/pages-demo/fixtures/hwp5-textbox-outer-margins.hwp",
     "hwp5-chart-create-line.hwp": "tools/pages-demo/fixtures/hwp5-chart-create-line.hwp",
     "hwp5-picture-vertical-margins.hwp": "tools/pages-demo/fixtures/hwp5-picture-vertical-margins.hwp",
-    "hwp5-textbox-vertical-margins.hwp": "tools/pages-demo/fixtures/hwp5-textbox-vertical-margins.hwp"
+    "hwp5-textbox-vertical-margins.hwp": "tools/pages-demo/fixtures/hwp5-textbox-vertical-margins.hwp",
+    "anchored-picture.hwp": "tools/pages-demo/fixtures/anchored-picture.hwp",
+    "anchored-picture.hwpx": "tools/pages-demo/fixtures/anchored-picture.hwpx"
   }
 }

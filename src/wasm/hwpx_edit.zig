@@ -1271,7 +1271,7 @@ fn apply(command: histories.Command) !void {
             _ = try session.setEquationScript(command.section, command.equation_node, command.inserted);
         },
         .picture_resize => {
-            _ = try session.resizePicture(command.section, command.picture_node, command.picture_size);
+            _ = if (command.picture_resize_anchor) |intent| try session.resizePictureAnchored(command.section, command.picture_node, command.picture_size, intent) else try session.resizePicture(command.section, command.picture_node, command.picture_size);
         },
         .format => {
             const end = std.math.add(u32, command.start, command.deleted) catch return error.InvalidTextPosition;
@@ -1383,6 +1383,45 @@ export fn hwpx_edit_set_cell_size(section: u32, list_node: u32, width: u32, heig
 export fn hwpx_edit_resize_picture(section: u32, picture_node: u32, width: u32, height: u32) u32 {
     apply(.{ .kind = .picture_resize, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "", .picture_node = picture_node, .picture_size = .{ width, height } }) catch |err| return fail(err);
     return 1;
+}
+export fn hwpx_edit_picture_resize_anchor_version() u32 {
+    return @import("hwpx_picture_anchor_wire.zig").version;
+}
+export fn hwpx_edit_picture_resize_anchor_query(section: u32, picture_node: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const h = requireManagedHistory() catch |err| return fail(err);
+    const expected = @import("../hwpx/picture_anchored_resize.zig").observe(session, section, picture_node) catch |err| return fail(err);
+    const epoch = formatting_lifetime.session(a) catch |err| return fail(err);
+    defer a.free(epoch);
+    var buffer: [20]u8 = undefined;
+    const serial = std.fmt.bufPrint(&buffer, "{d}", .{expected.serial}) catch unreachable;
+    const frame: @import("hwpx_picture_anchor_wire.zig").Expected = .{ .section = section, .pictureNode = picture_node, .size = expected.size, .offsets = expected.offsets, .sourceSha256 = expected.source_sha256, .serial = serial };
+    output = std.json.Stringify.valueAlloc(a, .{ .profileVersion = @as(u32, 1), .expected = frame, .binding = .{ .session = epoch, .revision = h.revision() } }, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_picture_resize_anchor_set(ptr: [*]const u8, len: usize) u32 {
+    hwpx_edit_output_free();
+    if (len > 16384) return fail(error.LimitExceeded);
+    requireNoReadScope() catch |err| return fail(err);
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const h = requireManagedHistory() catch |err| {
+        _ = fail(err);
+        return if (err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    const parsed = @import("hwpx_picture_anchor_wire.zig").parse(a, ptr[0..len]) catch |err| return fail(err);
+    defer parsed.deinit();
+    const value = parsed.value;
+    formatting_lifetime.check(.{ .session = value.binding.session, .revision = value.binding.revision }, h.revision()) catch return fail(error.StaleAnchoredPictureResize);
+    const expected = value.expected.native() catch |err| return fail(err);
+    const intent: @import("../hwpx/picture_anchored_resize.zig").Intent = .{ .anchor = value.anchor, .expected = expected };
+    _ = @import("../hwpx/picture_anchored_resize.zig").build(session, value.section, value.pictureNode, .{ value.width, value.height }, intent) catch |err| return fail(err);
+    document_text_generation.enterMutation() catch |err| return fail(err);
+    const changed = @import("../hwpx/display_resource_generation.zig").applyOwned(h, session, &.{.{ .kind = .picture_resize, .section = value.section, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "", .picture_node = value.pictureNode, .picture_size = .{ value.width, value.height }, .picture_resize_anchor = intent }}) catch |err| {
+        _ = fail(err);
+        return if (err == error.MutationUncertain or err == error.HistoryMutationUncertain or h.stats().poisoned) 3 else 0;
+    };
+    return if (changed) 1 else 2;
 }
 export fn hwpx_edit_group_picture_resize_available(section: u32, picture_node: u32) u32 {
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);

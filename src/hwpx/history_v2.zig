@@ -206,6 +206,10 @@ pub const History = struct {
     }
     pub fn applyBatch(self: *Self, s: *editor.Session, commands: []const commands_mod.Command) !bool {
         try self.bind(s);
+        for (commands) |command| if (command.picture_resize_anchor != null) {
+            if (!self.managed) return error.HistoryProtocol2Required;
+            if (commands.len != 1 or command.kind != .picture_resize or command.start != 0 or command.deleted != 0 or command.inserted.len != 0 or command.break_before != null) return error.InvalidAnchoredPictureResizeCommand;
+        };
         s.history_transaction_active = true;
         defer s.history_transaction_active = false;
         try self.stack.prepare();

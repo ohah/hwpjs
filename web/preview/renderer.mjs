@@ -87,7 +87,7 @@ import { paintPictureSelection } from './picture-selection-paint.mjs';
 import { paintTextSelectionBackground } from './text-selection-paint.mjs';
 import { canvasViewportMetrics } from './canvas-viewport-metrics.mjs';
 import { canvasHorizontalExtent } from './canvas-horizontal-extent.mjs';
-import { pictureResizeHandles } from './picture-resize-geometry.mjs';
+import { pictureResizeHandles, pictureResizeGuideGeometry } from './picture-resize-geometry.mjs';
 import { characterShadeRangesState } from './character-shade-selection.mjs';
 import { characterEffectRangesState } from './character-effect-selection.mjs';
 import {
@@ -1705,19 +1705,15 @@ export function createRenderer(
         });
       }
       if (resize && pictureResizeGuide) {
-        const { basis, size } = pictureResizeGuide;
-        const x =
-          basis.origin[0] +
-          (basis.x[0] * size.width) / basis.width +
-          (basis.y[0] * size.height) / basis.height;
-        const y =
-          basis.origin[1] +
-          (basis.x[1] * size.width) / basis.width +
-          (basis.y[1] * size.height) / basis.height;
-        paintRowTransform(ctx, { pageClip: basis.pageClip }, viewport.scrollTop, () => {
-          ctx.fillStyle = '#145b96';
-          ctx.fillRect(x - 3, y - viewport.scrollTop - 3, 6, 6);
-        });
+        const geometry = pictureResizeGuideGeometry(pictureResizeGuide);
+        if (geometry) {
+          const { basis } = pictureResizeGuide;
+          const [x, y] = geometry.point;
+          paintRowTransform(ctx, { pageClip: basis.pageClip }, viewport.scrollTop, () => {
+            ctx.fillStyle = '#145b96';
+            ctx.fillRect(x - 3, y - viewport.scrollTop - 3, 6, 6);
+          });
+        }
       }
     }
   };

@@ -56,6 +56,7 @@ export fn hwp5_edit_reflow() u32 {
 export fn hwp5_edit_close() void {
     clearOriginalCellLease();
     clearOriginalCellBlockLease();
+    anchored_picture_lease = null;
     document_text_generation.invalidate();
     hwp5_edit_strict_layout_cancel();
     formatting_lifetime.close();
@@ -896,6 +897,58 @@ export fn hwp5_edit_resize_picture(section: u32, picture_node: u32, width: u32, 
     apply(.{ .resize_picture = .{ .section = section, .picture_node = picture_node, .width = width, .height = height } }) catch |err| return fail(err);
     return 1;
 }
+const anchored_picture_wire = @import("hwp5_picture_anchor_wire.zig");
+const AnchoredPicture = @import("../hwp5/edit/picture_anchored_resize.zig");
+var anchored_picture_serial: u64 = 0;
+var anchored_picture_lease: ?struct { id: u64, revision: u32, observation: AnchoredPicture.Observation } = null;
+
+export fn hwp5_edit_picture_resize_anchor_version() u32 {
+    const h = if (history) |*value| value else return 0;
+    const owned = h.owned orelse return 0;
+    return if (owned.managed and !h.stats().poisoned) anchored_picture_wire.version else 0;
+}
+
+export fn hwp5_edit_picture_resize_anchor_query(section: u32, picture_node: u32) u32 {
+    hwp5_edit_output_free();
+    anchored_picture_lease = null;
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    if (h.stats().poisoned) return fail(error.HistoryMutationUncertain);
+    if (hwp5_edit_picture_resize_anchor_version() != anchored_picture_wire.version) return fail(error.HistoryProtocol2Required);
+    const current = session() catch |err| return fail(err);
+    const before = current.anchoredPictureGeometry(.{ .section = section, .kind = .picture, .node = picture_node }) catch |err| return fail(err);
+    const id = std.math.add(u64, anchored_picture_serial, 1) catch return fail(error.AnchoredPictureScopeExhausted);
+    const revision = h.revision();
+    const bytes = anchored_picture_wire.observation(a, before, id, revision) catch |err| return fail(err);
+    anchored_picture_serial = id;
+    anchored_picture_lease = .{ .id = id, .revision = revision, .observation = before };
+    output = bytes;
+    return 1;
+}
+
+export fn hwp5_edit_picture_resize_anchor_set(ptr: [*]const u8, size: usize) u32 {
+    hwp5_edit_output_free();
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    if (h.stats().poisoned) return fail(error.HistoryMutationUncertain);
+    if (hwp5_edit_picture_resize_anchor_version() != anchored_picture_wire.version) return fail(error.HistoryProtocol2Required);
+    const request = anchored_picture_wire.decode(a, ptr[0..size]) catch |err| return fail(err);
+    const lease = anchored_picture_lease orelse return fail(error.StaleAnchoredPictureLease);
+    if (lease.id != request.lease) return fail(error.StaleAnchoredPictureLease);
+    anchored_picture_lease = null;
+    if (lease.revision != h.revision()) return fail(error.StaleAnchoredPictureLease);
+    const revision = h.revision();
+    apply(.{ .resize_picture_anchored = .{
+        .target = lease.observation.target,
+        .expected = lease.observation.frame,
+        .width = request.width,
+        .height = request.height,
+        .anchor = request.anchor,
+    } }) catch |err| {
+        _ = fail(err);
+        return if (h.stats().poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    return if (h.revision() != revision) 1 else 2;
+}
+
 export fn hwp5_edit_table_placements(section: u32) u32 {
     hwp5_edit_output_free();
     const s = session() catch |err| return fail(err);

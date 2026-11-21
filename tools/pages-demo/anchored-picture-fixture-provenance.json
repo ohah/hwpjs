@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "feature": "anchored-picture-resize",
+  "policyBaseCommit": "5beb757e35071f918049a12c9366f752d836cf73",
+  "inputs": [
+    {
+      "id": "anchored-picture.hwp",
+      "bytes": 5120,
+      "sha256": "06f558d278cb6886866ab743ee2230f45d54f4042a70579f8795bd3ed6057036",
+      "parentId": "picture-resize.hwp",
+      "parentSHA256": "6b2010227e9d6cd41c242e0a29281eddb58f8f618c5df137c4ca3d518665dda2"
+    },
+    {
+      "id": "anchored-picture.hwpx",
+      "bytes": 8514,
+      "sha256": "91a6ddb492823d450b1b10432224074d804ff6feca8a37b78fce86bf5282cbfd",
+      "parentId": "picture-resize.hwpx",
+      "parentSHA256": "3beb9964f3a194f9d54ecac8ccc11949d1289fa141487028f6d070fd2b4ef255"
+    }
+  ],
+  "ancestry": {
+    "independentReceiptSHA256": "514ea2b2c8ef4f853f0bbdeb69e71556bfd9b47c2a7e9771d5491a11721c8b25",
+    "HWP5": {
+      "changedStream": "BodyText/Section0",
+      "flagsHex": "000a4108",
+      "positionYX": [1500, 7200],
+      "size": [7200, 3600],
+      "bodyUTF16Units": 335,
+      "otherStreamsAndMetadataExact": true
+    },
+    "HWPX": {
+      "changedEntry": "Contents/section0.xml",
+      "changedElement": "one existing picture pos",
+      "positionXY": [9000, 6000],
+      "size": [7200, 3600],
+      "otherXMLAndEntriesExact": true
+    }
+  },
+  "ownerResizeRawGate": {
+    "sourceSHA256": "5f8f0202e8edcfd384d330c70443e19bb55ba1e870fb7039a1c204e7868bdd30",
+    "cfbReaderSHA256": "518df8212cfb6042a3a9c18adb7851e45fecd772d2d347c37b85d21acd312fb2",
+    "exit": 0,
+    "stdoutSHA256": "01ed98b6098b70086a79a4e2156f3ea23a19085d30dd25070a6b86f8c2eae9bf",
+    "HWP5SavedSHA256": "6c9cf5d003c06002e664f56deceddb1b43e85b6b488bc22a67bb971f10751e2f",
+    "HWPXSavedSHA256": "86ca744bd279f16e5eb07c1d4629e81d0018367f889224b5adca2470ab4b02ea"
+  },
+  "publicAssets": "Two pre-edit derivatives only; edited saves and local evidence paths excluded",
+  "licenseBasis": "Derivatives of existing approved public picture-resize examples; preserve repository LICENSE and THIRD_PARTY_NOTICES via official producer",
+  "limitations": {
+    "newGUIClaim": false,
+    "defaultSaveOrFreshReflowClaim": false,
+    "NativeRebuild": false
+  }
+}

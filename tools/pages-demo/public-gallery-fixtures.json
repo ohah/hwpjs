@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "catalogSHA256": "65b4a52f58436e319a8a933fc2eaedc97ee8c213bbd22da7c0bcedb30265dd71",
+  "catalogSHA256": "212a0e461fa372c70097bd026c3a472021984850b03c433c4a126c494a76c088",
   "files": [
     {
       "id": "image-insert-blank.hwp",
@@ -1049,6 +1049,22 @@
       "path": "fixtures/hwp5-textbox-vertical-margins.hwp",
       "bytes": 14336,
       "sha256": "33cd713be59fb751dc9af6f6f9aeda2995015fcf64972c8763cf9721e77114cc"
+    },
+    {
+      "id": "anchored-picture.hwp",
+      "name": "anchored-picture.hwp",
+      "label": "[기능 예제] HWP5 그림 고정점 크기 조절",
+      "path": "fixtures/anchored-picture.hwp",
+      "bytes": 5120,
+      "sha256": "06f558d278cb6886866ab743ee2230f45d54f4042a70579f8795bd3ed6057036"
+    },
+    {
+      "id": "anchored-picture.hwpx",
+      "name": "anchored-picture.hwpx",
+      "label": "[기능 예제] HWPX 그림 고정점 크기 조절",
+      "path": "fixtures/anchored-picture.hwpx",
+      "bytes": 8514,
+      "sha256": "91a6ddb492823d450b1b10432224074d804ff6feca8a37b78fce86bf5282cbfd"
     }
   ]
 }
