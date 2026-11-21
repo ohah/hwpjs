@@ -31,7 +31,7 @@ async function setup(options: any = {}) {
   let revision = 0,
     closed = false;
   const content = () => ({
-    format: 'hwpx',
+    format: options.format ?? 'hwpx',
     readOnly: !!options.readOnly,
     totalParagraphs: 1,
     limited: false,
@@ -85,7 +85,7 @@ async function setup(options: any = {}) {
       () => !closed,
     );
   const editor = createEditor({ runtimeFactory: () => runtime });
-  await editor.load(new Uint8Array([1]), { format: 'hwpx', editable: true });
+  await editor.load(new Uint8Array([1]), { format: options.format ?? 'hwpx', editable: true });
   return { editor, calls };
 }
 async function target(editor: any) {
@@ -211,5 +211,55 @@ test('post-commit projection error is refresh-required and never replays the geo
     assert.equal(h.calls.filter((x) => x.kind === 'object-geometry-set').length, 1);
   } finally {
     await h.editor.dispose();
+  }
+});
+
+for (const patch of [{ width: 25000 }, { height: 15000 }])
+  test(
+    'H5 size-only Core authority preserves independent axis intent ' + JSON.stringify(patch),
+    async () => {
+      const native = {
+        ...observation(),
+        format: 'hwp5',
+        editable: { size: true, position: false },
+      };
+      const h = await setup({ format: 'hwp5', observation: native });
+      try {
+        const owned = await target(h.editor);
+        const result = await h.editor.dispatchCommand(SET_OBJECT_GEOMETRY_COMMAND, {
+          target: owned,
+          patch,
+        });
+        assert.equal(result.status, 'committed-with-snapshot');
+        assert.equal(result.state.nativeHistoryRevision, 1);
+        const writes = h.calls.filter((x) => x.kind === 'object-geometry-set');
+        assert.equal(writes.length, 1);
+        assert.deepEqual(writes[0].request.patch, patch);
+        assert.deepEqual(writes[0].request.expected, native.frame);
+      } finally {
+        await h.editor.dispose();
+      }
+    },
+  );
+test('H5 size-only typed authority cannot promote position or an unadmitted runtime', async () => {
+  for (const options of [{}, { atomic: false }]) {
+    const native = { ...observation(), format: 'hwp5', editable: { size: true, position: false } };
+    const h = await setup({ ...options, format: 'hwp5', observation: native });
+    try {
+      const read = await h.editor.getObjectGeometry(selector);
+      if (options.atomic === false) assert.equal(read.state, 'unavailable');
+      else {
+        assert.equal(read.state, 'available');
+        if (read.state !== 'available') throw Error('ExpectedGeometry');
+        const result = await h.editor.dispatchCommand(SET_OBJECT_GEOMETRY_COMMAND, {
+          target: read.target,
+          patch: { horizontalOffset: 1 },
+        });
+        assert.equal(result.status, 'rejected-unapplied');
+      }
+      assert.equal(h.calls.filter((x) => x.kind === 'object-geometry-set').length, 0);
+    } finally {
+      await h.editor.dispose();
+    }
   }
 });

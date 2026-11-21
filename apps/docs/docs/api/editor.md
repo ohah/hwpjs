@@ -336,7 +336,7 @@ export async function resizeObject(editor: HeadlessEditor, selector: ObjectGeome
 
 단위는 HWPUNIT이며 위치 간격은 음수를 허용합니다. 바꾸지 않을 필드는 생략합니다. `target`은 같은 편집기의 현재 상태에만 유효하며 JSON으로 저장·복원할 수 없습니다. 조회와 명령 사이에 저장·선택 변경·undo/redo를 수행했다면 다시 조회하세요.
 
-현재 경로는 지원하는 원본 HWPX 차트·글상자와 HWP5 글상자를 대상으로 합니다. 크기·위치 편집, 저장·다시 열기, 실행 취소·다시 실행을 별도로 검증했습니다. HWP5 변경 뒤 일반 저장이 `LayoutReflowRequired`로 거부되면 레이아웃 제한을 확인한 뒤 `save({ allowStaleLayout: true })`로 명시 동의할 수 있습니다. 완전 재조판이나 그룹·회전·임의 OLE 편집을 뜻하지 않습니다.
+크기·위치 편집은 지원하는 원본 HWPX 차트·글상자와 HWP5 글상자를 대상으로 합니다. 지원되는 HWP5 인라인 차트는 크기만 변경할 수 있습니다. 차트의 컴포넌트 노드로 조회한 뒤 `observation.editable.size`를 확인하고, 변경할 `width`나 `height`만 보냅니다. 크기·위치 편집, 저장·다시 열기, 실행 취소·다시 실행을 별도로 검증했습니다. HWP5 변경 뒤 일반 저장이 `LayoutReflowRequired`로 거부되면 레이아웃 제한을 확인한 뒤 `save({ allowStaleLayout: true })`로 명시 동의할 수 있습니다. 완전 재조판이나 그룹·회전·임의 OLE 편집을 뜻하지 않습니다.
 
 ## HWPX 글상자의 바깥 여백
 

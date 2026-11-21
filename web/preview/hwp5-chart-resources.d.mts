@@ -3,6 +3,8 @@ export interface CurrentHwp5ChartTarget {
   readonly kind: 'hwp5-chart';
   readonly section: number;
   readonly controlNode: number;
+  /** Physical component checked against the current owner; a selector, not edit authority. */
+  readonly componentNode: number;
   readonly historyRevision: number;
   readonly sourceEpoch: string;
 }

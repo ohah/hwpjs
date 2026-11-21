@@ -1,4 +1,4 @@
-import type { HeadlessEditor, EditorState } from '@hwpjs/core';
+import type { HeadlessEditor, EditorState, ObjectGeometrySelector } from '@hwpjs/core';
 // @ts-ignore Existing read-only owner and resource identity checks.
 import {
   currentHwp5ChartTarget,
@@ -38,6 +38,7 @@ function targetCopy(target: Hwp5ChartPropertiesTarget) {
   });
 }
 export function createHwp5ChartPropertiesPort(editor: Editor) {
+  const observations = new WeakSet<object>();
   function inspect(target: Hwp5ChartPropertiesTarget) {
     const state = editor.getEditorState();
     const row =
@@ -53,6 +54,7 @@ export function createHwp5ChartPropertiesPort(editor: Editor) {
     token: EditorState['token'];
   }) {
     try {
+      if (!observations.has(observation)) return false;
       const { state } = inspect(observation.target);
       return (
         state === observation.state &&
@@ -68,7 +70,13 @@ export function createHwp5ChartPropertiesPort(editor: Editor) {
     observe(value: Hwp5ChartPropertiesTarget) {
       const target = targetCopy(value),
         { state } = inspect(target);
-      return Object.freeze({ state, target, token: Object.freeze({ ...state.token }) });
+      const observation = Object.freeze({
+        state,
+        target,
+        token: Object.freeze({ ...state.token }),
+      });
+      observations.add(observation);
+      return observation;
     },
     async capture(observation: {
       state: EditorState;
@@ -99,6 +107,13 @@ export function createHwp5ChartPropertiesPort(editor: Editor) {
         ...observation,
         width: g.width,
         height: g.height,
+        // The painted control address is not the Native geometry component address.
+        // This selector only requests a fresh typed capture; it grants no write permission.
+        geometrySelector: Object.freeze({
+          kind: 'chart',
+          section: observation.target.section,
+          node: row.componentNode,
+        } satisfies ObjectGeometrySelector),
         title: projected
           ? Object.freeze({
               lines: Object.freeze([...projected.lines]),

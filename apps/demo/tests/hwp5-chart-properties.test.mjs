@@ -1,4 +1,7 @@
 import test from 'node:test';
+import { Document, all } from './fake-dom.mjs';
+import { createHwp5ChartPropertiesTool } from '../src/hwp5-chart-properties-tool.ts';
+import { SET_OBJECT_GEOMETRY_COMMAND } from '@hwpjs/core';
 import assert from 'node:assert/strict';
 import { currentHwp5ChartTarget } from '../../../web/preview/hwp5-chart-resources.mjs';
 import { objectActivationTarget } from '../../../web/preview/object-activation-target.mjs';
@@ -12,6 +15,7 @@ import { connectObjectActivation } from '../src/object-activation-bridge.ts';
 const address = { section: 0, controlNode: 17 };
 const hit = { kind: 'hwp5-chart', ...address };
 function fixture() {
+  const listeners = new Set();
   const owner = {
     control_node: 17,
     component_node: 18,
@@ -75,7 +79,10 @@ function fixture() {
   let read = async () => reply;
   const editor = {
     getEditorState: () => state,
-    registerStateListener: () => () => {},
+    registerStateListener(fn) {
+      listeners.add(fn);
+      return () => listeners.delete(fn);
+    },
     readResource(request, token) {
       reads.push({ request, token });
       return read();
@@ -93,6 +100,7 @@ function fixture() {
     reply,
     reads,
     editor,
+    listeners,
     replaceState: (s) => {
       state = s;
     },
@@ -308,4 +316,174 @@ test('bridge routes HWP5 only to its own properties port and rejects stale token
   dispatch({ type: 'double-click', target: hit, token: { ...f.token, generation: 2 } });
   assert.equal(calls.length, 1);
   stop();
+});
+
+const tick = () => new Promise((resolve) => setImmediate(resolve));
+function geometryDialog(options = {}) {
+  const f = fixture(),
+    doc = new Document(),
+    calls = [],
+    target = Object.freeze({});
+  const root = doc.createElement('main');
+  const create = doc.createElement.bind(doc);
+  doc.createElement = (tag) => {
+    const node = create(tag);
+    node.style = {};
+    node.showModal = () => {
+      node.open = true;
+    };
+    node.close = () => {
+      node.open = false;
+    };
+    return node;
+  };
+  let finish;
+  f.editor.getObjectGeometry = async (selector, settings) => {
+    calls.push({ kind: 'query', selector, settings });
+    const reply = options.unavailable
+      ? { state: 'unavailable', reason: 'Hwp5ChartGeometryLineCacheUnproved' }
+      : {
+          state: 'available',
+          target,
+          observation: {
+            frame: {
+              width: 20000,
+              height: 12000,
+              horizontalOffset: 0,
+              verticalOffset: 0,
+              treatAsCharacter: true,
+            },
+            editable: { size: !options.protected, position: false },
+          },
+        };
+    if (options.delayed)
+      return await new Promise((resolve) => {
+        finish = () => resolve(reply);
+      });
+    return reply;
+  };
+  f.editor.dispatchCommand = async (command, payload) => {
+    calls.push({ kind: 'write', command, payload });
+    return { status: 'committed-with-snapshot' };
+  };
+  const data = [];
+  const tool = createHwp5ChartPropertiesTool({
+    root,
+    editor: f.editor,
+    onStatus() {},
+    onClose() {},
+    canEditData: async () => true,
+    onEditData: (value) => data.push(value),
+  });
+  tool.open(address);
+  return {
+    ...f,
+    root,
+    tool,
+    calls,
+    target,
+    data,
+    finish: () => finish(),
+    input: (field) => all(root, (n) => n.dataset.role === 'object-geometry-' + field)[0],
+    button: () => all(root, (n) => n.dataset.role === 'object-geometry-apply')[0],
+  };
+}
+test('H5 geometry bridge uses verified component, never painted control, without granting write authority', async () => {
+  const f = fixture(),
+    port = createHwp5ChartPropertiesPort(f.editor);
+  const capture = await port.capture(port.observe(address));
+  assert.deepEqual(capture.geometrySelector, { kind: 'chart', section: 0, node: 18 });
+  assert(Object.isFrozen(capture.geometrySelector));
+  assert.notEqual(capture.geometrySelector.node, address.controlNode);
+  const forged = { ...port.observe(address) };
+  assert.equal(port.current(forged), false);
+  await assert.rejects(port.capture(forged));
+});
+for (const [axis, patch] of [
+  ['width', { width: 25002 }],
+  ['height', { height: 15001 }],
+])
+  test(
+    'H5 properties independently submits ' +
+      axis +
+      ' with one typed target and no other axis or position',
+    async () => {
+      const h = geometryDialog();
+      try {
+        await tick();
+        assert.deepEqual(h.calls[0].selector, { kind: 'chart', section: 0, node: 18 });
+        assert.equal(h.input('width').disabled, false);
+        assert.equal(h.input('height').disabled, false);
+        assert.equal(h.input('horizontalOffset').disabled, true);
+        assert.equal(h.input('verticalOffset').disabled, true);
+        assert.equal(all(h.root, (n) => n.type === 'checkbox')[0].disabled, true);
+        h.input(axis).value = axis === 'width' ? '88.2' : '52.92';
+        h.input(axis).dispatchEvent(new Event('input'));
+        h.button().dispatchEvent(new Event('click'));
+        await tick();
+        const writes = h.calls.filter((c) => c.kind === 'write');
+        assert.equal(writes.length, 1);
+        assert.equal(writes[0].command, SET_OBJECT_GEOMETRY_COMMAND);
+        assert.equal(writes[0].payload.target, h.target);
+        assert.deepEqual(writes[0].payload.patch, patch);
+      } finally {
+        h.tool.dispose();
+      }
+    },
+  );
+for (const options of [{ unavailable: true }, { protected: true }])
+  test(
+    'H5 properties preserves Native size refusal ' +
+      JSON.stringify(options) +
+      ' and independent data action',
+    async () => {
+      const h = geometryDialog(options);
+      try {
+        await tick();
+        assert.equal(h.input('width').disabled, true);
+        assert.equal(h.input('height').disabled, true);
+        assert.equal(h.button().disabled, true);
+        // A disabled browser button does not dispatch a trusted click.
+        // Assert the UI boundary; Native/Core refusal is tested separately.
+        assert.equal(h.calls.filter((c) => c.kind === 'write').length, 0);
+        const dataButton = all(h.root, (n) => n.textContent === '차트 데이터 편집')[0];
+        dataButton.dispatchEvent(new Event('click'));
+        assert.deepEqual(h.data, [address]);
+        assert.equal(h.root.children.length, 0);
+      } finally {
+        h.tool.dispose();
+      }
+    },
+  );
+for (const action of ['replace', 'close'])
+  test('H5 delayed geometry query cannot revive controls after ' + action, async () => {
+    const h = geometryDialog({ delayed: true });
+    try {
+      await tick();
+      if (action === 'close') h.tool.dispose();
+      else {
+        h.replaceState({ ...h.getState() });
+        for (const notify of h.listeners) notify();
+      }
+      h.finish();
+      await tick();
+      assert.equal(h.root.children.length, 0);
+      assert.equal(h.calls.filter((c) => c.kind === 'write').length, 0);
+    } finally {
+      h.tool.dispose();
+    }
+  });
+test('H5 geometry capture refuses a state change before apply and retains untouched Native precision', async () => {
+  const h = geometryDialog();
+  try {
+    await tick();
+    h.replaceState({ ...h.getState() });
+    h.input('width').value = '88.2';
+    h.input('width').dispatchEvent(new Event('input'));
+    h.button().dispatchEvent(new Event('click'));
+    await tick();
+    assert.equal(h.calls.filter((c) => c.kind === 'write').length, 0);
+  } finally {
+    h.tool.dispose();
+  }
 });

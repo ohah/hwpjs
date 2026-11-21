@@ -90,3 +90,8 @@ test "object geometry H5 late allocation failures retain original source and rev
     }
     try std.testing.expect(completed and tested > 0);
 }
+
+comptime {
+    _ = @import("chart_geometry_resize_tests.zig");
+    _ = @import("chart_geometry_independent_tests.zig");
+}

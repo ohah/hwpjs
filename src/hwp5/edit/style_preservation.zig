@@ -1004,6 +1004,11 @@ pub const Session = opaque {
         const state = self.stateConst();
         if (selector.section >= state.document.sections.len) return error.InvalidSection;
         const read_only = state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview);
+        if (selector.kind == .chart) {
+            const current = try self.currentDrawingSection(a, selector.section);
+            defer if (current) |bytes| a.free(bytes);
+            return @import("chart_object_geometry.zig").observe(a, self, &state.source, !state.chart_resources.empty(), current orelse state.decoded[selector.section], state.decoded, state.source.header.version(), state.document.sections[selector.section], selector, revision, binding, read_only);
+        }
         return @import("object_geometry.zig").observe(a, state.decoded[selector.section], state.source.header.version(), state.document.sections[selector.section].paragraphs, selector, revision, binding, read_only);
     }
     pub fn drawingSources(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("drawing_sources.zig").Source {
@@ -2190,7 +2195,11 @@ pub const Session = opaque {
                 if (state.formatting_batch != null) return error.MutationInProgress;
                 const section = &state.document.sections[section_index];
                 const read_only = state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview);
-                const bytes = (try @import("object_geometry.zig").write(state.allocator, state.decoded[section_index], state.source.header.version(), section.paragraphs, request.*, read_only)) orelse return;
+                const bytes = if (request.selector.kind == .chart) chart: {
+                    const current = try self.currentDrawingSection(state.allocator, section_index);
+                    defer if (current) |value| state.allocator.free(value);
+                    break :chart (try @import("chart_object_geometry.zig").write(state.allocator, self, &state.source, !state.chart_resources.empty(), current orelse state.decoded[section_index], state.decoded, state.source.header.version(), section.*, request.*, read_only)) orelse return;
+                } else (try @import("object_geometry.zig").write(state.allocator, state.decoded[section_index], state.source.header.version(), section.paragraphs, request.*, read_only)) orelse return;
                 errdefer state.allocator.free(bytes);
                 // Fixed topology, length and record offsets: retain all live model intents.
                 // History already owns the preimage Section basis through its checkpoint.

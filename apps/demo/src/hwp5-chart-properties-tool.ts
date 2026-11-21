@@ -1,4 +1,5 @@
 import type { HeadlessEditor } from '@hwpjs/core';
+import { createObjectGeometryForm } from './object-geometry-form.ts';
 import { createDialogLayer } from './dialog-layer.ts';
 import { pictureMillimeters } from './object-properties-input.ts';
 import {
@@ -6,7 +7,7 @@ import {
   type Hwp5ChartPropertiesTarget,
 } from './hwp5-chart-properties-port.ts';
 
-/** HWP5 display-only information. No geometry or data edit command is installed. */
+/** Read-only display identity and independent fresh Native geometry authority. */
 export function createHwp5ChartPropertiesTool(options: {
   root: HTMLElement;
   editor: HeadlessEditor;
@@ -18,11 +19,15 @@ export function createHwp5ChartPropertiesTool(options: {
   const port = createHwp5ChartPropertiesPort(options.editor);
   type Observation = ReturnType<typeof port.observe>;
   let closed = false;
-  let session: { observation: Observation; layer: ReturnType<typeof createDialogLayer> } | null =
-    null;
+  let session: {
+    observation: Observation;
+    layer: ReturnType<typeof createDialogLayer>;
+    geometry?: ReturnType<typeof createObjectGeometryForm>;
+  } | null = null;
   const close = (restore = false) => {
     const old = session;
     session = null;
+    old?.geometry?.dispose();
     old?.layer.destroy();
     if (restore && old && !closed && port.current(old.observation)) options.onClose();
   };
@@ -53,7 +58,7 @@ export function createHwp5ChartPropertiesTool(options: {
         mode: 'modal',
         onDismiss: () => close(true),
       });
-      const current = { observation, layer };
+      const current: NonNullable<typeof session> = { observation, layer };
       session = current;
       const doc = options.root.ownerDocument,
         rows = doc.createElement('dl'),
@@ -90,7 +95,17 @@ export function createHwp5ChartPropertiesTool(options: {
           );
           row('너비', pictureMillimeters(capture.width) + ' mm');
           row('높이', pictureMillimeters(capture.height) + ' mm');
-          status.textContent = '읽기 전용 차트 속성입니다. 크기와 데이터 편집은 지원하지 않습니다.';
+          current.geometry = createObjectGeometryForm(
+            layer.body,
+            layer.footer,
+            options.editor,
+            capture.geometrySelector,
+            () => {
+              if (session === current) close(true);
+            },
+          );
+          status.textContent =
+            '크기 편집은 현재 개체의 편집 가능 여부를 확인한 뒤 사용할 수 있습니다.';
           if (options.canEditData && options.onEditData)
             void options
               .canEditData(target)
@@ -106,7 +121,7 @@ export function createHwp5ChartPropertiesTool(options: {
                 });
                 layer.footer.append(edit);
                 status.textContent =
-                  '차트 크기는 읽기 전용입니다. 값과 범주는 데이터 편집에서 수정할 수 있습니다.';
+                  '값과 범주는 데이터 편집에서 수정할 수 있습니다. 크기는 아래 편집 가능 여부를 따릅니다.';
               })
               .catch(() => {});
         })

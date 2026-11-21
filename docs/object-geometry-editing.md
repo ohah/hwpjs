@@ -16,6 +16,18 @@ HWP5 글상자는 고정 길이 control/component payload와 행렬을 준비하
 
 크기 변경 후 다시 선택할 때도 현재 Native frame과 실제 꼭짓점·행렬이 일치해야 합니다. 글상자의 양의 축 배율은 기존 `drawingAxisGeometry`로 확인하고 HWP5의 raw/component/local transform 교차검증을 유지합니다. OLE는 선택적인 Native axis frame(원본·현재 크기, 행렬, 각도, flip, local offset)이 현재 geometry와 일치하는 경우에만 같은 축 배율을 배치에 사용합니다. 이것은 표시 증거이며 수정 권한이나 이전 차트 데이터의 재사용 권한이 아닙니다. preview 호환성은 여전히 현재 owner·frame·link를 확인하고 authoritative value는 현재 read 성공 전까지 null입니다.
 
+## HWP5 차트의 독립 너비와 높이 후보
+
+격리 후보는 기존 geometry 조회와 쓰기를 재사용한다. 차트 선택의 controlNode는 표시 조회에만 사용하고, 같은 현재 차트 행의 검증된 componentNode를 geometry selector로 전달한다. 속성 창은 공용 크기 폼을 사용하되 새 getObjectGeometry 관측의 editable.size만 너비와 높이를 열 수 있다. 이 행이나 그림 사각형이 수정 권한을 발급하지 않는다. Native가 position을 거부하면 위치와 글자처럼 취급은 잠겨 있다. 기존 데이터 편집의 별도 자격과 버튼은 유지한다.
+
+Core의 불투명 target, 같은 상태와 token, Native history revision 및 session/serial, 물리 소유자와 source SHA256 검증은 그대로다. 새 Surface 임의 요청이나 ABI를 추가하지 않는다. 변경하지 않은 축은 표시된 mm 값으로 다시 계산하지 않는다. 한 번의 적용은 기존 단일 geometry 명령을 사용하며 no-op은 기존 Core와 Native 계약을 따른다.
+
+Native 후보는 직접 본문에 인라인으로 놓인 modern chart의 spec24, attributes1과 유일한 물리 자원만 받는다. 원래 좌표계와 OLE intrinsic extent는 유지하고 common/current frame과 양의 축 배율만 변경한다. 축별 배율은 독립적이며 바꾸지 않은 축의 계수 비트는 보존한다. 등록된 PNG와 차트 데이터, 전체 자원은 그대로다. 회전, 뒤집기, 그룹, 상대 크기, 캡션, 중첩 호스트, 알 수 없는 속성과 꼬리, 보호 문서 및 불확실한 presentation은 계속 거부한다. 모든 구역의 기존 줄 캐시를 확인하며 캐시가 있으면 Hwp5ChartGeometryLineCacheUnproved로 거부한다. 캐시를 임의로 지우거나 조판 성공으로 승격하지 않는다.
+
+선행 비례 후보의 Native9와 독립 축 후속의 Native8은 별도 실행 증거다. 독립 축 Native8은 익명1과 함께 통과했고, 너비만25000x12000, 높이만20000x15000, 독립25000x18000으로 저장한 세 파일의 독립 바이너리 검사도 통과했다. 원래 extent20000x12000과 PNG267x160 및 자원 전체가 보존됐다. 이 증거는 이전 격리 Native 후보의 증거이며 현재 통합 트리의 새 Native 실행이나 공식 SDK와 실제 GUI 통과를 뜻하지 않는다.
+
+통합 후속에서는 소스 시험으로 실제 Core 명령과 속성 폼의 연결을 확인한다. 새 엔진을 담은 공식 Core/Vanilla와 gallery, 실제 선택과 속성 적용, undo/redo, 저장 파일과 fresh reopen은 후속 조율 대상이다. 기본 저장의 LayoutReflowRequired와 사용자가 명시한 기존 allowStaleLayout 정책을 유지한다. 이 후보는 외부 앱의 비균일 PNG 표시와 모델 재배치의 시각적 일치, 활성 캐시가 있는 문서 또는 전체 차트 profile 지원을 주장하지 않는다.
+
 ## 측정한 실행 범위
 
 집중 Native 코호트는 이름 있는 7개와 import된 익명 3개를 구분해 모두 통과했습니다. HWPX 차트·글상자와 HWP5 글상자의 실제 원본 변경, 저장·undo/redo·재열기 및 해당 시험의 거부·할당 실패 검사를 포함합니다. 앞선 컴파일 오류와 signed 위치 직렬화 실패 코호트는 보존했으며, 성공한 후속 실행으로 덮지 않았습니다. 통합 첫 실행의 원본 fixture 누락은 제품 동작 실패와 분리했고, 정확한 원본을 포함한 새 코호트에서 실행했습니다. 이 수치는 전체 Native suite 통과를 뜻하지 않습니다.
