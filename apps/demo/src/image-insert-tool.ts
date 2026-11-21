@@ -291,7 +291,7 @@ export function createImageInsertTool(options: {
             );
             close();
             options.onClose();
-          } catch (error) {
+          } catch {
             if (owned()) {
               const now = options.editor.getEditorState();
               if (

@@ -399,14 +399,17 @@ test('refresh-required는 재시도 없이 결과 확인 안내', async () => {
 });
 test('알 수 없는 dispatch 실패도 capture를 소진하고 한 번만 호출', async () => {
   const h = ui();
-  h.setResponse({
-    then(_resolve: any, reject: any) {
-      reject(Error('lost transport'));
-    },
-  });
+  let rejectResponse!: (error: Error) => void;
+  h.setResponse(
+    new Promise((_resolve, reject) => {
+      rejectResponse = reject;
+    }),
+  );
   await h.tool.open();
   await h.select();
   fire(h.role('image-insert-confirm'), 'click');
+  await tick();
+  rejectResponse(Error('lost transport'));
   await tick();
   assert.equal(h.writes.length, 1);
   assert.match(h.statuses[0], /결과를 확인할 수 없습니다/);
