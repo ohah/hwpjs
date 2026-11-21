@@ -2,7 +2,10 @@
 //! No document owner, save capability, synthetic raster, or preview cache is read.
 const std = @import("std");
 pub fn write(a: std.mem.Allocator, data: @import("../../hwpx/chart_create_data.zig").Data, limit: usize) ![]u8 {
-    const xml = try @import("../../hwpx/chart_create_xml.zig").create(a, data);
+    return writeFor(a, data, .spec24_registered_png_presentation_v1, limit);
+}
+pub fn writeFor(a: std.mem.Allocator, data: @import("../../hwpx/chart_create_data.zig").Data, profile: @import("create_profile.zig").Profile, limit: usize) ![]u8 {
+    const xml = try @import("create_profile.zig").create(a, data, profile);
     defer a.free(xml);
     var tree = try @import("../../hwpx/chart_tree.zig").parse(a, xml, 0, .{});
     defer tree.deinit(a);

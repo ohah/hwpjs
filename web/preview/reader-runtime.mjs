@@ -330,12 +330,14 @@ export function createReaderRuntime({
       !historyPoisoned &&
       editor?.historyStats?.()?.protocolVersion === 2 &&
       editor?.supportsEquationInsertionAbi?.() === true;
-    content.hwp5ChartCreateProfileVersion = editor?.supportsChartCreationAbi?.() === true ? 1 : 0;
+    const chartProfileVersion = editor?.chartCreateProfileVersion?.();
+    content.hwp5ChartCreateProfileVersion =
+      chartProfileVersion === 1 || chartProfileVersion === 2 ? chartProfileVersion : 0;
     content.chartCreationAvailable =
       historyEnabled &&
       !historyPoisoned &&
       editor?.historyStats?.()?.protocolVersion === 2 &&
-      content.hwp5ChartCreateProfileVersion === 1 &&
+      content.hwp5ChartCreateProfileVersion !== 0 &&
       typeof globalThis.OffscreenCanvas === 'function';
     content.hwp5ChartLiteralEditAvailable =
       historyEnabled &&

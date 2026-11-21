@@ -1978,9 +1978,9 @@ export fn hwp5_edit_insert_equation(ref_ptr: [*]const u8, ref_size: usize, ptr: 
 }
 
 // Optional current-caret authoring. Explicit experimental carrier; no inferred profile.
-const chart_create_profile = "spec24-registered-png-presentation-v1";
+const chart_create_profile = @import("../hwp5/chart/create_profile.zig");
 export fn hwp5_edit_chart_create_profile_version() u32 {
-    return 1;
+    return chart_create_profile.version;
 }
 export fn hwp5_edit_chart_create_preview(ref_ptr: [*]const u8, ref_size: usize, ptr: [*]const u8, size: usize) u32 {
     hwp5_edit_output_free();
@@ -1996,9 +1996,9 @@ export fn hwp5_edit_chart_create_preview(ref_ptr: [*]const u8, ref_size: usize, 
     const Wire = struct { start: u32, profile: []const u8, data: @import("../hwpx/chart_create_data.zig").Data };
     const parsed = std.json.parseFromSlice(Wire, a, ptr[0..size], .{ .allocate = .alloc_always, .ignore_unknown_fields = false, .duplicate_field_behavior = .@"error" }) catch |err| return fail(err);
     defer parsed.deinit();
-    if (!std.mem.eql(u8, parsed.value.profile, chart_create_profile)) return fail(error.UnsupportedChartCreateProfile);
+    const profile = chart_create_profile.decode(parsed.value.profile) catch |err| return fail(err);
     if (parsed.value.start >= witness.len / 2) return fail(error.InvalidChartCreateCaret);
-    output = @import("../hwp5/chart/create_preview.zig").write(a, parsed.value.data, 16 * 1024 * 1024) catch |err| return fail(err);
+    output = @import("../hwp5/chart/create_preview.zig").writeFor(a, parsed.value.data, profile, 16 * 1024 * 1024) catch |err| return fail(err);
     return 1;
 }
 export fn hwp5_edit_create_chart_current(ref_ptr: [*]const u8, ref_size: usize, ptr: [*]const u8, size: usize, image_ptr: [*]const u8, image_size: usize) u32 {
@@ -2030,7 +2030,7 @@ export fn hwp5_edit_create_chart_current(ref_ptr: [*]const u8, ref_size: usize, 
     const parsed = std.json.parseFromSlice(Wire, a, ptr[0..size], .{ .allocate = .alloc_always, .ignore_unknown_fields = false, .duplicate_field_behavior = .@"error" }) catch |err| return fail(err);
     defer parsed.deinit();
     const w = parsed.value;
-    if (!std.mem.eql(u8, w.profile, chart_create_profile)) return fail(error.UnsupportedChartCreateProfile);
+    const profile = chart_create_profile.decode(w.profile) catch |err| return fail(err);
     if (w.expected_text_utf16le.len > 1024 * 1024) return fail(error.ChartCreateExpectedTextLimit);
     if (w.width == 0 or w.height == 0 or w.width > std.math.maxInt(i32) or w.height > std.math.maxInt(i32)) return fail(error.InvalidChartCreateBox);
     const aspect_matches = if (w.width >= w.height)
@@ -2044,7 +2044,7 @@ export fn hwp5_edit_create_chart_current(ref_ptr: [*]const u8, ref_size: usize, 
         .box = .{ .width = w.width, .height = w.height },
         .data = w.data,
         .rendered = .{ .source_xml_sha256 = w.source_xml_sha256, .pixel_width = w.pixel_width, .pixel_height = w.pixel_height, .bytes = image_ptr[0..image_size] },
-        .profile = .spec24_registered_png_presentation_v1,
+        .profile = profile,
     };
     apply(.{ .insert_chart = request }) catch |err| {
         _ = fail(err);

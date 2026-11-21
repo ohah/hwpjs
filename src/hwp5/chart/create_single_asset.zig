@@ -11,7 +11,7 @@ pub const Prepared = struct {
 };
 pub fn prepare(a: std.mem.Allocator, file: *const @import("../../cfb/reader.zig").File, previous: store.Values, docinfo: []const u8, version: @import("../version.zig").Version, request: @import("create_request.zig").Request, limit: usize) !Prepared {
     try @import("create_request.zig").validate(request);
-    try @import("create_rendered_resources.zig").validate(a, request.data, request.rendered, .{});
+    try @import("create_rendered_resources.zig").validateFor(a, request.data, request.profile, request.rendered, .{});
     if (previous.docinfo) |bytes| if (!std.mem.eql(u8, bytes, docinfo)) return error.SourceBindingMismatch;
     if (previous.entries.len >= 128) return error.LimitExceeded;
     var names: std.ArrayList([]const u8) = .empty;
@@ -25,7 +25,7 @@ pub fn prepare(a: std.mem.Allocator, file: *const @import("../../cfb/reader.zig"
     }
     var info = try @import("create_single_docinfo.zig").prepare(a, docinfo, version, names.items, limit);
     defer info.deinit(a);
-    const xml = try @import("../../hwpx/chart_create_xml.zig").create(a, request.data);
+    const xml = try @import("create_profile.zig").create(a, request.data, request.profile);
     defer a.free(xml);
     const presentation = try @import("create_png_presentation.zig").write(a, request.rendered.bytes, request.rendered.pixel_width, request.rendered.pixel_height, limit);
     defer a.free(presentation);

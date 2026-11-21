@@ -7,6 +7,7 @@ import {
   checkedHwp5ChartCreateOptions,
 } from '../../js/hwp5-chart-create.mjs';
 import { model, context } from '../hwpx/chart-family-model.mjs';
+import { HWP5_LINE_CHART_CREATE_PROFILE as lineProfile } from '../../js/hwp5-chart-create-profiles.mjs';
 const encoder = new TextEncoder(),
   decoder = new TextDecoder();
 const png = new Uint8Array(
@@ -22,7 +23,7 @@ const options = () => ({
   series: [{ name: 'Own', values: [10, 20, 30] }],
   preview: { width: 64, height: 64 },
 });
-function harness() {
+function harness({ version = 1, authoringProfile = profile, previewKind = 'barChart' } = {}) {
   let next = 64,
     closed = false,
     epoch = '1',
@@ -55,11 +56,14 @@ function harness() {
   };
   const parse = (ptr) => JSON.parse(decoder.decode(allocated.get(ptr)));
   const currentRef = { epoch, kind: 'original', section: 0, id: '0', row: 0, column: 0 };
-  const display = model('barChart', [[10, 20, 30]]);
+  const display = model(previewKind, [[10, 20, 30]]);
   delete display.host;
   delete display.pair;
-  display.plot_settings[0].direction = { node: 4, value: 'col' };
-  display.plot_settings[0].grouping = { node: 5, value: 'clustered' };
+  if (previewKind === 'barChart') display.plot_settings[0].direction = { node: 4, value: 'col' };
+  display.plot_settings[0].grouping = {
+    node: 5,
+    value: previewKind === 'barChart' ? 'clustered' : 'standard',
+  };
   const wasm = {
     hwp5_edit_current_references(_section, _first, _count) {
       outputBytes = encoder.encode(
@@ -79,11 +83,11 @@ function harness() {
       return 1;
     },
     hwp5_edit_chart_create_profile_version() {
-      return 1;
+      return version;
     },
     hwp5_edit_chart_create_preview(rp, rs, p, _n) {
       assert.equal(parse(rp).epoch, epoch);
-      assert.equal(parse(p).profile, profile);
+      assert.equal(parse(p).profile, authoringProfile);
       outputBytes = encoder.encode(
         JSON.stringify({
           schemaVersion: 1,
@@ -99,6 +103,7 @@ function harness() {
       calls++;
       assert.equal(parse(rp).epoch, epoch);
       const request = parse(p);
+      assert.equal(request.profile, authoringProfile);
       assert.deepEqual(request.expected_text_utf16le, [13, 0]);
       assert.deepEqual(request.data.series[0].values, ['10', '20', '30']);
       assert.deepEqual(request.source_xml_sha256, Array(32).fill(7));
@@ -142,7 +147,7 @@ function harness() {
     api,
     wasm,
     reference,
-    request: () => ({ reference, start: 0, ...options() }),
+    request: () => ({ reference, start: 0, ...options(), profile: authoringProfile }),
     renderer,
     record,
     allocated,
@@ -190,7 +195,7 @@ test('older ABI, wrong arity and wrong profile never advertise or execute creati
       h.wasm.hwp5_edit_create_chart_current = () => 1;
     },
     (h) => {
-      h.wasm.hwp5_edit_chart_create_profile_version = () => 2;
+      h.wasm.hwp5_edit_chart_create_profile_version = () => 3;
     },
   ]) {
     const h = harness();
@@ -324,4 +329,45 @@ test('normal document sizes use nearest-pixel preview without changing document 
   });
   assert.equal(tall.width, 12000);
   assert.equal(tall.height, 20001);
+});
+
+test('line creation on profile v2 uses the same kind and XML digest for painting and commit', async () => {
+  const h = harness({ version: 2, authoringProfile: lineProfile, previewKind: 'lineChart' });
+  assert.equal(h.api.chartCreateProfileVersion(), 2);
+  const out = await h.api.createChart(h.request(), h.renderer);
+  assert.equal(out.application, 'applied');
+  assert.equal(h.calls(), 1);
+  assert.equal(h.canvases(), 1);
+  assert.ok(h.record.calls.some(([name]) => name === 'lineTo'));
+  assert.equal(h.allocated.size, 0);
+});
+test('old engines and mismatched Native plot output cannot persist a line request', async () => {
+  for (const [version, pattern] of [
+    [1, /UnsupportedChartCreateProfile/],
+    [2, /UnsupportedChartCreatePreviewKind/],
+  ]) {
+    const h = harness({ version, authoringProfile: lineProfile });
+    await assert.rejects(h.api.createChart(h.request(), h.renderer), pattern);
+    assert.equal(h.calls(), 0);
+    assert.equal(h.canvases(), 0);
+    assert.equal(h.allocated.size, 0);
+  }
+});
+
+test('line input uses the typed cache budget without narrowing the legacy bar budget', () => {
+  const series = [{ name: 'First' }, { name: 'Second' }, { name: 'Third' }];
+  const input = (categories) => ({
+    ...options(),
+    categories: Array.from({ length: categories }, (_, i) => String(i)),
+    series: series.map(({ name }) => ({ name, values: Array(categories).fill(1) })),
+  });
+  assert.equal(
+    checkedHwp5ChartCreateOptions({ ...input(2730), profile: lineProfile }).categories.length,
+    2730,
+  );
+  assert.throws(
+    () => checkedHwp5ChartCreateOptions({ ...input(2731), profile: lineProfile }),
+    /ChartPointLimitExceeded/,
+  );
+  assert.equal(checkedHwp5ChartCreateOptions(input(2731)).categories.length, 2731);
 });

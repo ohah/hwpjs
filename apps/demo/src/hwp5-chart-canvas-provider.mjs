@@ -14,8 +14,8 @@ export function createHwp5ChartCanvasProvider(document) {
   };
   return Object.freeze({
     createCanvas,
-    render(wire, pixels, current) {
-      return renderHwp5ChartCreatePreview(wire, pixels, { current, createCanvas });
+    render(wire, pixels, current, profile) {
+      return renderHwp5ChartCreatePreview(wire, pixels, { current, createCanvas }, profile);
     },
   });
 }

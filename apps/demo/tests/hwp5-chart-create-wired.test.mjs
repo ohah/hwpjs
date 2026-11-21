@@ -3,7 +3,10 @@ import assert from 'node:assert/strict';
 import { registerHooks } from 'node:module';
 import { Document, Element, all, fire } from './fake-dom.mjs';
 import * as core from '../../../packages/core/src/commands/inline-object-insert.ts';
-import { HWP5_CHART_CREATE_PROFILE as profile } from '../../../js/hwp5-chart-create.mjs';
+import {
+  HWP5_CHART_CREATE_PROFILE as profile,
+  HWP5_LINE_CHART_CREATE_PROFILE as lineProfile,
+} from '../../../js/hwp5-chart-create-profiles.mjs';
 import { model, context } from '../../../tests/hwpx/chart-family-model.mjs';
 const hook = registerHooks({
   load(url, ctx, next) {
@@ -143,12 +146,15 @@ function fixture() {
     encoderGate,
     readImpl = async () => ({ kind: 'hwp5-chart-create-preview', preview: wire() }),
     writeImpl = async () => ({ status: 'committed-with-snapshot' });
-  function wire() {
-    const data = model('barChart', [[10, 20, 30]]);
+  function wire(kind = 'barChart') {
+    const data = model(kind, [[10, 20, 30]]);
     delete data.pair;
     delete data.host;
-    data.plot_settings[0].direction = { node: 4, value: 'col' };
-    data.plot_settings[0].grouping = { node: 5, value: 'clustered' };
+    if (kind === 'barChart') data.plot_settings[0].direction = { node: 4, value: 'col' };
+    data.plot_settings[0].grouping = {
+      node: 5,
+      value: kind === 'barChart' ? 'clustered' : 'standard',
+    };
     return new TextEncoder().encode(
       JSON.stringify({
         schemaVersion: 1,
@@ -200,10 +206,10 @@ function fixture() {
     named = (label) => nodes().find((n) => n.getAttribute('aria-label') === label),
     button = (text) => nodes().find((n) => n.tagName === 'BUTTON' && n.textContent === text),
     form = () => nodes().find((n) => n.tagName === 'FORM');
-  const choose = () => {
+  const choose = (selected = profile) => {
     const n = named('HWP5 차트 생성 방식');
     assert.ok(n);
-    n.value = profile;
+    n.value = selected;
     fire(n, 'change');
   };
   const replace = () => {
@@ -428,4 +434,44 @@ test('dispose while preview pending removes subscriptions and rejects late UI wo
   assert.equal(f.form(), undefined);
   assert.equal(f.urls.length, 0);
   assert.equal(f.writes.length, 0);
+});
+
+test('v2 HWP5 dialog offers line and retains its profile through preview and insert', async () => {
+  const f = fixture();
+  f.state().content.hwp5ChartCreateProfileVersion = 2;
+  f.read(async () => ({ kind: 'hwp5-chart-create-preview', preview: f.wire('lineChart') }));
+  await open(f);
+  const select = f.named('HWP5 차트 생성 방식');
+  assert(select.children.some((option) => option.value === profile));
+  assert(select.children.some((option) => option.value === lineProfile));
+  f.choose(lineProfile);
+  fire(f.button('미리보기'), 'click');
+  await settle();
+  assert.equal(f.reads[0].message.request.profile, lineProfile);
+  assert.equal(f.urls.length, 1);
+  assert.equal(f.writes.length, 0);
+  fire(f.form(), 'submit');
+  await settle();
+  assert.equal(f.writes.length, 1);
+  assert.equal(f.writes[0].message.request.profile, lineProfile);
+  assert.equal('png' in f.writes[0].message.request, false);
+  assert.equal(f.revoked.length, 1);
+  f.tool.dispose();
+});
+test('v1 HWP5 dialog refuses a manually assigned line profile before preview or insertion', async () => {
+  const f = fixture();
+  await open(f);
+  const select = f.named('HWP5 차트 생성 방식');
+  assert.equal(
+    select.children.some((option) => option.value === lineProfile),
+    false,
+  );
+  f.choose(lineProfile);
+  assert.equal(f.button('미리보기').disabled, true);
+  assert.equal(f.button('차트 만들기').disabled, true);
+  fire(f.form(), 'submit');
+  await settle();
+  assert.equal(f.reads.length, 0);
+  assert.equal(f.writes.length, 0);
+  f.tool.dispose();
 });

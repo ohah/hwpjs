@@ -1,1 +1,1 @@
-export * from '../../assets/native-geometry-COFri-sV.js';
+export * from '../../assets/native-geometry-ChAcqXGm.js';

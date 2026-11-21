@@ -177,6 +177,12 @@ jobs:
           grep -Eq '^# skipped 0$' "$RUNNER_TEMP/object-activation.tap"
           bunx --no-install tsc --noEmit -p tools/tsconfig.object-activation.json
           bunx --no-install tsc --noEmit -p apps/demo/tests/tsconfig.drawing-properties.json
+      - name: HWP5 chart creation transport contracts
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test --test-concurrency=1 --test-reporter=tap tests/own-chart-create/current-transport.test.mjs
       - name: HWP5 chart literal edit source contracts
         timeout-minutes: 2
         shell: bash

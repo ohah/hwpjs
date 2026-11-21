@@ -190,3 +190,21 @@ test('existing HWPX default chart request preserves its prior wire contract', ()
   assert.equal(message.request.target.paragraph, 1);
   assert.equal(message.request.target.unit, 2);
 });
+
+test('version two admits the exact line profile in both readonly preview and mutation', () => {
+  const f = fixture();
+  f.payload.options.profile = 'spec24-registered-png-presentation-line-v1';
+  assert.throws(
+    () => inlineObjectInsertMessage(f.payload, f.state, 'chart'),
+    /ChartCreateProfileUnavailable/,
+  );
+  f.state.content.hwp5ChartCreateProfileVersion = 2;
+  const message = inlineObjectInsertMessage(f.payload, f.state, 'chart');
+  assert.equal(message.request.profile, f.payload.options.profile);
+  assert.deepEqual(hwp5ChartCreatePreviewMessage(f.payload, f.state).request, message.request);
+  f.state.content.hwp5ChartCreateProfileVersion = 3;
+  assert.throws(
+    () => inlineObjectInsertMessage(f.payload, f.state, 'chart'),
+    /ChartCreateProfileUnavailable/,
+  );
+});

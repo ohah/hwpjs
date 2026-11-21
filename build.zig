@@ -293,6 +293,18 @@ pub fn build(b: *std.Build) void {
     hwpx_generated_atomic_step.dependOn(&run_hwpx_generated_atomic_tests.step);
     core_test_step.dependOn(&run_hwpx_generated_atomic_tests.step);
 
+    const h5_line_tests = b.addTest(.{ .use_llvm = true, .filters = &.{ "H5 line chart", "H5 chart integrated Native" }, .root_module = b.createModule(.{
+        .root_source_file = b.path("src/hwp5_chart_line_create_probe.zig"),
+        .target = target,
+        .optimize = .ReleaseSafe,
+    }) });
+    h5_line_tests.step.dependOn(&abi_check.step);
+    h5_line_tests.step.dependOn(&icc_registry_check.step);
+    const run_h5_line_tests = b.addRunArtifact(h5_line_tests);
+    run_h5_line_tests.has_side_effects = true;
+    const h5_line_step = b.step("test-hwp5-line-chart-create", "Verify explicit line chart Native save, OOXML, History and existing bar isolation");
+    h5_line_step.dependOn(&run_h5_line_tests.step);
+
     const hx_source_crop_tests = b.addTest(.{ .use_llvm = true, .filters = &.{ "HX image source crop", "image insertion HX", "live image", "H5 chart integrated Native" }, .root_module = b.createModule(.{
         .root_source_file = b.path("src/hwpx_image_source_crop_probe.zig"),
         .target = target,

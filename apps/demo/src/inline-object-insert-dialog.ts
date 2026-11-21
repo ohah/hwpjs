@@ -1,8 +1,12 @@
 import {
-  HWP5_CHART_CREATE_PROFILE,
   checkedHwp5ChartCreateOptions,
   type Hwp5ChartCreateOptions,
 } from '../../../js/hwp5-chart-create.mjs';
+import {
+  HWP5_CHART_CREATE_PROFILE,
+  HWP5_LINE_CHART_CREATE_PROFILE,
+  supportsHwp5ChartCreateProfile,
+} from '../../../js/hwp5-chart-create-profiles.mjs';
 import { hwp5ChartRasterSize } from './hwp5-chart-raster-size.mjs';
 import type { ChartRasterPayload } from './hwp5-chart-create-input-lane.ts';
 import { checkedHwp5EquationInsertOptions } from '../../../js/hwp5-equation-insert.mjs';
@@ -37,6 +41,13 @@ export function createInlineObjectInsertDialog(
   const chart = kind === 'chart';
   const hwp5 = callbacks.format === 'hwp5',
     hwp5Chart = hwp5 && chart;
+  const hwp5Profiles = [
+    [HWP5_CHART_CREATE_PROFILE, '기본 막대 차트'],
+    [HWP5_LINE_CHART_CREATE_PROFILE, '기본 선 차트'],
+  ] as const;
+  const availableHwp5Profiles = hwp5Profiles.filter(([profile]) =>
+    supportsHwp5ChartCreateProfile(callbacks.chartCreateProfileVersion, profile),
+  );
   let busy = false,
     unavailable = false,
     previewBusy = false;
@@ -49,7 +60,7 @@ export function createInlineObjectInsertDialog(
   scope.id = 'inline-object-insert-scope';
   scope.className = 'inline-object-insert-scope';
   scope.textContent = hwp5Chart
-    ? 'HWP5 일반 본문 커서에 기본 막대 차트를 만듭니다. 외부 프로그램의 표시 호환성은 아직 확인되지 않았습니다.'
+    ? 'HWP5 일반 본문 커서에 선택한 종류의 차트를 만듭니다. 외부 프로그램의 표시 호환성은 아직 확인되지 않았습니다.'
     : hwp5
       ? 'HWP5 일반 본문 커서에 수식을 삽입합니다. 검정색과 일반 모드를 기본값으로 사용합니다. 저장 호환성은 후속 검증 대상입니다.'
       : 'HWPX 첫 구역의 일반 본문 커서 위치에 삽입합니다. 셀 안과 선택 영역에서는 사용할 수 없습니다.';
@@ -130,10 +141,7 @@ export function createInlineObjectInsertDialog(
     label.textContent = '생성 방식';
     profileChoice = doc.createElement('select');
     profileChoice.setAttribute('aria-label', 'HWP5 차트 생성 방식');
-    for (const [value, text] of [
-      ['', '생성 방식을 선택하세요'],
-      [HWP5_CHART_CREATE_PROFILE, '기본 막대 차트 (외부 호환 미검증)'],
-    ]) {
+    for (const [value, text] of [['', '생성 방식을 선택하세요'], ...availableHwp5Profiles]) {
       const option = doc.createElement('option');
       option.value = value;
       option.textContent = text;
@@ -142,6 +150,8 @@ export function createInlineObjectInsertDialog(
     label.append(profileChoice);
     group.append(label);
   }
+  const selectedHwp5Profile = () =>
+    availableHwp5Profiles.find(([profile]) => profile === profileChoice?.value)?.[0];
   const size = section('크기');
   size.className = 'inline-object-insert-size';
   const sizeDraft = createCellSizeUnitDraft({
@@ -262,11 +272,11 @@ export function createInlineObjectInsertDialog(
         );
       }
       if (hwp5Chart) {
-        if (profileChoice?.value !== HWP5_CHART_CREATE_PROFILE)
-          throw Error('HWP5 차트 생성 방식을 선택하세요.');
+        const profile = selectedHwp5Profile();
+        if (!profile) throw Error('HWP5 차트 생성 방식을 선택하세요.');
         options = checkedHwp5ChartCreateOptions({
           ...options,
-          profile: profileChoice.value,
+          profile,
           preview: hwp5ChartRasterSize(options),
         });
       }
@@ -323,7 +333,7 @@ export function createInlineObjectInsertDialog(
   };
   const updateEnabled = () => {
     const blocked = busy || previewBusy || unavailable;
-    const chosen = !hwp5Chart || profileChoice?.value === HWP5_CHART_CREATE_PROFILE;
+    const chosen = !hwp5Chart || selectedHwp5Profile() !== undefined;
     submit.disabled = blocked || !chosen;
     if (previewButton) previewButton.disabled = blocked || !chosen;
     if (profileChoice) profileChoice.disabled = blocked;

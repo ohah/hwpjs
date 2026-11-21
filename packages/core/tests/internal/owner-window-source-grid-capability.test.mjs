@@ -322,17 +322,17 @@ for (const key of [
     }
   });
 }
-test('HWP5 chart create profile is exactly unavailable0 or supported1, never arbitrary positive version', () => {
+test('HWP5 chart create profile is accepts only supported versions and preserves exact metadata', () => {
   for (const value of [NaN, Infinity])
     assert.throws(() => fixture({ hwp5ChartCreateProfileVersion: value }), /InvalidNumber/);
-  for (const value of [0, 1]) {
+  for (const value of [0, 1, 2]) {
     const f = fixture({ hwp5ChartCreateProfileVersion: value });
     assert.equal(isPlainOwnerBaseline(f.before, 0, 0), true);
     const next = f.merge();
     assert(next);
     assert.equal(next.hwp5ChartCreateProfileVersion, value);
   }
-  for (const value of [undefined, null, false, true, -0, -1, 2, 1.5, '0', '1', {}, []]) {
+  for (const value of [undefined, null, false, true, -0, -1, 3, 1.5, '0', '1', '2', {}, []]) {
     const f = fixture({ hwp5ChartCreateProfileVersion: value });
     assert.equal(isPlainOwnerBaseline(f.before, 0, 0), false);
     assert.equal(f.merge(), null);

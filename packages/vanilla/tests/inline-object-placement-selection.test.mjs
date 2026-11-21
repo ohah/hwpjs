@@ -63,41 +63,42 @@ test('inline creation captures a generated Canvas caret without creating a sourc
   }
 });
 
-test('HWP5 chart caret observes its own capability without claiming HWPX placement support', async () => {
-  const f = formattingFixture();
-  f.install({
-    nativeHistoryStats: { protocolVersion: 2 },
-    content: {
-      ...f.state().content,
-      format: 'hwp5',
-      inlineObjectPlacementVersion: 0,
-      chartCreationAvailable: true,
-      hwp5ChartCreateProfileVersion: 1,
-    },
+for (const version of [1, 2])
+  test(`HWP5 chart caret observes profile ${version} without claiming HWPX placement support`, async () => {
+    const f = formattingFixture();
+    f.install({
+      nativeHistoryStats: { protocolVersion: 2 },
+      content: {
+        ...f.state().content,
+        format: 'hwp5',
+        inlineObjectPlacementVersion: 0,
+        chartCreationAvailable: true,
+        hwp5ChartCreateProfileVersion: version,
+      },
+    });
+    const surface = createCanvasSurface({ root: f.root, editor: f.editor });
+    try {
+      f.pointer('pointerdown', 0, 1);
+      f.pointer('pointerup', 0, 1);
+      await tick();
+      const caret = surface.captureInlineObjectInsertCaret();
+      assert(caret);
+      assert.equal(caret.current(), true);
+      assert.equal(f.state().content.inlineObjectPlacementVersion, 0);
+      assert.equal(f.messages.length, 0);
+      f.setDialogs([f.dialog()]);
+      assert.equal(surface.captureInlineObjectInsertCaret(), null);
+      assert.equal(caret.current(), true); // A retained UX lease survives its own modal.
+      f.setDialogs([]);
+      f.pointer('pointerdown', 1, 2);
+      f.pointer('pointerup', 1, 2);
+      await tick();
+      assert.equal(caret.current(), false);
+      f.install({ content: { ...f.state().content, hwp5ChartCreateProfileVersion: 0 } });
+      await tick();
+      assert.equal(surface.captureInlineObjectInsertCaret(), null);
+    } finally {
+      while (f.waits.length) f.reject();
+      await surface.dispose();
+    }
   });
-  const surface = createCanvasSurface({ root: f.root, editor: f.editor });
-  try {
-    f.pointer('pointerdown', 0, 1);
-    f.pointer('pointerup', 0, 1);
-    await tick();
-    const caret = surface.captureInlineObjectInsertCaret();
-    assert(caret);
-    assert.equal(caret.current(), true);
-    assert.equal(f.state().content.inlineObjectPlacementVersion, 0);
-    assert.equal(f.messages.length, 0);
-    f.setDialogs([f.dialog()]);
-    assert.equal(surface.captureInlineObjectInsertCaret(), null);
-    assert.equal(caret.current(), true); // A retained UX lease survives its own modal.
-    f.setDialogs([]);
-    f.pointer('pointerdown', 1, 2);
-    f.pointer('pointerup', 1, 2);
-    await tick();
-    assert.equal(caret.current(), false);
-    f.install({ content: { ...f.state().content, hwp5ChartCreateProfileVersion: 0 } });
-    await tick();
-    assert.equal(surface.captureInlineObjectInsertCaret(), null);
-  } finally {
-    while (f.waits.length) f.reject();
-    await surface.dispose();
-  }
-});

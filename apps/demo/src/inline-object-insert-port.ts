@@ -1,3 +1,7 @@
+import {
+  HWP5_CHART_CREATE_PROFILE,
+  supportsHwp5ChartCreateProfile,
+} from '../../../js/hwp5-chart-create-profiles.mjs';
 import type { Hwp5ChartCreatePreviewCore } from './hwp5-chart-create-preview-port.ts';
 import type { Hwp5ChartCreateOptions } from '../../../js/hwp5-chart-create.mjs';
 import type {
@@ -78,8 +82,10 @@ export function createInlineObjectInsertPort(
       hwp5Chart &&
       (!core.hwp5ChartCreatePreviewMessage ||
         !editor.readResource ||
-        (observed.content as Record<string, unknown> | undefined)?.hwp5ChartCreateProfileVersion !==
-          1 ||
+        !supportsHwp5ChartCreateProfile(
+          (observed.content as Record<string, unknown> | undefined)?.hwp5ChartCreateProfileVersion,
+          HWP5_CHART_CREATE_PROFILE,
+        ) ||
         !captureCaret ||
         captureCaret()?.current() !== true)
     )
@@ -136,11 +142,17 @@ export function createInlineObjectInsertPort(
     presentation: inspect,
     chartCreateProfileVersion() {
       const state = editor.getEditorState();
-      return ((activeCapture?.state === state && activeCapture.caretCurrent?.() === true) ||
-        inspect('chart').enabled) &&
-        (state.content as Record<string, unknown> | undefined)?.chartCreateProfileVersion === 1
-        ? 1
-        : 0;
+      if (
+        !(activeCapture?.state === state && activeCapture.caretCurrent?.() === true) &&
+        !inspect('chart').enabled
+      )
+        return 0;
+      const content = state.content as Record<string, unknown> | undefined;
+      if (content?.format === 'hwp5') {
+        const version = content.hwp5ChartCreateProfileVersion;
+        return version === 1 || version === 2 ? version : 0;
+      }
+      return content?.chartCreateProfileVersion === 1 ? 1 : 0;
     },
     capture(kind: InlineObjectKind): InlineObjectInsertCapture {
       const initial = editor.getEditorState();

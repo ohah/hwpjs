@@ -32645,12 +32645,29 @@ var init_chart_preview_paint = __esmMin((() => {
 		"#70ad47"
 	];
 }));
+// ../../js/hwp5-chart-create-profiles.mjs
+function hwp5ChartCreateKind(profile) {
+	switch (profile) {
+		case HWP5_CHART_CREATE_PROFILE: return "barChart";
+		case HWP5_LINE_CHART_CREATE_PROFILE: return "lineChart";
+		default: throw Error("UnsupportedChartCreateProfile");
+	}
+}
+function supportsHwp5ChartCreateProfile(version, profile) {
+	const kind = hwp5ChartCreateKind(profile);
+	return version === 2 || version === 1 && kind === "barChart";
+}
+var HWP5_CHART_CREATE_PROFILE, HWP5_LINE_CHART_CREATE_PROFILE;
+var init_hwp5_chart_create_profiles = __esmMin((() => {
+	HWP5_CHART_CREATE_PROFILE = "spec24-registered-png-presentation-v1";
+	HWP5_LINE_CHART_CREATE_PROFILE = "spec24-registered-png-presentation-line-v1";
+}));
 // ../../web/preview/hwp5-chart-create-preview.mjs
 /** Render authored Native preview values. Existing resource previewValue caches
 * and test fixture images are never accepted as inputs or used as a fallback.
 * This remains an approximate own preview, not a promise of source-style fidelity.
 */
-async function renderPreview(wire, { width, height }, { createCanvas, current }, scope, payloadScope) {
+async function renderPreview(wire, { width, height }, { createCanvas, current }, scope, payloadScope, expectedKind) {
 	if (!(wire instanceof Uint8Array) || wire.byteLength === 0 || wire.byteLength > 16777216) fail$2("InvalidChartCreatePreview");
 	if (!validSize(width) || !validSize(height) || width * height > 4194304) fail$2("ChartCreatePreviewPixelLimit");
 	if (typeof createCanvas !== "function" || typeof current !== "function") fail$2("ChartCreatePreviewRendererUnavailable");
@@ -32658,7 +32675,7 @@ async function renderPreview(wire, { width, height }, { createCanvas, current },
 	const preview = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(wire.slice()));
 	if (preview.schemaVersion !== 1 || preview.scope !== scope || preview.executionAuthority !== false || !Array.isArray(preview.xml_sha256) || preview.xml_sha256.length !== 32 || !preview.xml_sha256.every((v) => Number.isInteger(v) && v >= 0 && v <= 255)) fail$2("InvalidChartCreatePreview");
 	const data = validateChartDisplayData(preview.data);
-	if (data.plots.length !== 1 || data.plots[0].kind !== "barChart") fail$2("UnsupportedChartCreatePreviewKind");
+	if (data.plots.length !== 1 || data.plots[0].kind !== expectedKind) fail$2("UnsupportedChartCreatePreviewKind");
 	const primitives = chartPreviewPrimitives(data);
 	if (primitives.state !== "ready") fail$2(primitives.reason ?? "ChartCreatePreviewUnavailable");
 	const canvas = createCanvas(width, height);
@@ -32701,8 +32718,8 @@ async function renderPreview(wire, { width, height }, { createCanvas, current },
 		canvas.width = canvas.height = 0;
 	}
 }
-function renderHwp5ChartCreatePreview(wire, size, host) {
-	return renderPreview(wire, size, host, "hwp5-chart-create-preview", "hwp5-chart-create-preview-payload");
+function renderHwp5ChartCreatePreview(wire, size, host, profile = HWP5_CHART_CREATE_PROFILE) {
+	return renderPreview(wire, size, host, "hwp5-chart-create-preview", "hwp5-chart-create-preview-payload", hwp5ChartCreateKind(profile));
 }
 function renderHwp5ChartLiteralEditPreview(wire, host) {
 	if (!(wire instanceof Uint8Array) || !wire.byteLength || wire.byteLength > 16777216) throw Error("InvalidChartLiteralPreview");
@@ -32711,13 +32728,14 @@ function renderHwp5ChartLiteralEditPreview(wire, host) {
 	return renderPreview(wire, {
 		width: p.pixel_width,
 		height: p.pixel_height
-	}, host, "hwp5-chart-literal-edit-preview", "hwp5-chart-literal-edit-preview-payload");
+	}, host, "hwp5-chart-literal-edit-preview", "hwp5-chart-literal-edit-preview-payload", "barChart");
 }
 var fail$2, live, validSize, signature;
 var init_hwp5_chart_create_preview = __esmMin((() => {
 	init_chart_display_data();
 	init_chart_preview_primitives();
 	init_chart_preview_paint();
+	init_hwp5_chart_create_profiles();
 	fail$2 = (name) => {
 		throw Error(name);
 	};
@@ -38318,20 +38336,26 @@ function checkedHwp5ChartCreateOptions(input) {
 		"series",
 		"preview"
 	]);
-	if (p.profile !== "spec24-registered-png-presentation-v1") throw Error("UnsupportedChartCreateProfile");
+	const kind = hwp5ChartCreateKind(p.profile);
 	const values = checkedChartCreateOptions({
 		width: p.width,
 		height: p.height,
 		categories: p.categories,
-		series: p.series
+		series: p.series,
+		...kind === "lineChart" ? { chart: {
+			kind,
+			grouping: "standard"
+		} } : {}
 	});
+	if (kind === "lineChart" && values.categories.length < 2) throw Error("InvalidChartLineCategoryCount");
 	const preview = inlineInsertRecord(p.preview, ["width", "height"]);
 	const width = integer$2(preview.width, 64, 2048), height = integer$2(preview.height, 64, 2048);
 	if (width * height > 4194304) throw Error("ChartCreatePreviewPixelLimit");
 	if (!(values.width >= values.height ? height === Math.floor((width * values.height + Math.floor(values.width / 2)) / values.width) : width === Math.floor((height * values.width + Math.floor(values.height / 2)) / values.height))) throw Error("InvalidHwp5ChartPreviewAspect");
 	return Object.freeze({
-		...values,
-		profile: HWP5_CHART_CREATE_PROFILE,
+		width: values.width,
+		height: values.height,
+		profile: p.profile,
 		preview: Object.freeze({
 			width,
 			height
@@ -38348,19 +38372,21 @@ function checkedHwp5ChartCreateOptions(input) {
 * Native repeats owner/epoch/source/hash/image checks before atomic publication.
 */
 function createHwp5ChartCreateApi({ wasm, memory, ready, check, encode, copyCurrentText, output, u32 }) {
-	const supported = () => {
+	const profileVersion = () => {
 		check();
 		try {
 			ready();
 		} catch {
-			return false;
+			return 0;
 		}
-		for (const [name, signature] of Object.entries(HWP5_CHART_CREATE_ABI)) if (typeof wasm[name] !== "function" || wasm[name].length !== signature.params.length) return false;
-		return wasm.hwp5_edit_chart_create_profile_version() === 1;
+		for (const [name, signature] of Object.entries(HWP5_CHART_CREATE_ABI)) if (typeof wasm[name] !== "function" || wasm[name].length !== signature.params.length) return 0;
+		const version = wasm.hwp5_edit_chart_create_profile_version();
+		return version === 1 || version === 2 ? version : 0;
 	};
 	const prepare = (input) => {
 		ready();
-		if (!supported()) throw Error("InlineObjectInsertionUnavailable");
+		const version = profileVersion();
+		if (!version) throw Error("InlineObjectInsertionUnavailable");
 		const { reference, start, ...raw } = inlineInsertRecord(input, [
 			"reference",
 			"start",
@@ -38375,6 +38401,7 @@ function createHwp5ChartCreateApi({ wasm, memory, ready, check, encode, copyCurr
 		if (!["original", "generated"].includes(reference.kind)) throw Error("UnsupportedChartInsertOwner");
 		const unit = u32(start, "start");
 		const options = checkedHwp5ChartCreateOptions(raw);
+		if (!supportsHwp5ChartCreateProfile(version, options.profile)) throw Error("UnsupportedChartCreateProfile");
 		const expected = copyCurrentText(reference).slice();
 		if (expected.length > 1048576) throw Error("ChartCreateExpectedTextLimit");
 		const data = chartCreateWireData(options);
@@ -38395,23 +38422,23 @@ function createHwp5ChartCreateApi({ wasm, memory, ready, check, encode, copyCurr
 	};
 	return {
 		supportsChartCreationAbi() {
-			return supported();
+			return profileVersion() !== 0;
 		},
 		chartCreateProfileVersion() {
-			return supported() ? 1 : 0;
+			return profileVersion();
 		},
 		chartCreatePreview(input) {
 			return prepare(input).wire.slice();
 		},
 		async createChart(input, renderer) {
 			ready();
-			if (!supported()) throw Error("InlineObjectInsertionUnavailable");
+			if (!profileVersion()) throw Error("InlineObjectInsertionUnavailable");
 			if (!renderer || typeof renderer.createCanvas !== "function") throw Error("ChartCreatePreviewRendererUnavailable");
 			const { reference, referenceBytes, unit, options, expected, data, wire } = prepare(input);
 			const current = () => {
 				try {
 					ready();
-					return supported() && (!renderer.current || renderer.current() === true) && equal(expected, copyCurrentText(reference));
+					return supportsHwp5ChartCreateProfile(profileVersion(), options.profile) && (!renderer.current || renderer.current() === true) && equal(expected, copyCurrentText(reference));
 				} catch {
 					return false;
 				}
@@ -38419,7 +38446,7 @@ function createHwp5ChartCreateApi({ wasm, memory, ready, check, encode, copyCurr
 			const painted = await renderHwp5ChartCreatePreview(wire, options.preview, {
 				createCanvas: renderer.createCanvas,
 				current
-			});
+			}, options.profile);
 			if (!current()) throw Error("StaleChartCreatePreview");
 			const body = bytesFor({
 				start: unit,
@@ -38453,14 +38480,14 @@ function createHwp5ChartCreateApi({ wasm, memory, ready, check, encode, copyCurr
 		}
 	};
 }
-var HWP5_CHART_CREATE_PROFILE, encoder$13, integer$2, bytesFor, equal;
+var encoder$13, integer$2, bytesFor, equal;
 var init_hwp5_chart_create = __esmMin((() => {
 	init_abi_schema();
 	init_hwpx_inline_object_record();
 	init_hwpx_inline_object_insert();
 	init_native_edit_outcome();
 	init_hwp5_chart_create_preview();
-	HWP5_CHART_CREATE_PROFILE = "spec24-registered-png-presentation-v1";
+	init_hwp5_chart_create_profiles();
 	encoder$13 = new TextEncoder();
 	integer$2 = (value, min, max) => {
 		if (!Number.isSafeInteger(value) || Object.is(value, -0) || value < min || value > max) throw Error("InvalidHwp5ChartCreateInteger");

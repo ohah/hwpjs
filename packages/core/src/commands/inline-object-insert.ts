@@ -1,4 +1,8 @@
 import { checkedHwp5ChartCreateOptions } from '../../../../js/hwp5-chart-create.mjs';
+import {
+  HWP5_CHART_CREATE_PROFILE,
+  supportsHwp5ChartCreateProfile,
+} from '../../../../js/hwp5-chart-create-profiles.mjs';
 import type { Hwp5ChartCreateOptions, Hwp5ChartCreateRequest } from './hwp5-chart-create-dto.ts';
 import { checkedHwp5EquationInsertOptions } from '../../../../js/hwp5-equation-insert.mjs';
 import { selectionMessage } from './selection.ts';
@@ -292,7 +296,10 @@ export function getInlineObjectInsertAvailability(
     if (
       kind === 'chart' &&
       target.format === 'hwp5' &&
-      (state.content as Record<string, unknown>)?.hwp5ChartCreateProfileVersion !== 1
+      !supportsHwp5ChartCreateProfile(
+        (state.content as Record<string, unknown>)?.hwp5ChartCreateProfileVersion,
+        HWP5_CHART_CREATE_PROFILE,
+      )
     )
       throw Error('ChartCreateProfileUnavailable');
     if (
@@ -336,15 +343,15 @@ export function inlineObjectInsertMessage(
         kind === 'chart' ? 'InvalidCurrentChartReference' : 'InvalidCurrentEquationReference',
       );
     if (kind === 'chart') {
-      if ((state.content as Record<string, unknown>)?.hwp5ChartCreateProfileVersion !== 1)
+      const version = (state.content as Record<string, unknown>)?.hwp5ChartCreateProfileVersion;
+      if (!supportsHwp5ChartCreateProfile(version, HWP5_CHART_CREATE_PROFILE))
+        throw Error('ChartCreateProfileUnavailable');
+      const options = checkedHwp5ChartCreateOptions(payload.options);
+      if (!supportsHwp5ChartCreateProfile(version, options.profile))
         throw Error('ChartCreateProfileUnavailable');
       return {
         kind: 'create-chart',
-        request: {
-          reference,
-          start: mapped.startUnit,
-          ...checkedHwp5ChartCreateOptions(payload.options),
-        },
+        request: { reference, start: mapped.startUnit, ...options },
       };
     }
     return {

@@ -4,7 +4,12 @@ import { checkedChartCreateOptions, chartCreateWireData } from './hwpx-inline-ob
 import { applyNativeEdit } from './native-edit-outcome.mjs';
 import { renderHwp5ChartCreatePreview } from '../web/preview/hwp5-chart-create-preview.mjs';
 
-export const HWP5_CHART_CREATE_PROFILE = 'spec24-registered-png-presentation-v1';
+import {
+  hwp5ChartCreateKind,
+  supportsHwp5ChartCreateProfile,
+} from './hwp5-chart-create-profiles.mjs';
+
+export { HWP5_CHART_CREATE_PROFILE } from './hwp5-chart-create-profiles.mjs';
 const encoder = new TextEncoder();
 const integer = (value, min, max) => {
   if (!Number.isSafeInteger(value) || Object.is(value, -0) || value < min || value > max)
@@ -20,13 +25,16 @@ export function checkedHwp5ChartCreateOptions(input) {
     'series',
     'preview',
   ]);
-  if (p.profile !== HWP5_CHART_CREATE_PROFILE) throw Error('UnsupportedChartCreateProfile');
+  const kind = hwp5ChartCreateKind(p.profile);
   const values = checkedChartCreateOptions({
     width: p.width,
     height: p.height,
     categories: p.categories,
     series: p.series,
+    ...(kind === 'lineChart' ? { chart: { kind, grouping: 'standard' } } : {}),
   });
+  if (kind === 'lineChart' && values.categories.length < 2)
+    throw Error('InvalidChartLineCategoryCount');
   const preview = inlineInsertRecord(p.preview, ['width', 'height']);
   const width = integer(preview.width, 64, 2048),
     height = integer(preview.height, 64, 2048);
@@ -38,8 +46,9 @@ export function checkedHwp5ChartCreateOptions(input) {
         Math.floor((height * values.width + Math.floor(values.height / 2)) / values.height);
   if (!aspectMatches) throw Error('InvalidHwp5ChartPreviewAspect');
   return Object.freeze({
-    ...values,
-    profile: HWP5_CHART_CREATE_PROFILE,
+    width: values.width,
+    height: values.height,
+    profile: p.profile,
     preview: Object.freeze({ width, height }),
     categories: Object.freeze([...values.categories]),
     series: Object.freeze(
@@ -70,21 +79,23 @@ export function createHwp5ChartCreateApi({
   output,
   u32,
 }) {
-  const supported = () => {
+  const profileVersion = () => {
     check();
     try {
       ready();
     } catch {
-      return false;
+      return 0;
     }
     for (const [name, signature] of Object.entries(HWP5_CHART_CREATE_ABI))
       if (typeof wasm[name] !== 'function' || wasm[name].length !== signature.params.length)
-        return false;
-    return wasm.hwp5_edit_chart_create_profile_version() === 1;
+        return 0;
+    const version = wasm.hwp5_edit_chart_create_profile_version();
+    return version === 1 || version === 2 ? version : 0;
   };
   const prepare = (input) => {
     ready();
-    if (!supported()) throw Error('InlineObjectInsertionUnavailable');
+    const version = profileVersion();
+    if (!version) throw Error('InlineObjectInsertionUnavailable');
     const { reference, start, ...raw } = inlineInsertRecord(input, [
       'reference',
       'start',
@@ -101,6 +112,8 @@ export function createHwp5ChartCreateApi({
       throw Error('UnsupportedChartInsertOwner');
     const unit = u32(start, 'start');
     const options = checkedHwp5ChartCreateOptions(raw);
+    if (!supportsHwp5ChartCreateProfile(version, options.profile))
+      throw Error('UnsupportedChartCreateProfile');
     const expected = copyCurrentText(reference).slice();
     if (expected.length > 1024 * 1024) throw Error('ChartCreateExpectedTextLimit');
     const data = chartCreateWireData(options);
@@ -114,17 +127,17 @@ export function createHwp5ChartCreateApi({
   };
   return {
     supportsChartCreationAbi() {
-      return supported();
+      return profileVersion() !== 0;
     },
     chartCreateProfileVersion() {
-      return supported() ? 1 : 0;
+      return profileVersion();
     },
     chartCreatePreview(input) {
       return prepare(input).wire.slice();
     },
     async createChart(input, renderer) {
       ready();
-      if (!supported()) throw Error('InlineObjectInsertionUnavailable');
+      if (!profileVersion()) throw Error('InlineObjectInsertionUnavailable');
       if (!renderer || typeof renderer.createCanvas !== 'function')
         throw Error('ChartCreatePreviewRendererUnavailable');
       const { reference, referenceBytes, unit, options, expected, data, wire } = prepare(input);
@@ -132,7 +145,7 @@ export function createHwp5ChartCreateApi({
         try {
           ready();
           return (
-            supported() &&
+            supportsHwp5ChartCreateProfile(profileVersion(), options.profile) &&
             (!renderer.current || renderer.current() === true) &&
             equal(expected, copyCurrentText(reference))
           );
@@ -140,10 +153,15 @@ export function createHwp5ChartCreateApi({
           return false;
         }
       };
-      const painted = await renderHwp5ChartCreatePreview(wire, options.preview, {
-        createCanvas: renderer.createCanvas,
-        current,
-      });
+      const painted = await renderHwp5ChartCreatePreview(
+        wire,
+        options.preview,
+        {
+          createCanvas: renderer.createCanvas,
+          current,
+        },
+        options.profile,
+      );
       if (!current()) throw Error('StaleChartCreatePreview');
       const body = bytesFor(
         {

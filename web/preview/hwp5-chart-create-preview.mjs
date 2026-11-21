@@ -1,6 +1,10 @@
 import { validateChartDisplayData } from '../../js/chart-display-data.mjs';
 import { chartPreviewPrimitives } from './chart-preview-primitives.mjs';
 import { paintChartPreview } from './chart-preview-paint.mjs';
+import {
+  HWP5_CHART_CREATE_PROFILE,
+  hwp5ChartCreateKind,
+} from '../../js/hwp5-chart-create-profiles.mjs';
 
 const fail = (name) => {
   throw Error(name);
@@ -21,6 +25,7 @@ async function renderPreview(
   { createCanvas, current },
   scope,
   payloadScope,
+  expectedKind,
 ) {
   if (!(wire instanceof Uint8Array) || wire.byteLength === 0 || wire.byteLength > 16 * 1024 * 1024)
     fail('InvalidChartCreatePreview');
@@ -40,7 +45,7 @@ async function renderPreview(
   )
     fail('InvalidChartCreatePreview');
   const data = validateChartDisplayData(preview.data);
-  if (data.plots.length !== 1 || data.plots[0].kind !== 'barChart')
+  if (data.plots.length !== 1 || data.plots[0].kind !== expectedKind)
     fail('UnsupportedChartCreatePreviewKind');
   const primitives = chartPreviewPrimitives(data);
   if (primitives.state !== 'ready') fail(primitives.reason ?? 'ChartCreatePreviewUnavailable');
@@ -104,13 +109,19 @@ async function renderPreview(
   }
 }
 
-export function renderHwp5ChartCreatePreview(wire, size, host) {
+export function renderHwp5ChartCreatePreview(
+  wire,
+  size,
+  host,
+  profile = HWP5_CHART_CREATE_PROFILE,
+) {
   return renderPreview(
     wire,
     size,
     host,
     'hwp5-chart-create-preview',
     'hwp5-chart-create-preview-payload',
+    hwp5ChartCreateKind(profile),
   );
 }
 export function renderHwp5ChartLiteralEditPreview(wire, host) {
@@ -124,5 +135,6 @@ export function renderHwp5ChartLiteralEditPreview(wire, host) {
     host,
     'hwp5-chart-literal-edit-preview',
     'hwp5-chart-literal-edit-preview-payload',
+    'barChart',
   );
 }

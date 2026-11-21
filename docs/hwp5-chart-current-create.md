@@ -12,7 +12,7 @@ js/abi-schema.mjs가 단일 출처다. tools/generate-abi.mjs로 src/wasm/abi_sc
 | hwp5_edit_chart_create_preview | ref_ptr, ref_len, request_ptr, request_len: i32 | i32 |
 | hwp5_edit_create_chart_current | 위4개 + PNG_ptr, PNG_len: i32 | i32 |
 
-profile_version1은 기본값 없는 실험 profile `spec24-registered-png-presentation-v1`만 뜻한다. 2D clustered column authored data만 받으며 HWPX의 다른 chart-family profile을 HWP5로 전달하지 않는다. PNG는 shared painter의 실제 Canvas encoder 결과이며 OLE 안의 등록 PNG presentation에 저장된다. 외부 HWP 앱 지원은 아직 미증명이다.
+profile_version1은 기본값 없는 실험 profile `spec24-registered-png-presentation-v1`만 뜻한다. 2D clustered column authored data만 받으며 HWPX의 다른 chart-family profile을 HWP5로 전달하지 않는다. profile_version2는 기존 막대 profile과 `spec24-registered-png-presentation-line-v1` 표준 2D 꺾은선 profile을 함께 노출한다. 새 SDK는 version1 엔진에서 막대만 노출하고 version2 엔진에서 두 형식을 노출한다. version1만 인식하는 구형 SDK는 version2 WASM에서 HWP5 차트 생성을 활성화하지 않으므로 같은 번들의 SDK와 WASM을 함께 사용한다. PNG는 shared painter의 실제 Canvas encoder 결과이며 OLE 안의 등록 PNG presentation에 저장된다. 외부 HWP 앱 지원은 아직 미증명이다.
 
 preview 입력은 `{start,profile,data}`이고 결과는 기존 Native create_preview.zig의 JSON bytes다. schemaVersion1, scope hwp5-chart-create-preview, executionAuthority false, authored XML SHA256과 실제 chart display_values를 포함한다. owner/reference·열린 Session·HistoryV2가 필요하며 읽기만 한다. 결과가 삽입 권한을 부여하지는 않는다.
 
@@ -34,7 +34,7 @@ Hwp5ChartCreateOptions는 `{profile,width,height,categories,series,preview:{widt
 
 `hwp5ChartCreatePreviewMessage(payload,state)`는 동일 admission으로 `{kind:'hwp5-chart-create-preview',request}`를 만든다. 공개 Core.readResource(message,{token})로 보내면 RuntimeReply.preview가 Uint8Array다. history/revision·내용 mutation은 없다. UI의 DOM Canvas PNG는 미리보기 전용이다.
 
-최종 create-chart는 Worker reader-runtime이 소유한 OffscreenCanvas를 주입한다. Runtime의 editor identity/History2/poison current 검사와 JS의 Native reference/epoch/text 검사가 비동기 구간을 함께 보호한다. OffscreenCanvas가 없으면 chartCreationAvailable은 false다. content.hwp5ChartCreateProfileVersion1과 chartCreationAvailable을 함께 확인해야 한다. 실험 profile을 UI에서 자동 opt-in하지 않는다.
+최종 create-chart는 Worker reader-runtime이 소유한 OffscreenCanvas를 주입한다. Runtime의 editor identity/History2/poison current 검사와 JS의 Native reference/epoch/text 검사가 비동기 구간을 함께 보호한다. OffscreenCanvas가 없으면 chartCreationAvailable은 false다. content.hwp5ChartCreateProfileVersion, 선택한 profile 및 chartCreationAvailable을 함께 확인해야 한다. 실험 profile을 UI에서 자동 opt-in하지 않는다.
 
 ## 증거와 열린 gate
 

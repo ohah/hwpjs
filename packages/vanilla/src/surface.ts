@@ -1,3 +1,7 @@
+import {
+  HWP5_CHART_CREATE_PROFILE,
+  supportsHwp5ChartCreateProfile,
+} from '../../../js/hwp5-chart-create-profiles.mjs';
 import { captureCreatedCellClipboard } from './created-cell-clipboard.ts';
 import type { PictureSelectionCapture } from '../../../web/preview/picture-selection-capture.mjs';
 import { displayDocumentParagraph } from '../../../js/document-text-coordinates.mjs';
@@ -2491,7 +2495,10 @@ export function createCanvasSurface({
           // placement ABI. This observes UX caret only; Core still admits it.
           (content?.format === 'hwp5' &&
             ((content?.chartCreationAvailable === true &&
-              content?.hwp5ChartCreateProfileVersion === 1) ||
+              supportsHwp5ChartCreateProfile(
+                content?.hwp5ChartCreateProfileVersion,
+                HWP5_CHART_CREATE_PROFILE,
+              )) ||
               content?.imageInsertionAvailable === true) &&
             state.nativeHistoryStats?.protocolVersion === 2)) &&
         content?.readOnly !== true &&

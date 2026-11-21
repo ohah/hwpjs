@@ -10,8 +10,10 @@ pub const Payload = struct {
     bytes: []const u8,
 };
 pub fn validate(a: std.mem.Allocator, data: data_module.Data, rendered: Payload, limits: resources.Limits) !void {
-    try data_module.validate(data);
-    const xml = try @import("../../hwpx/chart_create_xml.zig").create(a, data);
+    return validateFor(a, data, .spec24_registered_png_presentation_v1, rendered, limits);
+}
+pub fn validateFor(a: std.mem.Allocator, data: data_module.Data, profile: @import("create_profile.zig").Profile, rendered: Payload, limits: resources.Limits) !void {
+    const xml = try @import("create_profile.zig").create(a, data, profile);
     defer a.free(xml);
     var digest: [32]u8 = undefined;
     std.crypto.hash.sha2.Sha256.hash(xml, &digest, .{});

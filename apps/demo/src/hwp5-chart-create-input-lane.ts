@@ -38,6 +38,7 @@ export function createHwp5ChartCreateInputLane<Capture extends Hwp5ChartInputCap
     wire: Uint8Array,
     pixels: ChartRasterPixels,
     current: () => boolean,
+    capture: Capture,
   ): Promise<ChartRasterPayload>;
 }) {
   let disposed = false,
@@ -72,7 +73,7 @@ export function createHwp5ChartCreateInputLane<Capture extends Hwp5ChartInputCap
       try {
         const wire = await options.preview(draft, capture);
         if (!live(capture, ticket)) throw Error('StaleChartCreateInput');
-        const payload = await options.render(wire, size, () => live(capture, ticket));
+        const payload = await options.render(wire, size, () => live(capture, ticket), capture);
         if (!live(capture, ticket)) throw Error('StaleChartCreateInput');
         const value = Object.freeze({ capture, options: draft, preview: payload, epoch: ticket });
         prepared.add(value);
