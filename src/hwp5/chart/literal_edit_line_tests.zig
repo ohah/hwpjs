@@ -118,7 +118,7 @@ test "H5 chart literal edit line lease carries actual profile while wire schema 
     defer parsed.deinit();
     try std.testing.expectEqual(@as(u32, 1), parsed.value.schemaVersion);
     try std.testing.expectEqual(line, parsed.value.witness.profile);
-    try std.testing.expectEqual(@as(u32, 3), profile.capability_version);
+    try std.testing.expectEqual(@as(u32, 4), profile.capability_version);
     try wire.validateFence(parsed.value.witness, l.binding, 9007199254740993, 7);
     const request_bytes = try std.json.Stringify.valueAlloc(a, wire.Preview{ .schemaVersion = 1, .witness = parsed.value.witness, .edits = changes }, .{});
     defer a.free(request_bytes);

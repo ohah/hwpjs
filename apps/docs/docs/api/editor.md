@@ -294,7 +294,7 @@ HWP5의 `options`에는 `profile`, HWPUNIT 단위의 `width`와 `height`, `categ
 
 ## 기존 HWP5 차트 데이터 편집
 
-검증한 격리 소스의 `createHwp5ChartDataEditor(editor)`는 내장 Worker에서 현재 Native 소유권과 원문이 확인된 표준 2D 세로·가로 묶은 막대와 꺾은선 차트의 값과 기존 범주 이름을 편집합니다. npm 게시 상태와는 별개입니다. 먼저 `presentation().enabled`를 확인하고, `targets()`로 얻은 현재 대상을 `capture()`한 뒤 같은 capture에 변경 목록을 한 번 적용합니다.
+검증한 격리 소스의 `createHwp5ChartDataEditor(editor)`는 내장 Worker에서 현재 Native 소유권과 원문이 확인된 표준 2D 세로·가로 묶은 막대, 꺾은선, 원형 차트의 값과 기존 범주 이름을 편집합니다. npm 게시 상태와는 별개입니다. 먼저 `presentation().enabled`를 확인하고, `targets()`로 얻은 현재 대상을 `capture()`한 뒤 같은 capture에 변경 목록을 한 번 적용합니다.
 
 ```ts
 import { createHwp5ChartDataEditor, type HeadlessEditor } from '@ohah/hwpjs';

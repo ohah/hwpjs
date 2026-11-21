@@ -1,3 +1,4 @@
+import { checkedHwp5PieLiteralEdits } from './hwp5-chart-pie-literal.mjs';
 import { HWP5_CHART_LITERAL_EDIT_ABI } from './abi-schema.mjs';
 import { inlineInsertRecord } from './hwpx-inline-object-record.mjs';
 import { applyNativeEdit } from './native-edit-outcome.mjs';
@@ -5,6 +6,7 @@ import { renderHwp5ChartLiteralEditPreview } from '../web/preview/hwp5-chart-cre
 import {
   supportsHwp5ChartLiteralProfile,
   HWP5_CHART_LITERAL_BAR_PROFILE,
+  HWP5_CHART_LITERAL_PIE_PROFILE,
 } from './hwp5-chart-literal-profiles.mjs';
 const encoder = new TextEncoder();
 const maxWire = 16 * 1024 * 1024;
@@ -71,6 +73,7 @@ export function createHwp5ChartLiteralEditApi({ wasm, memory, check, output, u32
       supportsHwp5ChartLiteralProfile(
         wasm.hwp5_edit_chart_literal_edit_profile_version(),
         HWP5_CHART_LITERAL_BAR_PROFILE,
+        HWP5_CHART_LITERAL_PIE_PROFILE,
       )
     );
   };
@@ -116,6 +119,7 @@ export function createHwp5ChartLiteralEditApi({ wasm, memory, check, output, u32
         controlNode,
         literals: structuredClone(lease.literals),
         historyRevision: lease.witness.historyRevision,
+        profile: lease.witness.profile,
       });
       captures.set(capture, {
         witness: structuredClone(lease.witness),
@@ -129,6 +133,8 @@ export function createHwp5ChartLiteralEditApi({ wasm, memory, check, output, u32
       const own = captures.get(capture);
       if (!own || !current(capture)) throw Error('StaleChartLiteralCapture');
       const changes = checkedHwp5LiteralEdits(edits);
+      if (own.witness.profile === HWP5_CHART_LITERAL_PIE_PROFILE)
+        checkedHwp5PieLiteralEdits(capture.literals, changes);
       if (!changes.length) return { application: 'unapplied', nativeCode: 2, changed: false };
       const request = { schemaVersion: 1, witness: own.witness, edits: changes };
       const wire = memory.withBytes(jsonBytes(request), (ptr, len) =>

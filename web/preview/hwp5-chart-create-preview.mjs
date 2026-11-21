@@ -88,8 +88,7 @@ async function renderPreview(
     )
       fail('UnsupportedChartLiteralEditProfile');
   }
-  if (scope === 'hwp5-chart-create-preview' && expectedKind === 'pieChart')
-    checkedHwp5PiePreviewData(data);
+  if (expectedKind === 'pieChart') checkedHwp5PiePreviewData(data);
   const primitives = chartPreviewPrimitives(data);
   if (primitives.state !== 'ready') fail(primitives.reason ?? 'ChartCreatePreviewUnavailable');
   const canvas = createCanvas(width, height);

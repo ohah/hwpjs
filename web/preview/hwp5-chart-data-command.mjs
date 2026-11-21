@@ -54,6 +54,7 @@ export function createHwp5ChartDataCommands(getEditor, writable) {
         controlNode: m.controlNode,
         leaseKey,
         literals: capture.literals,
+        profile: capture.profile,
         historyRevision: capture.historyRevision,
       };
     },

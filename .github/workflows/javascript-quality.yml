@@ -192,8 +192,8 @@ jobs:
           set -euo pipefail
           node node_modules/typescript/bin/tsc --noEmit -p tools/tests/tsconfig.hwp5-chart-data.json
           node --experimental-transform-types --import ./tools/tests/hwp5-chart-data-source-provider.mjs --test --test-concurrency=1 --test-reporter=tap tests/own-chart-create/literal-edit-api.test.mjs tests/own-chart-create/preview-payload.test.mjs apps/demo/tests/hwp5-chart-data.test.mjs apps/demo/tests/chart-data-controller.test.mjs apps/demo/tests/chart-data-view.test.mjs apps/demo/tests/chart-data-port.test.mjs apps/demo/tests/hwp5-chart-properties.test.mjs packages/core/tests/state/native-read-source-lifecycle.test.ts 2>&1 | tee "$RUNNER_TEMP/hwp5-chart-literal-source.tap"
-          grep -Eq '^# tests 103$' "$RUNNER_TEMP/hwp5-chart-literal-source.tap"
-          grep -Eq '^# pass 103$' "$RUNNER_TEMP/hwp5-chart-literal-source.tap"
+          grep -Eq '^# tests 124$' "$RUNNER_TEMP/hwp5-chart-literal-source.tap"
+          grep -Eq '^# pass 124$' "$RUNNER_TEMP/hwp5-chart-literal-source.tap"
           grep -Eq '^# fail 0$' "$RUNNER_TEMP/hwp5-chart-literal-source.tap"
           grep -Eq '^# skipped 0$' "$RUNNER_TEMP/hwp5-chart-literal-source.tap"
       - name: HWP5 chart anchor source and current owner boundaries

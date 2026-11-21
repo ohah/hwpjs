@@ -29697,21 +29697,6 @@ function createBrowserStrictLayoutSaver({ prepare, commit, cancel, check, publis
 var init_hwp5_browser_strict_layout = __esmMin((() => {
 	init_hwp5_strict_plain_lines();
 }));
-// ../../js/hwpx-inline-object-record.mjs
-/** Strict data-only record; shared by creation payload and owner contracts. */
-function inlineInsertRecord(input, keys) {
-	if (!input || typeof input !== "object" || ![Object.prototype, null].includes(Object.getPrototypeOf(input))) throw Error("InvalidInlineObjectRequest");
-	const descriptors = Object.getOwnPropertyDescriptors(input);
-	if (Reflect.ownKeys(descriptors).length !== keys.length) throw Error("InvalidInlineObjectRequest");
-	const result = {};
-	for (const key of keys) {
-		const entry = descriptors[key];
-		if (!entry || !Object.hasOwn(entry, "value")) throw Error("InvalidInlineObjectRequest");
-		result[key] = entry.value;
-	}
-	return result;
-}
-var init_hwpx_inline_object_record = __esmMin((() => {}));
 // ../../js/chart-create-decimal.mjs
 function parseChartDecimal(text) {
 	if (typeof text !== "string" || text.length === 0 || text.length > 128) throw Error("InvalidChartNumber");
@@ -29849,6 +29834,37 @@ var init_hwp5_chart_pie_create = __esmMin((() => {
 	init_chart_create_decimal();
 	init_chart_circular_intervals();
 }));
+// ../../js/hwp5-chart-pie-literal.mjs
+function checkedHwp5PieLiteralEdits(literals, edits) {
+	if (literals?.series?.length !== 1) throw Error("UnsupportedChartLiteralEditProfile");
+	const values = [...literals.series[0].values];
+	for (const edit of edits) {
+		if (!edit.value) continue;
+		const { series, category, value } = edit.value;
+		if (series !== 0 || !Number.isSafeInteger(category) || category < 0 || category >= values.length) throw Error("InvalidChartPointIndex");
+		values[category] = value;
+	}
+	checkedHwp5PieValues(values);
+	return edits;
+}
+var init_hwp5_chart_pie_literal = __esmMin((() => {
+	init_hwp5_chart_pie_create();
+}));
+// ../../js/hwpx-inline-object-record.mjs
+/** Strict data-only record; shared by creation payload and owner contracts. */
+function inlineInsertRecord(input, keys) {
+	if (!input || typeof input !== "object" || ![Object.prototype, null].includes(Object.getPrototypeOf(input))) throw Error("InvalidInlineObjectRequest");
+	const descriptors = Object.getOwnPropertyDescriptors(input);
+	if (Reflect.ownKeys(descriptors).length !== keys.length) throw Error("InvalidInlineObjectRequest");
+	const result = {};
+	for (const key of keys) {
+		const entry = descriptors[key];
+		if (!entry || !Object.hasOwn(entry, "value")) throw Error("InvalidInlineObjectRequest");
+		result[key] = entry.value;
+	}
+	return result;
+}
+var init_hwpx_inline_object_record = __esmMin((() => {}));
 // ../../web/preview/chart-series-data.mjs
 function chartDisplayNumber(raw) {
 	const value = raw.replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, "");
@@ -33837,6 +33853,7 @@ function hwp5ChartLiteralKind(profile) {
 	switch (profile) {
 		case HWP5_CHART_LITERAL_BAR_PROFILE:
 		case HWP5_CHART_LITERAL_HORIZONTAL_BAR_PROFILE: return "barChart";
+		case HWP5_CHART_LITERAL_PIE_PROFILE: return "pieChart";
 		case HWP5_CHART_LITERAL_LINE_PROFILE: return "lineChart";
 		default: throw Error("UnsupportedChartLiteralEditProfile");
 	}
@@ -33846,16 +33863,19 @@ function supportsHwp5ChartLiteralProfile(version, profile) {
 	if (![
 		1,
 		2,
-		3
+		3,
+		4
 	].includes(version)) return false;
-	if (profile === "spec24_clustered_horizontal_bar_literals_v1") return version === 3;
+	if (profile === "spec24_standard_pie_literals_v1") return version === 4;
+	if (profile === "spec24_clustered_horizontal_bar_literals_v1") return version >= 3;
 	return version !== 1 || kind === "barChart";
 }
-var HWP5_CHART_LITERAL_BAR_PROFILE, HWP5_CHART_LITERAL_LINE_PROFILE, HWP5_CHART_LITERAL_HORIZONTAL_BAR_PROFILE;
+var HWP5_CHART_LITERAL_BAR_PROFILE, HWP5_CHART_LITERAL_LINE_PROFILE, HWP5_CHART_LITERAL_HORIZONTAL_BAR_PROFILE, HWP5_CHART_LITERAL_PIE_PROFILE;
 var init_hwp5_chart_literal_profiles = __esmMin((() => {
 	HWP5_CHART_LITERAL_BAR_PROFILE = "spec24_clustered_column_literals_v1";
 	HWP5_CHART_LITERAL_LINE_PROFILE = "spec24_standard_line_literals_v1";
 	HWP5_CHART_LITERAL_HORIZONTAL_BAR_PROFILE = "spec24_clustered_horizontal_bar_literals_v1";
+	HWP5_CHART_LITERAL_PIE_PROFILE = "spec24_standard_pie_literals_v1";
 }));
 // ../../web/preview/hwp5-chart-create-preview.mjs
 /** Render authored Native preview values. Existing resource previewValue caches
@@ -33883,7 +33903,7 @@ async function renderPreview(wire, { width, height }, { createCanvas, current },
 		const settings = data.plot_settings[0];
 		if (settings?.direction?.value !== (horizontalBar ? "bar" : "col") || settings.grouping?.value !== "clustered" || settings.spatial !== null || data.view_3d !== null || data.point_settings.length !== 0 || data.rich_text.length !== 0) fail$2("UnsupportedChartLiteralEditProfile");
 	}
-	if (scope === "hwp5-chart-create-preview" && expectedKind === "pieChart") checkedHwp5PiePreviewData(data);
+	if (expectedKind === "pieChart") checkedHwp5PiePreviewData(data);
 	const primitives = chartPreviewPrimitives(data);
 	if (primitives.state !== "ready") fail$2(primitives.reason ?? "ChartCreatePreviewUnavailable");
 	const canvas = createCanvas(width, height);
@@ -34006,7 +34026,7 @@ function createHwp5ChartLiteralEditApi({ wasm, memory, check, output, u32 }) {
 	const captures = /* @__PURE__ */ new WeakMap();
 	const supported = () => {
 		check();
-		return Object.entries(HWP5_CHART_LITERAL_EDIT_ABI).every(([name, sig]) => typeof wasm[name] === "function" && wasm[name].length === sig.params.length) && supportsHwp5ChartLiteralProfile(wasm.hwp5_edit_chart_literal_edit_profile_version(), "spec24_clustered_column_literals_v1");
+		return Object.entries(HWP5_CHART_LITERAL_EDIT_ABI).every(([name, sig]) => typeof wasm[name] === "function" && wasm[name].length === sig.params.length) && supportsHwp5ChartLiteralProfile(wasm.hwp5_edit_chart_literal_edit_profile_version(), "spec24_clustered_column_literals_v1", "spec24_standard_pie_literals_v1");
 	};
 	const query = (section, controlNode) => {
 		if (!supported()) throw Error("Hwp5ChartLiteralEditUnavailable");
@@ -34031,7 +34051,8 @@ function createHwp5ChartLiteralEditApi({ wasm, memory, check, output, u32 }) {
 				section,
 				controlNode,
 				literals: structuredClone(lease.literals),
-				historyRevision: lease.witness.historyRevision
+				historyRevision: lease.witness.historyRevision,
+				profile: lease.witness.profile
 			});
 			captures.set(capture, {
 				witness: structuredClone(lease.witness),
@@ -34045,6 +34066,7 @@ function createHwp5ChartLiteralEditApi({ wasm, memory, check, output, u32 }) {
 			const own = captures.get(capture);
 			if (!own || !current(capture)) throw Error("StaleChartLiteralCapture");
 			const changes = checkedHwp5LiteralEdits(edits);
+			if (own.witness.profile === "spec24_standard_pie_literals_v1") checkedHwp5PieLiteralEdits(capture.literals, changes);
 			if (!changes.length) return {
 				application: "unapplied",
 				nativeCode: 2,
@@ -34095,6 +34117,7 @@ function createHwp5ChartLiteralEditApi({ wasm, memory, check, output, u32 }) {
 }
 var encoder$16, maxWire, jsonBytes, parse$5, freeze;
 var init_hwp5_chart_literal_edit = __esmMin((() => {
+	init_hwp5_chart_pie_literal();
 	init_abi_schema();
 	init_hwpx_inline_object_record();
 	init_native_edit_outcome();

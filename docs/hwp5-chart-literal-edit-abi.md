@@ -2,6 +2,11 @@
 
 이 문서는 frozen Native5d0a88f9에서 시작한 optional lease와 ABI의 wire 계약을 소유한다. 현재 제품 지원 범위, 입력 한도와 exact176a의 실제 SDK/Worker/GUI 검증 결과는 [차트 데이터 편집 계약](hwp5-chart-literal-edit.md)이 소유한다. 아래 초기 probe 준비 기록을 이후 실제 실행 결과와 합쳐 세지 않는다.
 
+
+## 원형 리터럴 소스 후보
+
+capability version4는 `spec24_standard_pie_literals_v1`과 기존 세 프로필을 명시 허용한다. version3에서 기존 세로·꺾은선·가로 동작을 유지하며 원형은 거부한다. 선택 export 네 함수의 이름·매개변수·결과와 wire schemaVersion1은 유지한다. Native의 전체 witness 검증과 private JS capture 권한은 동일하다. 공개 capture에 전달하는 선택 `profile`은 Native lease에서 복사한 읽기 전용 관측이며 편집 권한을 대체하지 않는다. 이 항목은 소스 준비 계약으로 실제 컴파일·WASM 검증 완료를 뜻하지 않는다.
+
 ## 가로 리터럴 소스 후속
 
 version3에 `spec24_clustered_horizontal_bar_literals_v1`을 추가한다. version1은 기존 세로, version2는 기존 세로와 꺾은선, version3은 세 프로필을 명시적으로 허용한다. 미지 버전과 프로필은 거부하며 함수를 추가하거나 wire schemaVersion1을 바꾸지 않는다. 기존 version1/2 SDK를 version3 엔진과 조합해 활성화한다고 주장하지 않는다. 아래 version2 설명은 기존 실행 이력이다. 신규 Native/WASM/SDK/GUI 검증 완료를 뜻하지 않는다.

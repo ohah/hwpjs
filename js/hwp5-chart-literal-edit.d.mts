@@ -8,6 +8,7 @@ export interface Hwp5ChartLiteralSourceCapture {
   readonly controlNode: number;
   readonly literals: Hwp5ChartLiterals;
   readonly historyRevision: number;
+  readonly profile: import('./hwp5-chart-literal-profiles.mjs').Hwp5ChartLiteralProfile;
 }
 export function checkedHwp5LiteralEdits(input: unknown): Hwp5ChartLiteralEdit[];
 export function createHwp5ChartLiteralEditApi(options: unknown): {

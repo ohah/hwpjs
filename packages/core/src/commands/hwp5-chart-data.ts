@@ -6,6 +6,7 @@ import { readNativeReadSourceEvidence } from '../internal/native-read-source-evi
 // @ts-ignore Existing runtime-only current owner validator.
 import { currentHwp5ChartTarget } from '../../../../web/preview/hwp5-chart-resources.mjs';
 // @ts-ignore Existing runtime validator; portable public types are declared here.
+import { hwp5ChartLiteralKind } from '../../../../js/hwp5-chart-literal-profiles.mjs';
 import { checkedHwp5LiteralEdits } from '../../../../js/hwp5-chart-literal-edit.mjs';
 export type Hwp5ChartDataTarget = Readonly<{ section: number; controlNode: number }>;
 export type Hwp5ChartLiterals = Readonly<{
@@ -19,6 +20,7 @@ export type Hwp5ChartDataCapture = Readonly<{
   state: EditorState;
   target: Hwp5ChartDataTarget;
   literals: Hwp5ChartLiterals;
+  profile?: string;
 }>;
 type Editor = Pick<
   HeadlessEditor,
@@ -197,7 +199,17 @@ export function createHwp5ChartDataEditor(editor: Editor): Hwp5ChartDataEditor {
         )
           throw Error('StaleChartLiteralCapture');
         const literals = checkedLiterals(reply.literals);
-        const capture = Object.freeze({ state, target: Object.freeze({ ...target }), literals });
+        const profile = reply.profile;
+        if (profile !== undefined) {
+          if (typeof profile !== 'string') throw Error('InvalidChartLiteralData');
+          hwp5ChartLiteralKind(profile);
+        }
+        const capture: Hwp5ChartDataCapture = Object.freeze({
+          state,
+          target: Object.freeze({ ...target }),
+          literals,
+          ...(profile === undefined ? {} : { profile }),
+        });
         captures.set(capture, reply.leaseKey);
         return capture;
       } finally {

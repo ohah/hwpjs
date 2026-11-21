@@ -2,6 +2,15 @@
 
 이 문서는 HWP5 차트 값과 범주 편집의 지원 범위, 원본 소유권, 저장과 검증 경계를 소유한다. exact `176a14bfbb893fe036d89e904feb0417edf856a5`의 공식 Core/Vanilla/public/gallery와 WASM `9f383a8c3c16d85570e4a994a92e5468d74238f7150b6917f897f349713bbe45`를 사용한 격리 SDK와 실제 브라우저 검증을 아래에 기록한다. Root 반영, npm 게시 또는 공개 배포 완료를 뜻하지 않는다. 기존 HWPX 데이터 편집과 HWP5 읽기 및 생성은 각각의 계약을 유지한다.
 
+
+## 표준 2D 원형 리터럴 소스 후보
+
+exact `338723f1a1c49b8564942f3ddb884bfa07681df2`에서 분리한 후속은 own 생성기의 정확한 표준 2D 원형 한 계열만 허용한다. 원본과 수정 XML 전체를 기존 생성기로 재생성해 바이트가 같아야 한다. 기존 owner·보호·field·자원·ticket 검사를 유지하며 스타일, 계열·범주 개수와 계열 이름은 편집하지 않는다.
+
+원형에서는 기존 `create_pie_admission`을 canonical 재생성으로 재사용한다. 음수, 전부 0, 원문 nonzero가 binary64 0이 되는 값과 표현 불가능한 양의 부채꼴을 preview/commit 공통 준비 단계에서 거부한다. NaN과 무한대도 기존 숫자 문법을 통과하지 못한다. UI draft와 공개 edit의 expected/value는 문자열 그대로 유지하며, 원형에서만 전체 수정 후 벡터를 숫자 변환 전에 검증한다. 거부된 UI draft를 삭제하거나 0으로 바꾸지 않는다. 기존 세 프로필과 HWPX에는 이 원형 정책을 적용하지 않는다.
+
+소스 회귀에는 불변 own 공개 fixture `f0419e00552b521c72188064820ddf5a0b268a37e5cc24a18c8dfd510f4619fd` 11776바이트, 범주 가/나/다와 값 1/2/3을 사용한다. COW 원본 자원·geometry 유지, 기본 저장 거부, 명시 저장/재열기, undo/redo, 거부 후 이전 redo를 준비한다. Native의 시험 PNG는 기존 합성 transport 입력이며 제품 fallback이나 실제 painter 증거가 아니다. 실제 Native·WASM·SDK 저장·Worker PNG·GUI 검증은 아직 실행하지 않았다.
+
 ## 가로 묶은 막대 편집 소스 후속
 
 `spec24_clustered_horizontal_bar_literals_v1`은 own 가로 생성기의 정확한 2D `barChart` / `bar` / `clustered` 직렬화만 대상으로 한다. 리터럴 capability version3은 기존 세로 막대와 꺾은선도 유지하며, version1/2 엔진에서는 가로 리터럴을 거부한다. optional ABI의 함수 및 wire schemaVersion1은 유지한다. Native는 plot 방향으로 프로필을 구분한 뒤 편집 전후 canonical 전체 바이트를 재검증한다. JS는 lease/preview 프로필과 가로 방향을 확인하고 기존 private Worker painter, COW, 단일 History, 저장 거부 정책을 재사용한다. 사용자나 화면 데이터가 프로필 또는 PNG를 지정할 수 없다.

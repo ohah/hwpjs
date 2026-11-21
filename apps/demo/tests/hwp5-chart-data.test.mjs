@@ -8,7 +8,7 @@ const styles = installFormattingTestStyles();
 const { createHwp5ChartDataTool } = await import('../src/hwp5-chart-data-tool.ts');
 const { createHwp5ChartPropertiesTool } = await import('../src/hwp5-chart-properties-tool.ts');
 styles.deregister();
-function fixture(qualified = true, suppliedLiterals = null) {
+function fixture(qualified = true, suppliedLiterals = null, profile = undefined) {
   const target = { section: 0, controlNode: 17 };
   const owner = {
     control_node: 17,
@@ -100,6 +100,7 @@ function fixture(qualified = true, suppliedLiterals = null) {
         leaseKey: 'private',
         historyRevision: 0,
         literals,
+        ...(profile === undefined ? {} : { profile }),
       };
     },
     async requestExperimental(message, settings) {
@@ -333,4 +334,49 @@ test('horizontal catalog-shaped data reuses grid and routes one exact value comm
   assert.equal('profile' in writes[0][1], false);
   assert.equal('rendered' in writes[0][1], false);
   tool.dispose();
+});
+
+test('pie dialog validates raw drafts before dispatch and keeps exact spelling after refusal', async () => {
+  const f = fixture(
+    true,
+    { categories: ['가', '나', '다'], series: [{ name: '원형', values: ['1', '2', '3'] }] },
+    'spec24_standard_pie_literals_v1',
+  );
+  const dom = domFixture();
+  const tool = createHwp5ChartDataTool({
+    root: dom.root,
+    editor: f.editor,
+    onStatus() {},
+    onClose() {},
+  });
+  await tool.open(f.target);
+  const nodes = all(dom.root),
+    input = nodes.find((n) => n.tagName === 'INPUT'),
+    apply = nodes.find((n) => n.textContent === '변경 일괄 적용');
+  for (const text of ['-1e-5000', '1e-5000', 'NaN', '1e-320']) {
+    input.value = text;
+    fire(input, 'input');
+    assert.equal(input.value, text);
+    assert.equal(apply.disabled, true);
+    assert.equal(input.getAttribute('aria-invalid'), 'true');
+    fire(apply, 'click');
+    await new Promise((r) => setImmediate(r));
+    assert.equal(f.calls.filter((c) => c[0] === 'write').length, 0);
+  }
+  input.value = '+7.00';
+  fire(input, 'input');
+  assert.equal(apply.disabled, false);
+  fire(apply, 'click');
+  await new Promise((r) => setImmediate(r));
+  assert.deepEqual(f.calls.find((c) => c[0] === 'write')[1].edits, [
+    { value: { series: 0, category: 0, expected: '1', value: '+7.00' } },
+  ]);
+  tool.dispose();
+});
+test('Core propagates pie profile observation without publishing witness or authority', async () => {
+  const f = fixture(true, null, 'spec24_standard_pie_literals_v1');
+  const c = await createHwp5ChartDataEditor(f.editor).capture(f.target);
+  assert.equal(c.profile, 'spec24_standard_pie_literals_v1');
+  assert.equal('witness' in c, false);
+  assert.equal('leaseKey' in c, false);
 });

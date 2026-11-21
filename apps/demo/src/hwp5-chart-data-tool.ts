@@ -5,6 +5,9 @@ import {
   type Hwp5ChartDataCapture,
   type Hwp5ChartLiteralEdit,
 } from '@hwpjs/core';
+import { HWP5_CHART_LITERAL_PIE_PROFILE } from '../../../js/hwp5-chart-literal-profiles.mjs';
+// @ts-ignore Raw decimal validation shared with the private JS transport.
+import { checkedHwp5PieLiteralEdits } from '../../../js/hwp5-chart-pie-literal.mjs';
 import { createDialogLayer } from './dialog-layer.ts';
 // @ts-ignore Shared display-only projection, not an edit lease.
 import { createHwp5LiteralGridProjection } from '../../../web/preview/hwp5-literal-grid-projection.mjs';
@@ -141,11 +144,42 @@ export function createHwp5ChartDataTool(options: {
           },
         });
         current.destroyGrid = () => grid.close();
+        const draftEdits = () => {
+          const edits: Hwp5ChartLiteralEdit[] = [];
+          for (const [id, value] of drafts) {
+            const address = projection.cellAddress(id);
+            if (!address) throw Error('InvalidChartCell');
+            edits.push(
+              address.kind === 'category'
+                ? { category: { category: address.category, expected: address.expected, value } }
+                : {
+                    value: {
+                      series: address.series,
+                      category: address.category,
+                      expected: address.expected,
+                      value,
+                    },
+                  },
+            );
+          }
+          return edits;
+        };
         const update = () => {
           const live = ready();
           input.disabled = disposed || session !== current || busy || !api.current(capture);
           cancel.disabled = busy;
-          apply.disabled = !live || !drafts.size;
+          let valid = true;
+          if (capture.profile === HWP5_CHART_LITERAL_PIE_PROFILE) {
+            try {
+              checkedHwp5PieLiteralEdits(capture.literals, draftEdits());
+              status.textContent = '';
+            } catch (error) {
+              valid = false;
+              status.textContent = '원형 차트 값을 확인하세요. ' + String(error);
+            }
+          }
+          input.setAttribute('aria-invalid', String(!valid));
+          apply.disabled = !live || !valid || !drafts.size;
           grid.refresh();
         };
         input.value = projection.chart.values.points[selected].value;
@@ -183,22 +217,14 @@ export function createHwp5ChartDataTool(options: {
         apply.addEventListener('click', () => {
           void (async () => {
             if (!ready() || !drafts.size) return;
-            const edits: Hwp5ChartLiteralEdit[] = [];
-            for (const [id, value] of drafts) {
-              const address = projection.cellAddress(id);
-              if (!address) throw Error('InvalidChartCell');
-              edits.push(
-                address.kind === 'category'
-                  ? { category: { category: address.category, expected: address.expected, value } }
-                  : {
-                      value: {
-                        series: address.series,
-                        category: address.category,
-                        expected: address.expected,
-                        value,
-                      },
-                    },
-              );
+            const edits = draftEdits();
+            if (capture.profile === HWP5_CHART_LITERAL_PIE_PROFILE) {
+              try {
+                checkedHwp5PieLiteralEdits(capture.literals, edits);
+              } catch {
+                update();
+                return;
+              }
             }
             busy = true;
             update();

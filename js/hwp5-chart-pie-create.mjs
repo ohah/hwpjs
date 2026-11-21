@@ -18,7 +18,7 @@ export function checkedHwp5PieValues(values) {
   return numbers;
 }
 
-// Strict authored H5 creation only. Literal editing keeps its existing hard gate.
+// Strict own authored H5 profiles only; Native canonical proof remains edit authority.
 export function checkedHwp5PiePreviewData(data) {
   const plot = data.plots[0],
     settings = data.plot_settings[0];

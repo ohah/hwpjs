@@ -53,6 +53,7 @@ fn index(a: std.mem.Allocator, values: *const common.Values) !Index {
             };
         },
         .lineChart => .spec24_standard_line_literals_v1,
+        .pieChart => .spec24_standard_pie_literals_v1,
         else => return error.UnsupportedChartLiteralEditProfile,
     };
     var out: Index = .{ .series_nodes = series, .categories = 0, .profile = profile };

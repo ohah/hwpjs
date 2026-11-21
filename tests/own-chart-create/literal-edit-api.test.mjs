@@ -10,6 +10,7 @@ import {
   HWP5_CHART_LITERAL_BAR_PROFILE as BAR,
   HWP5_CHART_LITERAL_LINE_PROFILE as LINE,
   HWP5_CHART_LITERAL_HORIZONTAL_BAR_PROFILE as HORIZONTAL,
+  HWP5_CHART_LITERAL_PIE_PROFILE as PIE,
 } from '../../js/hwp5-chart-literal-profiles.mjs';
 import { model, context } from '../hwpx/chart-family-model.mjs';
 const edits = [{ value: { series: 0, category: 0, expected: '10', value: '73' } }];
@@ -21,7 +22,7 @@ function fixture({
   profile = BAR,
   version = 1,
   previewProfile = profile,
-  kind = profile === LINE ? 'lineChart' : 'barChart',
+  kind = profile === PIE ? 'pieChart' : profile === LINE ? 'lineChart' : 'barChart',
   mutateData = () => {},
 } = {}) {
   let epoch = 1,
@@ -73,6 +74,16 @@ function fixture({
     node: 5,
     value: kind === 'barChart' ? 'clustered' : 'standard',
   };
+  if (profile === PIE) {
+    data.axes = [];
+    data.axis_links = [];
+    Object.assign(data.plot_settings[0], {
+      grouping: null,
+      axis_references: [],
+      vary_colors: { node: 31, value: true },
+      first_slice_angle: { node: 32, value: 0 },
+    });
+  }
   mutateData(data);
   const memory = {
     withBytes(bytes, fn) {
@@ -319,7 +330,7 @@ test('capability v1 bar and v2 bar retain old signatures and missing old bar pre
     () => fixture({ version: 2, profile: 'arbitrary' }).api.captureHwp5ChartData(0, 9),
     /UnsupportedChartLiteralEditProfile/,
   );
-  assert.equal(fixture({ version: 4 }).api.supportsHwp5ChartLiteralEditAbi(), false);
+  assert.equal(fixture({ version: 5 }).api.supportsHwp5ChartLiteralEditAbi(), false);
 });
 for (const previewProfile of [BAR, null, 'arbitrary'])
   test(
@@ -502,4 +513,104 @@ test('horizontal bar layout uses independent value width and category height', (
     assert.equal(h.width, c.height);
     assert.equal(h.height, c.width);
   }
+});
+
+for (const version of [1, 2, 3])
+  test('pie literal old capability refuses ' + version, () => {
+    assert.throws(
+      () => fixture({ profile: PIE, version }).api.captureHwp5ChartData(0, 9),
+      /InvalidChartLiteralLease/,
+    );
+  });
+test('pie v4 capture profile is observation and private painter commits once with schema one', async () => {
+  const f = fixture({ profile: PIE, version: 4 });
+  await withCanvas(f, async () => {
+    const capture = f.api.captureHwp5ChartData(0, 9);
+    assert.equal(capture.profile, PIE);
+    await f.api.editHwp5ChartData(capture, edits);
+    assert.equal(f.stats().commits, 1);
+    assert.equal(f.stats().encoded, 1);
+    assert.equal(f.stats().finalBody.schemaVersion, 1);
+    assert.equal(f.stats().finalBody.witness.profile, PIE);
+    await assert.rejects(f.api.editHwp5ChartData({ ...capture }, edits), /Stale/);
+  });
+});
+for (const value of ['-1', '-1e-5000', '1e-5000', 'NaN', 'Infinity', '1e-320'])
+  test('pie raw rejection retains capture before preview/painter/commit ' + value, async () => {
+    const f = fixture({ profile: PIE, version: 4 });
+    const capture = f.api.captureHwp5ChartData(0, 9);
+    await assert.rejects(
+      f.api.editHwp5ChartData(capture, [
+        { value: { series: 0, category: 0, expected: '10', value } },
+      ]),
+    );
+    assert.equal(f.requests.length, 0);
+    assert.equal(f.stats().commits, 0);
+    assert.equal(f.stats().painted, 0);
+    assert.equal(f.api.isHwp5ChartDataCurrent(capture), true);
+  });
+test('pie all-zero full draft rejected before preview', async () => {
+  const f = fixture({ profile: PIE, version: 4 });
+  await assert.rejects(
+    f.api.editHwp5ChartData(
+      f.api.captureHwp5ChartData(0, 9),
+      ['10', '20', '30'].map((expected, category) => ({
+        value: { series: 0, category, expected, value: '0' },
+      })),
+    ),
+    /EmptyPieMagnitude/,
+  );
+  assert.equal(f.requests.length, 0);
+  assert.equal(f.stats().commits, 0);
+});
+for (const mutateData of [
+  (d) => {
+    d.plot_settings[0].first_slice_angle.value = 20;
+  },
+  (d) => {
+    d.series_settings[0].explosion = { node: 99, value: 1 };
+  },
+  (d) => {
+    d.axes.push({});
+  },
+  (d) => {
+    d.points.find((p) => p.kind === 'numeric_literal').value = '-1';
+  },
+])
+  test('pie noncanonical preview rejected before canvas ' + mutateData, async () => {
+    const f = fixture({ profile: PIE, version: 4, mutateData });
+    await withCanvas(f, async () => {
+      await assert.rejects(f.api.editHwp5ChartData(f.api.captureHwp5ChartData(0, 9), edits));
+      assert.equal(f.stats().commits, 0);
+      assert.equal(f.stats().painted, 0);
+    });
+  });
+test('v4 retains v3 bar line horizontal edits', async () => {
+  for (const profile of [BAR, LINE, HORIZONTAL]) {
+    const f = fixture({ profile, version: 4 });
+    await withCanvas(f, async () => {
+      await f.api.editHwp5ChartData(f.api.captureHwp5ChartData(0, 9), edits);
+      assert.equal(f.stats().commits, 1);
+    });
+  }
+});
+
+for (const staleAt of ['blob', 'array'])
+  test('pie stale painter boundary refuses ' + staleAt, async () => {
+    const f = fixture({ profile: PIE, version: 4, staleAt });
+    await withCanvas(f, async () => {
+      await assert.rejects(
+        f.api.editHwp5ChartData(f.api.captureHwp5ChartData(0, 9), edits),
+        /Stale/,
+      );
+      assert.equal(f.stats().commits, 0);
+      assert.equal(f.canvases[0].width, 0);
+    });
+  });
+test('pie no-op does not encode or allocate canvas', async () => {
+  const f = fixture({ profile: PIE, version: 4, changed: false, code: 2 });
+  await f.api.editHwp5ChartData(f.api.captureHwp5ChartData(0, 9), edits);
+  assert.equal(f.stats().painted, 0);
+  assert.equal(f.stats().encoded, 0);
+  assert.equal(f.stats().finalBody.rendered, null);
 });
