@@ -67,7 +67,7 @@ test('recorded click geometry selects the empty cell with actual-source table an
     boundaries: [
       { unit: 0, x: 0 },
       { unit: 1, x: 96 },
-      { unit: 7, x: 165.18264770507812 },
+      { unit: 7, x: Number('165.18264770507812') },
     ],
   };
   const c = {
