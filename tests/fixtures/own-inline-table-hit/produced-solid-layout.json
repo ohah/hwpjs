@@ -1,0 +1,1405 @@
+{
+  "state": "paginated",
+  "rows": [
+    {
+      "text": "가",
+      "kind": "text",
+      "section": 0,
+      "paragraph": 0,
+      "editable": true,
+      "selectable": true,
+      "startUnit": 0,
+      "endUnit": 1,
+      "boundaries": [
+        {
+          "unit": 0,
+          "x": 0
+        },
+        {
+          "unit": 1,
+          "x": 11.530441284179688
+        }
+      ],
+      "textHeight": 13.333333333333332,
+      "textTop": 0,
+      "paragraphShape": {
+        "spacingFormat": "hwpx",
+        "heading": {
+          "kind": "none",
+          "marker": null,
+          "id": null,
+          "level": null,
+          "placement": null
+        },
+        "breakSettings": {
+          "widow_orphan": false,
+          "keep_with_next": false,
+          "keep_lines": false,
+          "page_break_before": false
+        },
+        "alignment": 0,
+        "indent": 0,
+        "left": 0,
+        "right": 0,
+        "before": 0,
+        "after": 0,
+        "legacySpacingKind": 0,
+        "legacySpacing": 160
+      },
+      "paragraphX": 0,
+      "paragraphReferenceX": 0,
+      "width": 566.9333333333334,
+      "lastLine": true,
+      "y": 152.26666666666668,
+      "height": 21.33333333333333,
+      "x": 133.38666666666666,
+      "columnOrdinal": 0,
+      "zoneOrdinal": 0,
+      "pageOrdinal": 0,
+      "referenceBoxes": {
+        "paper": {
+          "x": 20,
+          "y": 20,
+          "width": 793.7066666666667,
+          "height": 1122.5066666666667
+        },
+        "page": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        },
+        "column": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        }
+      }
+    },
+    {
+      "text": "￼기울임진하게",
+      "kind": "text",
+      "section": 0,
+      "paragraph": 1,
+      "editable": true,
+      "selectable": true,
+      "startUnit": 0,
+      "endUnit": 7,
+      "boundaries": [
+        {
+          "unit": 0,
+          "x": 0
+        },
+        {
+          "unit": 1,
+          "x": 96
+        },
+        {
+          "unit": 2,
+          "x": 107.53044128417969
+        },
+        {
+          "unit": 3,
+          "x": 119.06088256835938
+        },
+        {
+          "unit": 4,
+          "x": 130.59132385253906
+        },
+        {
+          "unit": 5,
+          "x": 142.12176513671875
+        },
+        {
+          "unit": 6,
+          "x": 153.65220642089844
+        },
+        {
+          "unit": 7,
+          "x": 165.18264770507812
+        }
+      ],
+      "textHeight": 13.333333333333332,
+      "textTop": 0,
+      "paragraphShape": {
+        "spacingFormat": "hwpx",
+        "heading": {
+          "kind": "none",
+          "marker": null,
+          "id": null,
+          "level": null,
+          "placement": null
+        },
+        "breakSettings": {
+          "widow_orphan": false,
+          "keep_with_next": false,
+          "keep_lines": false,
+          "page_break_before": false
+        },
+        "alignment": 0,
+        "indent": 0,
+        "left": 0,
+        "right": 0,
+        "before": 0,
+        "after": 0,
+        "legacySpacingKind": 0,
+        "legacySpacing": 160
+      },
+      "paragraphX": 0,
+      "paragraphReferenceX": 0,
+      "width": 566.9333333333334,
+      "lastLine": true,
+      "y": 173.60000000000002,
+      "height": 48,
+      "tableIndex": 0,
+      "bandOrdinal": 0,
+      "inlineTableAnchor": {
+        "tableNode": 38,
+        "unit": 0,
+        "rowIndex": 0,
+        "x": 0,
+        "y": 0,
+        "width": 96,
+        "height": 48
+      },
+      "inlineTables": [
+        {
+          "unit": 0,
+          "tableNode": 38
+        }
+      ],
+      "x": 133.38666666666666,
+      "columnOrdinal": 0,
+      "zoneOrdinal": 0,
+      "pageOrdinal": 0,
+      "referenceBoxes": {
+        "paper": {
+          "x": 20,
+          "y": 20,
+          "width": 793.7066666666667,
+          "height": 1122.5066666666667
+        },
+        "page": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        },
+        "column": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        }
+      }
+    },
+    {
+      "text": "",
+      "kind": "text",
+      "section": 0,
+      "paragraph": 2,
+      "editable": true,
+      "selectable": true,
+      "startUnit": 0,
+      "endUnit": 0,
+      "boundaries": [
+        {
+          "unit": 0,
+          "x": 0
+        }
+      ],
+      "textHeight": 13.333333333333332,
+      "textTop": 0,
+      "paragraphShape": {
+        "spacingFormat": "hwpx",
+        "heading": {
+          "kind": "none",
+          "marker": null,
+          "id": null,
+          "level": null,
+          "placement": null
+        },
+        "breakSettings": {
+          "widow_orphan": false,
+          "keep_with_next": false,
+          "keep_lines": false,
+          "page_break_before": false
+        },
+        "alignment": 0,
+        "indent": -2620,
+        "left": 0,
+        "right": 0,
+        "before": 0,
+        "after": 0,
+        "legacySpacingKind": 0,
+        "legacySpacing": 130
+      },
+      "paragraphX": 0,
+      "paragraphReferenceX": 0,
+      "width": 48,
+      "lastLine": true,
+      "y": 173.60000000000002,
+      "height": 13.333333333333332,
+      "x": 133.38666666666666,
+      "tableNode": 38,
+      "listNode": 45,
+      "pageOrdinal": 0,
+      "columnOrdinal": 0,
+      "referenceBoxes": {
+        "paper": {
+          "x": 20,
+          "y": 20,
+          "width": 793.7066666666667,
+          "height": 1122.5066666666667
+        },
+        "page": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        },
+        "column": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        }
+      }
+    },
+    {
+      "text": "",
+      "kind": "text",
+      "section": 0,
+      "paragraph": 3,
+      "editable": true,
+      "selectable": true,
+      "startUnit": 0,
+      "endUnit": 0,
+      "boundaries": [
+        {
+          "unit": 0,
+          "x": 0
+        }
+      ],
+      "textHeight": 13.333333333333332,
+      "textTop": 0,
+      "paragraphShape": {
+        "spacingFormat": "hwpx",
+        "heading": {
+          "kind": "none",
+          "marker": null,
+          "id": null,
+          "level": null,
+          "placement": null
+        },
+        "breakSettings": {
+          "widow_orphan": false,
+          "keep_with_next": false,
+          "keep_lines": false,
+          "page_break_before": false
+        },
+        "alignment": 0,
+        "indent": -2620,
+        "left": 0,
+        "right": 0,
+        "before": 0,
+        "after": 0,
+        "legacySpacingKind": 0,
+        "legacySpacing": 130
+      },
+      "paragraphX": 0,
+      "paragraphReferenceX": 0,
+      "width": 48,
+      "lastLine": true,
+      "y": 173.60000000000002,
+      "height": 13.333333333333332,
+      "x": 181.38666666666666,
+      "tableNode": 38,
+      "listNode": 54,
+      "pageOrdinal": 0,
+      "columnOrdinal": 0,
+      "referenceBoxes": {
+        "paper": {
+          "x": 20,
+          "y": 20,
+          "width": 793.7066666666667,
+          "height": 1122.5066666666667
+        },
+        "page": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        },
+        "column": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        }
+      }
+    },
+    {
+      "text": "",
+      "kind": "text",
+      "section": 0,
+      "paragraph": 4,
+      "editable": true,
+      "selectable": true,
+      "startUnit": 0,
+      "endUnit": 0,
+      "boundaries": [
+        {
+          "unit": 0,
+          "x": 0
+        }
+      ],
+      "textHeight": 13.333333333333332,
+      "textTop": 0,
+      "paragraphShape": {
+        "spacingFormat": "hwpx",
+        "heading": {
+          "kind": "none",
+          "marker": null,
+          "id": null,
+          "level": null,
+          "placement": null
+        },
+        "breakSettings": {
+          "widow_orphan": false,
+          "keep_with_next": false,
+          "keep_lines": false,
+          "page_break_before": false
+        },
+        "alignment": 0,
+        "indent": -2620,
+        "left": 0,
+        "right": 0,
+        "before": 0,
+        "after": 0,
+        "legacySpacingKind": 0,
+        "legacySpacing": 130
+      },
+      "paragraphX": 0,
+      "paragraphReferenceX": 0,
+      "width": 48,
+      "lastLine": true,
+      "y": 197.60000000000002,
+      "height": 13.333333333333332,
+      "x": 133.38666666666666,
+      "tableNode": 38,
+      "listNode": 64,
+      "pageOrdinal": 0,
+      "columnOrdinal": 0,
+      "referenceBoxes": {
+        "paper": {
+          "x": 20,
+          "y": 20,
+          "width": 793.7066666666667,
+          "height": 1122.5066666666667
+        },
+        "page": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        },
+        "column": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        }
+      }
+    },
+    {
+      "text": "",
+      "kind": "text",
+      "section": 0,
+      "paragraph": 5,
+      "editable": true,
+      "selectable": true,
+      "startUnit": 0,
+      "endUnit": 0,
+      "boundaries": [
+        {
+          "unit": 0,
+          "x": 0
+        }
+      ],
+      "textHeight": 13.333333333333332,
+      "textTop": 0,
+      "paragraphShape": {
+        "spacingFormat": "hwpx",
+        "heading": {
+          "kind": "none",
+          "marker": null,
+          "id": null,
+          "level": null,
+          "placement": null
+        },
+        "breakSettings": {
+          "widow_orphan": false,
+          "keep_with_next": false,
+          "keep_lines": false,
+          "page_break_before": false
+        },
+        "alignment": 0,
+        "indent": -2620,
+        "left": 0,
+        "right": 0,
+        "before": 0,
+        "after": 0,
+        "legacySpacingKind": 0,
+        "legacySpacing": 130
+      },
+      "paragraphX": 0,
+      "paragraphReferenceX": 0,
+      "width": 48,
+      "lastLine": true,
+      "y": 197.60000000000002,
+      "height": 13.333333333333332,
+      "x": 181.38666666666666,
+      "tableNode": 38,
+      "listNode": 73,
+      "pageOrdinal": 0,
+      "columnOrdinal": 0,
+      "referenceBoxes": {
+        "paper": {
+          "x": 20,
+          "y": 20,
+          "width": 793.7066666666667,
+          "height": 1122.5066666666667
+        },
+        "page": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        },
+        "column": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        }
+      }
+    },
+    {
+      "text": "밑줄없음밑줄가운데줄윗줄",
+      "kind": "text",
+      "section": 0,
+      "paragraph": 6,
+      "editable": true,
+      "selectable": true,
+      "startUnit": 0,
+      "endUnit": 12,
+      "boundaries": [
+        {
+          "unit": 0,
+          "x": 0
+        },
+        {
+          "unit": 1,
+          "x": 11.530441284179688
+        },
+        {
+          "unit": 2,
+          "x": 23.060882568359375
+        },
+        {
+          "unit": 3,
+          "x": 34.59132385253906
+        },
+        {
+          "unit": 4,
+          "x": 46.12176513671875
+        },
+        {
+          "unit": 5,
+          "x": 57.65220642089844
+        },
+        {
+          "unit": 6,
+          "x": 69.18264770507812
+        },
+        {
+          "unit": 7,
+          "x": 80.71308898925781
+        },
+        {
+          "unit": 8,
+          "x": 92.2435302734375
+        },
+        {
+          "unit": 9,
+          "x": 103.77397155761719
+        },
+        {
+          "unit": 10,
+          "x": 115.30441284179688
+        },
+        {
+          "unit": 11,
+          "x": 126.83485412597656
+        },
+        {
+          "unit": 12,
+          "x": 138.36529541015625
+        }
+      ],
+      "textHeight": 22.333333333333332,
+      "textTop": 0,
+      "paragraphShape": {
+        "spacingFormat": "hwpx",
+        "heading": {
+          "kind": "none",
+          "marker": null,
+          "id": null,
+          "level": null,
+          "placement": null
+        },
+        "breakSettings": {
+          "widow_orphan": false,
+          "keep_with_next": false,
+          "keep_lines": false,
+          "page_break_before": false
+        },
+        "alignment": 0,
+        "indent": 0,
+        "left": 0,
+        "right": 0,
+        "before": 0,
+        "after": 0,
+        "legacySpacingKind": 0,
+        "legacySpacing": 160
+      },
+      "paragraphX": 0,
+      "paragraphReferenceX": 0,
+      "width": 566.9333333333334,
+      "lastLine": true,
+      "y": 221.60000000000002,
+      "height": 35.73333333333333,
+      "x": 133.38666666666666,
+      "columnOrdinal": 0,
+      "zoneOrdinal": 0,
+      "pageOrdinal": 0,
+      "referenceBoxes": {
+        "paper": {
+          "x": 20,
+          "y": 20,
+          "width": 793.7066666666667,
+          "height": 1122.5066666666667
+        },
+        "page": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        },
+        "column": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        }
+      }
+    },
+    {
+      "text": "글자크기: 기준크기10pt 한글90% 영문80% 기타70%",
+      "kind": "text",
+      "section": 0,
+      "paragraph": 7,
+      "editable": true,
+      "selectable": true,
+      "startUnit": 0,
+      "endUnit": 32,
+      "boundaries": [
+        {
+          "unit": 0,
+          "x": 0
+        },
+        {
+          "unit": 1,
+          "x": 11.530441284179688
+        },
+        {
+          "unit": 2,
+          "x": 23.060882568359375
+        },
+        {
+          "unit": 3,
+          "x": 34.59132385253906
+        },
+        {
+          "unit": 4,
+          "x": 46.12176513671875
+        },
+        {
+          "unit": 5,
+          "x": 49.97929382324219
+        },
+        {
+          "unit": 6,
+          "x": 53.6285400390625
+        },
+        {
+          "unit": 7,
+          "x": 65.15898132324219
+        },
+        {
+          "unit": 8,
+          "x": 76.68942260742188
+        },
+        {
+          "unit": 9,
+          "x": 88.21986389160156
+        },
+        {
+          "unit": 10,
+          "x": 99.75030517578125
+        },
+        {
+          "unit": 11,
+          "x": 105.83383178710938
+        },
+        {
+          "unit": 12,
+          "x": 114.13034057617188
+        },
+        {
+          "unit": 13,
+          "x": 122.16650390625
+        },
+        {
+          "unit": 14,
+          "x": 126.90922546386719
+        },
+        {
+          "unit": 15,
+          "x": 130.5584716796875
+        },
+        {
+          "unit": 16,
+          "x": 140.93846130371094
+        },
+        {
+          "unit": 17,
+          "x": 151.31845092773438
+        },
+        {
+          "unit": 18,
+          "x": 159.70608520507812
+        },
+        {
+          "unit": 19,
+          "x": 168.00259399414062
+        },
+        {
+          "unit": 20,
+          "x": 180.23692321777344
+        },
+        {
+          "unit": 21,
+          "x": 183.3183135986328
+        },
+        {
+          "unit": 22,
+          "x": 194.8487548828125
+        },
+        {
+          "unit": 23,
+          "x": 206.3791961669922
+        },
+        {
+          "unit": 24,
+          "x": 213.2707061767578
+        },
+        {
+          "unit": 25,
+          "x": 220.0685272216797
+        },
+        {
+          "unit": 26,
+          "x": 230.01541137695312
+        },
+        {
+          "unit": 27,
+          "x": 233.66465759277344
+        },
+        {
+          "unit": 28,
+          "x": 245.19509887695312
+        },
+        {
+          "unit": 29,
+          "x": 256.7255401611328
+        },
+        {
+          "unit": 30,
+          "x": 264.2149658203125
+        },
+        {
+          "unit": 31,
+          "x": 272.511474609375
+        },
+        {
+          "unit": 32,
+          "x": 284.7458038330078
+        }
+      ],
+      "textHeight": 13.333333333333332,
+      "textTop": 0,
+      "paragraphShape": {
+        "spacingFormat": "hwpx",
+        "heading": {
+          "kind": "none",
+          "marker": null,
+          "id": null,
+          "level": null,
+          "placement": null
+        },
+        "breakSettings": {
+          "widow_orphan": false,
+          "keep_with_next": false,
+          "keep_lines": false,
+          "page_break_before": false
+        },
+        "alignment": 0,
+        "indent": 0,
+        "left": 0,
+        "right": 0,
+        "before": 0,
+        "after": 0,
+        "legacySpacingKind": 0,
+        "legacySpacing": 160
+      },
+      "paragraphX": 0,
+      "paragraphReferenceX": 0,
+      "width": 566.9333333333334,
+      "lastLine": true,
+      "y": 257.33333333333337,
+      "height": 21.33333333333333,
+      "x": 133.38666666666666,
+      "columnOrdinal": 0,
+      "zoneOrdinal": 0,
+      "pageOrdinal": 0,
+      "referenceBoxes": {
+        "paper": {
+          "x": 20,
+          "y": 20,
+          "width": 793.7066666666667,
+          "height": 1122.5066666666667
+        },
+        "page": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        },
+        "column": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        }
+      }
+    },
+    {
+      "text": "폰트: 한글돋움 영문CourierNew 기타قLucidaSansUnicode",
+      "kind": "text",
+      "section": 0,
+      "paragraph": 8,
+      "editable": true,
+      "selectable": true,
+      "startUnit": 0,
+      "endUnit": 42,
+      "boundaries": [
+        {
+          "unit": 0,
+          "x": 0
+        },
+        {
+          "unit": 1,
+          "x": 11.530441284179688
+        },
+        {
+          "unit": 2,
+          "x": 23.060882568359375
+        },
+        {
+          "unit": 3,
+          "x": 26.918411254882812
+        },
+        {
+          "unit": 4,
+          "x": 30.567657470703125
+        },
+        {
+          "unit": 5,
+          "x": 42.09809875488281
+        },
+        {
+          "unit": 6,
+          "x": 53.6285400390625
+        },
+        {
+          "unit": 7,
+          "x": 65.15898132324219
+        },
+        {
+          "unit": 8,
+          "x": 76.68942260742188
+        },
+        {
+          "unit": 9,
+          "x": 80.33866882324219
+        },
+        {
+          "unit": 10,
+          "x": 91.86911010742188
+        },
+        {
+          "unit": 11,
+          "x": 103.39955139160156
+        },
+        {
+          "unit": 12,
+          "x": 111.39884948730469
+        },
+        {
+          "unit": 13,
+          "x": 119.39814758300781
+        },
+        {
+          "unit": 14,
+          "x": 127.39744567871094
+        },
+        {
+          "unit": 15,
+          "x": 135.39674377441406
+        },
+        {
+          "unit": 16,
+          "x": 143.3960418701172
+        },
+        {
+          "unit": 17,
+          "x": 151.3953399658203
+        },
+        {
+          "unit": 18,
+          "x": 159.39463806152344
+        },
+        {
+          "unit": 19,
+          "x": 167.39393615722656
+        },
+        {
+          "unit": 20,
+          "x": 175.3932342529297
+        },
+        {
+          "unit": 21,
+          "x": 183.3925323486328
+        },
+        {
+          "unit": 22,
+          "x": 187.04177856445312
+        },
+        {
+          "unit": 23,
+          "x": 198.5722198486328
+        },
+        {
+          "unit": 24,
+          "x": 210.1026611328125
+        },
+        {
+          "unit": 25,
+          "x": 219.1889190673828
+        },
+        {
+          "unit": 26,
+          "x": 226.6588134765625
+        },
+        {
+          "unit": 27,
+          "x": 234.3369903564453
+        },
+        {
+          "unit": 28,
+          "x": 241.6962432861328
+        },
+        {
+          "unit": 29,
+          "x": 244.88987731933594
+        },
+        {
+          "unit": 30,
+          "x": 252.9781036376953
+        },
+        {
+          "unit": 31,
+          "x": 260.23321533203125
+        },
+        {
+          "unit": 32,
+          "x": 268.6273651123047
+        },
+        {
+          "unit": 33,
+          "x": 275.8824768066406
+        },
+        {
+          "unit": 34,
+          "x": 283.56065368652344
+        },
+        {
+          "unit": 35,
+          "x": 290.43824768066406
+        },
+        {
+          "unit": 36,
+          "x": 300.16668701171875
+        },
+        {
+          "unit": 37,
+          "x": 307.84486389160156
+        },
+        {
+          "unit": 38,
+          "x": 311.0384979248047
+        },
+        {
+          "unit": 39,
+          "x": 318.3977508544922
+        },
+        {
+          "unit": 40,
+          "x": 326.17356872558594
+        },
+        {
+          "unit": 41,
+          "x": 334.2617950439453
+        },
+        {
+          "unit": 42,
+          "x": 341.7772521972656
+        }
+      ],
+      "textHeight": 13.333333333333332,
+      "textTop": 0,
+      "paragraphShape": {
+        "spacingFormat": "hwpx",
+        "heading": {
+          "kind": "none",
+          "marker": null,
+          "id": null,
+          "level": null,
+          "placement": null
+        },
+        "breakSettings": {
+          "widow_orphan": false,
+          "keep_with_next": false,
+          "keep_lines": false,
+          "page_break_before": false
+        },
+        "alignment": 0,
+        "indent": 0,
+        "left": 0,
+        "right": 0,
+        "before": 0,
+        "after": 0,
+        "legacySpacingKind": 0,
+        "legacySpacing": 160
+      },
+      "paragraphX": 0,
+      "paragraphReferenceX": 0,
+      "width": 566.9333333333334,
+      "lastLine": true,
+      "y": 278.6666666666667,
+      "height": 21.33333333333333,
+      "x": 133.38666666666666,
+      "columnOrdinal": 0,
+      "zoneOrdinal": 0,
+      "pageOrdinal": 0,
+      "referenceBoxes": {
+        "paper": {
+          "x": 20,
+          "y": 20,
+          "width": 793.7066666666667,
+          "height": 1122.5066666666667
+        },
+        "page": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        },
+        "column": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        }
+      }
+    },
+    {
+      "text": "붉은밑줄",
+      "kind": "text",
+      "section": 0,
+      "paragraph": 9,
+      "editable": true,
+      "selectable": true,
+      "startUnit": 0,
+      "endUnit": 4,
+      "boundaries": [
+        {
+          "unit": 0,
+          "x": 0
+        },
+        {
+          "unit": 1,
+          "x": 11.530441284179688
+        },
+        {
+          "unit": 2,
+          "x": 23.060882568359375
+        },
+        {
+          "unit": 3,
+          "x": 34.59132385253906
+        },
+        {
+          "unit": 4,
+          "x": 46.12176513671875
+        }
+      ],
+      "textHeight": 22.333333333333332,
+      "textTop": 0,
+      "paragraphShape": {
+        "spacingFormat": "hwpx",
+        "heading": {
+          "kind": "none",
+          "marker": null,
+          "id": null,
+          "level": null,
+          "placement": null
+        },
+        "breakSettings": {
+          "widow_orphan": false,
+          "keep_with_next": false,
+          "keep_lines": false,
+          "page_break_before": false
+        },
+        "alignment": 0,
+        "indent": 0,
+        "left": 0,
+        "right": 0,
+        "before": 0,
+        "after": 0,
+        "legacySpacingKind": 0,
+        "legacySpacing": 160
+      },
+      "paragraphX": 0,
+      "paragraphReferenceX": 0,
+      "width": 566.9333333333334,
+      "lastLine": true,
+      "y": 300,
+      "height": 35.73333333333333,
+      "x": 133.38666666666666,
+      "columnOrdinal": 0,
+      "zoneOrdinal": 0,
+      "pageOrdinal": 0,
+      "referenceBoxes": {
+        "paper": {
+          "x": 20,
+          "y": 20,
+          "width": 793.7066666666667,
+          "height": 1122.5066666666667
+        },
+        "page": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        },
+        "column": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        }
+      }
+    },
+    {
+      "text": "점선밑줄",
+      "kind": "text",
+      "section": 0,
+      "paragraph": 10,
+      "editable": true,
+      "selectable": true,
+      "startUnit": 0,
+      "endUnit": 4,
+      "boundaries": [
+        {
+          "unit": 0,
+          "x": 0
+        },
+        {
+          "unit": 1,
+          "x": 11.530441284179688
+        },
+        {
+          "unit": 2,
+          "x": 23.060882568359375
+        },
+        {
+          "unit": 3,
+          "x": 34.59132385253906
+        },
+        {
+          "unit": 4,
+          "x": 46.12176513671875
+        }
+      ],
+      "textHeight": 22.333333333333332,
+      "textTop": 0,
+      "paragraphShape": {
+        "spacingFormat": "hwpx",
+        "heading": {
+          "kind": "none",
+          "marker": null,
+          "id": null,
+          "level": null,
+          "placement": null
+        },
+        "breakSettings": {
+          "widow_orphan": false,
+          "keep_with_next": false,
+          "keep_lines": false,
+          "page_break_before": false
+        },
+        "alignment": 0,
+        "indent": 0,
+        "left": 0,
+        "right": 0,
+        "before": 0,
+        "after": 0,
+        "legacySpacingKind": 0,
+        "legacySpacing": 160
+      },
+      "paragraphX": 0,
+      "paragraphReferenceX": 0,
+      "width": 566.9333333333334,
+      "lastLine": true,
+      "y": 335.73333333333335,
+      "height": 35.73333333333333,
+      "x": 133.38666666666666,
+      "columnOrdinal": 0,
+      "zoneOrdinal": 0,
+      "pageOrdinal": 0,
+      "referenceBoxes": {
+        "paper": {
+          "x": 20,
+          "y": 20,
+          "width": 793.7066666666667,
+          "height": 1122.5066666666667
+        },
+        "page": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        },
+        "column": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        }
+      }
+    }
+  ],
+  "boxes": [
+    {
+      "listNode": 45,
+      "x": 133.38666666666666,
+      "y": 173.60000000000002,
+      "width": 48,
+      "height": 24,
+      "section": 0,
+      "tableNode": 38,
+      "pageOrdinal": 0,
+      "columnOrdinal": 0,
+      "referenceBoxes": {
+        "paper": {
+          "x": 20,
+          "y": 20,
+          "width": 793.7066666666667,
+          "height": 1122.5066666666667
+        },
+        "page": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        },
+        "column": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        }
+      }
+    },
+    {
+      "listNode": 54,
+      "x": 181.38666666666666,
+      "y": 173.60000000000002,
+      "width": 48,
+      "height": 24,
+      "section": 0,
+      "tableNode": 38,
+      "pageOrdinal": 0,
+      "columnOrdinal": 0,
+      "referenceBoxes": {
+        "paper": {
+          "x": 20,
+          "y": 20,
+          "width": 793.7066666666667,
+          "height": 1122.5066666666667
+        },
+        "page": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        },
+        "column": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        }
+      }
+    },
+    {
+      "listNode": 64,
+      "x": 133.38666666666666,
+      "y": 197.60000000000002,
+      "width": 48,
+      "height": 24,
+      "section": 0,
+      "tableNode": 38,
+      "pageOrdinal": 0,
+      "columnOrdinal": 0,
+      "referenceBoxes": {
+        "paper": {
+          "x": 20,
+          "y": 20,
+          "width": 793.7066666666667,
+          "height": 1122.5066666666667
+        },
+        "page": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        },
+        "column": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        }
+      }
+    },
+    {
+      "listNode": 73,
+      "x": 181.38666666666666,
+      "y": 197.60000000000002,
+      "width": 48,
+      "height": 24,
+      "section": 0,
+      "tableNode": 38,
+      "pageOrdinal": 0,
+      "columnOrdinal": 0,
+      "referenceBoxes": {
+        "paper": {
+          "x": 20,
+          "y": 20,
+          "width": 793.7066666666667,
+          "height": 1122.5066666666667
+        },
+        "page": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        },
+        "column": {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        }
+      }
+    }
+  ],
+  "pages": [
+    {
+      "ordinal": 0,
+      "paper": {
+        "x": 20,
+        "y": 20,
+        "width": 793.7066666666667,
+        "height": 1122.5066666666667
+      },
+      "page": {
+        "x": 133.38666666666666,
+        "y": 152.26666666666668,
+        "width": 566.9333333333334,
+        "height": 876.8533333333334
+      },
+      "columns": [
+        {
+          "x": 133.38666666666666,
+          "y": 152.26666666666668,
+          "width": 566.9333333333334,
+          "height": 876.8533333333334
+        }
+      ],
+      "section": 0
+    }
+  ],
+  "height": 1142.5066666666667,
+  "spatialRows": true,
+  "pageLayoutMode": "measured-body",
+  "limited": false,
+  "cellFloatingDrawingReservations": [],
+  "tableAnchors": [
+    {
+      "section": 0,
+      "tableNode": 38,
+      "hostParagraph": 1,
+      "anchorUnit": 0
+    }
+  ],
+  "tableCollisionFootprints": [
+    {
+      "section": 0,
+      "tableNode": 38,
+      "pageOrdinal": 0,
+      "rectangle": {
+        "x": 133.38666666666666,
+        "y": 173.60000000000002,
+        "width": 96,
+        "height": 48
+      }
+    }
+  ],
+  "tableCollisionFootprintErrors": []
+}

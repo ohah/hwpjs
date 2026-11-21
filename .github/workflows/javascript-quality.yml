@@ -942,6 +942,9 @@ jobs:
             ./tests/hwpx/inline-table-empty-cell-hit.test.mjs \
             ./tests/hwpx/inline-table-host-run.test.mjs \
             ./tests/hwpx/inline-table-host-projection.test.mjs \
+            ./tests/hwpx/inline-table-cell-box-hit.test.mjs \
+            ./tests/hwpx/inline-table-host-point-cost.test.mjs \
+            ./tests/hwpx/table-boundary-cell-interior.test.mjs \
             ./tests/created-cell-properties-wire.test.mjs \
             2>&1 | tee "$RUNNER_TEMP/object-outer-margins.tap"
           grep -Eq '^# skipped 0$' "$RUNNER_TEMP/object-outer-margins.tap"

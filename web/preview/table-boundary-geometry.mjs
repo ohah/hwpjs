@@ -81,7 +81,7 @@ export function hitTableBoundary(layout, x, y, paragraphAt, target = null) {
       ) > 4
     )
       continue;
-    if (cellTextAtBoundaryPoint(layout, x, y)) return null;
+    if (cellTextAtBoundaryPoint(layout, x, y, frame)) return null;
     const paragraph = paragraphAt({ section: frame.section, paragraph: frame.hostParagraph });
     if (paragraph?.editable !== true || paragraph.text?.[frame.anchorUnit] !== '\ufffc') continue;
     const after = x >= box.x + box.width / 2;

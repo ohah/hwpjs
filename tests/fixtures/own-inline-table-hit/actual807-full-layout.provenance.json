@@ -1,0 +1,10 @@
+{
+  "source": "/private/tmp/hwpjs-solid807267-gui-prep-own-20261121-165630/actual-once/ACTUAL-FULL-CURRENT-LAYOUT.json",
+  "sourceTree": "807267cb99622f0fcf1124fdaca792ad6e2c15b7",
+  "measurement": "actual existing owned browser current renderer full layout collected read-only after four failed/passed points; no new click or browser",
+  "actualInputSHA256": "815c83690c380f4e75826df1d4a4cc7dd75bdc792f5c84e7268497e1204a7dc2",
+  "class": "observed layout for controlled composed hit testing; not a saved-document or external expected oracle",
+  "captureSHA256": "0a8d000ce461a8a64cbdd6dede0843775d0e17661c3a6dba11e724bca15b1496",
+  "committedFixtureSHA256": "542b3f232af9fd7fcc5509474c888bb2f3f013d8b90d766615097be0a332ddac",
+  "fixtureNormalization": "oxfmt formatting only; parsed data identical to the raw capture"
+}

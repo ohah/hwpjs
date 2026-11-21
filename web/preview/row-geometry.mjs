@@ -1,4 +1,4 @@
-import { isInlineTableHostUnit } from './inline-table-host-run.mjs';
+import { inlineTableHostPoint } from './inline-table-host-run.mjs';
 /** Shared CSS-pixel row geometry, with compatibility for numeric-only layouts. */
 import { affinePoint, inverseAffine } from './affine-point-geometry.mjs';
 import { rowPageClipContains } from './row-page-clip.mjs';
@@ -50,6 +50,12 @@ export function rowAtPoint(layout, x, y) {
     const index = rowAtY(layout, y);
     return index >= 0 && rowPageClipContains(layout.rows[index], x, y) ? index : -1;
   }
+  let tableHostPoints;
+  const hostPoint = (row, localX) => {
+    tableHostPoints ??= new Map();
+    if (!tableHostPoints.has(row)) tableHostPoints.set(row, inlineTableHostPoint(row, localX));
+    return tableHostPoints.get(row);
+  };
   const contains = (row, index) => {
     if (row.sourceObjectAnchor === true) return false;
     if (!rowPageClipContains(row, x, y)) return false;
@@ -85,19 +91,42 @@ export function rowAtPoint(layout, x, y) {
     )
       return false;
     if (!row.inlineTables?.length) return true;
-    // Use the same projected table units that suppress host glyph painting.
-    for (let index = 1; index < boundaries.length; index++) {
-      const start = boundaries[index - 1],
-        end = boundaries[index];
-      if (localX >= start.x && localX < end.x && !isInlineTableHostUnit(row, start.unit))
-        return true;
-    }
-    return false;
+    return hostPoint(row, localX).hasHostInk;
   });
   if (ink >= 0) return ink;
   // Equal layers retain array order; floating layers match the paint order.
   const direct = topTablePaintRowIndex(layout.rows, contains);
-  if (direct >= 0) return direct;
+  if (direct >= 0) {
+    const host = layout.rows[direct];
+    if (host.inlineTables?.length) {
+      const point = rowLocalPoint(host, x, y);
+      const tables = hostPoint(host, point[0] - rowLeft(host)).tableNodes;
+      const boxIndex = topTablePaintRowIndex(layout.boxes ?? [], (box) => {
+        if (
+          box.section !== host.section ||
+          (host.pageOrdinal !== undefined && box.pageOrdinal !== host.pageOrdinal) ||
+          !rowPageClipContains(box, x, y)
+        )
+          return false;
+        const local = rowLocalPoint(box, x, y);
+        return (
+          local &&
+          local[0] >= box.x &&
+          local[0] < box.x + box.width &&
+          local[1] >= box.y &&
+          local[1] < box.y + box.height &&
+          tables.has(box.tableNode) &&
+          topTablePaintRowIndex([host, box], () => true) === 1
+        );
+      });
+      if (boxIndex >= 0) {
+        const selected = cellTextRowAtPoint(layout, layout.boxes[boxIndex], x, y);
+        if (selected >= 0 && topTablePaintRowIndex([host, layout.rows[selected]], () => true) === 1)
+          return selected;
+      }
+    }
+    return direct;
+  }
   const cell = layout.boxes
     ?.filter(
       (box) =>
@@ -109,6 +138,10 @@ export function rowAtPoint(layout, x, y) {
     )
     .reduce((best, box) => (!best || (box.depth ?? 0) > (best.depth ?? 0) ? box : best), null);
   if (!cell) return -1;
+  return cellTextRowAtPoint(layout, cell, x, y);
+}
+
+function cellTextRowAtPoint(layout, cell, x, y) {
   let closest = -1,
     distance = Infinity;
   for (const [index, row] of layout.rows.entries()) {
@@ -122,7 +155,19 @@ export function rowAtPoint(layout, x, y) {
       row.listNode !== cell.listNode
     )
       continue;
-    const delta = Math.max(rowTop(row, index) - y, y - (rowTop(row, index) + rowHeight(row)), 0);
+    if (
+      row.pageOrdinal !== undefined &&
+      cell.pageOrdinal !== undefined &&
+      row.pageOrdinal !== cell.pageOrdinal
+    )
+      continue;
+    const local = rowLocalPoint(row, x, y);
+    if (!local) continue;
+    const delta = Math.max(
+      rowTop(row, index) - local[1],
+      local[1] - (rowTop(row, index) + rowHeight(row)),
+      0,
+    );
     if (delta < distance) {
       distance = delta;
       closest = index;

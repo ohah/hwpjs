@@ -1,0 +1,10 @@
+{
+  "source": "/private/tmp/hwpjs-solid-sdk-layout-readonly-own-20261121-164123/evidence/PRODUCED-LAYOUT.json",
+  "sha256": "434f3b3ea843d217776b0f121b0cdcfcdaf6fc1f09007e059fe1c7c7a77e34cb",
+  "inputSHA256": "815c83690c380f4e75826df1d4a4cc7dd75bdc792f5c84e7268497e1204a7dc2",
+  "producerSource": "b70de7604306f2b9e880743ae640b37aa106c2d4",
+  "WASM": "c09080bc0db1d10d8cbfb7f8214c6e65abb20dce4a8e34d0330f3fccabf32960",
+  "measurement": "normal SDK readonly content with recorded b70 Canvas grapheme advances replay and product style heights; no fresh GUI/font measurement",
+  "scope": "source-level row hit geometry snapshot; not product saved-document oracle or all-layout equivalence",
+  "approvedRawChanged": false
+}
