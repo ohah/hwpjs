@@ -9659,19 +9659,27 @@ var init_hwp5_chart_create_profiles = __esmMin((() => {
 // ../../js/hwp5-chart-literal-profiles.mjs
 function hwp5ChartLiteralKind(profile) {
 	switch (profile) {
-		case HWP5_CHART_LITERAL_BAR_PROFILE: return "barChart";
+		case HWP5_CHART_LITERAL_BAR_PROFILE:
+		case HWP5_CHART_LITERAL_HORIZONTAL_BAR_PROFILE: return "barChart";
 		case HWP5_CHART_LITERAL_LINE_PROFILE: return "lineChart";
 		default: throw Error("UnsupportedChartLiteralEditProfile");
 	}
 }
 function supportsHwp5ChartLiteralProfile(version, profile) {
 	const kind = hwp5ChartLiteralKind(profile);
-	return version === 2 || version === 1 && kind === "barChart";
+	if (![
+		1,
+		2,
+		3
+	].includes(version)) return false;
+	if (profile === "spec24_clustered_horizontal_bar_literals_v1") return version === 3;
+	return version !== 1 || kind === "barChart";
 }
-var HWP5_CHART_LITERAL_BAR_PROFILE, HWP5_CHART_LITERAL_LINE_PROFILE;
+var HWP5_CHART_LITERAL_BAR_PROFILE, HWP5_CHART_LITERAL_LINE_PROFILE, HWP5_CHART_LITERAL_HORIZONTAL_BAR_PROFILE;
 var init_hwp5_chart_literal_profiles = __esmMin((() => {
 	HWP5_CHART_LITERAL_BAR_PROFILE = "spec24_clustered_column_literals_v1";
 	HWP5_CHART_LITERAL_LINE_PROFILE = "spec24_standard_line_literals_v1";
+	HWP5_CHART_LITERAL_HORIZONTAL_BAR_PROFILE = "spec24_clustered_horizontal_bar_literals_v1";
 }));
 // ../../web/preview/hwp5-chart-create-preview.mjs
 /** Render authored Native preview values. Existing resource previewValue caches
@@ -9694,6 +9702,10 @@ async function renderPreview(wire, { width, height }, { createCanvas, current },
 	if (scope === "hwp5-chart-literal-edit-preview" && expectedKind === "lineChart") {
 		const settings = data.plot_settings[0];
 		if (settings?.grouping?.value !== "standard" || settings.direction !== null || settings.spatial !== null || data.view_3d !== null || data.point_settings.length !== 0 || data.rich_text.length !== 0 || data.series_settings.some((s) => s.marker !== null || s.smooth !== null)) fail$2("UnsupportedChartLiteralEditProfile");
+	}
+	if (scope === "hwp5-chart-literal-edit-preview" && expectedKind === "barChart") {
+		const settings = data.plot_settings[0];
+		if (settings?.direction?.value !== (horizontalBar ? "bar" : "col") || settings.grouping?.value !== "clustered" || settings.spatial !== null || data.view_3d !== null || data.point_settings.length !== 0 || data.rich_text.length !== 0) fail$2("UnsupportedChartLiteralEditProfile");
 	}
 	const primitives = chartPreviewPrimitives(data);
 	if (primitives.state !== "ready") fail$2(primitives.reason ?? "ChartCreatePreviewUnavailable");
@@ -9747,7 +9759,7 @@ function renderHwp5ChartLiteralEditPreview(wire, host, profile = HWP5_CHART_LITE
 	return renderPreview(wire, {
 		width: p.pixel_width,
 		height: p.pixel_height
-	}, host, "hwp5-chart-literal-edit-preview", "hwp5-chart-literal-edit-preview-payload", hwp5ChartLiteralKind(profile));
+	}, host, "hwp5-chart-literal-edit-preview", "hwp5-chart-literal-edit-preview-payload", hwp5ChartLiteralKind(profile), profile === HWP5_CHART_LITERAL_HORIZONTAL_BAR_PROFILE);
 }
 var fail$2, live, validSize, signature;
 var init_hwp5_chart_create_preview = __esmMin((() => {
@@ -9816,7 +9828,7 @@ function createHwp5ChartLiteralEditApi({ wasm, memory, check, output, u32 }) {
 	const captures = /* @__PURE__ */ new WeakMap();
 	const supported = () => {
 		check();
-		return Object.entries(HWP5_CHART_LITERAL_EDIT_ABI).every(([name, sig]) => typeof wasm[name] === "function" && wasm[name].length === sig.params.length) && [1, 2].includes(wasm.hwp5_edit_chart_literal_edit_profile_version());
+		return Object.entries(HWP5_CHART_LITERAL_EDIT_ABI).every(([name, sig]) => typeof wasm[name] === "function" && wasm[name].length === sig.params.length) && supportsHwp5ChartLiteralProfile(wasm.hwp5_edit_chart_literal_edit_profile_version(), "spec24_clustered_column_literals_v1");
 	};
 	const query = (section, controlNode) => {
 		if (!supported()) throw Error("Hwp5ChartLiteralEditUnavailable");

@@ -10,6 +10,7 @@ const artifacts = new Map([
   ['1abb11ee1f1b91553479cde3e6713628fbc4dc91b60bc7eacffa92ad104ecc50', 5672476],
   ['773e3f117c141464cd069e8915e6e02d15604eebd04f36483a903c02337fde9a', 5699237],
   ['858c1dac8c9fda5e28d9eb2a5b50ac07be731d5963937a153b9a89dc667d7dcc', 5699361],
+  ['5f98f685e8017159588169739febb13760b8439ccb21b2d1d08e64f88b0ab077', 5699849],
 ]);
 const allowedLengths = new Set(artifacts.values());
 const qualifiedBackendModules = new WeakMap();

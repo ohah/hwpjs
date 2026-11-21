@@ -1,3 +1,4 @@
+import { chartBarLayout } from '../../web/preview/chart-bar-layout.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -8,6 +9,7 @@ import { createHwp5ChartDataCommands } from '../../web/preview/hwp5-chart-data-c
 import {
   HWP5_CHART_LITERAL_BAR_PROFILE as BAR,
   HWP5_CHART_LITERAL_LINE_PROFILE as LINE,
+  HWP5_CHART_LITERAL_HORIZONTAL_BAR_PROFILE as HORIZONTAL,
 } from '../../js/hwp5-chart-literal-profiles.mjs';
 import { model, context } from '../hwpx/chart-family-model.mjs';
 const edits = [{ value: { series: 0, category: 0, expected: '10', value: '73' } }];
@@ -65,7 +67,8 @@ function fixture({
   const data = model(kind, [[73, 20, 30]]);
   delete data.pair;
   delete data.host;
-  if (kind === 'barChart') data.plot_settings[0].direction = { node: 4, value: 'col' };
+  if (kind === 'barChart')
+    data.plot_settings[0].direction = { node: 4, value: profile === HORIZONTAL ? 'bar' : 'col' };
   data.plot_settings[0].grouping = {
     node: 5,
     value: kind === 'barChart' ? 'clustered' : 'standard',
@@ -316,7 +319,7 @@ test('capability v1 bar and v2 bar retain old signatures and missing old bar pre
     () => fixture({ version: 2, profile: 'arbitrary' }).api.captureHwp5ChartData(0, 9),
     /UnsupportedChartLiteralEditProfile/,
   );
-  assert.equal(fixture({ version: 3 }).api.supportsHwp5ChartLiteralEditAbi(), false);
+  assert.equal(fixture({ version: 4 }).api.supportsHwp5ChartLiteralEditAbi(), false);
 });
 for (const previewProfile of [BAR, null, 'arbitrary'])
   test(
@@ -390,4 +393,113 @@ test('line stale capture before preview cannot allocate raster or reach commit',
   assert.equal(f.requests.length, 0);
   assert.equal(f.stats().commits, 0);
   assert.equal(f.stats().painted, 0);
+});
+
+test('horizontal v3 owns direction profile and one painter commit while v1 and v2 refuse', async () => {
+  for (const version of [1, 2])
+    assert.throws(
+      () => fixture({ profile: HORIZONTAL, version }).api.captureHwp5ChartData(0, 9),
+      /InvalidChartLiteralLease/,
+    );
+  const f = fixture({ profile: HORIZONTAL, version: 3 });
+  await withCanvas(f, async () => {
+    const capture = f.api.captureHwp5ChartData(0, 9);
+    const result = await f.api.editHwp5ChartData(capture, edits);
+    assert.equal(result.application, 'applied');
+    assert.equal(f.stats().finalBody.witness.profile, HORIZONTAL);
+    assert.equal(f.stats().commits, 1);
+    assert.equal(f.stats().painted, 1);
+    assert.equal(f.stats().encoded, 1);
+    assert.equal(f.canvases[0].width, 0);
+    await assert.rejects(f.api.editHwp5ChartData(capture, edits), /Stale/);
+  });
+});
+for (const mutateData of [
+  (d) => {
+    d.plot_settings[0].direction.value = 'col';
+  },
+  (d) => {
+    d.plot_settings[0].direction = null;
+  },
+  (d) => {
+    d.plot_settings[0].grouping.value = 'stacked';
+  },
+  (d) => {
+    d.plots[0].kind = 'bar3DChart';
+  },
+  (d) => {
+    d.plots.push(structuredClone(d.plots[0]));
+  },
+])
+  test(
+    'horizontal profile refuses noncanonical direction or plot before canvas ' + mutateData,
+    async () => {
+      const f = fixture({ profile: HORIZONTAL, version: 3, mutateData });
+      await withCanvas(f, async () => {
+        await assert.rejects(f.api.editHwp5ChartData(f.api.captureHwp5ChartData(0, 9), edits));
+        assert.equal(f.stats().commits, 0);
+        assert.equal(f.stats().painted, 0);
+      });
+    },
+  );
+for (const previewProfile of [BAR, LINE, null])
+  test('horizontal preview refuses profile substitution ' + previewProfile, async () => {
+    const f = fixture({ profile: HORIZONTAL, version: 3, previewProfile });
+    await withCanvas(f, async () => {
+      await assert.rejects(
+        f.api.editHwp5ChartData(f.api.captureHwp5ChartData(0, 9), edits),
+        /InvalidChartLiteralPreview/,
+      );
+      assert.equal(f.stats().commits, 0);
+      assert.equal(f.stats().painted, 0);
+    });
+  });
+for (const staleAt of ['blob', 'array'])
+  test('horizontal stale ' + staleAt + ' cannot commit', async () => {
+    const f = fixture({ profile: HORIZONTAL, version: 3, staleAt });
+    await withCanvas(f, async () => {
+      await assert.rejects(
+        f.api.editHwp5ChartData(f.api.captureHwp5ChartData(0, 9), edits),
+        /Stale/,
+      );
+      assert.equal(f.stats().commits, 0);
+      assert.equal(f.canvases[0].width, 0);
+    });
+  });
+test('horizontal no-op retains profile without painter; v3 keeps column and line', async () => {
+  const f = fixture({ profile: HORIZONTAL, version: 3, changed: false, code: 2 });
+  const result = await f.api.editHwp5ChartData(f.api.captureHwp5ChartData(0, 9), edits);
+  assert.equal(result.nativeCode, 2);
+  assert.equal(f.stats().painted, 0);
+  assert.equal(f.stats().finalBody.rendered, null);
+  for (const profile of [BAR, LINE]) {
+    const old = fixture({ profile, version: 3 });
+    await withCanvas(old, async () => {
+      await old.api.editHwp5ChartData(old.api.captureHwp5ChartData(0, 9), edits);
+      assert.equal(old.stats().commits, 1);
+    });
+  }
+});
+
+test('horizontal bar layout uses independent value width and category height', () => {
+  const d = model('barChart', [
+    [30, -10, 0],
+    [20, -20, 10],
+  ]);
+  d.plot_settings[0].grouping = { node: 5, value: 'clustered' };
+  d.plot_settings[0].direction = { node: 4, value: 'col' };
+  const column = chartBarLayout(d, d.plots[0].node);
+  d.plot_settings[0].direction.value = 'bar';
+  const horizontal = chartBarLayout(d, d.plots[0].node);
+  assert.equal(horizontal.state, 'ready');
+  assert.equal(horizontal.direction, 'bar');
+  assert.equal(horizontal.bars.length, 6);
+  for (let i = 0; i < horizontal.bars.length; ++i) {
+    const h = horizontal.bars[i].rectangle,
+      c = column.bars[i].rectangle;
+    assert.ok(Math.abs(h.x - (1 - c.y - c.height)) < 1e-12);
+    assert.ok(Math.abs(h.y - (1 - c.x - c.width)) < 1e-12);
+    assert.equal(h.width, c.height);
+    assert.equal(h.height, c.width);
+  }
 });

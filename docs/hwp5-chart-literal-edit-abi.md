@@ -2,6 +2,10 @@
 
 이 문서는 frozen Native5d0a88f9에서 시작한 optional lease와 ABI의 wire 계약을 소유한다. 현재 제품 지원 범위, 입력 한도와 exact176a의 실제 SDK/Worker/GUI 검증 결과는 [차트 데이터 편집 계약](hwp5-chart-literal-edit.md)이 소유한다. 아래 초기 probe 준비 기록을 이후 실제 실행 결과와 합쳐 세지 않는다.
 
+## 가로 리터럴 소스 후속
+
+version3에 `spec24_clustered_horizontal_bar_literals_v1`을 추가한다. version1은 기존 세로, version2는 기존 세로와 꺾은선, version3은 세 프로필을 명시적으로 허용한다. 미지 버전과 프로필은 거부하며 함수를 추가하거나 wire schemaVersion1을 바꾸지 않는다. 기존 version1/2 SDK를 version3 엔진과 조합해 활성화한다고 주장하지 않는다. 아래 version2 설명은 기존 실행 이력이다. 신규 Native/WASM/SDK/GUI 검증 완료를 뜻하지 않는다.
+
 ## 선택 export와 원본 SSOT
 
 ABI 버전6과 기존 required/HWPX/차트 read/create export 및 signature는 유지한다. 원본 `js/abi-schema.mjs`에 선택 `HWP5_CHART_LITERAL_EDIT_ABI`와 파생 FUNCTION 목록을 추가하고 `tools/generate-abi.mjs`에서 Zig schema를 생성한다. 초기 ABI 패킷은 공개 SDK, Core, Worker와 UI 진입점을 바꾸지 않았으며 이후 제품 연결은 위 계약에 기록한다. export 존재만으로 qualification 또는 UI capability를 활성화하지 않는다.

@@ -9,6 +9,7 @@ import {
 
 import {
   HWP5_CHART_LITERAL_BAR_PROFILE,
+  HWP5_CHART_LITERAL_HORIZONTAL_BAR_PROFILE,
   hwp5ChartLiteralKind,
 } from '../../js/hwp5-chart-literal-profiles.mjs';
 
@@ -71,6 +72,18 @@ async function renderPreview(
       data.point_settings.length !== 0 ||
       data.rich_text.length !== 0 ||
       data.series_settings.some((s) => s.marker !== null || s.smooth !== null)
+    )
+      fail('UnsupportedChartLiteralEditProfile');
+  }
+  if (scope === 'hwp5-chart-literal-edit-preview' && expectedKind === 'barChart') {
+    const settings = data.plot_settings[0];
+    if (
+      settings?.direction?.value !== (horizontalBar ? 'bar' : 'col') ||
+      settings.grouping?.value !== 'clustered' ||
+      settings.spatial !== null ||
+      data.view_3d !== null ||
+      data.point_settings.length !== 0 ||
+      data.rich_text.length !== 0
     )
       fail('UnsupportedChartLiteralEditProfile');
   }
@@ -169,5 +182,6 @@ export function renderHwp5ChartLiteralEditPreview(
     'hwp5-chart-literal-edit-preview',
     'hwp5-chart-literal-edit-preview-payload',
     hwp5ChartLiteralKind(profile),
+    profile === HWP5_CHART_LITERAL_HORIZONTAL_BAR_PROFILE,
   );
 }

@@ -41,7 +41,17 @@ fn index(a: std.mem.Allocator, values: *const common.Values) !Index {
     const series = values.plots.plots[0].series_nodes;
     if (series.len == 0 or series.len > chart.max_series or values.series_text.items.len != series.len) return error.UnsupportedChartLiteralEditProfile;
     const profile: @import("literal_edit_profile.zig").Profile = switch (values.plots.plots[0].kind) {
-        .barChart => .spec24_clustered_column_literals_v1,
+        .barChart => blk: {
+            if (values.plot_settings.len != 1) return error.UnsupportedChartLiteralEditProfile;
+            const settings = values.plot_settings[0];
+            const direction = settings.direction orelse return error.UnsupportedChartLiteralEditProfile;
+            const grouping = settings.grouping orelse return error.UnsupportedChartLiteralEditProfile;
+            if (grouping.value != .clustered) return error.UnsupportedChartLiteralEditProfile;
+            break :blk switch (direction.value orelse return error.UnsupportedChartLiteralEditProfile) {
+                .col => .spec24_clustered_column_literals_v1,
+                .bar => .spec24_clustered_horizontal_bar_literals_v1,
+            };
+        },
         .lineChart => .spec24_standard_line_literals_v1,
         else => return error.UnsupportedChartLiteralEditProfile,
     };

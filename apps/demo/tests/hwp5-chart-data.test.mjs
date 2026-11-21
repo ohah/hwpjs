@@ -8,7 +8,7 @@ const styles = installFormattingTestStyles();
 const { createHwp5ChartDataTool } = await import('../src/hwp5-chart-data-tool.ts');
 const { createHwp5ChartPropertiesTool } = await import('../src/hwp5-chart-properties-tool.ts');
 styles.deregister();
-function fixture(qualified = true) {
+function fixture(qualified = true, suppliedLiterals = null) {
   const target = { section: 0, controlNode: 17 };
   const owner = {
     control_node: 17,
@@ -80,7 +80,10 @@ function fixture(qualified = true) {
     listeners = new Set();
   let wait = null,
     beforeReply = () => {};
-  const literals = { categories: ['A', 'B'], series: [{ name: 'S', values: ['20', '40'] }] };
+  const literals = suppliedLiterals ?? {
+    categories: ['A', 'B'],
+    series: [{ name: 'S', values: ['20', '40'] }],
+  };
   const editor = {
     getEditorState: () => state,
     registerStateListener(fn) {
@@ -295,4 +298,39 @@ test('H5 read-only properties exposes data action only after canonical admission
     }
     tool.dispose();
   }
+});
+
+test('horizontal catalog-shaped data reuses grid and routes one exact value command', async () => {
+  // Logical data only. Native canonical admission and real Worker paint are separate gates.
+  const f = fixture(true, {
+    categories: ['North', 'East', 'South'],
+    series: [
+      { name: 'Blue', values: ['30', '-10', '0'] },
+      { name: 'Orange', values: ['20', '-20', '10'] },
+    ],
+  });
+  const dom = domFixture();
+  const tool = createHwp5ChartDataTool({
+    root: dom.root,
+    editor: f.editor,
+    onStatus() {},
+    onClose() {},
+  });
+  await tool.open(f.target);
+  const nodes = all(dom.root),
+    input = nodes.find((n) => n.tagName === 'INPUT'),
+    apply = nodes.find((n) => n.textContent === '변경 일괄 적용');
+  assert.equal(input.value, '30');
+  input.value = '77';
+  fire(input, 'input');
+  fire(apply, 'click');
+  await new Promise((resolve) => setImmediate(resolve));
+  const writes = f.calls.filter((x) => x[0] === 'write');
+  assert.equal(writes.length, 1);
+  assert.deepEqual(writes[0][1].edits, [
+    { value: { series: 0, category: 0, expected: '30', value: '77' } },
+  ]);
+  assert.equal('profile' in writes[0][1], false);
+  assert.equal('rendered' in writes[0][1], false);
+  tool.dispose();
 });

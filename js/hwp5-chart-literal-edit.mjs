@@ -2,7 +2,10 @@ import { HWP5_CHART_LITERAL_EDIT_ABI } from './abi-schema.mjs';
 import { inlineInsertRecord } from './hwpx-inline-object-record.mjs';
 import { applyNativeEdit } from './native-edit-outcome.mjs';
 import { renderHwp5ChartLiteralEditPreview } from '../web/preview/hwp5-chart-create-preview.mjs';
-import { supportsHwp5ChartLiteralProfile } from './hwp5-chart-literal-profiles.mjs';
+import {
+  supportsHwp5ChartLiteralProfile,
+  HWP5_CHART_LITERAL_BAR_PROFILE,
+} from './hwp5-chart-literal-profiles.mjs';
 const encoder = new TextEncoder();
 const maxWire = 16 * 1024 * 1024;
 const jsonBytes = (value) => {
@@ -64,7 +67,11 @@ export function createHwp5ChartLiteralEditApi({ wasm, memory, check, output, u32
       Object.entries(HWP5_CHART_LITERAL_EDIT_ABI).every(
         ([name, sig]) =>
           typeof wasm[name] === 'function' && wasm[name].length === sig.params.length,
-      ) && [1, 2].includes(wasm.hwp5_edit_chart_literal_edit_profile_version())
+      ) &&
+      supportsHwp5ChartLiteralProfile(
+        wasm.hwp5_edit_chart_literal_edit_profile_version(),
+        HWP5_CHART_LITERAL_BAR_PROFILE,
+      )
     );
   };
   const query = (section, controlNode) => {

@@ -2,6 +2,14 @@
 
 이 문서는 HWP5 차트 값과 범주 편집의 지원 범위, 원본 소유권, 저장과 검증 경계를 소유한다. exact `176a14bfbb893fe036d89e904feb0417edf856a5`의 공식 Core/Vanilla/public/gallery와 WASM `9f383a8c3c16d85570e4a994a92e5468d74238f7150b6917f897f349713bbe45`를 사용한 격리 SDK와 실제 브라우저 검증을 아래에 기록한다. Root 반영, npm 게시 또는 공개 배포 완료를 뜻하지 않는다. 기존 HWPX 데이터 편집과 HWP5 읽기 및 생성은 각각의 계약을 유지한다.
 
+## 가로 묶은 막대 편집 소스 후속
+
+`spec24_clustered_horizontal_bar_literals_v1`은 own 가로 생성기의 정확한 2D `barChart` / `bar` / `clustered` 직렬화만 대상으로 한다. 리터럴 capability version3은 기존 세로 막대와 꺾은선도 유지하며, version1/2 엔진에서는 가로 리터럴을 거부한다. optional ABI의 함수 및 wire schemaVersion1은 유지한다. Native는 plot 방향으로 프로필을 구분한 뒤 편집 전후 canonical 전체 바이트를 재검증한다. JS는 lease/preview 프로필과 가로 방향을 확인하고 기존 private Worker painter, COW, 단일 History, 저장 거부 정책을 재사용한다. 사용자나 화면 데이터가 프로필 또는 PNG를 지정할 수 없다.
+
+공통 series/category grid에는 방향별 분기를 추가하지 않는다. 값과 범주 이름만 바꾸고 계열 이름·개수와 범주 개수, 스타일·종류·방향·크기는 바꾸지 않는다. 일반 읽기나 painted hit는 편집 권한이 아니다. stacked/percentStacked/3D/혼합 plot, 누락 방향, 외부 workbook, unknown 스타일과 stale 원본은 계속 거부한다.
+
+이 후속의 Native 시험은 소스 준비이며 실행 완료가 아니다. 자체 생성 입력과 공개 134번 own 예제의 값·범주, 단일 History/undo/redo, COW/재열기, 실패 원자성과 할당 실패 검사를 별도로 준비한다. 실제 SDK, Worker PNG, 독립 저장 비교와 GUI의 가로 편집 성공은 후속 실행 증거가 필요하다. 기존 아래 세로·꺾은선 증거와 합산하지 않는다.
+
 ## 현재 제품 연결
 
 대상은 Native가 현재 문서에서 소유권과 원문을 다시 검증한 자체 생성기 템플릿과 일치하는 spec24 표준 2D 세로 묶은 막대 또는 표준 꺾은선 차트다. 읽어서 표시할 수 있는 모든 HWP5 차트가 편집 가능한 것은 아니다. 현재 일반 본문 root의 소유자, 원본 XML, 자원과 보호 조건을 모두 통과해야 한다. 값과 기존 범주 이름을 수정하며 계열 이름, 계열 수와 범주 수는 변경하지 않는다. 임의 스타일, 다른 차트 종류, 혼합 차트, 크기나 위치 변경과 완전 재조판은 이 기능에 포함되지 않는다.
