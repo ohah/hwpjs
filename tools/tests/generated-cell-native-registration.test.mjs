@@ -11,12 +11,19 @@ function registration(source) {
   assert(begin >= 0 && end > begin, 'MissingEditorExtensionLoop');
   const loop = source.slice(begin, end);
   const entries = [
-    ...loop.matchAll(/\.path = "([^"]+)", \.filters = &\.\{"([^"]+)"\}, \.step = "([^"]+)"/g),
-  ].map(([, path, filter, step]) => ({ path, filter, step }));
+    ...loop.matchAll(/\.path = "([^"]+)",\s*\.filters = &\.\{([^}]*)\},\s*\.step = "([^"]+)"/g),
+  ].map(([, path, list, step]) => ({
+    path,
+    filters: [...list.matchAll(/"([^"]+)"/g)].map(([, filter]) => filter),
+    step,
+  }));
   const edge = (target, dependency) =>
     loop.includes(target + '.dependOn(&' + dependency + '.step);');
-  for (const key of ['path', 'step'])
-    assert.equal(new Set(entries.map((row) => row[key])).size, entries.length);
+  assert.equal(new Set(entries.map((row) => row.step)).size, entries.length);
+  const sourceFilters = entries.flatMap(({ path, filters }) =>
+    filters.map((filter) => JSON.stringify([path, filter])),
+  );
+  assert.equal(new Set(sourceFilters).size, sourceFilters.length);
   assert.match(loop, /\.use_llvm = true/);
   assert.match(loop, /\.filters = entry\.filters/);
   assert.match(loop, /\.root_source_file = b\.path\(entry\.path\)/);
@@ -35,20 +42,20 @@ test('generated rich eight have one filtered LLVM step in direct and aggregate t
     [
       {
         path: 'src/generated_cell_rich_transfer_probe.zig',
-        filter: 'generated cell rich',
+        filters: ['generated cell rich'],
         step: 'test-generated-cell-rich',
       },
     ],
   );
 });
 
-test('geometry keeps its existing path, filter and regular step', () => {
+test('geometry keeps its existing filter and also registers HWP5 outer margins', () => {
   assert.deepEqual(
     registration(build).filter((row) => row.path === 'src/object_geometry_probe.zig'),
     [
       {
         path: 'src/object_geometry_probe.zig',
-        filter: 'object geometry',
+        filters: ['object geometry', 'H5 outer margins', 'H5 margins top bottom'],
         step: 'test-object-geometry',
       },
     ],
