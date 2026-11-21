@@ -20,6 +20,7 @@ test('actual HWP5 cell-size capabilities retain plain-owner admission and reject
     const state = editor.getEditorState();
     assert.equal(state.content.sourceTableCellWidthAvailable, true);
     assert.equal(state.content.sourceTableCellHeightAvailable, true);
+    assert.equal(state.content.originalCellVerticalAlignmentBatchAvailable, true);
     assert.equal(isPlainOwnerBaseline(state.content, 0, 15), true);
     const probe = (extra) =>
       isPlainOwnerBaseline(ownObservation({ ...state.content, ...extra })(), 0, 15);
@@ -44,6 +45,7 @@ test('actual HWP5 cell-size capabilities retain plain-owner admission and reject
       'equationInsertionAvailable',
       'chartCreationAvailable',
       'strictMeasuredSaveAvailable',
+      'originalCellVerticalAlignmentBatchAvailable',
     ]) {
       for (const value of [true, false]) assert.equal(probe({ [key]: value }), true);
       for (const value of [undefined, null, 0, 1, '', 'true', {}, []])

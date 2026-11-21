@@ -16,6 +16,7 @@ const PLAIN_BOOLEAN_CAPABILITY_KEYS = [
   'chartCreationAvailable',
   'hwp5ChartLiteralEditAvailable',
   'strictMeasuredSaveAvailable',
+  'originalCellVerticalAlignmentBatchAvailable',
 ] as const;
 const ROOT_KEYS = new Set([
   ...PLAIN_BOOLEAN_CAPABILITY_KEYS,
