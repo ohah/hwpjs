@@ -333,3 +333,24 @@ export const PICTURE_ANCHORED_RESIZE_ABI = Object.freeze(
     ]),
   ),
 );
+
+// Original single source-cell insets; independently optional on ABI6.
+export const ORIGINAL_CELL_INSETS_ABI = Object.freeze(
+  Object.fromEntries(
+    ['hwp5_edit', 'hwpx_edit'].flatMap((prefix) => [
+      [`${prefix}_original_cell_insets_version`, { params: [], results: ['i32'] }],
+      [`${prefix}_original_cell_insets`, { params: ['i32', 'i32'], results: ['i32'] }],
+      [`${prefix}_set_original_cell_insets`, { params: ['i32', 'i32'], results: ['i32'] }],
+    ]),
+  ),
+);
+
+// Optional existing PAGE restart edit, schema1; no insertion or old ABI change.
+export const PAGE_RESTART_EDIT_ABI = Object.freeze(
+  Object.fromEntries(
+    ['hwp5_edit', 'hwpx_edit'].flatMap((prefix) => [
+      [`${prefix}_page_restart_capabilities`, { params: [], results: ['i32'] }],
+      [`${prefix}_write_page_restart`, { params: ['i32', 'i32'], results: ['i32'] }],
+    ]),
+  ),
+);

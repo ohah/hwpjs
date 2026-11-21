@@ -15,6 +15,7 @@ const alignmentLabel = (key: 'DISTRIBUTE' | 'DISTRIBUTE_SPACE'): string => {
 };
 export const DEMO_COMMAND_REGISTRY = Object.freeze({
   'page-settings': entry('편집 용지', '쪽'),
+  'edit-page-restart': entry('기존 새 쪽 번호 편집', '쪽'),
   'new-document': entry('새 문서', '문서', false, false),
   save: entry('저장', '문서'),
   'print-preview': entry('인쇄 미리보기', '문서'),

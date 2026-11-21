@@ -247,6 +247,14 @@ export type {
   EditParagraphBulletDefinitionPayload,
 } from './commands/paragraph-bullet-definition.ts';
 
+export { EDIT_PAGE_RESTART_COMMAND } from './commands/commands.ts';
+export type {
+  PageRestartTarget,
+  PageRestartRead,
+  PageRestartEntry,
+  EditPageRestartPayload,
+} from './commands/page-restart.ts';
+
 export { EDIT_PAGE_SETTINGS_COMMAND } from './commands/commands.ts';
 export type {
   PageSettingsValues,
@@ -402,6 +410,14 @@ export type {
   SetHwp5VerticalMarginsPayload,
 } from './commands/hwp5-vertical-margins-dto.ts';
 
+export { SET_ORIGINAL_CELL_INSETS_COMMAND } from './commands/original-cell-insets.ts';
+export type {
+  OriginalCellInsetsTarget,
+  OriginalCellInsetsRead,
+  SetOriginalCellInsetsPayload,
+  CellInsetsPatch,
+  CellInsetsValue,
+} from './commands/original-cell-insets.ts';
 export { SET_ORIGINAL_CELL_VERTICAL_ALIGNMENT_COMMAND } from './commands/original-cell-vertical-alignment.ts';
 export type {
   OriginalCellSelectionTarget,

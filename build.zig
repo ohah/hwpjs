@@ -151,6 +151,7 @@ pub fn build(b: *std.Build) void {
     editor_extensions_step.dependOn(equation_display_step);
     editor_extensions_step.dependOn(control_text_read_step);
     for ([_]struct { path: []const u8, filters: []const []const u8, step: []const u8, description: []const u8 }{
+        .{ .path = "src/original_cell_insets_probe.zig", .filters = &.{ "original cell insets shared", "original cell insets H5", "original cell insets HX" }, .step = "test-original-cell-insets", .description = "Verify original H5/HX single-cell source insets, inherited axes and managed history" },
         .{ .path = "src/object_geometry_probe.zig", .filters = &.{ "object geometry", "HWPX TOP margins", "H5 outer margins", "H5 margins top bottom", "H5 observed vertical" }, .step = "test-object-geometry", .description = "Verify source-owned object geometry, history and allocation failure rollback" },
         .{ .path = "src/generated_cell_rich_transfer_probe.zig", .filters = &.{"generated cell rich"}, .step = "test-generated-cell-rich", .description = "Verify canonical generated-cell rich typing, serializer transfer and owned history" },
         .{ .path = "src/caret_rich_native_probe.zig", .filters = &.{"caret rich"}, .step = "test-caret-rich", .description = "Verify HWP5 and HWPX source body and cell rich typing" },
@@ -269,6 +270,17 @@ pub fn build(b: *std.Build) void {
         core_test_step.dependOn(&run_extension_tests.step);
     }
 
+    // Allocation sweeps are explicit-only and never a dependency of the regular root.
+    const insets_oom_tests = b.addTest(.{
+        .use_llvm = true,
+        .filters = &.{"managed cell insets"},
+        .root_module = b.createModule(.{ .root_source_file = b.path("src/original_cell_insets_probe.zig"), .target = target, .optimize = optimize }),
+    });
+    const run_insets_oom = b.addRunArtifact(insets_oom_tests);
+    run_insets_oom.step.dependOn(&abi_check.step);
+    run_insets_oom.step.dependOn(&icc_registry_check.step);
+    b.step("test-original-cell-insets-oom", "Separately verify original cell insets allocation failure ownership and history rollback").dependOn(&run_insets_oom.step);
+
     const chart_read_source_tests = b.addSystemCommand(&.{
         "node",                                            "--test",                                         "--test-concurrency=1",
         "tests/hwp5/chart-display-api.test.mjs",           "tests/hwp5/chart-display-owner-limits.test.mjs", "tests/hwp5/chart-canvas-connection.test.mjs",
@@ -384,6 +396,30 @@ pub fn build(b: *std.Build) void {
     run_hx_source_crop_tests.has_side_effects = true;
     const hx_source_crop_step = b.step("test-hwpx-image-source-crop", "Verify HWPX inserted raster source crop independent from display and saved XML");
     hx_source_crop_step.dependOn(&run_hx_source_crop_tests.step);
+
+    const page_restart_api_tests = b.addTest(.{ .use_llvm = true, .filters = &.{ "PAGE restart inventory", "PAGE restart wire" }, .root_module = b.createModule(.{
+        .root_source_file = b.path("src/page_restart_api_probe.zig"),
+        .target = target,
+        .optimize = .ReleaseSafe,
+    }) });
+    page_restart_api_tests.step.dependOn(&abi_check.step);
+    page_restart_api_tests.step.dependOn(&icc_registry_check.step);
+    const run_page_restart_api_tests = b.addRunArtifact(page_restart_api_tests);
+    run_page_restart_api_tests.has_side_effects = true;
+    const page_restart_api_step = b.step("test-page-restart-api-wire", "Verify linear existing restart inventories and private lease wire ownership");
+    page_restart_api_step.dependOn(&run_page_restart_api_tests.step);
+
+    const page_restart_tests = b.addTest(.{ .use_llvm = true, .filters = &.{"PAGE restart"}, .root_module = b.createModule(.{
+        .root_source_file = b.path("src/page_restart_edit_probe.zig"),
+        .target = target,
+        .optimize = .ReleaseSafe,
+    }) });
+    page_restart_tests.step.dependOn(&abi_check.step);
+    page_restart_tests.step.dependOn(&icc_registry_check.step);
+    const run_page_restart_tests = b.addRunArtifact(page_restart_tests);
+    run_page_restart_tests.has_side_effects = true;
+    const page_restart_step = b.step("test-existing-page-restart-edit", "Verify existing PAGE restart source and managed History2 save ownership");
+    page_restart_step.dependOn(&run_page_restart_tests.step);
 
     const source_crop_tests = b.addTest(.{ .use_llvm = true, .filters = &.{ "image source crop", "image insertion H5", "live image", "H5 chart integrated Native" }, .root_module = b.createModule(.{
         .root_source_file = b.path("src/hwp5_image_source_crop_probe.zig"),

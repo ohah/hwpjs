@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@hwpjs/core": ["../../packages/core/src/index.ts"],
+      "@hwpjs/core/*": ["../../packages/core/src/*"]
+    }
+  },
+  "files": [
+    "../../apps/demo/src/assets.d.ts",
+    "../../apps/demo/src/page-restart-tool.ts",
+    "../../packages/core/tests/types/page-restart-public-types-consumer.ts"
+  ],
+  "include": []
+}

@@ -47,6 +47,7 @@ export type DemoCommand =
   | 'character-properties'
   | 'paragraph-properties'
   | 'page-settings'
+  | 'edit-page-restart'
   | 'paragraph-bullets'
   | 'object-properties'
   | 'select-behind-text-object'

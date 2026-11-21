@@ -1579,3 +1579,13 @@ test {
 test {
     _ = @import("hwp5_chart_pie_create_probe.zig");
 }
+
+// Existing PAGE restart edits: register once in the regular Native gate.
+test "register PAGE restart regular focused probe" {
+    _ = @import("page_restart_edit_probe.zig");
+}
+
+// Source inventory and optional lease wire use a separate focused gate.
+test "register PAGE restart API wire regular probe" {
+    _ = @import("page_restart_api_probe.zig");
+}

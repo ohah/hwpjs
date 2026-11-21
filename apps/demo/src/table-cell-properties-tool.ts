@@ -1,4 +1,4 @@
-import type { HeadlessEditor, OriginalCellAlignment } from '@hwpjs/core';
+import type { CellInsetsPatch, HeadlessEditor, OriginalCellAlignment } from '@hwpjs/core';
 import {
   createTableCellPropertiesPort,
   tableCellReason,
@@ -34,6 +34,9 @@ export function createTableCellPropertiesController(options: {
     Awaited<ReturnType<TableCellPropertiesPort['readAlignmentBlock']>>,
     { state: 'available' }
   >['capture'];
+  type InsetsRead = Awaited<ReturnType<TableCellPropertiesPort['captureInsets']>>;
+  type InsetsCapture = Extract<InsetsRead, { state: 'available' }>['capture'];
+  let insetsCaptured: InsetsCapture | undefined;
   let view: TableCellPropertiesView | undefined,
     captured: TableCellCapture | undefined,
     verticalCaptured: VerticalCapture | BlockCapture | undefined;
@@ -48,6 +51,7 @@ export function createTableCellPropertiesController(options: {
     view = undefined;
     captured = undefined;
     verticalCaptured = undefined;
+    insetsCaptured = undefined;
     opening = false;
     try {
       old?.destroy();
@@ -64,8 +68,16 @@ export function createTableCellPropertiesController(options: {
         options.onClose();
     }
   }
-  async function submit(draft: TableCellDraft | { verticalAlignment: OriginalCellAlignment }) {
+  async function submit(
+    draft:
+      | TableCellDraft
+      | { verticalAlignment: OriginalCellAlignment }
+      | { insets: CellInsetsPatch },
+  ) {
     if (disposed || pending || !view || !captured) return;
+    const insets = 'insets' in draft;
+    const insetLease = insetsCaptured;
+    if (insets && !insetLease) return;
     const alignment = 'verticalAlignment' in draft;
     const verticalLease = verticalCaptured;
     if (alignment && !verticalLease) return;
@@ -76,9 +88,11 @@ export function createTableCellPropertiesController(options: {
     currentView.setBusy(true);
     options.onPresentationChange?.();
     try {
-      const result = alignment
-        ? await options.port.applyVerticalAlignment(verticalLease!, draft.verticalAlignment)
-        : await options.port.apply(lease, draft);
+      const result = insets
+        ? await options.port.applyInsets(insetLease!, draft.insets)
+        : alignment
+          ? await options.port.applyVerticalAlignment(verticalLease!, draft.verticalAlignment)
+          : await options.port.apply(lease, draft);
       if (disposed || ticket !== epoch || !sameDocument(lease, options.port.capture())) return;
       const status = 'status' in result && typeof result.status === 'string' ? result.status : '';
       if (status.startsWith('committed')) {
@@ -89,9 +103,13 @@ export function createTableCellPropertiesController(options: {
         const completed = epoch;
         options.onStatus(
           status === 'committed-with-snapshot'
-            ? (alignment ? '셀 세로 정렬을 적용했습니다.' : '셀 크기를 적용했습니다.') +
+            ? (insets
+                ? '셀 안쪽 여백을 적용했습니다.'
+                : alignment
+                  ? '셀 세로 정렬을 적용했습니다.'
+                  : '셀 크기를 적용했습니다.') +
                 (restored || block ? '' : ' 커서 위치를 다시 선택해주세요.')
-            : (alignment ? '정렬은' : '크기는') +
+            : (insets ? '안쪽 여백은' : alignment ? '정렬은' : '크기는') +
                 ' 반영됐지만 표시 확인이 필요합니다. 다시 적용하지 마세요.',
         );
         if (
@@ -104,10 +122,10 @@ export function createTableCellPropertiesController(options: {
         )
           options.onClose();
       } else if (status === 'known-no-op') close(true);
-      else if (alignment) {
+      else if (alignment || insets) {
         // The retained Native alignment lease is single-use even on refusal.
         close(false);
-        options.onStatus('세로 정렬을 적용하지 못했습니다. 셀을 확인하고 속성을 다시 열어주세요.');
+        options.onStatus('셀 변경을 적용하지 못했습니다. 셀을 확인하고 속성을 다시 열어주세요.');
       } else
         currentView.setStatus(
           'error' in result && typeof result.error === 'string'
@@ -202,7 +220,7 @@ export function createTableCellPropertiesController(options: {
       }
       captured = lease;
       const ticket = ++epoch;
-      const mount = (vertical?: VerticalCapture) => {
+      const mount = (vertical?: VerticalCapture, insets?: InsetsRead) => {
         if (disposed || ticket !== epoch || !options.port.isCurrent(lease)) {
           if (ticket === epoch) close(false);
           return;
@@ -218,13 +236,38 @@ export function createTableCellPropertiesController(options: {
           (vertical.value === null || ['TOP', 'CENTER', 'BOTTOM'].includes(vertical.value))
             ? vertical
             : undefined;
+        insetsCaptured = insets?.state === 'available' ? insets.capture : undefined;
         let bound = false;
+        let boundElement: HTMLDialogElement | undefined;
+        const bindOnce = (element: HTMLDialogElement, bind: () => boolean) => {
+          if (boundElement) return boundElement === element && bound;
+          bound = bind();
+          if (bound) boundElement = element;
+          return bound;
+        };
         view = (options.createView ?? createTableCellPropertiesView)(options.root, lease, {
+          insets: {
+            observation:
+              insets?.state === 'available'
+                ? insets.capture.observation
+                : insets?.state === 'readonly'
+                  ? insets.observation
+                  : undefined,
+            editable: !!insetsCaptured,
+            bindDialog: (element) =>
+              !!insetsCaptured &&
+              bindOnce(element, () => options.port.bindInsetsDialog(insetsCaptured!, element)),
+            apply: (patch) => {
+              if (bound && insetsCaptured) void submit({ insets: patch });
+            },
+          },
           verticalAlignment: verticalCaptured
             ? {
                 value: verticalCaptured.value,
                 bindDialog: (element) => {
-                  bound = options.port.bindVerticalAlignmentDialog(verticalCaptured!, element);
+                  bound = bindOnce(element, () =>
+                    options.port.bindVerticalAlignmentDialog(verticalCaptured!, element),
+                  );
                   return bound;
                 },
                 apply: (value) => {
@@ -250,30 +293,27 @@ export function createTableCellPropertiesController(options: {
         });
         opening = false;
       };
-      // Capability is discovery only; the independent Native capture and bound
-      // modal supply authority. Keep unsupported existing size dialogs synchronous.
-      const capabilities = lease.state.capabilities;
-      if (
-        capabilities !== null &&
-        typeof capabilities === 'object' &&
-        'originalCellVerticalAlignmentAvailable' in capabilities &&
-        capabilities.originalCellVerticalAlignmentAvailable === true
-      ) {
+      // One modal owner capture, independent optional feature reads; no capability flag grants authority.
+      const propertiesSelection = options.port.capturePropertiesSelection?.();
+      const capabilities = lease.state.capabilities as any;
+      if (propertiesSelection) {
         opening = true;
-        void options.port
-          .captureVerticalAlignment()
-          .then(
-            (read) => {
-              mount(read.state === 'available' ? read.capture : undefined);
-            },
-            () => mount(),
-          )
+        const vertical =
+          capabilities?.originalCellVerticalAlignmentAvailable === true
+            ? options.port.captureVerticalAlignment(propertiesSelection).catch(() => undefined)
+            : Promise.resolve(undefined);
+        const insets = options.port.captureInsets(propertiesSelection).catch(() => undefined);
+        void Promise.all([vertical, insets])
+          .then(([v, i]) => mount(v?.state === 'available' ? v.capture : undefined, i))
           .catch(() => {
-            if (!disposed && ticket === epoch) {
-              close(false);
-              options.onStatus('셀 속성 창을 열지 못했습니다. 현재 셀을 다시 선택해주세요.');
-            }
+            if (!disposed && ticket === epoch) close(false);
           });
+      } else if (capabilities?.originalCellVerticalAlignmentAvailable === true) {
+        opening = true;
+        void options.port.captureVerticalAlignment().then(
+          (v) => mount(v.state === 'available' ? v.capture : undefined),
+          () => mount(),
+        );
       } else mount();
     },
     close: () => close(true),

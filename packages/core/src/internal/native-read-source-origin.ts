@@ -1,4 +1,7 @@
-import { surfaceOperation } from '../commands/surface-protocol.ts';
+import {
+  isNativeReadSourceRead,
+  isNativeReadSourceMutation,
+} from './native-read-source-operation.ts';
 import { sameRequestContext } from './native-runtime-origin.ts';
 import { validDocumentTextReadStamp } from '../../../../js/document-text-read-stamp.mjs';
 import type { RuntimeReply, RuntimeRequestContext, EditorRuntime } from '../contracts.ts';
@@ -101,15 +104,11 @@ export function createNativeReadSourceLifecycle(
   };
   return {
     begin(kind: string, context?: RuntimeRequestContext): object {
-      // Geometry is a typed query and stays outside the generic surface protocol.
-      if (
-        surfaceOperation(kind) !== 'read' &&
-        kind !== 'save' &&
-        kind !== 'object-geometry-query'
-      ) {
+      // Typed scalar reads stay outside the generic surface protocol.
+      if (!isNativeReadSourceRead(kind) && kind !== 'save') {
         const previous = scope && last?.authority() ? last : undefined;
         revoke();
-        if (surfaceOperation(kind) === 'mutation') {
+        if (isNativeReadSourceMutation(kind)) {
           retired = previous;
           retiredRequest = context ? { ...context } : undefined;
         }
@@ -126,7 +125,7 @@ export function createNativeReadSourceLifecycle(
       if (ticket !== fence) return;
       if (reply.content !== undefined) scope = undefined;
       if (!trusted || !valid()) return;
-      if (surfaceOperation(reply.kind) === 'mutation') {
+      if (isNativeReadSourceMutation(reply.kind)) {
         const unchanged =
           reply.meta?.application === 'unapplied' ||
           (!reply.error && (reply.meta?.changed === false || reply.changed === false));

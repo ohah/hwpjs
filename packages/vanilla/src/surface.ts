@@ -2636,7 +2636,7 @@ export function createCanvasSurface({
         return false;
       };
       if (!current()) return null;
-      const target = lease?.captureOriginalCellVerticalAlignment?.(selector, current);
+      const target = lease?.captureOriginalCellProperties?.(selector, current);
       if (!target || !current()) return null;
       return Object.freeze({
         state,

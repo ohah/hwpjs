@@ -137,6 +137,10 @@ pub const History = struct {
     }
     pub fn applyBatch(self: *Self, s: *edit.Session, commands: []const edit.Command) !bool {
         try self.bind(s);
+        for (commands) |command| if (command == .edit_page_restart) {
+            if (commands.len != 1 or !self.managed) return error.HistoryProtocol2Required;
+            if (!try s.validatePageRestart(command.edit_page_restart, self.stack.current.revision)) return false;
+        };
         for (commands) |command| if (command == .resize_picture_anchored) {
             if (commands.len != 1 or !self.managed) return error.HistoryProtocol2Required;
             if (!std.meta.eql(command.resize_picture_anchored.target.ticket, try s.historyTicket())) return error.StaleMutationEpoch;
@@ -150,6 +154,11 @@ pub const History = struct {
             if (commands.len != 1 or !self.managed) return error.HistoryProtocol2Required;
             if (!std.meta.eql(command.set_cell_vertical_alignment_block.before.ticket, try s.historyTicket())) return error.StaleMutationEpoch;
             if (!try s.validateCellVerticalAlignmentBlock(command.set_cell_vertical_alignment_block)) return false;
+        };
+        for (commands) |command| if (command == .set_cell_insets) {
+            if (commands.len != 1 or !self.managed) return error.HistoryProtocol2Required;
+            if (!std.meta.eql(command.set_cell_insets.before.ticket, try s.historyTicket())) return error.StaleMutationEpoch;
+            if (!try s.validateCellInsets(command.set_cell_insets)) return false;
         };
         for (commands) |command| if (command == .set_cell_vertical_alignment) {
             if (commands.len != 1 or !self.managed) return error.HistoryProtocol2Required;

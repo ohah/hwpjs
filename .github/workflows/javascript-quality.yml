@@ -95,6 +95,9 @@ jobs:
         run: python3 -B -m unittest discover -s tools/tests -p 'test_document_text_selected_run_fixture.py' -v
       - name: Test current public demo dependency notices
         run: node --test tools/tests/ui-license-inputs.test.mjs
+
+      - name: Existing PAGE restart SDK issuer source tests
+        run: node --test tools/tests/page-restart-api.test.mjs
       - name: Test headless generated-cell source authority and public Core types
         run: |
           bun test --no-install ./packages/core/tests/commands/created-cell-headless-text.test.ts ./packages/core/tests/commands/inline-object-owner-query.test.ts
@@ -185,6 +188,17 @@ jobs:
           node --test --test-concurrency=1 --test-reporter=tap tests/own-chart-create/current-transport.test.mjs tests/own-chart-create/pie-source-contract.test.mjs
           bun test --no-install ./tests/own-chart-create/pie-core-queue.test.mjs ./tests/own-chart-create/current-sdk-queue.test.mjs
           node --experimental-transform-types --import ./tools/tests/picture-resize-source-provider.mjs --test --test-concurrency=1 --test-reporter=tap apps/demo/tests/hwp5-pie-create-dialog.test.ts apps/demo/tests/inline-object-chart-kinds.test.ts apps/demo/tests/inline-object-insert-data-grid.test.ts apps/demo/tests/hwp5-chart-create-wired.test.mjs
+      - name: Existing PAGE restart Core and UI source contracts
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          node node_modules/typescript/bin/tsc --noEmit -p tools/tests/tsconfig.page-restart.json
+          node --experimental-transform-types --import ./tools/tests/page-restart-source-provider.mjs --test --test-concurrency=1 --test-reporter=tap apps/demo/tests/page-restart.test.mjs 2>&1 | tee "$RUNNER_TEMP/page-restart-source.tap"
+          grep -Eq '^# tests 14$' "$RUNNER_TEMP/page-restart-source.tap"
+          grep -Eq '^# pass 14$' "$RUNNER_TEMP/page-restart-source.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/page-restart-source.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/page-restart-source.tap"
       - name: HWP5 chart literal edit source contracts
         timeout-minutes: 2
         shell: bash
@@ -1015,6 +1029,19 @@ jobs:
             --import ./tools/object-properties-test-css.mjs \
             --import ./apps/demo/tests/table-cell-properties-style-preload.mjs \
             --test --test-isolation=none --test-concurrency=1 "$@"
+      - name: Test original cell insets source contracts
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          node node_modules/typescript/bin/tsc --noEmit -p apps/demo/tests/tsconfig.cell-insets.json
+          bun test --no-install --tsconfig-override=apps/demo/tests/tsconfig.cell-insets.json \
+            ./packages/core/tests/commands/original-cell-insets.test.ts \
+            ./packages/core/tests/commands/original-cell-insets-lease.test.mjs \
+            ./packages/core/tests/commands/original-cell-insets-wire.test.mjs \
+            ./apps/demo/tests/table-cell-insets.test.mjs 2>&1 | tee "$RUNNER_TEMP/original-cell-insets-source.log"
+          grep -Eq '^ 50 pass$' "$RUNNER_TEMP/original-cell-insets-source.log"
+          grep -Eq '^ 0 fail$' "$RUNNER_TEMP/original-cell-insets-source.log"
       - name: Test original cell vertical alignment source contracts
         timeout-minutes: 2
         run: |

@@ -1,9 +1,11 @@
 import { readFileSync } from 'node:fs';
 import {
   ABI_VERSION,
+  ORIGINAL_CELL_INSETS_ABI,
   ORIGINAL_CELL_VERTICAL_ALIGNMENT_ABI,
   ORIGINAL_CELL_VERTICAL_ALIGNMENT_BATCH_ABI,
   PICTURE_ANCHORED_RESIZE_ABI,
+  PAGE_RESTART_EDIT_ABI,
   HWP5_VERTICAL_OUTER_MARGINS_ABI,
   HWPX_OBJECT_BODY_FLOW_ABI,
   HWP5_OBJECT_OUTER_MARGINS_ABI,
@@ -182,6 +184,14 @@ const generated =
     )
     .join('') +
   '};\n' +
+  'pub const original_cell_insets_signatures = [_]OptionalFunctionSignature{\n' +
+  Object.entries(ORIGINAL_CELL_INSETS_ABI)
+    .map(
+      ([name, signature]) =>
+        `    .{ .name = ${JSON.stringify(name)}, .params = ${signatureTypes(signature.params)}, .results = ${signatureTypes(signature.results)} },\n`,
+    )
+    .join('') +
+  '};\n' +
   'pub const original_cell_vertical_alignment_signatures = [_]OptionalFunctionSignature{\n' +
   Object.entries(ORIGINAL_CELL_VERTICAL_ALIGNMENT_ABI)
     .map(
@@ -200,6 +210,14 @@ const generated =
   '};\n' +
   'pub const picture_anchored_resize_signatures = [_]OptionalFunctionSignature{\n' +
   Object.entries(PICTURE_ANCHORED_RESIZE_ABI)
+    .map(
+      ([name, signature]) =>
+        `    .{ .name = ${JSON.stringify(name)}, .params = ${signatureTypes(signature.params)}, .results = ${signatureTypes(signature.results)} },\n`,
+    )
+    .join('') +
+  '};\n' +
+  'pub const page_restart_edit_signatures = [_]OptionalFunctionSignature{\n' +
+  Object.entries(PAGE_RESTART_EDIT_ABI)
     .map(
       ([name, signature]) =>
         `    .{ .name = ${JSON.stringify(name)}, .params = ${signatureTypes(signature.params)}, .results = ${signatureTypes(signature.results)} },\n`,

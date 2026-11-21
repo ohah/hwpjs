@@ -41,6 +41,10 @@ export interface InputSurfaceLease {
     witness: SourceTableCellBlockWitness,
     current: () => boolean,
   ): OriginalCellAlignmentBlockSelection | null;
+  captureOriginalCellProperties?(
+    selector: OriginalCellSelector,
+    current: () => boolean,
+  ): OriginalCellSelectionTarget | null;
   captureOriginalCellVerticalAlignment?(
     selector: OriginalCellSelector,
     current: () => boolean,

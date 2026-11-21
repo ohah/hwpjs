@@ -58,6 +58,7 @@ pub const Command = union(enum) {
     edit_object_vertical_margins: @import("object_outer_margins.zig").Request,
     set_cell_vertical_alignment: @import("cell_vertical_alignment_plan.zig").Request,
     set_cell_vertical_alignment_block: @import("cell_vertical_alignment_batch_plan.zig").Request,
+    edit_page_restart: @import("page_restart_history.zig").Request,
     edit_page_settings: *const @import("page_settings_types.zig").Request,
     edit_bullet_definition: @import("../../model/paragraph_bullet_definition.zig").Request,
     set_paragraph_alignment: struct { section: usize, paragraph: usize, alignment: u32 },
@@ -69,6 +70,7 @@ pub const Command = union(enum) {
     set_form_text: @import("form_text_apply.zig").Edit,
     set_form_choice: @import("form_choice_apply.zig").Edit,
     select_form_radio: @import("form_radio_apply.zig").Edit,
+    set_cell_insets: @import("cell_insets_plan.zig").Request,
 };
 pub const SaveOptions = struct {
     /// Byte-preservation experiments only; does not certify Hancom layout.
@@ -657,14 +659,15 @@ pub const Session = opaque {
     }
     /// Checkpoint must represent the current model; history reserves first.
     pub fn applyCheckpointed(self: *Session, checkpoint: *Checkpoint, limit: usize, command: Command) !bool {
-        if (command == .set_cell_vertical_alignment_block) try self.requireManagedCellBlock();
+        if (command == .set_cell_vertical_alignment_block or command == .set_cell_insets) try self.requireManagedCellBlock();
         try self.requireManagedAnchoredDispatch(command);
         try self.materializeLiveText();
         return self.applyBatchCheckpointed(checkpoint, limit, &.{command});
     }
 
     pub fn applyBatchCheckpointed(self: *Session, checkpoint: *Checkpoint, limit: usize, commands: []const Command) !bool {
-        for (commands) |command| if (command == .set_cell_vertical_alignment_block) try self.requireManagedCellBlock();
+        for (commands) |command| if (command == .set_cell_insets and commands.len != 1) return error.HistoryProtocol2Required;
+        for (commands) |command| if (command == .set_cell_vertical_alignment_block or command == .set_cell_insets) try self.requireManagedCellBlock();
         for (commands) |command| try self.requireManagedAnchoredDispatch(command);
         try self.materializeLiveText();
         const before = try self.externalHistoryBegin();
@@ -928,6 +931,31 @@ pub const Session = opaque {
         std.mem.swap(@import("../../model/font_resource_values.zig").Values, &state.document.font_resources, &pending);
         return count;
     }
+    pub fn pageRestartInventory(self: *const Session, a: std.mem.Allocator, section: usize, revision: u32) ![]@import("page_restart_inventory.zig").Candidate {
+        if (self.historyTransactionActive()) return error.MutationInProgress;
+        try self.materializeLiveText();
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        const read_only = state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview);
+        return @import("page_restart_inventory.zig").read(a, state.decoded[section], state.source.header.version(), state.document.sections[section].paragraphs, section, try self.historyTicket(), revision, read_only);
+    }
+    pub fn pageRestart(self: *const Session, a: std.mem.Allocator, section: usize, control: usize, revision: u32) !@import("page_restart_history.zig").Observation {
+        if (self.historyTransactionActive()) return error.MutationInProgress;
+        try self.materializeLiveText();
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        const read_only = state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview);
+        return @import("page_restart_history.zig").observe(a, state.decoded[section], state.source.header.version(), state.document.sections[section].paragraphs, section, control, try self.historyTicket(), revision, read_only);
+    }
+    pub fn validatePageRestart(self: *const Session, request: @import("page_restart_history.zig").Request, revision: u32) !bool {
+        if (!std.meta.eql(request.before.ticket, try self.historyTicket()) or request.before.revision != revision) return error.StalePageRestartBinding;
+        const state = self.stateConst();
+        const index = request.before.target.section;
+        if (index >= state.document.sections.len) return error.InvalidSection;
+        const read_only = state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview);
+        const current = try @import("page_restart_history.zig").observe(state.allocator, state.decoded[index], state.source.header.version(), state.document.sections[index].paragraphs, index, request.before.target.control_node, try self.historyTicket(), revision, read_only);
+        return @import("page_restart_history.zig").validate(request.before, current, request.number);
+    }
     pub fn paragraphShapeId(self: *const Session, section: usize, paragraph_index: usize) !u16 {
         try self.materializeLiveText();
         if (paragraph_index >= try self.paragraphCount(section)) return error.InvalidParagraph;
@@ -949,6 +977,21 @@ pub const Session = opaque {
     }
     fn requireManagedCellBlock(self: *const Session) !void {
         if (!self.historyTransactionActive() or self.stateConst().history_poison_observer == null) return error.HistoryProtocol2Required;
+    }
+    pub fn cellInsets(self: *const Session, a: std.mem.Allocator, selector: @import("cell_insets_plan.zig").Selector) !@import("cell_insets_plan.zig").Observation {
+        try self.materializeLiveText();
+        const state = self.stateConst();
+        if (selector.section >= state.document.sections.len) return error.InvalidSection;
+        const read_only = state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview);
+        return @import("cell_insets_plan.zig").observe(a, state.decoded[selector.section], state.source.header.version(), state.document.sections[selector.section], selector.section, selector, try self.historyTicket(), read_only);
+    }
+    pub fn validateCellInsets(self: *const Session, request: @import("cell_insets_plan.zig").Request) !bool {
+        try self.materializeLiveText();
+        const state = self.stateConst();
+        const index = request.before.selector.section;
+        if (index >= state.document.sections.len) return error.InvalidSection;
+        const read_only = state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview);
+        return @import("cell_insets_plan.zig").validate(state.allocator, state.decoded[index], state.source.header.version(), state.document.sections[index], index, request, try self.historyTicket(), read_only);
     }
     pub fn cellVerticalAlignment(self: *const Session, a: std.mem.Allocator, selector: @import("cell_vertical_alignment_plan.zig").Selector) !@import("cell_vertical_alignment_plan.zig").Observation {
         try self.materializeLiveText();
@@ -1845,12 +1888,14 @@ pub const Session = opaque {
         if (!self.historyTransactionActive() or self.stateConst().history_poison_observer == null) return error.HistoryProtocol2Required;
     }
     pub fn apply(self: *Session, command: Command) !void {
-        if (command == .set_cell_vertical_alignment_block) return error.HistoryProtocol2Required;
+        if (command == .edit_page_restart) return error.HistoryProtocol2Required;
+        if (command == .set_cell_vertical_alignment_block or command == .set_cell_insets) return error.HistoryProtocol2Required;
         if (command == .resize_picture_anchored) return error.HistoryProtocol2Required;
         return self.applyWithFontCache(command, null);
     }
     pub fn applyWithFontCache(self: *Session, command: Command, font_cache: ?*@import("../../model/batch_font_lookup.zig").Cache) !void {
-        if (command == .set_cell_vertical_alignment_block) try self.requireManagedCellBlock();
+        if (command == .edit_page_restart and (!self.historyTransactionActive() or self.stateConst().history_poison_observer == null)) return error.HistoryProtocol2Required;
+        if (command == .set_cell_vertical_alignment_block or command == .set_cell_insets) try self.requireManagedCellBlock();
         try self.requireManagedAnchoredDispatch(command);
         self.invalidateStrictLayout();
         // Helpers may replace a whole Section clone. Refresh borrowed bases before returning.
@@ -2290,6 +2335,17 @@ pub const Session = opaque {
                 state.refreshSourceViews();
                 if (old) |*basis| basis.deinit(state.allocator);
             },
+            .set_cell_insets => |request| {
+                try self.requireManagedCellBlock();
+                const state = self.getState();
+                const index = request.before.selector.section;
+                if (index >= state.document.sections.len) return error.InvalidSection;
+                if (state.formatting_batch != null) return error.MutationInProgress;
+                const read_only = state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview);
+                const bytes = (try @import("cell_insets_plan.zig").prepare(state.allocator, state.decoded[index], state.source.header.version(), state.document.sections[index], index, request, try self.historyTicket(), read_only, max_stream)) orelse return;
+                errdefer state.allocator.free(bytes);
+                try self.publishFixedSection(index, bytes, .keep);
+            },
             .set_cell_vertical_alignment => |request| {
                 const state = self.getState();
                 const index = request.before.selector.section;
@@ -2322,6 +2378,15 @@ pub const Session = opaque {
                 } else (try @import("object_geometry.zig").write(state.allocator, state.decoded[section_index], state.source.header.version(), section.paragraphs, request.*, read_only)) orelse return;
                 errdefer state.allocator.free(bytes);
                 try self.publishFixedSection(section_index, bytes, .keep);
+            },
+            .edit_page_restart => |request| {
+                const state = self.getState();
+                if (state.formatting_batch != null) return error.MutationInProgress;
+                if (!try self.validatePageRestart(request, request.before.revision)) return;
+                const index = request.before.target.section;
+                const changed = (try @import("page_restart_edit.zig").write(state.allocator, state.decoded[index], state.source.header.version(), request.before.target, request.number)) orelse return;
+                errdefer state.allocator.free(changed);
+                try self.publishFixedSection(index, changed, .keep);
             },
             .edit_page_settings => |request| {
                 const state = self.getState();

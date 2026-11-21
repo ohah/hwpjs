@@ -1,0 +1,19 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@hwpjs/core": ["../../../packages/core/src/index.ts"],
+      "@hwpjs/core/*": ["../../../packages/core/src/*"],
+      "@hwpjs/vanilla": ["../../../packages/vanilla/src/index.ts"]
+    }
+  },
+  "files": [
+    "../src/assets.d.ts",
+    "../src/table-cell-properties-tool.ts",
+    "../../../packages/vanilla/src/surface.ts",
+    "../../../packages/core/src/runtime/reader-runtime.ts",
+    "../../../packages/core/src/worker-runtime.ts",
+    "../../../packages/core/tests/commands/original-cell-insets.test.ts"
+  ],
+  "include": []
+}

@@ -1,3 +1,4 @@
+import { surfaceOperation } from '../../src/commands/surface-protocol.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createNativeReadSourceLifecycle } from '../../src/internal/native-read-source-origin.ts';
@@ -76,6 +77,10 @@ test('read and save preserve current scope; transition revokes before awaiting i
   const { life, origin } = setup();
   life.begin('object-geometry-query', { ...context, requestId: 2 });
   assert(origin.authority(), 'reading object geometry must preserve document read authority');
+  assert.equal(surfaceOperation('page-restarts-query'), undefined);
+  assert.equal(surfaceOperation('edit-page-restart'), undefined);
+  life.begin('page-restarts-query');
+  assert(origin.authority(), 'typed restart query must preserve current read authority');
   life.begin('hwp5-chart-data-capture');
   assert(origin.authority());
   life.begin('save');
@@ -114,7 +119,7 @@ test('wrong request context and consumed reply cannot replay origin', () => {
   assert.equal(life.consume(r, context), undefined);
 });
 test('successful apply, undo, redo and refresh need exact Core reserved publication revision', () => {
-  for (const kind of ['hwp5-chart-data-apply', 'undo', 'redo', 'refresh']) {
+  for (const kind of ['hwp5-chart-data-apply', 'edit-page-restart', 'undo', 'redo', 'refresh']) {
     const { life } = setup();
     const r = reply(kind);
     life.publish(life.begin(kind), r, context, 2, true);
@@ -166,7 +171,7 @@ test('save acknowledgement can inherit only identical document content operation
 });
 
 test('unchanged recovery requires authenticated reply, identical binding and same mutation request fence', () => {
-  for (const mode of [
+  for (const [kind, mode] of [
     'same',
     'changed-binding',
     'other-operation',
@@ -174,12 +179,12 @@ test('unchanged recovery requires authenticated reply, identical binding and sam
     'untrusted',
     'unknown-error',
     'new-transition',
-  ]) {
+  ].flatMap((mode) => ['hwp5-chart-data-apply', 'edit-page-restart'].map((kind) => [kind, mode]))) {
     const { life, origin } = setup();
     const mutationContext = { ...context, operationRevision: 2, requestId: 2 };
-    const ticket = life.begin('hwp5-chart-data-apply', mutationContext);
+    const ticket = life.begin(kind, mutationContext);
     const unchanged = {
-      kind: 'hwp5-chart-data-apply',
+      kind,
       error: mode === 'unknown-error' ? 'Unknown' : 'Predictable',
       meta: { application: mode === 'unknown-error' ? 'unknown' : 'unapplied', changed: false },
     };

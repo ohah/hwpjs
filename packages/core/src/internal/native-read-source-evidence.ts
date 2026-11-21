@@ -1,4 +1,4 @@
-import { surfaceOperation } from '../commands/surface-protocol.ts';
+import { isNativeReadSourceMutation } from './native-read-source-operation.ts';
 import { sameRequestContext } from './native-runtime-origin.ts';
 import type { RuntimeRequestContext } from '../contracts.ts';
 import type { EditorState } from '../state/editor-state.ts';
@@ -31,7 +31,7 @@ export function observeNativeReadSource(
       committed.operationRevision === state.operationRevision &&
       Number.isSafeInteger(committed.operationRevision) &&
       committed.operationRevision > c.operationRevision &&
-      ((origin.kind === committed.kind && surfaceOperation(origin.kind) === 'mutation') ||
+      ((origin.kind === committed.kind && isNativeReadSourceMutation(origin.kind)) ||
         origin.kind === 'refresh');
     if (!initial && !applied) return;
   }

@@ -141,6 +141,9 @@ export const REPLACE_ALL_COMMAND = createCommand<ReplaceAllPlanRequest>('replace
 import type { InsertDocumentPayload } from './document-insert.ts';
 export const INSERT_DOCUMENT_COMMAND = createCommand<InsertDocumentPayload>('insert-document');
 
+import type { EditPageRestartPayload } from './page-restart.ts';
+export const EDIT_PAGE_RESTART_COMMAND = createCommand<EditPageRestartPayload>('edit-page-restart');
+
 import type { EditPageSettingsPayload } from './page-settings.ts';
 export const EDIT_PAGE_SETTINGS_COMMAND =
   createCommand<EditPageSettingsPayload>('write-page-settings');

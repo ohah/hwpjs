@@ -1,5 +1,7 @@
+import { createPageRestartApi } from './page-restart-api.mjs';
 import { createPictureAnchoredResizeApi } from './picture-anchored-resize-api.mjs';
 import { createOriginalCellVerticalAlignmentBatchApi } from './original-cell-vertical-alignment-batch.mjs';
+import { createOriginalCellInsetsApi } from './original-cell-insets.mjs';
 import { createOriginalCellVerticalAlignmentApi } from './original-cell-vertical-alignment.mjs';
 import { createHwp5VerticalMarginsApi } from './hwp5-vertical-outer-margins.mjs';
 import { createHwp5OuterMarginsApi } from './hwp5-object-outer-margins.mjs';
@@ -258,8 +260,10 @@ export async function createExperimentalHwp5Editor(
     },
   };
   const api = {
+    ...createOriginalCellInsetsApi({ wasm, memory, check: check, prefix: 'hwp5_edit' }),
     ...createOriginalCellVerticalAlignmentApi({ wasm, memory, check: check, prefix: 'hwp5_edit' }),
     ...createPictureAnchoredResizeApi({ wasm, memory, check, prefix: 'hwp5_edit' }),
+    ...createPageRestartApi({ wasm, memory, check, prefix: 'hwp5_edit' }),
     ...createOriginalCellVerticalAlignmentBatchApi({
       wasm,
       memory,

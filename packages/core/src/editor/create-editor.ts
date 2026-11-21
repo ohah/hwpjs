@@ -1,3 +1,16 @@
+import { originalCellPropertiesSelector } from '../commands/original-cell-owner.ts';
+import {
+  SET_ORIGINAL_CELL_INSETS_COMMAND,
+  captureOriginalCellInsetsPayload,
+  type SetOriginalCellInsetsPayload,
+  type OriginalCellInsetsRead,
+  type OriginalCellInsetsTarget,
+} from '../commands/original-cell-insets.ts';
+import {
+  checkedCellInsetsObservation,
+  checkedCellInsetsRequest,
+  type CellInsetsObservation,
+} from '../../../../js/original-cell-insets.mjs';
 import {
   RESIZE_PICTURE_ANCHORED_COMMAND,
   captureResizePictureAnchoredPayload,
@@ -175,6 +188,14 @@ import {
   type InsertEquationPayload,
   type CreateChartPayload,
 } from '../commands/inline-object-insert.ts';
+import { EDIT_PAGE_RESTART_COMMAND } from '../commands/commands.ts';
+import {
+  capturePageRestartPayload,
+  checkedPageRestartInventory,
+  type EditPageRestartPayload,
+  type PageRestartTarget,
+  type PageRestartRead,
+} from '../commands/page-restart.ts';
 import type { PageSettingsCapabilities } from '../commands/page-settings-dto.ts';
 import { EDIT_PAGE_SETTINGS_COMMAND } from '../commands/commands.ts';
 import { capturePageSettingsPayload } from '../commands/page-settings.ts';
@@ -1521,6 +1542,15 @@ export function createEditor(options: CreateEditorOptions) {
     OriginalCellSelectionTarget,
     { state: EditorState; selector: Readonly<OriginalCellSelector>; current: () => boolean }
   >();
+  const originalCellInsetsTargets = new WeakMap<
+    OriginalCellInsetsTarget,
+    {
+      state: EditorState;
+      runtime: EditorRuntime;
+      native: Readonly<CellInsetsObservation>;
+      current: () => boolean;
+    }
+  >();
   const originalCellTargets = new WeakMap<
     OriginalCellVerticalAlignmentTarget,
     {
@@ -1585,6 +1615,10 @@ export function createEditor(options: CreateEditorOptions) {
     ObjectGeometryTarget,
     { state: EditorState; native: ReturnType<typeof checkedObjectGeometryObservation> }
   >();
+  const pageRestartTargets = new WeakMap<
+    PageRestartTarget,
+    { state: EditorState; leaseKey: string }
+  >();
   const pageSettingsTargets = new WeakMap<
     PageSettingsTarget,
     { state: EditorState; native: PageSettingsCapabilities; section: number | null }
@@ -1599,12 +1633,14 @@ export function createEditor(options: CreateEditorOptions) {
     snapshot: EditorState = state,
   ): PendingCommand {
     if (!command || typeof command.id !== 'symbol') throw Error('InvalidCommand');
+    const originalCellInsets = command.id === SET_ORIGINAL_CELL_INSETS_COMMAND.id;
     const originalCellAlignment = command.id === SET_ORIGINAL_CELL_VERTICAL_ALIGNMENT_COMMAND.id;
     const originalCellBlock = command.id === SET_ORIGINAL_CELL_ALIGNMENT_BLOCK_COMMAND.id;
     const split = command.id === SPLIT_SOURCE_TABLE_CELLS_COMMAND.id;
     const merge = command.id === MERGE_SOURCE_TABLE_CELLS_COMMAND.id;
     const width = command.id === EQUALIZE_SOURCE_TABLE_CELL_WIDTH_COMMAND.id;
     const height = command.id === EQUALIZE_SOURCE_TABLE_CELL_HEIGHT_COMMAND.id;
+    const pageRestart = command.id === EDIT_PAGE_RESTART_COMMAND.id;
     const pageSettings = command.id === EDIT_PAGE_SETTINGS_COMMAND.id;
     const anchoredPicture = command.id === RESIZE_PICTURE_ANCHORED_COMMAND.id;
     const objectGeometry = command.id === SET_OBJECT_GEOMETRY_COMMAND.id;
@@ -1613,6 +1649,7 @@ export function createEditor(options: CreateEditorOptions) {
     const bodyFlow = command.id === SET_OBJECT_BODY_FLOW_COMMAND.id;
     const pictureReplacement = command.id === REPLACE_PICTURE_COMMAND.id;
     const tableCell =
+      originalCellInsets ||
       originalCellAlignment ||
       originalCellBlock ||
       merge ||
@@ -1620,6 +1657,7 @@ export function createEditor(options: CreateEditorOptions) {
       width ||
       height ||
       pageSettings ||
+      pageRestart ||
       anchoredPicture ||
       objectGeometry ||
       pictureReplacement ||
@@ -1644,46 +1682,50 @@ export function createEditor(options: CreateEditorOptions) {
         : command.id === INSERT_ENDNOTE_COMMAND.id
           ? 'end'
           : undefined;
-    const owned = anchoredPicture
-      ? captureResizePictureAnchoredPayload(payload)
-      : originalCellBlock
-        ? captureOriginalCellAlignmentBlockPayload(payload)
-        : originalCellAlignment
-          ? captureOriginalCellAlignmentPayload(payload)
-          : verticalMargins
-            ? captureHwp5VerticalMarginsPayload(payload)
-            : bodyFlow
-              ? captureObjectBodyFlowPayload(payload)
-              : outerMargins
-                ? captureObjectOuterMarginsPayload(payload)
-                : pictureReplacement
-                  ? captureReplacePicturePayload(payload)
-                  : command.id === INSERT_IMAGE_COMMAND.id
-                    ? captureImageInsertPayload(payload)
-                    : command.id === DELETE_NOTE_COMMAND.id
-                      ? captureNoteDeletePayload(payload)
-                      : noteKind
-                        ? captureNoteInsertPayload(payload)
-                        : logicalSplice
-                          ? captureCreatedCellSplicePayload(payload)
-                          : objectGeometry
-                            ? captureObjectGeometryPayload(payload)
-                            : inlineKind
-                              ? captureInlineObjectInsertPayload(payload, inlineKind)
-                              : pageSettings
-                                ? capturePageSettingsPayload(payload)
-                                : split
-                                  ? captureSourceTableCellSplitPayload(payload)
-                                  : merge || width || height
-                                    ? payload
-                                    : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
-                                      ? captureSourceTableGridRequest(
-                                          payload,
-                                          (snapshot.content as any)?.format,
-                                        )
-                                      : command.id === INSERT_DOCUMENT_COMMAND.id
-                                        ? captureDocumentInsertPayload(payload)
-                                        : copyOwned(payload);
+    const owned = originalCellInsets
+      ? captureOriginalCellInsetsPayload(payload)
+      : anchoredPicture
+        ? captureResizePictureAnchoredPayload(payload)
+        : originalCellBlock
+          ? captureOriginalCellAlignmentBlockPayload(payload)
+          : originalCellAlignment
+            ? captureOriginalCellAlignmentPayload(payload)
+            : verticalMargins
+              ? captureHwp5VerticalMarginsPayload(payload)
+              : bodyFlow
+                ? captureObjectBodyFlowPayload(payload)
+                : outerMargins
+                  ? captureObjectOuterMarginsPayload(payload)
+                  : pictureReplacement
+                    ? captureReplacePicturePayload(payload)
+                    : command.id === INSERT_IMAGE_COMMAND.id
+                      ? captureImageInsertPayload(payload)
+                      : command.id === DELETE_NOTE_COMMAND.id
+                        ? captureNoteDeletePayload(payload)
+                        : noteKind
+                          ? captureNoteInsertPayload(payload)
+                          : logicalSplice
+                            ? captureCreatedCellSplicePayload(payload)
+                            : objectGeometry
+                              ? captureObjectGeometryPayload(payload)
+                              : inlineKind
+                                ? captureInlineObjectInsertPayload(payload, inlineKind)
+                                : pageRestart
+                                  ? capturePageRestartPayload(payload)
+                                  : pageSettings
+                                    ? capturePageSettingsPayload(payload)
+                                    : split
+                                      ? captureSourceTableCellSplitPayload(payload)
+                                      : merge || width || height
+                                        ? payload
+                                        : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
+                                          ? captureSourceTableGridRequest(
+                                              payload,
+                                              (snapshot.content as any)?.format,
+                                            )
+                                          : command.id === INSERT_DOCUMENT_COMMAND.id
+                                            ? captureDocumentInsertPayload(payload)
+                                            : copyOwned(payload);
     return {
       command: command as EditorCommand<unknown>,
       payload: owned,
@@ -1781,6 +1823,35 @@ export function createEditor(options: CreateEditorOptions) {
               value: payload.value,
             },
           },
+          pending.token,
+          false,
+          guard,
+        );
+      }
+      if (pending.command.id === SET_ORIGINAL_CELL_INSETS_COMMAND.id) {
+        const payload = pending.payload as SetOriginalCellInsetsPayload;
+        const owned = originalCellInsetsTargets.get(payload.target);
+        if (!owned) throw Error('ForeignOriginalCellTarget');
+        const guard = () => {
+          requireReady(pending.token, true);
+          if (state !== owned.state || active !== owned.runtime || !owned.current())
+            throw Error('StaleOriginalCellTarget');
+          originalCellPropertiesSelector(state, {
+            section: owned.native.section,
+            paragraph: owned.native.paragraph,
+            tableNode: owned.native.tableNode,
+            listNode: owned.native.listNode,
+          });
+          if (state.nativeHistoryRevision !== owned.native.historyRevision)
+            throw Error('StaleOriginalCellBinding');
+          if (!hasRuntimeAdmission(active, 'original-cell-insets-set'))
+            throw Error('UnsupportedOriginalCellRuntime');
+        };
+        guard();
+        const request = checkedCellInsetsRequest({ before: owned.native, patch: payload.patch });
+        originalCellInsetsTargets.delete(payload.target);
+        return await mutate(
+          { kind: 'original-cell-insets-set', request },
           pending.token,
           false,
           guard,
@@ -2165,6 +2236,34 @@ export function createEditor(options: CreateEditorOptions) {
           },
           payload.token,
           false,
+          guard,
+        );
+      }
+      if (pending.command.id === EDIT_PAGE_RESTART_COMMAND.id) {
+        const payload = pending.payload as EditPageRestartPayload;
+        const capture = pageRestartTargets.get(payload.target);
+        if (!capture) throw Error('ForeignPageRestartTarget');
+        const guard = () => {
+          requireReady(capture.state.token, true);
+          if (state !== capture.state) throw Error('StalePageRestartTarget');
+          if (
+            state.historyRecoveryRequired ||
+            state.nativeHistoryStats?.protocolVersion !== 2 ||
+            (state.content as Record<string, unknown> | undefined)?.readOnly ||
+            (state.capabilities as Record<string, unknown> | undefined)?.readOnly ||
+            (state.content as Record<string, unknown> | undefined)?.limited ||
+            (state.content as Record<string, unknown> | undefined)?.window
+          )
+            throw Error('PageRestartEditUnavailable');
+        };
+        guard();
+        if (!hasRuntimeAdmission(active, 'edit-page-restart'))
+          throw Error('UnsupportedAtomicRuntime');
+        pageRestartTargets.delete(payload.target);
+        return await mutate(
+          { kind: 'edit-page-restart', leaseKey: capture.leaseKey, number: payload.number },
+          capture.state.token,
+          true,
           guard,
         );
       }
@@ -2639,6 +2738,13 @@ export function createEditor(options: CreateEditorOptions) {
       if (state !== owned.state)
         return Promise.resolve(reject(context(pending.token), 'StaleObjectGeometryTarget'));
     }
+    if (command.id === EDIT_PAGE_RESTART_COMMAND.id) {
+      const owned = pageRestartTargets.get((pending.payload as EditPageRestartPayload).target);
+      if (!owned)
+        return Promise.resolve(reject(context(pending.token), 'ForeignPageRestartTarget'));
+      if (state !== owned.state)
+        return Promise.resolve(reject(context(pending.token), 'StalePageRestartTarget'));
+    }
     if (command.id === EDIT_PAGE_SETTINGS_COMMAND.id) {
       const found = pageSettingsTargets.get((pending.payload as EditPageSettingsPayload).target);
       if (!found)
@@ -3056,7 +3162,9 @@ export function createEditor(options: CreateEditorOptions) {
     const kind = Object.getOwnPropertyDescriptor(message ?? {}, 'kind')?.value;
     if (
       [
+        'original-cell-insets-query',
         'original-cell-vertical-alignment-query',
+        'original-cell-insets-set',
         'original-cell-vertical-alignment-set',
         'original-cell-vertical-alignment-batch-query',
         'original-cell-vertical-alignment-batch-set',
@@ -3085,6 +3193,8 @@ export function createEditor(options: CreateEditorOptions) {
         'picture-replace',
         'object-geometry-query',
         'object-geometry-set',
+        'page-restarts-query',
+        'edit-page-restart',
         'page-settings-capabilities',
         'write-page-settings',
         'source-table-cell-split',
@@ -3441,6 +3551,77 @@ export function createEditor(options: CreateEditorOptions) {
         target,
         value: observed.value,
         cellCount: witness.cells.length,
+      });
+    });
+  }
+  function getOriginalCellInsets(
+    selection: OriginalCellSelectionTarget,
+  ): Promise<OriginalCellInsetsRead> {
+    assertPublicMutation();
+    const captured = originalCellSelections.get(selection);
+    if (!captured || captured.state !== state || !captured.current())
+      throw Error('ForeignOrStaleOriginalCellSelection');
+    const snapshot = state,
+      token = snapshot.token;
+    return enqueue(async () => {
+      const runtime = active;
+      const guard = () => {
+        requireReady(token, true);
+        if (state !== snapshot || !captured.current() || active !== runtime)
+          throw Error('StaleOriginalCellSelection');
+        originalCellPropertiesSelector(state, captured.selector);
+      };
+      guard();
+      if (!runtime || !hasRuntimeAdmission(runtime, 'original-cell-insets-query'))
+        throw Error('UnsupportedOriginalCellRuntime');
+      const reply = await readRequest(
+        { kind: 'original-cell-insets-query', selector: captured.selector },
+        token,
+        guard,
+        true,
+      );
+      guard();
+      if (reply.cellInsets === null)
+        return {
+          state: 'unavailable' as const,
+          reason: String(reply.reason ?? 'OriginalCellInsetsUnavailable'),
+        };
+      const native = checkedCellInsetsObservation(reply.cellInsets);
+      if (
+        native.format !== (snapshot.content as any)?.format ||
+        !Object.entries(captured.selector).every(
+          ([key, value]) => (native as any)[key] === value,
+        ) ||
+        native.historyRevision !== snapshot.nativeHistoryRevision ||
+        !native.scope
+      )
+        throw Error('OriginalCellOwnerMismatch');
+      const observation = Object.freeze({
+        mode: native.mode,
+        effective: native.effective,
+        tableDefaults: native.tableDefaults,
+        frame: native.frame,
+      });
+      if (!native.editable)
+        return {
+          state: 'readonly' as const,
+          reason: 'OriginalCellInsetsReadOnly',
+          observation,
+          selector: captured.selector,
+        };
+      guard();
+      const target = Object.freeze({}) as OriginalCellInsetsTarget;
+      originalCellInsetsTargets.set(target, {
+        state: snapshot,
+        runtime,
+        native,
+        current: captured.current,
+      });
+      return Object.freeze({
+        state: 'available' as const,
+        target,
+        observation,
+        selector: captured.selector,
       });
     });
   }
@@ -3897,6 +4078,77 @@ export function createEditor(options: CreateEditorOptions) {
       const target = Object.freeze({}) as ObjectGeometryTarget;
       objectGeometryTargets.set(target, { state: snapshot, native });
       return Object.freeze({ state: 'available', target, observation: native });
+    });
+  }
+  function getPageRestarts(
+    options: { token?: StateToken; section?: number } = {},
+  ): Promise<PageRestartRead> {
+    assertPublicMutation();
+    const settings = copyOwned(options);
+    if (
+      !settings ||
+      typeof settings !== 'object' ||
+      Array.isArray(settings) ||
+      Object.keys(settings).some((k) => !['token', 'section'].includes(k)) ||
+      settings.token === null ||
+      (settings.section !== undefined &&
+        (!Number.isSafeInteger(settings.section) ||
+          settings.section < 0 ||
+          settings.section > 0xffffffff ||
+          Object.is(settings.section, -0)))
+    )
+      throw Error('InvalidPageRestartOptions');
+    const token = copyOwned(settings.token ?? state.token);
+    return enqueue(async () => {
+      requireReady(token, true);
+      const before = state,
+        content = state.content as Record<string, unknown> | undefined;
+      if (
+        (content?.format !== 'hwp5' && content?.format !== 'hwpx') ||
+        content?.readOnly ||
+        content?.limited ||
+        content?.window ||
+        (state.capabilities as Record<string, unknown> | undefined)?.readOnly ||
+        state.historyRecoveryRequired ||
+        state.nativeHistoryStats?.protocolVersion !== 2
+      )
+        return { state: 'unavailable' as const, reason: 'PageRestartEditUnavailable' };
+      const guard = () => {
+        requireReady(token, true);
+        if (state !== before) throw Error('StalePageRestartTarget');
+      };
+      if (!hasRuntimeAdmission(active, 'page-restarts-query'))
+        throw Error('UnsupportedAtomicRuntime');
+      const reply = await readRequest({ kind: 'page-restarts-query' }, token, guard, true);
+      guard();
+      const inventory = checkedPageRestartInventory(
+        reply.pageRestarts,
+        content.format,
+        before.nativeHistoryRevision,
+      );
+      const entries = inventory.entries
+        .filter((row) => settings.section === undefined || row.section === settings.section)
+        .map((row) => {
+          const target = Object.freeze({}) as PageRestartTarget;
+          pageRestartTargets.set(target, { state: before, leaseKey: row.leaseKey });
+          return Object.freeze({
+            target,
+            section: row.section,
+            controlNode: row.controlNode,
+            paragraph: row.paragraph,
+            number: row.number,
+          });
+        });
+      return Object.freeze({
+        state: 'available',
+        format: inventory.format,
+        entries: Object.freeze(entries),
+        unavailable: Object.freeze(
+          inventory.unavailable
+            .filter((row) => settings.section === undefined || row.section === settings.section)
+            .map((row) => Object.freeze(row)),
+        ),
+      });
     });
   }
   function getPageSettings(
@@ -4581,7 +4833,11 @@ export function createEditor(options: CreateEditorOptions) {
       );
     if (
       [
+        'page-restarts-query',
+        'edit-page-restart',
+        'original-cell-insets-query',
         'original-cell-vertical-alignment-query',
+        'original-cell-insets-set',
         'original-cell-vertical-alignment-set',
         'original-cell-vertical-alignment-batch-query',
         'original-cell-vertical-alignment-batch-set',
@@ -4671,7 +4927,9 @@ export function createEditor(options: CreateEditorOptions) {
           owned = copyOwned(message);
           if (
             [
+              'original-cell-insets-query',
               'original-cell-vertical-alignment-query',
+              'original-cell-insets-set',
               'original-cell-vertical-alignment-set',
               'original-cell-vertical-alignment-batch-query',
               'original-cell-vertical-alignment-batch-set',
@@ -4747,6 +5005,31 @@ export function createEditor(options: CreateEditorOptions) {
             witness: owned,
             current: live,
           });
+          return selected;
+        } catch {
+          return null;
+        }
+      },
+      captureOriginalCellProperties(selector: OriginalCellSelector, current: () => boolean) {
+        const snapshot = state;
+        let invalid = false;
+        const live = () => {
+          if (invalid) return false;
+          try {
+            assertSurface(record);
+            if (snapshot === state && current() === true && snapshot === state) return true;
+          } catch {
+            /* Lost input lease never revives. */
+          }
+          invalid = true;
+          return false;
+        };
+        if (!hasRuntimeAdmission(active, 'original-cell-insets-query') || !live()) return null;
+        try {
+          const owner = originalCellPropertiesSelector(snapshot, copyOwned(selector));
+          if (!live()) return null;
+          const selected = Object.freeze({}) as OriginalCellSelectionTarget;
+          originalCellSelections.set(selected, { state: snapshot, selector: owner, current: live });
           return selected;
         } catch {
           return null;
@@ -5016,6 +5299,7 @@ export function createEditor(options: CreateEditorOptions) {
     getInlineObjectInsertTarget: geometryGuard(getInlineObjectInsertTarget),
     getCreatedCellTextTarget: geometryGuard(getCreatedCellTextTarget),
     getOriginalCellAlignmentBlock: geometryGuard(getOriginalCellAlignmentBlock),
+    getOriginalCellInsets: geometryGuard(getOriginalCellInsets),
     getOriginalCellVerticalAlignment: geometryGuard(getOriginalCellVerticalAlignment),
     getObjectOuterMargins: geometryGuard(getObjectOuterMargins),
     getHwp5VerticalMargins: geometryGuard(getHwp5VerticalMargins),
@@ -5023,6 +5307,7 @@ export function createEditor(options: CreateEditorOptions) {
     getPictureReplacement: geometryGuard(getPictureReplacement),
     getAnchoredPictureResize: geometryGuard(getAnchoredPictureResize),
     getObjectGeometry: geometryGuard(getObjectGeometry),
+    getPageRestarts: geometryGuard(getPageRestarts),
     getPageSettings: geometryGuard(getPageSettings),
     getSourceTableCellSplitCapabilities: geometryGuard(getSourceTableCellSplitCapabilities),
     queryFormatting: geometryGuard(queryFormatting),

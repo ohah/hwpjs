@@ -1,4 +1,7 @@
 import {
+  SET_ORIGINAL_CELL_INSETS_COMMAND,
+  type OriginalCellInsetsTarget,
+  type CellInsetsPatch,
   SET_ORIGINAL_CELL_VERTICAL_ALIGNMENT_COMMAND,
   SET_ORIGINAL_CELL_ALIGNMENT_BLOCK_COMMAND,
   type OriginalCellAlignmentBlockSelection,
@@ -110,6 +113,18 @@ export function createTableCellPropertiesPort(
 ) {
   let disposed = false,
     pending = false;
+  type PropertiesSelection = NonNullable<
+    ReturnType<NonNullable<TableCellCore['captureOriginalCellPropertiesSelection']>>
+  >;
+  const insetsLeases = new WeakMap<
+    object,
+    {
+      state: EditorState;
+      target: OriginalCellInsetsTarget;
+      current(): boolean;
+      bindDialog(element: HTMLDialogElement): boolean;
+    }
+  >();
   const alignmentLeases = new WeakMap<
     object,
     {
@@ -431,8 +446,68 @@ export function createTableCellPropertiesPort(
   }
   return {
     /** Separate single-cell Native transaction; never silently combines size/style changes. */
-    async captureVerticalAlignment() {
-      const selected = core.captureOriginalCellPropertiesSelection?.();
+    capturePropertiesSelection() {
+      return core.captureOriginalCellPropertiesSelection?.() ?? null;
+    },
+    async captureInsets(selected: PropertiesSelection | null) {
+      if (
+        disposed ||
+        pending ||
+        !selected ||
+        selected.state !== editor.getEditorState() ||
+        !selected.current()
+      )
+        return { state: 'unavailable' as const, reason: 'OriginalCellInsetsUnavailable' };
+      const read = await editor.getOriginalCellInsets(selected.target);
+      if (disposed || selected.state !== editor.getEditorState() || !selected.current())
+        throw Error('StaleOriginalCellSelection');
+      if (read.state !== 'available') return read;
+      const capture = Object.freeze({
+        state: selected.state,
+        selector: read.selector,
+        observation: read.observation,
+      });
+      insetsLeases.set(capture, {
+        state: selected.state,
+        target: read.target,
+        current: selected.current,
+        bindDialog: selected.bindDialog,
+      });
+      return { state: 'available' as const, capture };
+    },
+    bindInsetsDialog(capture: object, element: HTMLDialogElement) {
+      const lease = insetsLeases.get(capture);
+      return (
+        !disposed &&
+        !pending &&
+        !!lease &&
+        lease.state === editor.getEditorState() &&
+        lease.bindDialog(element) &&
+        lease.current()
+      );
+    },
+    async applyInsets(capture: object, patch: CellInsetsPatch) {
+      const lease = insetsLeases.get(capture);
+      if (
+        disposed ||
+        pending ||
+        !lease ||
+        lease.state !== editor.getEditorState() ||
+        !lease.current()
+      )
+        throw Error('StaleOriginalCellSelection');
+      insetsLeases.delete(capture);
+      pending = true;
+      try {
+        return await editor.dispatchCommand(SET_ORIGINAL_CELL_INSETS_COMMAND, {
+          target: lease.target,
+          patch,
+        });
+      } finally {
+        pending = false;
+      }
+    },
+    async captureVerticalAlignment(selected = core.captureOriginalCellPropertiesSelection?.()) {
       if (
         disposed ||
         pending ||

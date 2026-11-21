@@ -146,7 +146,7 @@ const menus: readonly [string, readonly DemoCommand[]][] = [
       'align-distribute-space',
     ],
   ],
-  ['쪽', ['page-settings', 'insert-header', 'insert-footer']],
+  ['쪽', ['page-settings', 'edit-page-restart', 'insert-header', 'insert-footer']],
   [
     '표',
     [

@@ -12,6 +12,9 @@ var strict_layout: ?StrictLayout.Snapshot = null;
 var active: ?*Session = null;
 var history: ?History = null;
 var output: ?[]u8 = null;
+const page_restart_capabilities = @import("page_restart_capabilities.zig");
+const page_restart_wire = @import("page_restart_wire.zig");
+var page_restart_leases: page_restart_capabilities.H5Store = .{};
 var formatting_lifetime: @import("../model/formatting_binding.zig").State = .{};
 var document_text_generation: @import("../model/document_text_read_generation.zig").State = .{};
 var reflow: bool = false;
@@ -54,6 +57,8 @@ export fn hwp5_edit_reflow() u32 {
     return @intFromBool(reflow);
 }
 export fn hwp5_edit_close() void {
+    clearOriginalCellInsetsLease();
+    page_restart_leases.clear(a);
     clearOriginalCellLease();
     clearOriginalCellBlockLease();
     anchored_picture_lease = null;
@@ -2497,4 +2502,104 @@ export fn hwp5_edit_set_original_cell_vertical_alignment_batch(ptr: [*]const u8,
         return if (h.stats().poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) 3 else 0;
     };
     return if (h.revision() != revision) 1 else 2;
+}
+
+// Optional original physical-cell insets. This lease never accepts a caller witness.
+const original_cell_insets_wire = @import("original_cell_insets_wire.zig");
+var original_cell_insets_lease_serial: u64 = 0;
+var original_cell_insets_lease: ?struct { id: u64, before: @import("../hwp5/edit/cell_insets_plan.zig").Observation, revision: u32 } = null;
+fn clearOriginalCellInsetsLease() void {
+    original_cell_insets_lease = null;
+}
+export fn hwp5_edit_original_cell_insets_version() u32 {
+    const h = if (history) |*value| value else return 0;
+    const owned = h.owned orelse return 0;
+    return if (owned.managed and !h.stats().poisoned) 1 else 0;
+}
+export fn hwp5_edit_original_cell_insets(section: u32, paragraph: u32) u32 {
+    hwp5_edit_output_free();
+    clearOriginalCellInsetsLease();
+    const current = session() catch |err| return fail(err);
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    if (h.owned == null) return fail(error.HistoryProtocol2Required);
+    if (h.stats().poisoned) return fail(error.HistoryMutationUncertain);
+    if (hwp5_edit_original_cell_insets_version() != 1) return fail(error.HistoryProtocol2Required);
+    const bindings = current.tableBindings(a, section) catch |err| return fail(err);
+    defer a.free(bindings);
+    var selector: ?@import("../hwp5/edit/cell_insets_plan.zig").Selector = null;
+    for (bindings) |binding| if (binding.paragraph == paragraph) {
+        if (selector != null) return fail(error.InvalidCellDisplayOwner);
+        selector = .{ .section = section, .paragraph = paragraph, .table_node = @intCast(binding.table_node), .list_node = @intCast(binding.list_node) };
+    };
+    const before = current.cellInsets(a, selector orelse return fail(error.InvalidCellDisplayOwner)) catch |err| return fail(err);
+    _ = @import("../model/original_cell_insets.zig").effective(before.source, before.frame) catch |err| return fail(err);
+    const token: ?u64 = if (before.read_only) null else std.math.add(u64, original_cell_insets_lease_serial, 1) catch return fail(error.OriginalCellInsetsScopeExhausted);
+    const bytes = original_cell_insets_wire.observation(a, "hwp5", section, paragraph, before.selector.table_node, before.selector.list_node, token, h.revision(), before.source, before.frame, before.read_only) catch |err| return fail(err);
+    if (token) |id| {
+        original_cell_insets_lease_serial = id;
+        original_cell_insets_lease = .{ .id = id, .before = before, .revision = h.revision() };
+    }
+    output = bytes;
+    return 1;
+}
+export fn hwp5_edit_set_original_cell_insets(ptr: [*]const u8, size: usize) u32 {
+    hwp5_edit_output_free();
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    if (h.owned == null) return fail(error.HistoryProtocol2Required);
+    if (h.stats().poisoned) return fail(error.HistoryMutationUncertain);
+    if (hwp5_edit_original_cell_insets_version() != 1) return fail(error.HistoryProtocol2Required);
+    const request = original_cell_insets_wire.decode(a, ptr[0..size]) catch |err| return fail(err);
+    const lease = original_cell_insets_lease orelse return fail(error.StaleOriginalCellLease);
+    if (lease.id != request.lease) return fail(error.StaleOriginalCellLease);
+    defer clearOriginalCellInsetsLease();
+    if (lease.revision != h.revision()) return fail(error.StaleOriginalCellLease);
+    const revision = h.revision();
+    apply(.{ .set_cell_insets = .{ .before = lease.before, .patch = request.patch } }) catch |err| {
+        _ = fail(err);
+        return if (h.stats().poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    return if (h.revision() != revision) 1 else 2;
+}
+
+// Optional existing PAGE restart edit. Captured Native observations never leave this instance.
+export fn hwp5_edit_page_restart_capabilities() u32 {
+    page_restart_leases.clear(a);
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    if (h.stats().protocolVersion != 2) return fail(error.HistoryProtocol2Required);
+    const epoch = formatting_lifetime.session(a) catch |err| return fail(err);
+    defer a.free(epoch);
+    var revision_buffer: [20]u8 = undefined;
+    var serial_buffer: [20]u8 = undefined;
+    const binding: page_restart_wire.Binding = .{
+        .session = epoch,
+        .revision = std.fmt.bufPrint(&revision_buffer, "{d}", .{h.revision()}) catch unreachable,
+        .serial = std.fmt.bufPrint(&serial_buffer, "{d}", .{view_epoch.current() catch |err| return fail(err)}) catch unreachable,
+    };
+    output = page_restart_capabilities.h5(a, s, h, &page_restart_leases, binding) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_write_page_restart(ptr: [*]const u8, len: usize) u32 {
+    hwp5_edit_output_free();
+    _ = session() catch |err| return fail(err);
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    if (h.stats().protocolVersion != 2) return fail(error.HistoryProtocol2Required);
+    if (len == 0 or len > 65536) return fail(error.LimitExceeded);
+    const parsed = std.json.parseFromSlice(page_restart_wire.Request, a, ptr[0..len], .{ .allocate = .alloc_always, .ignore_unknown_fields = false, .duplicate_field_behavior = .@"error" }) catch |err| return fail(err);
+    defer parsed.deinit();
+    const request = parsed.value;
+    if (request.number == 0) return fail(error.InvalidPageRestartNumber);
+    const revision = page_restart_wire.revision(request.before.revision) catch |err| return fail(err);
+    formatting_lifetime.check(.{ .session = request.before.session, .revision = revision }, h.revision()) catch return fail(error.StalePageRestartBinding);
+    const serial = page_restart_wire.decimal(request.before.serial) catch |err| return fail(err);
+    if (serial != (view_epoch.current() catch |err| return fail(err))) return fail(error.StalePageRestartBinding);
+    // Consume once before apply, including no-op and rejected/uncertain outcomes.
+    const observed = page_restart_leases.take(request.before.lease) catch |err| return fail(err);
+    const before = h.revision();
+    apply(.{ .edit_page_restart = .{ .before = observed, .number = request.number } }) catch |err| {
+        _ = fail(err);
+        return if (err == error.HistoryMutationUncertain or err == error.MutationUncertain or h.stats().poisoned) 3 else 0;
+    };
+    return if (h.revision() == before) 2 else 1;
 }

@@ -14,6 +14,7 @@ import { createDrawingPropertiesTool } from './drawing-properties-tool.ts';
 import type { CanvasObjectActivation, CanvasObjectPropertiesRequest } from '@hwpjs/vanilla';
 import { createInlineObjectInsertTool } from './inline-object-insert-tool.ts';
 import { createShapeCopyTool } from './shape-copy-tool.ts';
+import { createPageRestartTool } from './page-restart-tool.ts';
 import { createPageSettingsTool } from './page-settings-tool.ts';
 import { createTableCellSplitTool, type TableCellSplitCapture } from './table-cell-split-tool.ts';
 import { createTableGridPort, type TableGridHost } from './table-grid-port.ts';
@@ -290,6 +291,12 @@ export async function mountDemo(
       host?.focus?.();
     },
     onPresentationChange: () => shell.update(),
+  });
+  const pageRestartTool = createPageRestartTool({
+    root,
+    editor,
+    onStatus: note,
+    onClose: () => host?.focus?.(),
   });
   const pageSettingsTool = createPageSettingsTool({
     root,
@@ -628,6 +635,7 @@ export async function mountDemo(
       ...formatDialogs.presentation(),
       'paragraph-bullets': paragraphBullet.presentation(),
       'page-settings': pageSettingsTool.presentation(),
+      'edit-page-restart': pageRestartTool.presentation(),
       ...(paragraphShape.available
         ? {
             'paragraph-properties': {
@@ -949,6 +957,10 @@ export async function mountDemo(
     }
     if (action.command === 'format-copy' && (await shapeCopy.action(action.command))) return;
     if (textColor.action(action.command)) return;
+    if (action.command === 'edit-page-restart') {
+      void pageRestartTool.open();
+      return;
+    }
     if (action.command === 'page-settings') {
       void pageSettingsTool.open();
       return;
@@ -1251,6 +1263,7 @@ export async function mountDemo(
     chartProperties.dispose();
     hwp5ChartProperties.dispose();
     pageSettingsTool.dispose();
+    pageRestartTool.dispose();
     paragraphBullet.dispose();
     paragraphShape.dispose();
     formatDialogs.dispose();
@@ -1313,6 +1326,7 @@ export async function mountDemo(
       chartProperties.dispose();
       hwp5ChartProperties.dispose();
       pageSettingsTool.dispose();
+      pageRestartTool.dispose();
       paragraphBullet.dispose();
       paragraphShape.dispose();
       formatDialogs.dispose();

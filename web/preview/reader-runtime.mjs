@@ -1,3 +1,4 @@
+import { createPageRestartCommands } from './page-restart-command.mjs';
 import { isHwp5ChartCreateProfileVersion } from '../../js/hwp5-chart-create-profiles.mjs';
 import {
   queryPictureAnchoredResize,
@@ -294,6 +295,11 @@ export function createReaderRuntime({
       hwp5PreviewDirty = false;
     }
   }
+  const pageRestarts = createPageRestartCommands(
+    () => editor,
+    () =>
+      ['hwp5', 'hwpx'].includes(format) && historyEnabled && !historyPoisoned && !documentWindow,
+  );
   const hwp5ChartData = createHwp5ChartDataCommands(
     () => editor,
     () =>
@@ -1427,6 +1433,27 @@ export function createReaderRuntime({
         reply({ kind: message.kind, content: hwp5Display() });
         return;
       }
+      if (message.kind === 'original-cell-insets-query') {
+        if (
+          !['hwp5', 'hwpx'].includes(format) ||
+          !historyEnabled ||
+          historyPoisoned ||
+          documentWindow ||
+          editor?.supportsOriginalCellInsets?.() !== true
+        ) {
+          reply({
+            kind: message.kind,
+            cellInsets: null,
+            reason: 'OriginalCellInsetsUnavailable',
+          });
+          return;
+        }
+        reply({
+          kind: message.kind,
+          cellInsets: editor.originalCellInsets(message.selector),
+        });
+        return;
+      }
       if (message.kind === 'original-cell-vertical-alignment-query') {
         if (
           !['hwp5', 'hwpx'].includes(format) ||
@@ -1470,23 +1497,29 @@ export function createReaderRuntime({
         return;
       }
       if (
+        message.kind === 'original-cell-insets-set' ||
         message.kind === 'original-cell-vertical-alignment-set' ||
         message.kind === 'original-cell-vertical-alignment-batch-set'
       ) {
+        const insets = message.kind === 'original-cell-insets-set';
         const batch = message.kind === 'original-cell-vertical-alignment-batch-set';
         if (
           !['hwp5', 'hwpx'].includes(format) ||
           !historyEnabled ||
           historyPoisoned ||
           documentWindow ||
-          (batch
-            ? editor?.supportsOriginalCellVerticalAlignmentBatch?.() !== true
-            : editor?.supportsOriginalCellVerticalAlignment?.() !== true)
+          (insets
+            ? editor?.supportsOriginalCellInsets?.() !== true
+            : batch
+              ? editor?.supportsOriginalCellVerticalAlignmentBatch?.() !== true
+              : editor?.supportsOriginalCellVerticalAlignment?.() !== true)
         )
           throw Error('OriginalCellVerticalAlignmentUnavailable');
-        atomicOutcome = batch
-          ? editor.setOriginalCellVerticalAlignmentBatch(message.request)
-          : editor.setOriginalCellVerticalAlignment(message.request);
+        atomicOutcome = insets
+          ? editor.setOriginalCellInsets(message.request)
+          : batch
+            ? editor.setOriginalCellVerticalAlignmentBatch(message.request)
+            : editor.setOriginalCellVerticalAlignment(message.request);
         applied = atomicOutcome.application === 'applied';
         mutationUncertain = atomicOutcome.application === 'unknown';
         if (mutationUncertain) historyPoisoned = true;
@@ -1734,13 +1767,17 @@ export function createReaderRuntime({
         reply({ kind: message.kind, content: format === 'hwpx' ? hwpxDisplay() : hwp5Display() });
         return;
       }
+      if (message.kind === 'page-restarts-query') {
+        reply({ kind: message.kind, pageRestarts: pageRestarts.query() });
+        return;
+      }
       if (message.kind === 'page-settings-capabilities') {
         if (!['hwpx', 'hwp5'].includes(format) || !editor?.supportsPageSettingsWrite?.())
           throw Error('PageSettingsWriteUnavailable');
         reply({ kind: message.kind, pageSettings: editor.pageSettingsCapabilities() });
         return;
       }
-      if (message.kind === 'write-page-settings') {
+      if (message.kind === 'write-page-settings' || message.kind === 'edit-page-restart') {
         if (
           !['hwpx', 'hwp5'].includes(format) ||
           !editor ||
@@ -1749,7 +1786,10 @@ export function createReaderRuntime({
         )
           throw Error('PageSettingsWriteUnavailable');
         if (historyPoisoned) throw Error('HistoryMutationUncertain');
-        atomicOutcome = editor.writePageSettings(message.request);
+        atomicOutcome =
+          message.kind === 'edit-page-restart'
+            ? pageRestarts.apply(message)
+            : editor.writePageSettings(message.request);
         applied = atomicOutcome.application === 'applied';
         mutationUncertain = atomicOutcome.application === 'unknown';
         if (mutationUncertain) historyPoisoned = true;
@@ -2397,6 +2437,7 @@ export function createReaderRuntime({
       }
       if (message.kind === 'load') {
         hwp5ChartData.reset();
+        pageRestarts.reset();
         const availableSectionsOnly = availableSectionsRequest(message);
         const availableSectionCopy = availableSectionCopyRequest(message);
         const requestedPolicy =
@@ -4388,6 +4429,7 @@ export function createReaderRuntime({
   let disposal;
   function clear() {
     hwp5ChartData.reset();
+    pageRestarts.reset();
     hwp5PreviewDirty = false;
     hwpxRichTypingOwners = null;
     displayResources.reset();

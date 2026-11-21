@@ -244,6 +244,42 @@ export async function setA4Page(editor: HeadlessEditor) {
 
 `scope: 'section'`은 조회 시 실제로 선택한 구역에 적용합니다. 선택 구역이 없으면 임의의 첫 구역을 사용하지 않습니다. 문서 전체 요청도 모든 대상 구역을 먼저 검사하며, 중복·조건부 owner나 해석할 수 없는 캐시가 있으면 변경을 거절합니다. 알려진 줄 배치 캐시는 해당 변경에서 무효화합니다. 용지 설정 변경은 하나의 Native 이력으로 처리하며, 저장은 기존 `save()` 계약을 따릅니다.
 
+## 기존 쪽 번호 다시 시작 편집
+
+`getPageRestarts({ section })`은 HWP5·HWPX 구역에 이미 있는 쪽 번호 다시 시작 항목을 조회합니다. 편집할 수 있는 항목에는 현재 문서 상태에 연결된 `target`이 있고, 편집할 수 없는 항목에는 사유가 있습니다. 값을 바꾼 뒤 추가로 편집하려면 대상을 다시 조회하세요.
+
+```ts
+import { EDIT_PAGE_RESTART_COMMAND } from '@ohah/hwpjs';
+
+const read = await editor.getPageRestarts({ section: 0 });
+if (read.state === 'available') {
+  const entry = read.entries.find((item) => item.number === 7);
+  if (entry) {
+    await editor.dispatchCommand(EDIT_PAGE_RESTART_COMMAND, { target: entry.target, number: 30 });
+  }
+}
+```
+
+번호 범위는 1~65535입니다. 이 명령은 기존 컨트롤의 번호를 수정합니다. HWP5 저장에서 레이아웃 재계산이 필요하면 사용자가 변경 가능성을 확인한 뒤 명시적으로 저장을 허용할 수 있습니다.
+
+## 기존 셀의 안쪽 여백 편집
+
+`getOriginalCellInsets(selection)`에 현재 표 선택에서 발급한 `OriginalCellSelectionTarget`을 전달합니다. 읽기 결과에서 현재 여백과 표 기본값을 확인할 수 있습니다. `state`가 `available`이면 발급된 `target`으로 여백을 변경할 수 있습니다.
+
+```ts
+import { SET_ORIGINAL_CELL_INSETS_COMMAND } from '@ohah/hwpjs';
+
+const read = await editor.getOriginalCellInsets(selection);
+if (read.state === 'available') {
+  await editor.dispatchCommand(SET_ORIGINAL_CELL_INSETS_COMMAND, {
+    target: read.target,
+    patch: { mode: 'custom', left: 720 },
+  });
+}
+```
+
+여백은 HWP 단위이며 720은 0.1인치입니다. 생략한 변은 현재 유효값을 유지합니다. `{ mode: 'inherit' }`는 표 기본값을 사용하도록 전환합니다. 여백을 적용한 후 문서 상태가 바뀌므로 다음 편집 전에 선택과 여백을 다시 조회하세요.
+
 ## 새 HWPX 차트·수식 생성
 
 현재 GitHub 소스와 웹 데모는 `CREATE_CHART_COMMAND`, `INSERT_EQUATION_COMMAND`, `getInlineObjectInsertAvailability()`를 제공합니다. npm 릴리스 반영은 별도입니다. 새 생성 ABI가 있는 엔진과 Native history v2가 필요합니다.

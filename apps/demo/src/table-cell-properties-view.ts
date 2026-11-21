@@ -1,3 +1,5 @@
+import type { CellInsetsPatch, CellInsetsValue } from '@hwpjs/core';
+import { createCellInsetsDraft, cellInsetsAxes } from './table-cell-insets-draft.ts';
 import type { OriginalCellAlignment } from '@hwpjs/core';
 import './table-cell-properties.css';
 import { createDialogLayer } from './dialog-layer.ts';
@@ -17,6 +19,12 @@ export function createTableCellPropertiesView(
     dismiss: () => void;
     appearance?: () => void;
     appearanceEnabled?: boolean;
+    insets?: {
+      observation?: CellInsetsValue;
+      editable: boolean;
+      bindDialog?(element: HTMLDialogElement): boolean;
+      apply(patch: CellInsetsPatch): void;
+    };
     verticalAlignment?: {
       value: OriginalCellAlignment | null | 'mixed';
       cellCount?: number;
@@ -91,6 +99,64 @@ export function createTableCellPropertiesView(
   verticalLabel.append(vertical);
   verticalGroup.className = 'hwp-table-cell-properties-group';
   verticalGroup.append(verticalLegend, verticalLabel, verticalHint);
+  const insetsGroup = doc.createElement('fieldset'),
+    insetsLegend = doc.createElement('legend'),
+    insetsMode = doc.createElement('select'),
+    insetsUnit = doc.createElement('select'),
+    insetsHint = doc.createElement('p');
+  insetsGroup.className = 'hwp-table-cell-properties-group';
+  insetsLegend.textContent = '셀 안쪽 여백';
+  insetsGroup.append(insetsLegend);
+  insetsMode.dataset.role = 'cell-insets-mode';
+  insetsMode.setAttribute('aria-label', '안쪽 여백 적용 방식');
+  for (const [value, text] of [
+    ['', '확인할 수 없음'],
+    ['inherit', '표 기본값 사용'],
+    ['custom', '이 셀에 직접 지정'],
+  ]) {
+    const o = doc.createElement('option');
+    o.value = value;
+    o.textContent = text;
+    o.disabled = value === '';
+    insetsMode.append(o);
+  }
+  for (const value of ['mm', 'pt']) {
+    const o = doc.createElement('option');
+    o.value = o.textContent = value;
+    insetsUnit.append(o);
+  }
+  insetsUnit.dataset.role = 'cell-insets-unit';
+  insetsUnit.setAttribute('aria-label', '안쪽 여백 단위');
+  const insetDraft = callbacks.insets?.observation
+    ? createCellInsetsDraft(callbacks.insets.observation)
+    : undefined;
+  const insetFields = cellInsetsAxes.map((axis, i) => {
+    const input = doc.createElement('input'),
+      label = doc.createElement('label');
+    label.className = 'hwp-table-cell-properties-field';
+    label.textContent = ['왼쪽', '오른쪽', '위쪽', '아래쪽'][i];
+    input.type = 'text';
+    input.inputMode = 'decimal';
+    input.dataset.role = `cell-insets-${axis}`;
+    input.setAttribute('aria-label', `안쪽 여백 ${label.textContent}`);
+    label.append(input);
+    return { input, label, axis };
+  });
+  insetsGroup.append(insetsMode, insetsUnit);
+  for (const field of insetFields) insetsGroup.append(field.label);
+  insetsGroup.append(insetsHint);
+  let insetsAvailable = false;
+  const insetsChanged = () => insetsAvailable && insetDraft?.changed() === true;
+  function paintInsets() {
+    const value = insetDraft?.read();
+    insetsMode.value = value?.mode ?? '';
+    insetsUnit.value = value?.unit ?? 'mm';
+    insetFields.forEach((f, i) => {
+      f.input.value = value?.text[i] ?? '';
+      f.input.placeholder = value ? '' : '확인할 수 없음';
+    });
+  }
+  paintInsets();
   const verticalChanged = () => verticalAvailable && vertical.value !== originalAlignment;
   let unitBlocked = false;
   let busy = false,
@@ -218,6 +284,23 @@ export function createTableCellPropertiesView(
           ? '지원하는 세로 정렬을 선택하세요.'
           : '';
     }
+    if (insetsChanged()) {
+      reason = stale;
+      invalid =
+        dimensionsChanged || verticalChanged() ? '크기·정렬·안쪽 여백은 한 항목씩 적용하세요.' : '';
+      try {
+        insetDraft!.patch();
+      } catch {
+        invalid = '안쪽 여백은 0 이상 허용 범위로 입력하고 내용 영역을 남겨주세요.';
+      }
+    }
+    const insetsBlocked = batch || disposed || busy || composing || !!stale || !insetsAvailable;
+    insetsMode.disabled = insetsUnit.disabled = insetsBlocked;
+    for (const f of insetFields)
+      f.input.disabled = insetsBlocked || insetDraft?.read().mode !== 'custom';
+    insetsHint.textContent = insetsAvailable
+      ? '현재 원본 셀 하나에 적용합니다. 다른 속성과 따로 적용하세요.'
+      : '현재 셀의 안쪽 여백을 변경할 수 없습니다.';
     vertical.disabled = disposed || busy || composing || !!stale || !verticalAvailable;
     verticalHint.textContent = verticalAvailable
       ? batch
@@ -237,7 +320,8 @@ export function createTableCellPropertiesView(
         draft().dirty?.width === true ||
         draft().dirty?.height === true ||
         callbacks.appearanceEnabled === false ||
-        verticalChanged();
+        verticalChanged() ||
+        insetsChanged();
     cancel.textContent = busy ? '닫기 (접수된 작업은 계속)' : '취소';
   }
   for (const [axis, input] of [
@@ -255,6 +339,27 @@ export function createTableCellPropertiesView(
   }
   for (const event of ['input', 'change']) mode.addEventListener(event, refresh);
   vertical.addEventListener('change', refresh);
+  insetsMode.addEventListener('change', () => {
+    if (!insetsMode.disabled && insetDraft) {
+      insetDraft.setMode(insetsMode.value as 'inherit' | 'custom');
+      paintInsets();
+      refresh();
+    }
+  });
+  insetsUnit.addEventListener('change', () => {
+    if (!insetsUnit.disabled && insetDraft) {
+      insetDraft.changeUnit(insetsUnit.value as CellSizeUnit);
+      paintInsets();
+      refresh();
+    }
+  });
+  for (const f of insetFields)
+    f.input.addEventListener('input', () => {
+      if (!f.input.disabled && insetDraft) {
+        insetDraft.edit(f.axis, f.input.value);
+        refresh();
+      }
+    });
   unit.addEventListener('change', (event) => {
     if (blocked() || composing || (event as any).isComposing) {
       unit.value = sizes.read().unit;
@@ -291,12 +396,14 @@ export function createTableCellPropertiesView(
   });
   apply.addEventListener('click', (event) => {
     if (disposed || apply.disabled || (event as any).isComposing) return;
-    if (verticalChanged()) {
+    if (insetsChanged()) {
+      callbacks.insets?.apply(insetDraft!.patch());
+    } else if (verticalChanged()) {
       if (knownAlignment(vertical.value)) callbacks.verticalAlignment?.apply(vertical.value);
     } else if (!batch) callbacks.apply(draft());
   });
   cancel.addEventListener('click', callbacks.dismiss);
-  layer.body.append(verticalGroup);
+  layer.body.append(verticalGroup, insetsGroup);
   if (!batch) layer.body.append(note);
   layer.body.append(status);
   if (appearance) layer.footer.append(appearance);
@@ -321,6 +428,18 @@ export function createTableCellPropertiesView(
       verticalAvailable = callbacks.verticalAlignment.bindDialog(layer.element);
     } catch {
       verticalAvailable = false;
+    }
+  }
+  if (
+    !batch &&
+    callbacks.insets?.editable &&
+    insetDraft &&
+    !['ReadOnlyDocument', 'HistoryRecoveryRequired'].includes(capture.writeReason ?? '')
+  ) {
+    try {
+      insetsAvailable = callbacks.insets.bindDialog?.(layer.element) === true;
+    } catch {
+      insetsAvailable = false;
     }
   }
   refresh();

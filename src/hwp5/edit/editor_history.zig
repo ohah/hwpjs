@@ -53,15 +53,29 @@ pub const History = struct {
     fn bind(self: *const History, session: *edit.Session) !void {
         if (self.owner != session) return error.SourceBindingMismatch;
     }
+    pub fn pageRestartInventory(self: *History, session: *edit.Session, a: std.mem.Allocator, section: usize) ![]@import("page_restart_inventory.zig").Candidate {
+        try self.bind(session);
+        if (self.owned == null) return error.HistoryProtocol2Required;
+        return session.pageRestartInventory(a, section, self.revision());
+    }
+    pub fn pageRestart(self: *History, session: *edit.Session, a: std.mem.Allocator, section: usize, control: usize) !@import("page_restart_history.zig").Observation {
+        try self.bind(session);
+        if (self.owned == null) return error.HistoryProtocol2Required;
+        return session.pageRestart(a, section, control, self.revision());
+    }
     pub fn apply(self: *History, session: *edit.Session, command: edit.Command) !bool {
         return self.applyBatch(session, &.{command});
     }
     pub fn applyBatch(self: *History, session: *edit.Session, commands: []const edit.Command) !bool {
         try self.bind(session);
+        for (commands) |command| if (command == .edit_page_restart) {
+            const owned = self.owned orelse return error.HistoryProtocol2Required;
+            return owned.applyBatch(session, commands);
+        };
         if (self.owned == null) for (commands) |command| if (command == .resize_picture_anchored) return error.HistoryProtocol2Required;
         session.invalidateStrictLayout();
         if (self.owned) |h| return h.applyBatch(session, commands);
-        for (commands) |command| if (command == .edit_object_outer_margins or command == .edit_object_vertical_margins or command == .set_cell_vertical_alignment or command == .set_cell_vertical_alignment_block or command == .resize_picture_anchored) return error.HistoryProtocol2Required;
+        for (commands) |command| if (command == .edit_object_outer_margins or command == .edit_object_vertical_margins or command == .set_cell_insets or command == .set_cell_vertical_alignment or command == .set_cell_vertical_alignment_block or command == .resize_picture_anchored) return error.HistoryProtocol2Required;
         try self.bind(session);
         const before = try session.createCheckpoint(self.max_checkpoint_bytes);
         var transferred = false;

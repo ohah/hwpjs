@@ -165,6 +165,14 @@ pub const hwp5_vertical_outer_margins_signatures = [_]OptionalFunctionSignature{
     .{ .name = "hwp5_edit_vertical_outer_margins", .params = &.{ "i32", "i32", "i32" }, .results = &.{"i32"} },
     .{ .name = "hwp5_edit_set_vertical_outer_margins", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
 };
+pub const original_cell_insets_signatures = [_]OptionalFunctionSignature{
+    .{ .name = "hwp5_edit_original_cell_insets_version", .params = &.{}, .results = &.{"i32"} },
+    .{ .name = "hwp5_edit_original_cell_insets", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+    .{ .name = "hwp5_edit_set_original_cell_insets", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+    .{ .name = "hwpx_edit_original_cell_insets_version", .params = &.{}, .results = &.{"i32"} },
+    .{ .name = "hwpx_edit_original_cell_insets", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+    .{ .name = "hwpx_edit_set_original_cell_insets", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+};
 pub const original_cell_vertical_alignment_signatures = [_]OptionalFunctionSignature{
     .{ .name = "hwp5_edit_original_cell_vertical_alignment_version", .params = &.{}, .results = &.{"i32"} },
     .{ .name = "hwp5_edit_original_cell_vertical_alignment", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
@@ -188,6 +196,12 @@ pub const picture_anchored_resize_signatures = [_]OptionalFunctionSignature{
     .{ .name = "hwpx_edit_picture_resize_anchor_version", .params = &.{}, .results = &.{"i32"} },
     .{ .name = "hwpx_edit_picture_resize_anchor_query", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
     .{ .name = "hwpx_edit_picture_resize_anchor_set", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+};
+pub const page_restart_edit_signatures = [_]OptionalFunctionSignature{
+    .{ .name = "hwp5_edit_page_restart_capabilities", .params = &.{}, .results = &.{"i32"} },
+    .{ .name = "hwp5_edit_write_page_restart", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+    .{ .name = "hwpx_edit_page_restart_capabilities", .params = &.{}, .results = &.{"i32"} },
+    .{ .name = "hwpx_edit_write_page_restart", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
 };
 pub const document = struct {
     pub const header_bytes: usize = 8;
