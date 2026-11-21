@@ -1,0 +1,313 @@
+{
+  "solid": {
+    "sourceOnly": true,
+    "cells": [
+      {
+        "table_node": 38,
+        "cell_node": 44,
+        "list_node": 45,
+        "border_fill_id": 0,
+        "style_index": 0
+      },
+      {
+        "table_node": 38,
+        "cell_node": 53,
+        "list_node": 54,
+        "border_fill_id": 1,
+        "style_index": 1
+      },
+      {
+        "table_node": 38,
+        "cell_node": 63,
+        "list_node": 64,
+        "border_fill_id": 1,
+        "style_index": 1
+      },
+      {
+        "table_node": 38,
+        "cell_node": 72,
+        "list_node": 73,
+        "border_fill_id": 1,
+        "style_index": 1
+      }
+    ],
+    "styles": [
+      {
+        "id": 0,
+        "node": 64,
+        "edges": [
+          {
+            "style": "NONE",
+            "width": "0.1 mm",
+            "color": "#000000"
+          },
+          {
+            "style": "NONE",
+            "width": "0.1 mm",
+            "color": "#000000"
+          },
+          {
+            "style": "NONE",
+            "width": "0.1 mm",
+            "color": "#000000"
+          },
+          {
+            "style": "NONE",
+            "width": "0.1 mm",
+            "color": "#000000"
+          }
+        ],
+        "diagonal": {
+          "style": "SOLID",
+          "width": "0.1 mm",
+          "color": "#000000"
+        },
+        "slash": "NONE",
+        "back_slash": "NONE",
+        "slash_crooked": "0",
+        "slash_is_counter": "0",
+        "back_slash_crooked": "0",
+        "back_slash_is_counter": "0",
+        "slash_node": 65,
+        "back_slash_node": 66,
+        "three_d": "0",
+        "shadow": "0",
+        "center_line": "NONE",
+        "break_cell_separate_line": "0",
+        "fill_node": 72,
+        "fill_report": {
+          "header_and_sections": 1,
+          "master_pages": 0,
+          "brushes": [
+            {
+              "part_kind": "header",
+              "part_item_index": 0,
+              "section_ordinal": null,
+              "element_index": 72,
+              "parent_element_index": 64,
+              "child_counts": [
+                1,
+                0,
+                0
+              ],
+              "other_attributes": 0,
+              "direct_children": 1
+            }
+          ],
+          "nodes": [
+            {
+              "kind": "win_brush",
+              "brush_index": 0,
+              "parent_node_index": null,
+              "element_index": 73,
+              "raw": [
+                "#563412",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              "attribute_bytes": 7,
+              "other_attributes": 0,
+              "unknown_enums": 0,
+              "non_six_hex_colors": 0,
+              "direct_children": 0,
+              "recognized_children": 0
+            }
+          ],
+          "kind_counts": [
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "other_attributes": 0,
+          "unknown_enums": 0,
+          "non_six_hex_colors": 0,
+          "attribute_bytes": 7,
+          "direct_children": 1,
+          "color_count_mismatch": 0
+        },
+        "semantic_fill_colors": [
+          {
+            "node": 73,
+            "field": "winBrush.faceColor",
+            "rgb": 1193046
+          }
+        ],
+        "semantic_face_colors": [
+          {
+            "node": 73,
+            "field": "winBrush.faceColor",
+            "rgb": 1193046
+          }
+        ],
+        "source_color_profile": {
+          "id": "hangul-10.0.0.5060-xml1.2",
+          "encoding": "colorref24",
+          "verified": true
+        },
+        "unknown_children": 0,
+        "unknown_attributes": 0
+      },
+      {
+        "id": 1,
+        "node": 46,
+        "edges": [
+          {
+            "style": "NONE",
+            "width": "0.1 mm",
+            "color": "#000000"
+          },
+          {
+            "style": "NONE",
+            "width": "0.1 mm",
+            "color": "#000000"
+          },
+          {
+            "style": "NONE",
+            "width": "0.1 mm",
+            "color": "#000000"
+          },
+          {
+            "style": "NONE",
+            "width": "0.1 mm",
+            "color": "#000000"
+          }
+        ],
+        "diagonal": {
+          "style": "SOLID",
+          "width": "0.1 mm",
+          "color": "#000000"
+        },
+        "slash": "NONE",
+        "back_slash": "NONE",
+        "slash_crooked": "0",
+        "slash_is_counter": "0",
+        "back_slash_crooked": "0",
+        "back_slash_is_counter": "0",
+        "slash_node": 47,
+        "back_slash_node": 48,
+        "three_d": "0",
+        "shadow": "0",
+        "center_line": "NONE",
+        "break_cell_separate_line": "0",
+        "fill_node": null,
+        "fill_report": null,
+        "semantic_fill_colors": [],
+        "semantic_face_colors": [],
+        "source_color_profile": {
+          "id": "hangul-10.0.0.5060-xml1.2",
+          "encoding": "colorref24",
+          "verified": true
+        },
+        "unknown_children": 0,
+        "unknown_attributes": 0
+      }
+    ]
+  },
+  "none": {
+    "sourceOnly": true,
+    "cells": [
+      {
+        "table_node": 38,
+        "cell_node": 44,
+        "list_node": 45,
+        "border_fill_id": 1,
+        "style_index": 0
+      },
+      {
+        "table_node": 38,
+        "cell_node": 53,
+        "list_node": 54,
+        "border_fill_id": 1,
+        "style_index": 0
+      },
+      {
+        "table_node": 38,
+        "cell_node": 63,
+        "list_node": 64,
+        "border_fill_id": 1,
+        "style_index": 0
+      },
+      {
+        "table_node": 38,
+        "cell_node": 72,
+        "list_node": 73,
+        "border_fill_id": 1,
+        "style_index": 0
+      }
+    ],
+    "styles": [
+      {
+        "id": 1,
+        "node": 46,
+        "edges": [
+          {
+            "style": "NONE",
+            "width": "0.1 mm",
+            "color": "#000000"
+          },
+          {
+            "style": "NONE",
+            "width": "0.1 mm",
+            "color": "#000000"
+          },
+          {
+            "style": "NONE",
+            "width": "0.1 mm",
+            "color": "#000000"
+          },
+          {
+            "style": "NONE",
+            "width": "0.1 mm",
+            "color": "#000000"
+          }
+        ],
+        "diagonal": {
+          "style": "SOLID",
+          "width": "0.1 mm",
+          "color": "#000000"
+        },
+        "slash": "NONE",
+        "back_slash": "NONE",
+        "slash_crooked": "0",
+        "slash_is_counter": "0",
+        "back_slash_crooked": "0",
+        "back_slash_is_counter": "0",
+        "slash_node": 47,
+        "back_slash_node": 48,
+        "three_d": "0",
+        "shadow": "0",
+        "center_line": "NONE",
+        "break_cell_separate_line": "0",
+        "fill_node": null,
+        "fill_report": null,
+        "semantic_fill_colors": [],
+        "semantic_face_colors": [],
+        "source_color_profile": {
+          "id": "hangul-10.0.0.5060-xml1.2",
+          "encoding": "colorref24",
+          "verified": true
+        },
+        "unknown_children": 0,
+        "unknown_attributes": 0
+      }
+    ]
+  }
+}

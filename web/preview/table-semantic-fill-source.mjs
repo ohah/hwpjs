@@ -1,4 +1,6 @@
 import { rgbCss } from './rgb-css.mjs';
+import { colorrefCss } from './colorref-css.mjs';
+import { parseCharacterColor } from '../../js/character-color-args.mjs';
 import { tableSemanticFaceFill } from './table-semantic-face-fill.mjs';
 import { isSourceColorProfile } from '../../js/hwpx-document-provenance.mjs';
 
@@ -131,14 +133,24 @@ export function tableSemanticFillProjection(style, selected) {
     }
   }
   const color = (node, field) => rgbCss(values.get(`${node.element_index}:${field}`));
-  // Exact own-writer compatibility for already saved table resources. The shared
+  // Exact own-writer compatibility for already saved table resources, including
+  // the observed legacy COLORREF profile. The shared
   // drawing selector still requires explicit alpha; no source DTO is rewritten.
   const profile = style.source_color_profile,
     minimal = nodes[0];
-  const authoredMinimalSolid =
+  const supportedMinimalProfile =
     isSourceColorProfile(profile) &&
-    profile.id === 'hwpjs-authored-v1-rgb24' &&
-    profile.encoding === 'rgb24' &&
+    ((profile.id === 'hwpjs-authored-v1-rgb24' && profile.encoding === 'rgb24') ||
+      (profile.id === 'hangul-10.0.0.5060-xml1.2' && profile.encoding === 'colorref24'));
+  const rawFace = parseCharacterColor(minimal?.raw?.[0]);
+  const expectedFace =
+    rawFace === null
+      ? null
+      : profile?.encoding === 'colorref24'
+        ? colorrefCss(rawFace)
+        : rgbCss(rawFace);
+  const ownWriterMinimalSolid =
+    supportedMinimalProfile &&
     profile.verified === true &&
     style.unknown_attributes === 0 &&
     style.unknown_children === 0 &&
@@ -173,12 +185,12 @@ export function tableSemanticFillProjection(style, selected) {
     values.size === 1 &&
     Array.isArray(style.semantic_face_colors) &&
     style.semantic_face_colors.length === 1 &&
-    color(minimal, 'winBrush.faceColor') === minimal.raw[0].toLowerCase();
+    color(minimal, 'winBrush.faceColor') === expectedFace;
   return {
     state: 'ready',
     project(source) {
       if (
-        authoredMinimalSolid &&
+        ownWriterMinimalSolid &&
         source.state === 'unavailable' &&
         source.error === 'UnsupportedDrawingPatternFill'
       )

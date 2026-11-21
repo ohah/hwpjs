@@ -1,5 +1,6 @@
 /** Internal compatibility inventory from reader-runtime and canvas-editor, not a general JSON API. */
 export const SURFACE_READ_KINDS = Object.freeze([
+  'object-outer-margins-query',
   'picture-replacement-query',
   'formatting-capabilities',
   'query-formatting',
@@ -32,6 +33,7 @@ export const SURFACE_READ_KINDS = Object.freeze([
   'dutmal-text-query',
 ] as const);
 export const SURFACE_MUTATION_KINDS = Object.freeze([
+  'object-outer-margins-set',
   'insert-equation',
   'create-chart',
   'delete-note',

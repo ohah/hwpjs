@@ -1,3 +1,4 @@
+import { isInlineTableHostUnit } from './inline-table-host-run.mjs';
 /** Shared CSS-pixel row geometry, with compatibility for numeric-only layouts. */
 import { affinePoint, inverseAffine } from './affine-point-geometry.mjs';
 import { rowPageClipContains } from './row-page-clip.mjs';
@@ -70,15 +71,28 @@ export function rowAtPoint(layout, x, y) {
     if (!Array.isArray(boundaries) || !boundaries.length) return false;
     const start = boundaries[0]?.x,
       end = boundaries.at(-1)?.x;
-    return (
-      Number.isFinite(start) &&
-      Number.isFinite(end) &&
-      end > start &&
-      point[0] >= rowLeft(row) + start &&
-      point[0] < rowLeft(row) + end &&
-      point[1] >= rowTop(row, index) + rowTextTop(row) &&
-      point[1] < rowTop(row, index) + rowTextTop(row) + rowTextHeight(row)
-    );
+    const localX = point[0] - rowLeft(row);
+    const textY = rowTop(row, index) + rowTextTop(row);
+    if (
+      !(
+        Number.isFinite(start) &&
+        Number.isFinite(end) &&
+        localX >= start &&
+        localX < end &&
+        point[1] >= textY &&
+        point[1] < textY + rowTextHeight(row)
+      )
+    )
+      return false;
+    if (!row.inlineTables?.length) return true;
+    // Use the same projected table units that suppress host glyph painting.
+    for (let index = 1; index < boundaries.length; index++) {
+      const start = boundaries[index - 1],
+        end = boundaries[index];
+      if (localX >= start.x && localX < end.x && !isInlineTableHostUnit(row, start.unit))
+        return true;
+    }
+    return false;
   });
   if (ink >= 0) return ink;
   // Equal layers retain array order; floating layers match the paint order.

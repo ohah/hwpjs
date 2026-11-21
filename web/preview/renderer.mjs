@@ -1,3 +1,4 @@
+import { isInlineTableHostUnit } from './inline-table-host-run.mjs';
 import { capturePictureSelection } from './picture-selection-capture.mjs';
 import {
   createHwp5ChartResources,
@@ -1099,7 +1100,7 @@ export function createRenderer(
                   item.drawing.hostParagraph === row.paragraph &&
                   item.drawing.anchorUnit === start.unit,
               ) ||
-              row.inlineTables?.some((table) => table.unit === start.unit) ||
+              isInlineTableHostUnit(row, start.unit) ||
               layout.placedDrawings?.some(
                 (d) =>
                   d.section === row.section &&

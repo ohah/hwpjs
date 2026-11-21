@@ -927,6 +927,26 @@ jobs:
             ./apps/demo/tests/created-cell-properties-view.test.mjs \
             2>&1 | tee "$RUNNER_TEMP/created-cell-properties.tap"
           grep -Eq '^# skipped 0$' "$RUNNER_TEMP/created-cell-properties.tap"
+      - name: Test object outer margins and saved table fill
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --experimental-transform-types --max-old-space-size=384 \
+            --import ./tools/tests/picture-resize-source-provider.mjs \
+            --test --test-concurrency=1 --test-reporter=tap \
+            ./apps/demo/tests/object-outer-margins-{form,input,port,wrap}.test.mjs \
+            ./apps/demo/tests/object-properties-edit-gate.test.mjs \
+            ./tools/tests/object-outer-margins{,-abi}.test.mjs \
+            ./tests/canvas/table-existing-minimal-fill.test.mjs \
+            ./tests/hwpx/inline-table-empty-cell-hit.test.mjs \
+            ./tests/hwpx/inline-table-host-run.test.mjs \
+            ./tests/hwpx/inline-table-host-projection.test.mjs \
+            ./tests/created-cell-properties-wire.test.mjs \
+            2>&1 | tee "$RUNNER_TEMP/object-outer-margins.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/object-outer-margins.tap"
+          bun test ./packages/core/tests/commands/object-outer-margins.test.ts ./packages/core/tests/transport/object-outer-margins-admission.test.ts
+          node node_modules/typescript/lib/tsc.js --noEmit -p ./tools/tests/tsconfig.object-outer-margins.json
       - name: Test selected table object and formatting command regressions
         timeout-minutes: 2
         run: |

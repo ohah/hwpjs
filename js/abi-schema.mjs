@@ -245,3 +245,10 @@ export const CREATED_CELL_PROPERTIES_ABI = Object.freeze(
     ]),
   ),
 );
+
+// Optional HWPX existing-node margins; no expansion of required ABI6 or geometry V1.
+export const HWPX_OBJECT_OUTER_MARGINS_ABI = Object.freeze({
+  hwpx_edit_object_outer_margins_version: { params: [], results: ['i32'] },
+  hwpx_edit_object_outer_margins: { params: ['i32', 'i32'], results: ['i32'] },
+  hwpx_edit_set_object_outer_margins: { params: ['i32', 'i32'], results: ['i32'] },
+});

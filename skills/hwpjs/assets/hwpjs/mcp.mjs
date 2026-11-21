@@ -1084,7 +1084,7 @@ const guid = /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9
 /** Returns a regex for validating an RFC 9562/4122 UUID.
 *
 * @param version Optionally specify a version 1-8. If no version is specified, all versions are supported. */
-const uuid = (version) => {
+const uuid$1 = (version) => {
 	if (!version) return /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/;
 	return new RegExp(`^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-${version}[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$`);
 };
@@ -1620,8 +1620,8 @@ const $ZodUUID = /*@__PURE__*/ $constructor("$ZodUUID", (inst, def) => {
 			v8: 8
 		}[def.version];
 		if (v === void 0) throw new Error(`Invalid UUID version: "${def.version}"`);
-		def.pattern ?? (def.pattern = uuid(v));
-	} else def.pattern ?? (def.pattern = uuid());
+		def.pattern ?? (def.pattern = uuid$1(v));
+	} else def.pattern ?? (def.pattern = uuid$1());
 	$ZodStringFormat.init(inst, def);
 });
 const $ZodEmail = /*@__PURE__*/ $constructor("$ZodEmail", (inst, def) => {
@@ -26402,7 +26402,7 @@ function decodeCreatedCellDocumentProjection(bytes, format) {
 	for (const [section, part] of value.sections.entries()) {
 		exact$1(part, ["section", "tables"]);
 		if (part.section !== section) throw Error("InvalidCreatedCellProjection");
-		const rows = format === "hwp5" ? decodeHwp5CreatedTables(encoder$17.encode(JSON.stringify(part.tables)), { cellGeometryVersion: 1 }) : validateCreatedTables(part.tables, { cellGeometryVersion: 1 });
+		const rows = format === "hwp5" ? decodeHwp5CreatedTables(encoder$18.encode(JSON.stringify(part.tables)), { cellGeometryVersion: 1 }) : validateCreatedTables(part.tables, { cellGeometryVersion: 1 });
 		sections.push(rows);
 		for (const row of rows) {
 			const table = format === "hwp5" ? row.table : row;
@@ -26445,43 +26445,43 @@ function decodeCreatedCellDocumentProjection(bytes, format) {
 	}
 	return sections;
 }
-var decoder$6, encoder$17, uint$57;
+var decoder$6, encoder$18, uint$57;
 var init_created_cell_properties_projection = __esmMin((() => {
 	init_hwpx_created_tables();
 	init_hwp5_created_tables();
 	init_border_fill_values();
 	init_cell_fill_command();
 	decoder$6 = new TextDecoder("utf-8", { fatal: true });
-	encoder$17 = new TextEncoder();
+	encoder$18 = new TextEncoder();
 	uint$57 = (n, max = 16777215) => Number.isInteger(n) && n >= 0 && n <= max;
 }));
 // ../../js/created-cell-properties.mjs
 function own$3(value, depth = 0) {
 	if (value === null || typeof value !== "object") return value;
-	if (depth > 6) return invalid$7();
+	if (depth > 6) return invalid$8();
 	const array = Array.isArray(value);
-	if (!array && ![Object.prototype, null].includes(Object.getPrototypeOf(value))) return invalid$7();
+	if (!array && ![Object.prototype, null].includes(Object.getPrototypeOf(value))) return invalid$8();
 	const keys = Reflect.ownKeys(value);
-	if (keys.length > 32 || keys.some((key) => typeof key !== "string")) return invalid$7();
+	if (keys.length > 32 || keys.some((key) => typeof key !== "string")) return invalid$8();
 	const out = array ? [] : Object.create(null);
 	for (const key of keys) {
 		const field = Object.getOwnPropertyDescriptor(value, key);
-		if (!field || !Object.hasOwn(field, "value")) return invalid$7();
+		if (!field || !Object.hasOwn(field, "value")) return invalid$8();
 		if (array && key === "length") continue;
-		if (!field.enumerable) return invalid$7();
-		if (array && !/^(0|[1-9][0-9]*)$/.test(key)) return invalid$7();
+		if (!field.enumerable) return invalid$8();
+		if (array && !/^(0|[1-9][0-9]*)$/.test(key)) return invalid$8();
 		Object.defineProperty(out, key, {
 			value: own$3(field.value, depth + 1),
 			enumerable: true
 		});
 	}
-	if (array && (out.length !== value.length || keys.length !== out.length + 1)) return invalid$7();
+	if (array && (out.length !== value.length || keys.length !== out.length + 1)) return invalid$8();
 	return Object.freeze(out);
 }
 function shape$1(value, allowed, required = []) {
-	if (!value || typeof value !== "object" || Array.isArray(value)) return invalid$7();
+	if (!value || typeof value !== "object" || Array.isArray(value)) return invalid$8();
 	const keys = Reflect.ownKeys(value);
-	if (keys.some((key) => !allowed.includes(key)) || required.some((key) => !Object.hasOwn(value, key))) return invalid$7();
+	if (keys.some((key) => !allowed.includes(key)) || required.some((key) => !Object.hasOwn(value, key))) return invalid$8();
 	return keys;
 }
 function uint$56(value, positive = false, max = 4294967295) {
@@ -26517,13 +26517,13 @@ function captureCreatedCellPropertiesRequest(input) {
 	uint$56(value.expected.height, true);
 	let changed = false;
 	if (Object.hasOwn(value, "size")) {
-		if (!shape$1(value.size, ["width", "height"]).length) return invalid$7();
+		if (!shape$1(value.size, ["width", "height"]).length) return invalid$8();
 		for (const key of Reflect.ownKeys(value.size)) uint$56(value.size[key], true);
 		changed = true;
 	}
 	let appearance;
 	if (Object.hasOwn(value, "appearance")) {
-		if (!shape$1(value.appearance, ["borders", "fill"]).length) return invalid$7();
+		if (!shape$1(value.appearance, ["borders", "fill"]).length) return invalid$8();
 		appearance = { ...value.appearance };
 		if (Object.hasOwn(appearance, "borders")) {
 			const edges = shape$1(appearance.borders, [
@@ -26532,16 +26532,16 @@ function captureCreatedCellPropertiesRequest(input) {
 				"top",
 				"bottom"
 			]);
-			if (!edges.length) return invalid$7();
+			if (!edges.length) return invalid$8();
 			for (const edge of edges) {
 				const stroke = appearance.borders[edge];
 				if (!shape$1(stroke, [
 					"style",
 					"width",
 					"color"
-				]).length) return invalid$7();
-				if (Object.hasOwn(stroke, "style") && !CELL_BORDER_STYLES.includes(stroke.style)) return invalid$7();
-				if (Object.hasOwn(stroke, "width") && !CELL_BORDER_WIDTHS.includes(stroke.width)) return invalid$7();
+				]).length) return invalid$8();
+				if (Object.hasOwn(stroke, "style") && !CELL_BORDER_STYLES.includes(stroke.style)) return invalid$8();
+				if (Object.hasOwn(stroke, "width") && !CELL_BORDER_WIDTHS.includes(stroke.width)) return invalid$8();
 				if (Object.hasOwn(stroke, "color")) uint$56(stroke.color, false, 16777215);
 			}
 		}
@@ -26549,18 +26549,18 @@ function captureCreatedCellPropertiesRequest(input) {
 		appearance = Object.freeze(appearance);
 		changed = true;
 	}
-	if (!changed) return invalid$7();
+	if (!changed) return invalid$8();
 	return Object.freeze({
 		...value,
 		...appearance ? { appearance } : {}
 	});
 }
-var invalid$7;
+var invalid$8;
 var init_created_cell_properties = __esmMin((() => {
 	init_created_table_identity();
 	init_cell_fill_command();
 	init_cell_border_command();
-	invalid$7 = () => {
+	invalid$8 = () => {
 		throw TypeError("InvalidCreatedCellProperties");
 	};
 }));
@@ -26677,7 +26677,7 @@ function createCreatedCellPropertiesApi({ wasm, memory, check, prefix }) {
 			} finally {
 				wasm[`${prefix}_output_free`]();
 			}
-			const bytes = encoder$16.encode(JSON.stringify({
+			const bytes = encoder$17.encode(JSON.stringify({
 				...request,
 				appearance: appearance(request.appearance),
 				witness: binding
@@ -26716,11 +26716,11 @@ function createCreatedCellPropertiesApi({ wasm, memory, check, prefix }) {
 		}
 	};
 }
-var encoder$16;
+var encoder$17;
 var init_created_cell_properties_api = __esmMin((() => {
 	init_created_cell_properties_projection();
 	init_created_cell_properties();
-	encoder$16 = new TextEncoder();
+	encoder$17 = new TextEncoder();
 }));
 // ../../js/hwp5-strict-layout-transport.mjs
 function registerStrictLayoutTransport(editor, transport) {
@@ -27193,6 +27193,20 @@ var init_abi_schema = __esmMin((() => {
 			results: ["i32"]
 		}]
 	])));
+	Object.freeze({
+		hwpx_edit_object_outer_margins_version: {
+			params: [],
+			results: ["i32"]
+		},
+		hwpx_edit_object_outer_margins: {
+			params: ["i32", "i32"],
+			results: ["i32"]
+		},
+		hwpx_edit_set_object_outer_margins: {
+			params: ["i32", "i32"],
+			results: ["i32"]
+		}
+	});
 }));
 // ../../js/hwpx-inline-object-record.mjs
 /** Strict data-only record; shared by creation payload and owner contracts. */
@@ -32057,7 +32071,7 @@ function checkedHwp5LiteralEdits(input) {
 		for (const key of kind === "category" ? ["category"] : ["series", "category"]) if (!Number.isSafeInteger(raw[key]) || raw[key] < 0 || Object.is(raw[key], -0)) throw Error("InvalidChartLiteralEdits");
 		for (const key of ["expected", "value"]) {
 			if (typeof raw[key] !== "string" || /[\uD800-\uDFFF]/u.test(raw[key])) throw Error("InvalidChartLiteralEdits");
-			const bytes = encoder$15.encode(raw[key]).length;
+			const bytes = encoder$16.encode(raw[key]).length;
 			if (bytes > (kind === "category" ? 4096 : 128) || bytes > budget) throw Error("ChartLiteralEditValueLimit");
 			budget -= bytes;
 		}
@@ -32163,16 +32177,16 @@ function createHwp5ChartLiteralEditApi({ wasm, memory, check, output, u32 }) {
 		}
 	};
 }
-var encoder$15, maxWire, jsonBytes, parse$5, freeze;
+var encoder$16, maxWire, jsonBytes, parse$5, freeze;
 var init_hwp5_chart_literal_edit = __esmMin((() => {
 	init_abi_schema();
 	init_hwpx_inline_object_record();
 	init_native_edit_outcome();
 	init_hwp5_chart_create_preview();
-	encoder$15 = new TextEncoder();
+	encoder$16 = new TextEncoder();
 	maxWire = 16777216;
 	jsonBytes = (value) => {
-		const bytes = encoder$15.encode(JSON.stringify(value));
+		const bytes = encoder$16.encode(JSON.stringify(value));
 		if (!bytes.length || bytes.length > maxWire) throw Error("ChartLiteralEditWireLimit");
 		return bytes;
 	};
@@ -32236,9 +32250,9 @@ function decodeHwp5DrawingSources(bytes) {
 var init_hwp5_drawing_sources = __esmMin((() => {}));
 // ../../js/hwp5-chart-display-api.mjs
 function envelope(bytes, kind) {
-	if (!(bytes instanceof Uint8Array) || bytes.length > 16777216) invalid$6();
+	if (!(bytes instanceof Uint8Array) || bytes.length > 16777216) invalid$7();
 	const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-	if (!value || value.format !== "hwp5" || value.version !== 1 || value.kind !== kind || typeof value.source_epoch !== "string" || !/^[1-9][0-9]{0,19}$/.test(value.source_epoch) || BigInt(value.source_epoch) > 18446744073709551615n || value.history_revision !== null && !uint$54(value.history_revision)) invalid$6();
+	if (!value || value.format !== "hwp5" || value.version !== 1 || value.kind !== kind || typeof value.source_epoch !== "string" || !/^[1-9][0-9]{0,19}$/.test(value.source_epoch) || BigInt(value.source_epoch) > 18446744073709551615n || value.history_revision !== null && !uint$54(value.history_revision)) invalid$7();
 	return value;
 }
 function owner$2(value, allowUnresolved = false) {
@@ -32252,42 +32266,42 @@ function owner$2(value, allowUnresolved = false) {
 		"current_unit",
 		"attributes",
 		"opaque_tail_bytes"
-	].every((key) => uint$54(value[key])) || !uint$54(value.ordinal, 65535) || !allowUnresolved && value.ordinal === 0 || !["spec24", "observed26"].includes(value.ole_layout) || ![value.extent_x, value.extent_y].every((number) => Number.isInteger(number) && number >= -2147483648 && number <= 2147483647) || !(value.paragraph_node < value.control_node && value.control_node < value.component_node && value.component_node < value.ole_node)) invalid$6();
-	if (!digest$4(value.section_source_sha256)) invalid$6();
+	].every((key) => uint$54(value[key])) || !uint$54(value.ordinal, 65535) || !allowUnresolved && value.ordinal === 0 || !["spec24", "observed26"].includes(value.ole_layout) || ![value.extent_x, value.extent_y].every((number) => Number.isInteger(number) && number >= -2147483648 && number <= 2147483647) || !(value.paragraph_node < value.control_node && value.control_node < value.component_node && value.component_node < value.ole_node)) invalid$7();
+	if (!digest$4(value.section_source_sha256)) invalid$7();
 	validateHwp5DrawingSources([value.geometry]);
 	if (value.geometry.kind_id !== 611282021 || [
 		"control_node",
 		"component_node",
 		"paragraph_node"
-	].some((key) => value[key] !== value.geometry[key])) invalid$6();
+	].some((key) => value[key] !== value.geometry[key])) invalid$7();
 	return value;
 }
 function decodeHwp5ChartCandidates(bytes) {
 	const value = envelope(bytes, "hwp5_chart_candidates");
-	if (!Array.isArray(value.candidates) || value.candidates.length > 4096) invalid$6();
+	if (!Array.isArray(value.candidates) || value.candidates.length > 4096) invalid$7();
 	const seen = /* @__PURE__ */ new Map();
 	for (const row of value.candidates) {
-		if (!row || !uint$54(row.section)) invalid$6();
+		if (!row || !uint$54(row.section)) invalid$7();
 		owner$2(row.owner, true);
 		const key = row.section + ":" + row.owner.control_node;
-		if (seen.has(key)) invalid$6();
+		if (seen.has(key)) invalid$7();
 		seen.set(key, row);
 		const r = row.resource;
 		if (!r || ![
 			"modern_chart",
 			"unresolved_ole",
 			"unavailable"
-		].includes(r.state)) invalid$6();
+		].includes(r.state)) invalid$7();
 		if (r.state === "modern_chart") {
-			if (row.owner.ordinal === 0 || !uint$54(r.physical_id, 65535) || !digest$4(r.resource_sha256) || !uint$54(r.stream_entry) || typeof r.legacy_backup_present !== "boolean" || !uint$54(r.presentation_streams) || r.error_name !== null) invalid$6();
-		} else if (typeof r.error_name !== "string" || !r.error_name.length || r.physical_id !== null || r.resource_sha256 !== null || r.stream_entry !== null || r.legacy_backup_present !== null || r.presentation_streams !== null) invalid$6();
+			if (row.owner.ordinal === 0 || !uint$54(r.physical_id, 65535) || !digest$4(r.resource_sha256) || !uint$54(r.stream_entry) || typeof r.legacy_backup_present !== "boolean" || !uint$54(r.presentation_streams) || r.error_name !== null) invalid$7();
+		} else if (typeof r.error_name !== "string" || !r.error_name.length || r.physical_id !== null || r.resource_sha256 !== null || r.stream_entry !== null || r.legacy_backup_present !== null || r.presentation_streams !== null) invalid$7();
 	}
 	return value;
 }
 function decodeHwp5ChartDisplay(bytes) {
 	const value = envelope(bytes, "hwp5_chart_display");
 	owner$2(value.owner);
-	if (!uint$54(value.section) || !uint$54(value.physical_id, 65535) || !digest$4(value.resource_sha256) || !uint$54(value.stream_entry) || typeof value.legacy_backup_present !== "boolean" || !uint$54(value.presentation_streams) || Object.hasOwn(value, "pair") || Object.hasOwn(value, "host")) invalid$6();
+	if (!uint$54(value.section) || !uint$54(value.physical_id, 65535) || !digest$4(value.resource_sha256) || !uint$54(value.stream_entry) || typeof value.legacy_backup_present !== "boolean" || !uint$54(value.presentation_streams) || Object.hasOwn(value, "pair") || Object.hasOwn(value, "host")) invalid$7();
 	validateChartDisplayData(value.data);
 	return value;
 }
@@ -32313,17 +32327,17 @@ function createHwp5ChartDisplayApi({ wasm, check, output, u32 }) {
 			ready();
 			const s = u32(section, "section"), c = u32(control, "control");
 			const value = decodeHwp5ChartDisplay(output(() => wasm.hwp5_edit_chart_display(s, c)).bytes);
-			if (value.section !== s || value.owner.control_node !== c) invalid$6();
+			if (value.section !== s || value.owner.control_node !== c) invalid$7();
 			return value;
 		}
 	};
 }
-var invalid$6, uint$54, digest$4;
+var invalid$7, uint$54, digest$4;
 var init_hwp5_chart_display_api = __esmMin((() => {
 	init_abi_schema();
 	init_hwp5_drawing_sources();
 	init_chart_display_data();
-	invalid$6 = () => {
+	invalid$7 = () => {
 		throw Error("InvalidHwp5ChartReply");
 	};
 	uint$54 = (value, maximum = 4294967295) => Number.isInteger(value) && value >= 0 && value <= maximum;
@@ -32331,11 +32345,11 @@ var init_hwp5_chart_display_api = __esmMin((() => {
 }));
 // ../../js/hwp5-equation-sources.mjs
 function keys$5(value, required) {
-	if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).length !== required.length || required.some((key) => !Object.hasOwn(value, key))) invalid$5();
+	if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).length !== required.length || required.some((key) => !Object.hasOwn(value, key))) invalid$6();
 }
 function parse$4(bytes) {
-	if (!(bytes instanceof Uint8Array) || bytes.length > 16777216) invalid$5();
-	return JSON.parse(utf8$5.decode(bytes));
+	if (!(bytes instanceof Uint8Array) || bytes.length > 16777216) invalid$6();
+	return JSON.parse(utf8$6.decode(bytes));
 }
 function site(value) {
 	const fields = [
@@ -32347,7 +32361,7 @@ function site(value) {
 		"current_unit"
 	];
 	keys$5(value, fields);
-	if (fields.some((key) => !uint$53(value[key])) || value.control_node <= value.paragraph_node || value.equation_node <= value.control_node) invalid$5();
+	if (fields.some((key) => !uint$53(value[key])) || value.control_node <= value.paragraph_node || value.equation_node <= value.control_node) invalid$6();
 	return Object.freeze({
 		controlNode: value.control_node,
 		equationNode: value.equation_node,
@@ -32360,11 +32374,11 @@ function site(value) {
 function decodeHwp5EquationSites(bytes) {
 	const value = parse$4(bytes);
 	keys$5(value, ["schemaVersion", "sites"]);
-	if (value.schemaVersion !== 1 || !Array.isArray(value.sites) || value.sites.length > 1e4) invalid$5();
+	if (value.schemaVersion !== 1 || !Array.isArray(value.sites) || value.sites.length > 1e4) invalid$6();
 	const controls = /* @__PURE__ */ new Set(), equations = /* @__PURE__ */ new Set();
 	return Object.freeze(value.sites.map((row) => {
 		const result = site(row);
-		if (controls.has(result.controlNode) || equations.has(result.equationNode)) invalid$5();
+		if (controls.has(result.controlNode) || equations.has(result.equationNode)) invalid$6();
 		controls.add(result.controlNode);
 		equations.add(result.equationNode);
 		return result;
@@ -32372,10 +32386,10 @@ function decodeHwp5EquationSites(bytes) {
 }
 function rawArray(value, max, budget, byteWidth) {
 	const maxLength = byteWidth === 2 ? 65535 : MAX_DETAIL;
-	if (!Array.isArray(value) || value.length > maxLength) invalid$5();
+	if (!Array.isArray(value) || value.length > maxLength) invalid$6();
 	budget.bytes += value.length * byteWidth;
-	if (budget.bytes > MAX_DETAIL) invalid$5();
-	if (value.some((item) => !uint$53(item, max))) invalid$5();
+	if (budget.bytes > MAX_DETAIL) invalid$6();
+	if (value.some((item) => !uint$53(item, max))) invalid$6();
 	return Object.freeze(value);
 }
 function text$3(words) {
@@ -32408,7 +32422,7 @@ function decodeSource(value) {
 		"fontUtf16LE",
 		"extraBytes"
 	]);
-	if (value.schemaVersion !== 1 || !["version-only", "with-font"].includes(value.layout) || !uint$53(value.attributes) || !uint$53(value.fontSize) || !uint$53(value.color) || !uint$53(value.unknown, 65535) || !Number.isInteger(value.baseline) || Object.is(value.baseline, -0) || value.baseline < -32768 || value.baseline > 32767 || (value.layout === "version-only" ? value.fontUtf16LE !== null : value.fontUtf16LE === null)) invalid$5();
+	if (value.schemaVersion !== 1 || !["version-only", "with-font"].includes(value.layout) || !uint$53(value.attributes) || !uint$53(value.fontSize) || !uint$53(value.color) || !uint$53(value.unknown, 65535) || !Number.isInteger(value.baseline) || Object.is(value.baseline, -0) || value.baseline < -32768 || value.baseline > 32767 || (value.layout === "version-only" ? value.fontUtf16LE !== null : value.fontUtf16LE === null)) invalid$6();
 	const metadata = site(value.site), budget = { bytes: 0 };
 	const scriptRaw = rawArray(value.scriptUtf16LE, 65535, budget, 2), versionRaw = rawArray(value.versionUtf16LE, 65535, budget, 2), fontRaw = value.fontUtf16LE === null ? null : rawArray(value.fontUtf16LE, 65535, budget, 2), extraRaw = rawArray(value.extraBytes, 255, budget, 1);
 	const script = text$3(scriptRaw), version = text$3(versionRaw), font = fontRaw === null ? {
@@ -32445,11 +32459,11 @@ function decodeHwp5EquationSource(bytes) {
 function decodeHwp5EquationSnapshot(bytes) {
 	const value = parse$4(bytes);
 	keys$5(value, ["schemaVersion", "sources"]);
-	if (value.schemaVersion !== 1 || !Array.isArray(value.sources) || value.sources.length > 1e4) invalid$5();
+	if (value.schemaVersion !== 1 || !Array.isArray(value.sources) || value.sources.length > 1e4) invalid$6();
 	const controls = /* @__PURE__ */ new Set(), equations = /* @__PURE__ */ new Set();
 	return Object.freeze(value.sources.map((source) => {
 		const row = decodeSource(source);
-		if (controls.has(row.site.controlNode) || equations.has(row.site.equationNode)) invalid$5();
+		if (controls.has(row.site.controlNode) || equations.has(row.site.equationNode)) invalid$6();
 		controls.add(row.site.controlNode);
 		equations.add(row.site.equationNode);
 		return row;
@@ -32492,16 +32506,16 @@ function createHwp5EquationApi({ wasm, check, output, u32 }) {
 		}
 	};
 }
-var utf8$5, utf16$1, MAX_DETAIL, uint$53, invalid$5;
+var utf8$6, utf16$1, MAX_DETAIL, uint$53, invalid$6;
 var init_hwp5_equation_sources = __esmMin((() => {
-	utf8$5 = new TextDecoder("utf-8", { fatal: true });
+	utf8$6 = new TextDecoder("utf-8", { fatal: true });
 	utf16$1 = new TextDecoder("utf-16le", {
 		fatal: true,
 		ignoreBOM: true
 	});
 	MAX_DETAIL = 2097152;
 	uint$53 = (value, max = 4294967295) => Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= max;
-	invalid$5 = () => {
+	invalid$6 = () => {
 		throw Error("InvalidHwp5EquationSources");
 	};
 }));
@@ -33433,7 +33447,7 @@ var init_hwp5_source_table_cell_split = __esmMin((() => {
 }));
 // ../../js/hwp5-named-fields.mjs
 function decodeHwp5NamedFields(bytes) {
-	const source = JSON.parse(utf8$4.decode(bytes));
+	const source = JSON.parse(utf8$5.decode(bytes));
 	const invalid = () => /* @__PURE__ */ new Error("InvalidHwp5NamedFields");
 	if (source?.format !== "hwp5" || !["complete", "partial"].includes(source.coverage) || !Array.isArray(source.rows) || source.rows.length > 2e4) throw invalid();
 	const ids = /* @__PURE__ */ new Set();
@@ -33471,9 +33485,9 @@ function decodeHwp5NamedFields(bytes) {
 		rows
 	};
 }
-var utf8$4, uint$50;
+var utf8$5, uint$50;
 var init_hwp5_named_fields = __esmMin((() => {
-	utf8$4 = new TextDecoder("utf-8", { fatal: true });
+	utf8$5 = new TextDecoder("utf-8", { fatal: true });
 	uint$50 = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 4294967295;
 }));
 // ../../js/table-diagonal-directions.mjs
@@ -33903,7 +33917,7 @@ function prepareIndependentTextRequest(input, limits) {
 		"requestStructure"
 	]) if (!Number.isSafeInteger(limits?.[key]) || limits[key] <= 0) throw Error("InvalidTextTransactionLimits");
 	if (limits.requestDepth > 64) throw Error("InvalidTextTransactionLimits");
-	if (!input || typeof input !== "object" || Array.isArray(input)) throw invalid$4();
+	if (!input || typeof input !== "object" || Array.isArray(input)) throw invalid$5();
 	let bytes = 0, structure = 0;
 	const active = /* @__PURE__ */ new Set();
 	const addBytes = (amount) => {
@@ -33951,11 +33965,11 @@ function prepareIndependentTextRequest(input, limits) {
 			addBytes(JSON.stringify(value).length);
 			return value;
 		}
-		if (typeof value !== "object" || active.has(value)) throw invalid$4();
+		if (typeof value !== "object" || active.has(value)) throw invalid$5();
 		if (depth > limits.requestDepth) throw Error("LimitExceeded");
 		const array = Array.isArray(value);
 		const proto = Object.getPrototypeOf(value);
-		if (!array && proto !== Object.prototype && proto !== null) throw invalid$4();
+		if (!array && proto !== Object.prototype && proto !== null) throw invalid$5();
 		const keys = Reflect.ownKeys(value);
 		if (keys.length > limits.requestStructure) throw Error("LimitExceeded");
 		addStructure(2);
@@ -33965,12 +33979,12 @@ function prepareIndependentTextRequest(input, limits) {
 			let count = 0;
 			for (const key of keys) {
 				if (array && key === "length") continue;
-				if (typeof key !== "string") throw invalid$4();
-				if (array && !/^(0|[1-9][0-9]*)$/.test(key)) throw invalid$4();
+				if (typeof key !== "string") throw invalid$5();
+				if (array && !/^(0|[1-9][0-9]*)$/.test(key)) throw invalid$5();
 				const descriptor = Object.getOwnPropertyDescriptor(value, key);
 				if (!descriptor || !Object.hasOwn(descriptor, "value")) throw Error("AccessorPayloadUnsupported");
 				if (descriptor.value === void 0) {
-					if (array) throw invalid$4();
+					if (array) throw invalid$5();
 					continue;
 				}
 				if (count++) addStructure(1);
@@ -33982,8 +33996,8 @@ function prepareIndependentTextRequest(input, limits) {
 			}
 			if (array) {
 				const length = Object.getOwnPropertyDescriptor(value, "length")?.value;
-				if (count !== length || output.length !== length) throw invalid$4();
-				for (let index = 0; index < length; index++) if (!Object.hasOwn(output, index)) throw invalid$4();
+				if (count !== length || output.length !== length) throw invalid$5();
+				for (let index = 0; index < length; index++) if (!Object.hasOwn(output, index)) throw invalid$5();
 			}
 			return output;
 		} finally {
@@ -33998,9 +34012,9 @@ function prepareIndependentTextRequest(input, limits) {
 		bytes: encoded
 	};
 }
-var invalid$4;
+var invalid$5;
 var init_independent_text_request = __esmMin((() => {
-	invalid$4 = () => Error("InvalidTextTransactionDTO");
+	invalid$5 = () => Error("InvalidTextTransactionDTO");
 }));
 // ../../js/text-transaction-args.mjs
 function textTransactionArgs({ section, paragraph, startUnit, endUnit, text }) {
@@ -35090,11 +35104,11 @@ function documentTextFormat(prefix) {
 	if (prefix === "hwpx_edit") return "hwpx";
 	throw Error("InvalidDocumentTextAbiFamily");
 }
-var uint$45, keys$2, binding, scalarText, scalarBoundary, identity;
+var uint$45, keys$2, binding$1, scalarText, scalarBoundary, identity;
 var init_document_text_observation_schema = __esmMin((() => {
 	uint$45 = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 4294967295;
 	keys$2 = (value, names) => value !== null && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === names.length && names.every((name) => Object.hasOwn(value, name));
-	binding = (value) => keys$2(value, ["session", "revision"]) && typeof value.session === "string" && value.session.length > 0 && (value.revision === null || uint$45(value.revision) && value.revision < 4294967295);
+	binding$1 = (value) => keys$2(value, ["session", "revision"]) && typeof value.session === "string" && value.session.length > 0 && (value.revision === null || uint$45(value.revision) && value.revision < 4294967295);
 	scalarText = (text) => {
 		if (typeof text !== "string") return false;
 		for (let i = 0; i < text.length; i++) {
@@ -35196,7 +35210,7 @@ function createDocumentTextAnchorApi({ wasm, memory, check, prefix }) {
 				"binding",
 				"target",
 				...Object.hasOwn(request, "readBinding") ? ["readBinding"] : []
-			]) || request.schemaVersion !== 1 || request.scope !== scope$1 || !binding(request.binding) || Object.hasOwn(request, "readBinding") && !validDocumentTextReadStamp(request.readBinding) || !(paragraph ? keys$2(point, [
+			]) || request.schemaVersion !== 1 || request.scope !== scope$1 || !binding$1(request.binding) || Object.hasOwn(request, "readBinding") && !validDocumentTextReadStamp(request.readBinding) || !(paragraph ? keys$2(point, [
 				"kind",
 				"section",
 				"paragraph",
@@ -35228,7 +35242,7 @@ function createDocumentTextAnchorApi({ wasm, memory, check, prefix }) {
 						"ref",
 						"startUnit",
 						"endUnit"
-					]) || value.schemaVersion !== 1 || value.scope !== scope$1 || value.coordinateSpace !== "native-read-inventory" || value.executionAuthority !== false || value.format !== format || !binding(value.binding) || !sameDocumentTextReadStamp(value.readBinding, request.readBinding) || value.binding.session !== request.binding.session || value.binding.revision !== request.binding.revision || typeof value.ref !== "string" || !value.ref || new TextEncoder().encode(value.ref).length > 256 || !uint$45(value.startUnit) || value.startUnit !== value.endUnit || value.startUnit > 4194304) throw Error("MalformedDocumentTextAnchor");
+					]) || value.schemaVersion !== 1 || value.scope !== scope$1 || value.coordinateSpace !== "native-read-inventory" || value.executionAuthority !== false || value.format !== format || !binding$1(value.binding) || !sameDocumentTextReadStamp(value.readBinding, request.readBinding) || value.binding.session !== request.binding.session || value.binding.revision !== request.binding.revision || typeof value.ref !== "string" || !value.ref || new TextEncoder().encode(value.ref).length > 256 || !uint$45(value.startUnit) || value.startUnit !== value.endUnit || value.startUnit > 4194304) throw Error("MalformedDocumentTextAnchor");
 					check();
 					return value;
 				} finally {
@@ -35278,7 +35292,7 @@ function createDocumentTextSelectionApi({ wasm, memory, check, prefix }) {
 				"endUnit",
 				"expectedOriginal",
 				...Object.hasOwn(request, "readBinding") ? ["readBinding"] : []
-			]) || request.schemaVersion !== 1 || request.scope !== scope || !binding(request.binding) || Object.hasOwn(request, "readBinding") && !validDocumentTextReadStamp(request.readBinding) || typeof request.ref !== "string" || !request.ref || new TextEncoder().encode(request.ref).length > 256 || !uint$45(request.startUnit) || !uint$45(request.endUnit) || request.startUnit >= request.endUnit || typeof request.expectedOriginal !== "string" || !request.expectedOriginal || request.expectedOriginal.length > 2e5 || request.expectedOriginal.length !== request.endUnit - request.startUnit) throw Error("InvalidDocumentTextSelectionRequest");
+			]) || request.schemaVersion !== 1 || request.scope !== scope || !binding$1(request.binding) || Object.hasOwn(request, "readBinding") && !validDocumentTextReadStamp(request.readBinding) || typeof request.ref !== "string" || !request.ref || new TextEncoder().encode(request.ref).length > 256 || !uint$45(request.startUnit) || !uint$45(request.endUnit) || request.startUnit >= request.endUnit || typeof request.expectedOriginal !== "string" || !request.expectedOriginal || request.expectedOriginal.length > 2e5 || request.expectedOriginal.length !== request.endUnit - request.startUnit) throw Error("InvalidDocumentTextSelectionRequest");
 			return memory.withBytes(owned.bytes, (ptr, size) => {
 				try {
 					if (wasm[`${prefix}_document_text_selection`](ptr, size) !== 1) throw memory.error();
@@ -35297,7 +35311,7 @@ function createDocumentTextSelectionApi({ wasm, memory, check, prefix }) {
 						"expectedOriginal",
 						"beforeText",
 						"target"
-					]) || value.schemaVersion !== 1 || value.scope !== scope || value.coordinateSpace !== "native-current-text-observation" || value.executionAuthority !== false || value.format !== format || !binding(value.binding) || !sameDocumentTextReadStamp(value.readBinding, request.readBinding) || value.binding.session !== request.binding.session || value.binding.revision !== request.binding.revision || value.ref !== request.ref || value.expectedOriginal !== request.expectedOriginal || !scalarText(value.beforeText) || value.beforeText.length > 4194304) throw Error("MalformedDocumentTextSelection");
+					]) || value.schemaVersion !== 1 || value.scope !== scope || value.coordinateSpace !== "native-current-text-observation" || value.executionAuthority !== false || value.format !== format || !binding$1(value.binding) || !sameDocumentTextReadStamp(value.readBinding, request.readBinding) || value.binding.session !== request.binding.session || value.binding.revision !== request.binding.revision || value.ref !== request.ref || value.expectedOriginal !== request.expectedOriginal || !scalarText(value.beforeText) || value.beforeText.length > 4194304) throw Error("MalformedDocumentTextSelection");
 					const target = value.target;
 					if (!(target?.kind === "paragraph" ? keys$2(target, [
 						"kind",
@@ -36885,13 +36899,13 @@ var init_picture_replacement_input = __esmMin((() => {
 }));
 // ../../js/live-picture-replacement.mjs
 function digest$3(value) {
-	if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype || value.length !== 32) invalid$3();
+	if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype || value.length !== 32) invalid$4();
 	const descriptors = Object.getOwnPropertyDescriptors(value);
-	if (Reflect.ownKeys(descriptors).length !== 33) invalid$3();
+	if (Reflect.ownKeys(descriptors).length !== 33) invalid$4();
 	const bytes = [];
 	for (let index = 0; index < 32; index++) {
 		const entry = descriptors[index];
-		if (!entry || !Object.hasOwn(entry, "value") || !uint$41(entry.value) || entry.value > 255) invalid$3();
+		if (!entry || !Object.hasOwn(entry, "value") || !uint$41(entry.value) || entry.value > 255) invalid$4();
 		bytes.push(entry.value);
 	}
 	return Object.freeze(bytes);
@@ -36917,9 +36931,9 @@ function checkedPictureReplacementOwner(value) {
 		p.section,
 		p.pictureNode,
 		p.historyRevision
-	].every(uint$41)) invalid$3();
+	].every(uint$41)) invalid$4();
 	const binding = ownObjectGeometryRecord(p.binding, ["session", "serial"]);
-	if (typeof binding.session !== "string" || !/^[\x20-\x7e]{1,512}$/.test(binding.session) || typeof binding.serial !== "string" || !/^(0|[1-9][0-9]{0,19})$/.test(binding.serial) || binding.serial.length === 20 && binding.serial > "18446744073709551615") invalid$3();
+	if (typeof binding.session !== "string" || !/^[\x20-\x7e]{1,512}$/.test(binding.session) || typeof binding.serial !== "string" || !/^(0|[1-9][0-9]{0,19})$/.test(binding.serial) || binding.serial.length === 20 && binding.serial > "18446744073709551615") invalid$4();
 	return Object.freeze({
 		...p,
 		pictureIdentity: boundedString(p.pictureIdentity),
@@ -36963,7 +36977,7 @@ function createLivePictureReplacementApi({ format, wasm, memory, check, output }
 			requireSupported();
 			const bytes = output(() => wasm[ownerQuery](selected.section, selected.pictureNode)).bytes;
 			if (!(bytes instanceof Uint8Array) || bytes.length > 16384) throw Error("InvalidPictureReplacementOwner");
-			const owner = checkedPictureReplacementOwner(JSON.parse(utf8$3.decode(bytes)));
+			const owner = checkedPictureReplacementOwner(JSON.parse(utf8$4.decode(bytes)));
 			if (owner.format !== format || owner.section !== selected.section || owner.pictureNode !== selected.pictureNode) throw Error("PictureReplacementBindingMismatch");
 			if (owner.binding.session.length > 256) throw Error("InvalidPictureReplacementOwner");
 			return checkedPictureReplacementOwner({
@@ -36983,7 +36997,7 @@ function createLivePictureReplacementApi({ format, wasm, memory, check, output }
 			if (!nativeSession || nativeSession.length > 256) throw Error("InvalidPictureReplacementOwner");
 			const image = copyPictureReplacementImage(imageBytes);
 			requireSupported();
-			const wire = encoder$14.encode(JSON.stringify({
+			const wire = encoder$15.encode(JSON.stringify({
 				...owner,
 				binding: {
 					...owner.binding,
@@ -37007,20 +37021,20 @@ function createLivePictureReplacementApi({ format, wasm, memory, check, output }
 		}
 	};
 }
-var utf8$3, encoder$14, maxImageBytes, uint$41, invalid$3, boundedString;
+var utf8$4, encoder$15, maxImageBytes, uint$41, invalid$4, boundedString;
 var init_live_picture_replacement = __esmMin((() => {
 	init_object_geometry_edit();
 	init_picture_replacement_input();
 	init_native_edit_outcome();
-	utf8$3 = new TextDecoder("utf-8", { fatal: true });
-	encoder$14 = new TextEncoder();
+	utf8$4 = new TextDecoder("utf-8", { fatal: true });
+	encoder$15 = new TextEncoder();
 	maxImageBytes = 8388608;
 	uint$41 = (value) => Number.isSafeInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
-	invalid$3 = () => {
+	invalid$4 = () => {
 		throw Error("InvalidPictureReplacementOwner");
 	};
 	boundedString = (value) => {
-		if (typeof value !== "string" || !value || value.includes("\0") || !value.isWellFormed() || encoder$14.encode(value).length > 4096) invalid$3();
+		if (typeof value !== "string" || !value || value.includes("\0") || !value.isWellFormed() || encoder$15.encode(value).length > 4096) invalid$4();
 		return value;
 	};
 }));
@@ -37190,7 +37204,7 @@ function checkedImageInsertOptions(input) {
 function invoke$2(memory, metadata, image, reference, action) {
 	let outcome;
 	const call = (rp, rn) => memory.withBytes(image, (ip, n) => {
-		outcome = applyNativeEdit(memory, encoder$13.encode(JSON.stringify(metadata)), (p, size) => action(rp, rn, p, size, ip, n), "InvalidImageInsertResult");
+		outcome = applyNativeEdit(memory, encoder$14.encode(JSON.stringify(metadata)), (p, size) => action(rp, rn, p, size, ip, n), "InvalidImageInsertResult");
 		return outcome;
 	});
 	try {
@@ -37254,13 +37268,13 @@ function createLiveImageInsertApi({ wasm, memory, check, encode }) {
 		}
 	};
 }
-var encoder$13;
+var encoder$14;
 var init_live_image_insertion = __esmMin((() => {
 	init_hwpx_inline_object_record();
 	init_hwpx_inline_object_placement();
 	init_picture_replacement_input();
 	init_native_edit_outcome();
-	encoder$13 = new TextEncoder();
+	encoder$14 = new TextEncoder();
 }));
 // ../../js/chart-create-decimal.mjs
 function parseChartDecimal(text) {
@@ -37851,7 +37865,7 @@ function createHwp5ChartCreateApi({ wasm, memory, ready, check, encode, copyCurr
 		}
 	};
 }
-var HWP5_CHART_CREATE_PROFILE, encoder$12, integer$2, bytesFor, equal;
+var HWP5_CHART_CREATE_PROFILE, encoder$13, integer$2, bytesFor, equal;
 var init_hwp5_chart_create = __esmMin((() => {
 	init_abi_schema();
 	init_hwpx_inline_object_record();
@@ -37859,13 +37873,13 @@ var init_hwp5_chart_create = __esmMin((() => {
 	init_native_edit_outcome();
 	init_hwp5_chart_create_preview();
 	HWP5_CHART_CREATE_PROFILE = "spec24-registered-png-presentation-v1";
-	encoder$12 = new TextEncoder();
+	encoder$13 = new TextEncoder();
 	integer$2 = (value, min, max) => {
 		if (!Number.isSafeInteger(value) || Object.is(value, -0) || value < min || value > max) throw Error("InvalidHwp5ChartCreateInteger");
 		return value;
 	};
 	bytesFor = (value, limit) => {
-		const bytes = encoder$12.encode(JSON.stringify(value));
+		const bytes = encoder$13.encode(JSON.stringify(value));
 		if (bytes.length === 0 || bytes.length > limit) throw Error("LimitExceeded");
 		return bytes;
 	};
@@ -38056,25 +38070,25 @@ var init_hwp5_exclusive_text_delta = __esmMin((() => {
 }));
 // ../../js/hwp5-current-references.mjs
 function validate$1(reference) {
-	if (!reference || typeof reference !== "object" || Array.isArray(reference)) invalid$2();
-	if (Object.keys(reference).length !== fields$6.length || fields$6.some((key) => !Object.hasOwn(reference, key))) invalid$2();
+	if (!reference || typeof reference !== "object" || Array.isArray(reference)) invalid$3();
+	if (Object.keys(reference).length !== fields$6.length || fields$6.some((key) => !Object.hasOwn(reference, key))) invalid$3();
 	const { epoch, kind, section, id, row, column } = reference;
-	if (!decimal(epoch) || epoch === "0" || !decimal(id) || !uint$38(section) || !uint$38(row) || !uint$38(column)) invalid$2();
+	if (!decimal(epoch) || epoch === "0" || !decimal(id) || !uint$38(section) || !uint$38(row) || !uint$38(column)) invalid$3();
 	if (![
 		"original",
 		"generated",
 		"cell"
-	].includes(kind)) invalid$2();
-	if (kind !== "cell" && (row !== 0 || column !== 0 || BigInt(id) > 4294967295n)) invalid$2();
-	if (kind !== "original" && id === "0") invalid$2();
+	].includes(kind)) invalid$3();
+	if (kind !== "cell" && (row !== 0 || column !== 0 || BigInt(id) > 4294967295n)) invalid$3();
+	if (kind !== "original" && id === "0") invalid$3();
 	return reference;
 }
 function decodeHwp5CurrentReferences(bytes) {
-	const value = JSON.parse(utf8$2.decode(bytes));
-	if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).sort().join() !== "first,references,total,version") invalid$2();
-	if (value.version !== 1 || !uint$38(value.total) || !uint$38(value.first) || value.first > value.total || !Array.isArray(value.references) || value.references.length > 1024 || value.first + value.references.length > value.total) invalid$2();
+	const value = JSON.parse(utf8$3.decode(bytes));
+	if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).sort().join() !== "first,references,total,version") invalid$3();
+	if (value.version !== 1 || !uint$38(value.total) || !uint$38(value.first) || value.first > value.total || !Array.isArray(value.references) || value.references.length > 1024 || value.first + value.references.length > value.total) invalid$3();
 	for (const reference of value.references) validate$1(reference);
-	if (value.references.some((reference) => reference.epoch !== value.references[0].epoch)) invalid$2();
+	if (value.references.some((reference) => reference.epoch !== value.references[0].epoch)) invalid$3();
 	return value;
 }
 function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u32, referenceScope }) {
@@ -38092,7 +38106,7 @@ function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u
 		if (!reference || reference.scope !== scope || Object.keys(reference).length !== fields$6.length + 1) throw new Error("InvalidCurrentReferenceScope");
 		const wire = Object.fromEntries(fields$6.map((key) => [key, reference[key]]));
 		validate$1(wire);
-		return encoder$11.encode(JSON.stringify(wire));
+		return encoder$12.encode(JSON.stringify(wire));
 	};
 	const copyCurrentText = (reference) => {
 		ready();
@@ -38110,7 +38124,7 @@ function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u
 		];
 		if (count > 1024) throw new RangeError("LimitExceeded");
 		const window = decodeHwp5CurrentReferences(output(() => wasm[name](...args)).bytes);
-		if (window.first !== args[1] || window.references.length !== Math.min(args[2], window.total - args[1]) || window.references.some((ref) => ref.section !== args[0])) invalid$2();
+		if (window.first !== args[1] || window.references.length !== Math.min(args[2], window.total - args[1]) || window.references.some((ref) => ref.section !== args[0])) invalid$3();
 		return {
 			...window,
 			references: window.references.map((reference) => Object.freeze({
@@ -38174,7 +38188,7 @@ function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u
 			if (!["original", "generated"].includes(reference.kind)) throw Error("UnsupportedEquationInsertOwner");
 			const values = checkedHwp5EquationInsertOptions(options);
 			u32(start, "start");
-			const bytes = encoder$11.encode(JSON.stringify({
+			const bytes = encoder$12.encode(JSON.stringify({
 				start,
 				...values
 			}));
@@ -38203,7 +38217,7 @@ function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u
 		},
 		currentSourceReferences(section, options) {
 			const window = windowQuery("hwp5_edit_current_source_references", section, options);
-			if (window.references.some((ref) => ref.kind === "cell")) invalid$2();
+			if (window.references.some((ref) => ref.kind === "cell")) invalid$3();
 			return window;
 		},
 		currentReferences(section, options = {}) {
@@ -38222,13 +38236,13 @@ function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u
 			if (typeof text !== "string") throw new TypeError("Text must be a string");
 			if (!text.isWellFormed()) throw new Error("InvalidUnicodeEncoding");
 			if (text.length > 4194304) throw new RangeError("LimitExceeded");
-			const bytes = encoder$11.encode(text);
+			const bytes = encoder$12.encode(text);
 			if (bytes.length > 4194304) throw new RangeError("LimitExceeded");
 			memory.withBytes(encode(reference), (ptr, size) => memory.withBytes(bytes, (textPtr, textSize) => success(wasm.hwp5_edit_splice_current(ptr, size, ...range, textPtr, textSize))));
 		}
 	};
 }
-var utf8$2, utf16, encoder$11, fields$6, scopeSequence$1, invalid$2, uint$38, decimal;
+var utf8$3, utf16, encoder$12, fields$6, scopeSequence$1, invalid$3, uint$38, decimal;
 var init_hwp5_current_references = __esmMin((() => {
 	init_live_picture_replacement();
 	init_live_image_insertion();
@@ -38237,7 +38251,7 @@ var init_hwp5_current_references = __esmMin((() => {
 	init_hwp5_equation_insert();
 	init_native_edit_outcome();
 	init_hwp5_exclusive_text_delta();
-	utf8$2 = new TextDecoder("utf-8", {
+	utf8$3 = new TextDecoder("utf-8", {
 		fatal: true,
 		ignoreBOM: true
 	});
@@ -38245,7 +38259,7 @@ var init_hwp5_current_references = __esmMin((() => {
 		fatal: true,
 		ignoreBOM: true
 	});
-	encoder$11 = new TextEncoder();
+	encoder$12 = new TextEncoder();
 	fields$6 = [
 		"epoch",
 		"kind",
@@ -38255,7 +38269,7 @@ var init_hwp5_current_references = __esmMin((() => {
 		"column"
 	];
 	scopeSequence$1 = 0n;
-	invalid$2 = () => {
+	invalid$3 = () => {
 		throw new Error("InvalidHwp5CurrentReference");
 	};
 	uint$38 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
@@ -38386,7 +38400,7 @@ function captureTableInitialTexts(rows, columns, input) {
 				const unit = text.charCodeAt(index);
 				if (unit < 32 || unit === 127) throw new TypeError("InvalidTableCellText");
 			}
-			bytes += encoder$10.encode(text).length;
+			bytes += encoder$11.encode(text).length;
 			if (bytes > 4194304) throw new RangeError("LimitExceeded");
 			return text;
 		});
@@ -38395,13 +38409,13 @@ function captureTableInitialTexts(rows, columns, input) {
 function encodeTableTextRequest(request) {
 	const json = JSON.stringify(request);
 	if (json.length > 4194304) throw new RangeError("LimitExceeded");
-	const bytes = encoder$10.encode(json);
+	const bytes = encoder$11.encode(json);
 	if (bytes.length > 4194304) throw new RangeError("LimitExceeded");
 	return bytes;
 }
-var encoder$10;
+var encoder$11;
 var init_table_initial_texts = __esmMin((() => {
-	encoder$10 = new TextEncoder();
+	encoder$11 = new TextEncoder();
 }));
 // ../../js/hwp5-table-creation.mjs
 function createHwp5TableCreationApi({ wasm, memory, check, output, u32 }) {
@@ -38452,7 +38466,7 @@ function createHwp5TableCreationApi({ wasm, memory, check, output, u32 }) {
 			} else {
 				const json = JSON.stringify(request);
 				if (json.length > 1048576) throw new RangeError("LimitExceeded");
-				bytes = encoder$9.encode(json);
+				bytes = encoder$10.encode(json);
 				if (bytes.length > 1048576) throw new RangeError("LimitExceeded");
 			}
 			const response = memory.withBytes(bytes, (ptr, size) => output(() => withTexts ? wasm.hwp5_edit_insert_table_with_texts(ptr, size) : wasm.hwp5_edit_insert_table(ptr, size)).bytes);
@@ -38462,14 +38476,14 @@ function createHwp5TableCreationApi({ wasm, memory, check, output, u32 }) {
 		}
 	};
 }
-var encoder$9, decoder$2;
+var encoder$10, decoder$2;
 var init_hwp5_table_creation = __esmMin((() => {
 	init_created_cell_properties_api();
 	init_created_table_grid();
 	init_hwp5_created_tables();
 	init_table_creation_resources();
 	init_table_initial_texts();
-	encoder$9 = new TextEncoder();
+	encoder$10 = new TextEncoder();
 	decoder$2 = new TextDecoder("utf-8", {
 		fatal: true,
 		ignoreBOM: true
@@ -39167,7 +39181,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			if (typeof text !== "string") throw new TypeError("Form text must be a string");
 			if (!text.isWellFormed()) throw new Error("InvalidUnicodeEncoding");
 			if (text.length > 65535) throw new RangeError("LimitExceeded");
-			const bytes = encoder$8.encode(text);
+			const bytes = encoder$9.encode(text);
 			if (bytes.length > 196605) throw new RangeError("LimitExceeded");
 			memory.withBytes(bytes, (ptr, size) => success(wasm.hwp5_edit_set_form_text(...positions, ptr, size)));
 		},
@@ -39384,7 +39398,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			if (typeof formula !== "string") throw new TypeError("Formula must be a string");
 			if (!formula.isWellFormed()) throw new Error("InvalidUnicodeEncoding");
 			if (formula.length > 4096) throw new RangeError("LimitExceeded");
-			const bytes = encoder$8.encode(formula);
+			const bytes = encoder$9.encode(formula);
 			if (bytes.length > 4096) throw new RangeError("LimitExceeded");
 			memory.withBytes(bytes, (ptr, size) => success(wasm.hwp5_edit_set_formula_definition(...positions, ptr, size)));
 		},
@@ -39404,7 +39418,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			if (!text.isWellFormed()) throw new Error("InvalidUnicodeEncoding");
 			if (rangePolicy !== "reject" && rangePolicy !== "half-open") throw new Error("InvalidRangePolicy");
 			if (text.length > 4194304) throw new RangeError("LimitExceeded");
-			const bytes = encoder$8.encode(text);
+			const bytes = encoder$9.encode(text);
 			if (bytes.length > 4194304) throw new RangeError("LimitExceeded");
 			memory.withBytes(bytes, (ptr, size) => success(wasm.hwp5_edit_splice(...values, ptr, size, rangePolicy === "half-open" ? 1 : 0)));
 		},
@@ -39690,7 +39704,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 	registerStrictLayoutTransport(api, strictTransport);
 	return api;
 }
-var encoder$8, decoder, u32$2;
+var encoder$9, decoder, u32$2;
 var init_hwp5_editor = __esmMin((() => {
 	init_created_cell_properties_api();
 	init_hwp5_strict_layout_transport();
@@ -39796,7 +39810,7 @@ var init_hwp5_editor = __esmMin((() => {
 	init_hwp5_current_references();
 	init_hwp5_table_creation();
 	init_hwp5_text_wire();
-	encoder$8 = new TextEncoder();
+	encoder$9 = new TextEncoder();
 	decoder = new TextDecoder("utf-16le", {
 		fatal: true,
 		ignoreBOM: true
@@ -39805,6 +39819,164 @@ var init_hwp5_editor = __esmMin((() => {
 		if (!Number.isInteger(value) || value < 0 || value > 4294967295) throw new RangeError(`Invalid ${name}`);
 		return value;
 	};
+}));
+// ../../js/object-outer-margins.mjs
+function checkedObjectOuterMargins(value) {
+	const margins = ownObjectGeometryRecord(value, [
+		"left",
+		"right",
+		"top",
+		"bottom"
+	]);
+	if (Object.values(margins).some((v) => !Number.isSafeInteger(v) || Object.is(v, -0) || v < 0 || v > 32767)) invalid$2();
+	return Object.freeze(margins);
+}
+function binding(value) {
+	const b = ownObjectGeometryRecord(value, ["session", "serial"]);
+	if (typeof b.session !== "string" || !/^[A-Za-z0-9:._-]{1,512}$/.test(b.session) || typeof b.serial !== "string" || !/^(0|[1-9][0-9]{0,19})$/.test(b.serial) || b.serial.length === 20 && b.serial > "18446744073709551615") invalid$2();
+	const raw = b.session.replace(scoped, "");
+	if (raw.length < 2 || raw.length > 256) invalid$2();
+	return Object.freeze(b);
+}
+function checkedObjectOuterMarginsObservation(value) {
+	const p = ownObjectGeometryRecord(value, ["geometry", "margins"]);
+	const g = ownObjectGeometryRecord(p.geometry, [
+		"format",
+		"selector",
+		"owner",
+		"frame",
+		"editable",
+		"reason",
+		"historyRevision",
+		"binding"
+	]);
+	const b = binding(g.binding);
+	const raw = checkedObjectGeometryObservation({
+		...g,
+		binding: {
+			...b,
+			session: b.session.replace(scoped, "")
+		}
+	});
+	if (raw.format !== "hwpx" || raw.selector.kind !== "drawing" || raw.frame.treatAsCharacter || !raw.editable.position) invalid$2();
+	return Object.freeze({
+		geometry: Object.freeze({
+			...raw,
+			binding: b
+		}),
+		margins: checkedObjectOuterMargins(p.margins)
+	});
+}
+function checkedObjectOuterMarginsRequest(value) {
+	const p = ownObjectGeometryRecord(value, [
+		"geometry",
+		"expectedMargins",
+		"margins"
+	]);
+	const g = ownObjectGeometryRecord(p.geometry, [
+		"selector",
+		"owner",
+		"expected",
+		"historyRevision",
+		"binding",
+		"patch"
+	]);
+	const selector = checkedObjectGeometrySelector(g.selector), expected = checkedObjectGeometryFrame(g.expected);
+	if (selector.kind !== "drawing" || expected.treatAsCharacter || !Number.isSafeInteger(g.historyRevision) || Object.is(g.historyRevision, -0) || g.historyRevision < 0) invalid$2();
+	ownObjectGeometryRecord(g.patch, []);
+	return Object.freeze({
+		geometry: Object.freeze({
+			selector,
+			owner: checkedObjectGeometryOwner(g.owner),
+			expected,
+			historyRevision: g.historyRevision,
+			binding: binding(g.binding),
+			patch: Object.freeze({})
+		}),
+		expectedMargins: checkedObjectOuterMargins(p.expectedMargins),
+		margins: checkedObjectOuterMargins(p.margins)
+	});
+}
+function createObjectOuterMarginsApi({ wasm, memory, check }) {
+	let scope;
+	try {
+		const nonce = globalThis.crypto?.randomUUID?.();
+		if (typeof nonce === "string" && new RegExp("^" + uuid + "$", "i").test(nonce)) scope = "outer-margins:" + nonce + ":";
+	} catch {}
+	const version = "hwpx_edit_object_outer_margins_version";
+	const read = "hwpx_edit_object_outer_margins";
+	const write = "hwpx_edit_set_object_outer_margins";
+	function supportsObjectOuterMargins() {
+		check();
+		return typeof scope === "string" && [
+			version,
+			read,
+			write
+		].every((n) => typeof wasm[n] === "function") && wasm[version]() === 1;
+	}
+	function requireSupported() {
+		if (!supportsObjectOuterMargins()) throw Error("ObjectOuterMarginsAbiUnavailable");
+	}
+	return {
+		supportsObjectOuterMargins,
+		objectOuterMargins(value) {
+			check();
+			requireSupported();
+			const selector = checkedObjectGeometrySelector(value);
+			if (selector.kind !== "drawing") invalid$2();
+			let observation;
+			try {
+				if (wasm[read](selector.section, selector.node) !== 1) throw memory.error();
+				const size = wasm.hwpx_edit_output_len();
+				if (!Number.isSafeInteger(size) || size <= 0 || size > 16384) invalid$2();
+				observation = checkedObjectOuterMarginsObservation(JSON.parse(utf8$2.decode(memory.copy(wasm.hwpx_edit_output_ptr(), size))));
+			} finally {
+				wasm.hwpx_edit_output_free();
+			}
+			const g = observation.geometry;
+			if (g.selector.section !== selector.section || g.selector.node !== selector.node || scoped.test(g.binding.session)) throw Error("ObjectOuterMarginsBindingMismatch");
+			return checkedObjectOuterMarginsObservation({
+				...observation,
+				geometry: {
+					...g,
+					binding: {
+						...g.binding,
+						session: scope + g.binding.session
+					}
+				}
+			});
+		},
+		setObjectOuterMargins(value) {
+			check();
+			requireSupported();
+			const request = checkedObjectOuterMarginsRequest(value), b = request.geometry.binding;
+			if (!b.session.startsWith(scope)) throw Error("ForeignObjectOuterMarginsOwner");
+			const bytes = encoder$8.encode(JSON.stringify({
+				...request,
+				geometry: {
+					...request.geometry,
+					binding: {
+						...b,
+						session: b.session.slice(scope.length)
+					}
+				}
+			}));
+			if (bytes.length > 16384) invalid$2();
+			return applyNativeEdit(memory, bytes, (ptr, len) => wasm[write](ptr, len), "InvalidObjectOuterMarginsResult");
+		}
+	};
+}
+var utf8$2, encoder$8, invalid$2, uuid, scoped;
+var init_object_outer_margins = __esmMin((() => {
+	init_object_geometry_edit();
+	init_native_edit_outcome();
+	utf8$2 = new TextDecoder("utf-8", { fatal: true });
+	encoder$8 = new TextEncoder();
+	invalid$2 = () => {
+		throw Error("InvalidObjectOuterMargins");
+	};
+	uuid = "[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}";
+	scoped = new RegExp("^outer-margins:" + uuid + ":", "i");
 }));
 // ../../js/hwpx-note-delete.mjs
 function checkedNoteDeleteRequest(input) {
@@ -43284,6 +43456,11 @@ async function createHwpxEditor(source) {
 			check: ready,
 			format: "hwpx"
 		}),
+		...createObjectOuterMarginsApi({
+			wasm,
+			memory,
+			check: ready
+		}),
 		...createLivePictureReplacementApi({
 			format: "hwpx",
 			wasm,
@@ -45665,6 +45842,7 @@ async function createHwpxEditor(source) {
 	};
 }
 var init_hwpx_editor = __esmMin((() => {
+	init_object_outer_margins();
 	init_live_picture_replacement();
 	init_live_image_insertion();
 	init_created_cell_properties_api();

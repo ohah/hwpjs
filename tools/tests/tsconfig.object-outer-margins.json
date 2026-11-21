@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "ES2024.String", "DOM", "DOM.Iterable"],
+    "types": ["bun"],
+    "skipLibCheck": true
+  },
+  "include": [
+    "../../packages/core/src/**/*.ts",
+    "../../packages/core/tests/commands/object-outer-margins.test.ts",
+    "../../packages/core/tests/transport/object-outer-margins-admission.test.ts",
+    "./types/object-outer-margins-consumer.ts"
+  ],
+  "exclude": []
+}

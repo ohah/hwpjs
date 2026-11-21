@@ -375,3 +375,12 @@ export type {
   PictureReplacementObservation,
   PictureReplacementRead,
 } from './commands/picture-replacement.ts';
+
+export { SET_OBJECT_OUTER_MARGINS_COMMAND } from './commands/object-outer-margins.ts';
+export type {
+  ObjectOuterMargins,
+  ObjectOuterMarginsSelector,
+  ObjectOuterMarginsTarget,
+  ObjectOuterMarginsRead,
+  SetObjectOuterMarginsPayload,
+} from './commands/object-outer-margins.ts';

@@ -1163,7 +1163,7 @@ fn apply(command: histories.Command) !void {
         _ = try @import("../hwpx/display_resource_generation.zig").applyOwned(value, session, &.{command});
     } else switch (command.kind) {
         // Independent source-axis batches require the existing owned History.
-        .created_cell_properties, .page_settings, .object_geometry, .bullet_definition, .paragraph_bullet, .independent_text, .document_text, .insert_document, .equation_insert, .chart_create, .image_insert, .picture_replace, .note_delete, .note_create, .named_field_rename, .named_field_create, .named_field_parameters, .source_table_cell_merge, .source_table_cell_split, .splice_created_cell => return error.HistoryNotEnabled,
+        .created_cell_properties, .page_settings, .object_geometry, .object_outer_margins, .bullet_definition, .paragraph_bullet, .independent_text, .document_text, .insert_document, .equation_insert, .chart_create, .image_insert, .picture_replace, .note_delete, .note_create, .named_field_rename, .named_field_create, .named_field_parameters, .source_table_cell_merge, .source_table_cell_split, .splice_created_cell => return error.HistoryNotEnabled,
         .source_table_grid => {
             _ = try @import("../hwpx/source_table_grid_session.zig").apply(session, .{ .section = command.section, .node = command.source_grid_node, .expected_rows = command.source_grid_expected_rows, .expected_columns = command.source_grid_expected_columns, .action = command.source_grid_action });
         },
@@ -2806,6 +2806,48 @@ fn applyCreatedCellTyping(value: @import("../model/created_cell_typing.zig").Edi
     try service.session.beginFormattingBatch(&batch);
     defer service.session.endFormattingBatch(&batch);
     return @import("../hwpx/display_resource_generation.zig").applyOwned(service.history, service.session, &.{.{ .kind = .splice_created_cell, .section = value.section, .paragraph = 0, .start = value.start, .deleted = value.end - value.start, .inserted = value.text, .created_table_identity = value.identity, .created_cell = .{ value.row, value.column }, .created_cell_insertion = &value.insertion }});
+}
+
+// Optional independent margins scope; geometry V1 remains unchanged.
+export fn hwpx_edit_object_outer_margins_version() u32 {
+    return 1;
+}
+export fn hwpx_edit_object_outer_margins(section: u32, node: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const h = requireManagedHistory() catch |err| return fail(err);
+    const epoch = formatting_lifetime.session(a) catch |err| return fail(err);
+    defer a.free(epoch);
+    var buffer: [20]u8 = undefined;
+    const serial = std.fmt.bufPrint(&buffer, "{d}", .{session.mutation_serial}) catch unreachable;
+    var value = @import("../hwpx/object_outer_margins.zig").observe(a, session, .{ .kind = .drawing, .section = section, .node = node }, h.revision(), .{ .session = epoch, .serial = serial }) catch |err| return fail(err);
+    defer value.deinit(a);
+    output = @import("hwpx_object_outer_margins_wire.zig").encode(a, value) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_set_object_outer_margins(ptr: [*]const u8, len: usize) u32 {
+    hwpx_edit_output_free();
+    if (len > 16384) return fail(error.LimitExceeded);
+    requireNoReadScope() catch |err| return fail(err);
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const h = requireManagedHistory() catch |err| {
+        _ = fail(err);
+        return if (err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    var parsed = @import("../model/object_outer_margins.zig").parse(a, ptr[0..len]) catch |err| return fail(err);
+    defer parsed.deinit();
+    const request = parsed.json.value;
+    if (request.geometry.historyRevision != h.revision()) return fail(error.StaleObjectGeometryBinding);
+    formatting_lifetime.check(.{ .session = request.geometry.binding.session, .revision = @as(u32, @intCast(request.geometry.historyRevision)) }, h.revision()) catch return fail(error.StaleObjectGeometryBinding);
+    const serial = @import("../model/formatting_binding.zig").decimal(request.geometry.binding.serial) catch |err| return fail(err);
+    if (serial != session.mutation_serial) return fail(error.StaleObjectGeometryBinding);
+    @import("../hwpx/object_outer_margins.zig").validate(a, session, request) catch |err| return fail(err);
+    document_text_generation.enterMutation() catch |err| return fail(err);
+    const changed = @import("../hwpx/display_resource_generation.zig").applyOwned(h, session, &.{.{ .kind = .object_outer_margins, .object_outer_margins = &request, .section = request.geometry.selector.section, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "" }}) catch |err| {
+        _ = fail(err);
+        return if (err == error.MutationUncertain or err == error.HistoryMutationUncertain or h.stats().poisoned) 3 else 0;
+    };
+    return if (changed) 1 else 2;
 }
 
 // Exact source-frame geometry: lifetime and serial fences precede owner validation.

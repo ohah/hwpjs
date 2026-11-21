@@ -1,3 +1,14 @@
+import {
+  SET_OBJECT_OUTER_MARGINS_COMMAND,
+  captureObjectOuterMarginsPayload,
+  objectOuterMarginsMessage,
+  type SetObjectOuterMarginsPayload,
+  type ObjectOuterMarginsTarget,
+  type ObjectOuterMarginsSelector,
+  type ObjectOuterMarginsRead,
+} from '../commands/object-outer-margins.ts';
+import type { NativeObjectOuterMarginsObservation } from '../commands/object-outer-margins-dto.ts';
+import { checkedObjectOuterMarginsObservation } from '../../../../js/object-outer-margins.mjs';
 import { EDIT_CREATED_CELL_PROPERTIES_COMMAND } from '../commands/commands.ts';
 import {
   createdCellPropertiesMessage,
@@ -1449,6 +1460,10 @@ export function createEditor(options: CreateEditorOptions) {
       current: () => boolean;
     }
   >();
+  const objectOuterMarginsTargets = new WeakMap<
+    ObjectOuterMarginsTarget,
+    { state: EditorState; runtime: EditorRuntime; native: NativeObjectOuterMarginsObservation }
+  >();
   const pictureReplacementTargets = new WeakMap<
     PictureReplacementTarget,
     { state: EditorState; runtime: EditorRuntime; native: PictureReplacementOwner }
@@ -1477,9 +1492,17 @@ export function createEditor(options: CreateEditorOptions) {
     const height = command.id === EQUALIZE_SOURCE_TABLE_CELL_HEIGHT_COMMAND.id;
     const pageSettings = command.id === EDIT_PAGE_SETTINGS_COMMAND.id;
     const objectGeometry = command.id === SET_OBJECT_GEOMETRY_COMMAND.id;
+    const outerMargins = command.id === SET_OBJECT_OUTER_MARGINS_COMMAND.id;
     const pictureReplacement = command.id === REPLACE_PICTURE_COMMAND.id;
     const tableCell =
-      merge || split || width || height || pageSettings || objectGeometry || pictureReplacement;
+      merge ||
+      split ||
+      width ||
+      height ||
+      pageSettings ||
+      objectGeometry ||
+      pictureReplacement ||
+      outerMargins;
     const inlineKind =
       command.id === INSERT_EQUATION_COMMAND.id
         ? 'equation'
@@ -1498,34 +1521,36 @@ export function createEditor(options: CreateEditorOptions) {
         : command.id === INSERT_ENDNOTE_COMMAND.id
           ? 'end'
           : undefined;
-    const owned = pictureReplacement
-      ? captureReplacePicturePayload(payload)
-      : command.id === INSERT_IMAGE_COMMAND.id
-        ? captureImageInsertPayload(payload)
-        : command.id === DELETE_NOTE_COMMAND.id
-          ? captureNoteDeletePayload(payload)
-          : noteKind
-            ? captureNoteInsertPayload(payload)
-            : logicalSplice
-              ? captureCreatedCellSplicePayload(payload)
-              : objectGeometry
-                ? captureObjectGeometryPayload(payload)
-                : inlineKind
-                  ? captureInlineObjectInsertPayload(payload, inlineKind)
-                  : pageSettings
-                    ? capturePageSettingsPayload(payload)
-                    : split
-                      ? captureSourceTableCellSplitPayload(payload)
-                      : merge || width || height
-                        ? payload
-                        : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
-                          ? captureSourceTableGridRequest(
-                              payload,
-                              (snapshot.content as any)?.format,
-                            )
-                          : command.id === INSERT_DOCUMENT_COMMAND.id
-                            ? captureDocumentInsertPayload(payload)
-                            : copyOwned(payload);
+    const owned = outerMargins
+      ? captureObjectOuterMarginsPayload(payload)
+      : pictureReplacement
+        ? captureReplacePicturePayload(payload)
+        : command.id === INSERT_IMAGE_COMMAND.id
+          ? captureImageInsertPayload(payload)
+          : command.id === DELETE_NOTE_COMMAND.id
+            ? captureNoteDeletePayload(payload)
+            : noteKind
+              ? captureNoteInsertPayload(payload)
+              : logicalSplice
+                ? captureCreatedCellSplicePayload(payload)
+                : objectGeometry
+                  ? captureObjectGeometryPayload(payload)
+                  : inlineKind
+                    ? captureInlineObjectInsertPayload(payload, inlineKind)
+                    : pageSettings
+                      ? capturePageSettingsPayload(payload)
+                      : split
+                        ? captureSourceTableCellSplitPayload(payload)
+                        : merge || width || height
+                          ? payload
+                          : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
+                            ? captureSourceTableGridRequest(
+                                payload,
+                                (snapshot.content as any)?.format,
+                              )
+                            : command.id === INSERT_DOCUMENT_COMMAND.id
+                              ? captureDocumentInsertPayload(payload)
+                              : copyOwned(payload);
     return {
       command: command as EditorCommand<unknown>,
       payload: owned,
@@ -1600,6 +1625,27 @@ export function createEditor(options: CreateEditorOptions) {
         };
         guard();
         return await mutate(noteInsertMessage(payload, state, kind), payload.target, false, guard);
+      }
+      if (pending.command.id === SET_OBJECT_OUTER_MARGINS_COMMAND.id) {
+        const payload = pending.payload as SetObjectOuterMarginsPayload;
+        const owned = objectOuterMarginsTargets.get(payload.target);
+        if (!owned) throw Error('ForeignObjectOuterMarginsTarget');
+        const guard = () => {
+          requireReady(pending.token, true);
+          if (state !== owned.state || active !== owned.runtime)
+            throw Error('StaleObjectOuterMarginsTarget');
+          if (state.nativeHistoryRevision !== owned.native.geometry.historyRevision)
+            throw Error('StaleObjectOuterMarginsBinding');
+          if (!hasRuntimeAdmission(active, 'object-outer-margins-set'))
+            throw Error('UnsupportedObjectOuterMarginsRuntime');
+        };
+        guard();
+        return await mutate(
+          objectOuterMarginsMessage(owned.native, payload.margins),
+          pending.token,
+          false,
+          guard,
+        );
       }
       if (pending.command.id === REPLACE_PICTURE_COMMAND.id) {
         const payload = pending.payload as ReplacePicturePayload;
@@ -2267,6 +2313,15 @@ export function createEditor(options: CreateEditorOptions) {
   function dispatchCommand<T>(command: EditorCommand<T>, payload: T): Promise<CommandResult> {
     assertPublicMutation();
     const pending = capture(command, payload);
+    if (command.id === SET_OBJECT_OUTER_MARGINS_COMMAND.id) {
+      const owned = objectOuterMarginsTargets.get(
+        (pending.payload as SetObjectOuterMarginsPayload).target,
+      );
+      if (!owned)
+        return Promise.resolve(reject(context(pending.token), 'ForeignObjectOuterMarginsTarget'));
+      if (state !== owned.state || active !== owned.runtime)
+        return Promise.resolve(reject(context(pending.token), 'StaleObjectOuterMarginsTarget'));
+    }
     if (command.id === REPLACE_PICTURE_COMMAND.id) {
       const owned = pictureReplacementTargets.get(
         (pending.payload as ReplacePicturePayload).target,
@@ -2713,6 +2768,8 @@ export function createEditor(options: CreateEditorOptions) {
         'document-insert-capabilities',
         'inline-object-owner',
         'created-cell-text-target',
+        'object-outer-margins-query',
+        'object-outer-margins-set',
         'picture-replacement-query',
         'picture-replace',
         'object-geometry-query',
@@ -2938,6 +2995,83 @@ export function createEditor(options: CreateEditorOptions) {
           }),
         }),
       );
+    });
+  }
+  function getObjectOuterMargins(
+    selector: ObjectOuterMarginsSelector,
+    options: { token?: StateToken } = {},
+  ): Promise<ObjectOuterMarginsRead> {
+    assertPublicMutation();
+    const snapshot = state;
+    const selected = checkedObjectGeometrySelector(selector);
+    if (selected.kind !== 'drawing') throw Error('InvalidObjectOuterMarginsSelector');
+    const settings = copyOwned(options);
+    if (
+      !settings ||
+      typeof settings !== 'object' ||
+      Array.isArray(settings) ||
+      Object.keys(settings).some((key) => key !== 'token') ||
+      settings.token === null
+    )
+      throw Error('InvalidObjectOuterMarginsOptions');
+    const token = copyOwned(settings.token ?? snapshot.token);
+    if (state !== snapshot) throw Error('StaleObjectOuterMarginsTarget');
+    return enqueue(async () => {
+      requireReady(token, true);
+      const runtime = active;
+      const guard = () => {
+        requireReady(token, true);
+        if (state !== snapshot || active !== runtime) throw Error('StaleObjectOuterMarginsTarget');
+      };
+      guard();
+      const content = snapshot.content as Record<string, unknown> | undefined;
+      const capabilities = snapshot.capabilities as Record<string, unknown> | undefined;
+      if (content?.readOnly === true || capabilities?.readOnly === true)
+        return { state: 'unavailable', reason: 'ReadOnlyDocument' };
+      if (!content || content.format !== 'hwpx' || content.limited || content.window)
+        return { state: 'unavailable', reason: 'ObjectOuterMarginsRequiresFullDocument' };
+      if (
+        snapshot.nativeHistoryStats?.protocolVersion !== 2 ||
+        !Number.isSafeInteger(snapshot.nativeHistoryRevision) ||
+        snapshot.nativeHistoryRevision! < 0 ||
+        snapshot.nativeHistoryRevision! >= 0xffffffff
+      )
+        return { state: 'unavailable', reason: 'HistoryProtocol2Required' };
+      if (!runtime || !hasRuntimeAdmission(runtime, 'object-outer-margins-query'))
+        return { state: 'unavailable', reason: 'UnsupportedObjectOuterMarginsRuntime' };
+      const reply = await readRequest(
+        { kind: 'object-outer-margins-query', selector: selected },
+        token,
+        guard,
+        true,
+      );
+      guard();
+      if (reply.outerMargins === null)
+        return {
+          state: 'unavailable',
+          reason: typeof reply.reason === 'string' ? reply.reason : 'ObjectOuterMarginsUnavailable',
+        };
+      const native = checkedObjectOuterMarginsObservation(reply.outerMargins);
+      if (
+        native.geometry.format !== content.format ||
+        native.geometry.selector.section !== selected.section ||
+        native.geometry.selector.node !== selected.node ||
+        native.geometry.historyRevision !== snapshot.nativeHistoryRevision
+      )
+        throw Error('ObjectOuterMarginsBindingMismatch');
+      guard();
+      const target = Object.freeze({}) as ObjectOuterMarginsTarget;
+      objectOuterMarginsTargets.set(target, { state: snapshot, runtime, native });
+      return Object.freeze({
+        state: 'available',
+        target,
+        observation: Object.freeze({
+          format: native.geometry.format,
+          section: native.geometry.selector.section,
+          drawingNode: native.geometry.selector.node,
+          margins: native.margins,
+        }),
+      });
     });
   }
   function getPictureReplacement(
@@ -4120,6 +4254,7 @@ export function createEditor(options: CreateEditorOptions) {
     getDocumentInsertionCapabilities: geometryGuard(getDocumentInsertionCapabilities),
     getInlineObjectInsertTarget: geometryGuard(getInlineObjectInsertTarget),
     getCreatedCellTextTarget: geometryGuard(getCreatedCellTextTarget),
+    getObjectOuterMargins: geometryGuard(getObjectOuterMargins),
     getPictureReplacement: geometryGuard(getPictureReplacement),
     getObjectGeometry: geometryGuard(getObjectGeometry),
     getPageSettings: geometryGuard(getPageSettings),

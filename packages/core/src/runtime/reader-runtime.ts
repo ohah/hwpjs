@@ -130,7 +130,13 @@ export function createReaderEditorRuntime(options: ReaderRuntimeOptions = {}): E
     (kind) =>
       !closed &&
       !poisoned &&
-      (!['picture-replacement-query', 'picture-replace'].includes(kind ?? '') || valid()),
+      (![
+        'picture-replacement-query',
+        'picture-replace',
+        'object-outer-margins-query',
+        'object-outer-margins-set',
+      ].includes(kind ?? '') ||
+        valid()),
   );
   origins.set(runtime, {
     valid,

@@ -1,3 +1,4 @@
+import type { ObjectPropertiesEditGate } from './object-properties-edit-gate.ts';
 import type { HeadlessEditor, ObjectGeometrySelector, ObjectGeometryFrame } from '@hwpjs/core';
 import { createObjectGeometryPort } from './object-geometry-port.ts';
 import { createObjectGeometryController } from './object-geometry-controller.ts';
@@ -17,6 +18,7 @@ export function createObjectGeometryForm(
   editor: ObjectGeometryEditor | undefined,
   selector: ObjectGeometrySelector,
   onApplied: () => void,
+  editGate?: ObjectPropertiesEditGate,
 ) {
   const doc = root.ownerDocument,
     group = doc.createElement('fieldset'),
@@ -69,6 +71,7 @@ export function createObjectGeometryForm(
     inputs[field] = input;
     const onInput = () => {
       dirty[field] = true;
+      publishDirty();
     };
     input.addEventListener('input', onInput);
     listeners.push(() => input.removeEventListener('input', onInput));
@@ -89,11 +92,18 @@ export function createObjectGeometryForm(
   root.append(group);
   footer.append(apply);
   function availability() {
-    apply.disabled = busy || !original || (!size && !position);
+    apply.disabled =
+      busy ||
+      !original ||
+      (!size && !position) ||
+      (editGate !== undefined && !editGate.allowed('geometry'));
     for (const field of Object.keys(inputs) as ObjectGeometryField[])
       inputs[field].disabled =
-        busy || !original || (field === 'width' || field === 'height' ? !size : !position);
-    inline.disabled = busy || !original || !position;
+        busy ||
+        editGate?.busy === true ||
+        !original ||
+        (field === 'width' || field === 'height' ? !size : !position);
+    inline.disabled = busy || editGate?.busy === true || !original || !position;
   }
   const controller = createObjectGeometryController({
     port: createObjectGeometryPort(editor),
@@ -121,6 +131,19 @@ export function createObjectGeometryForm(
       availability();
     },
   });
+  const unsubscribeGate = editGate?.subscribe(availability);
+  function publishDirty() {
+    if (!editGate || !original) return;
+    const labels = objectGeometryDraft(original);
+    editGate.setDirty(
+      'geometry',
+      (Object.keys(inputs) as ObjectGeometryField[]).some(
+        (field) => dirty[field] && inputs[field].value.trim() !== labels[field],
+      ) || inline.checked !== original.treatAsCharacter,
+    );
+  }
+  const onInline = publishDirty;
+  inline.addEventListener('change', onInline);
   const onApply = () => {
     if (disposed || busy || !original) return;
     try {
@@ -139,7 +162,12 @@ export function createObjectGeometryForm(
           ? { treatAsCharacter: inline.checked }
           : {}),
       };
-      void controller.apply(patch);
+      if (editGate && !editGate.begin('geometry')) {
+        status.textContent =
+          '바깥 여백을 함께 변경할 수 없습니다. 다른 값을 되돌리거나 속성 창을 다시 열어주세요.';
+        return;
+      }
+      void controller.apply(patch).finally(() => editGate?.end('geometry'));
     } catch {
       status.textContent = '크기와 위치에 올바른 mm 값을 입력해주세요.';
     }
@@ -151,6 +179,8 @@ export function createObjectGeometryForm(
       if (disposed) return;
       disposed = true;
       controller.dispose();
+      unsubscribeGate?.();
+      inline.removeEventListener('change', onInline);
       for (const remove of listeners) remove();
       apply.removeEventListener('click', onApply);
       group.remove();

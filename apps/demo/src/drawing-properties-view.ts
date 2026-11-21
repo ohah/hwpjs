@@ -1,3 +1,8 @@
+import { createObjectPropertiesEditGate } from './object-properties-edit-gate.ts';
+import {
+  createObjectOuterMarginsForm,
+  type ObjectOuterMarginsEditor,
+} from './object-outer-margins-form.ts';
 import { createObjectGeometryForm, type ObjectGeometryEditor } from './object-geometry-form.ts';
 import { createDialogLayer } from './dialog-layer.ts';
 import type { DrawingPropertiesCapture } from './drawing-properties-port.ts';
@@ -8,6 +13,8 @@ export function createDrawingPropertiesView(
   capture: DrawingPropertiesCapture,
   onDismiss: () => void,
   editor?: ObjectGeometryEditor,
+  marginsEditor?: ObjectOuterMarginsEditor,
+  drawingCurrent: () => boolean = () => true,
 ): DrawingPropertiesView {
   const doc = root.ownerDocument;
   const layer = createDialogLayer(root, {
@@ -50,11 +57,31 @@ export function createDrawingPropertiesView(
   dismiss.textContent = '닫기';
   dismiss.addEventListener('click', onDismiss);
   layer.footer.append(dismiss);
+  const editGate = createObjectPropertiesEditGate();
+  const editStatus = doc.createElement('p');
+  editStatus.setAttribute('role', 'status');
+  editStatus.dataset.role = 'object-property-edit-status';
+  layer.body.append(editStatus);
+  const unsubscribeGate = editGate.subscribe(() => {
+    editStatus.textContent = editGate.conflict
+      ? '한 번에 크기와 위치 또는 바깥 여백 중 하나만 변경하세요. 다른 값을 되돌리거나 속성 창을 다시 열어주세요.'
+      : '';
+  });
   const geometry = createObjectGeometryForm(
     layer.body,
     layer.footer,
     editor,
     { kind: 'drawing', section: capture.target.section, node: capture.target.drawingNode },
+    onDismiss,
+    editGate,
+  );
+  const margins = createObjectOuterMarginsForm(
+    layer.body,
+    layer.footer,
+    marginsEditor,
+    { kind: 'drawing', section: capture.target.section, node: capture.target.drawingNode },
+    drawingCurrent,
+    editGate,
     onDismiss,
   );
   let disposed = false;
@@ -66,7 +93,9 @@ export function createDrawingPropertiesView(
       if (disposed) return;
       disposed = true;
       dismiss.removeEventListener('click', onDismiss);
+      unsubscribeGate();
       geometry.dispose();
+      margins.dispose();
       layer.destroy();
     },
   };

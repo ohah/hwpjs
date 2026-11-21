@@ -1,3 +1,4 @@
+import type { ObjectOuterMarginsEditor } from './object-outer-margins-form.ts';
 import type { ObjectGeometryEditor } from './object-geometry-form.ts';
 import {
   createDrawingPropertiesPort,
@@ -8,7 +9,7 @@ import { createDrawingPropertiesView } from './drawing-properties-view.ts';
 
 export interface DrawingPropertiesToolOptions {
   root: HTMLElement;
-  editor: DrawingPropertiesEditor & Partial<ObjectGeometryEditor>;
+  editor: DrawingPropertiesEditor & Partial<ObjectGeometryEditor & ObjectOuterMarginsEditor>;
   onStatus?(text: string): void;
   onClose?(): void;
   onPresentationChange?(): void;
@@ -24,9 +25,10 @@ export interface DrawingPropertiesTool {
 export function createDrawingPropertiesTool(
   options: DrawingPropertiesToolOptions,
 ): DrawingPropertiesTool {
+  const port = createDrawingPropertiesPort(options.editor);
   const controller = createDrawingPropertiesController({
     ...options,
-    port: createDrawingPropertiesPort(options.editor),
+    port,
     createView: (capture, onDismiss) =>
       createDrawingPropertiesView(
         options.root,
@@ -36,6 +38,11 @@ export function createDrawingPropertiesTool(
           typeof options.editor.dispatchCommand === 'function'
           ? (options.editor as ObjectGeometryEditor)
           : undefined,
+        typeof options.editor.getObjectOuterMargins === 'function' &&
+          typeof options.editor.dispatchCommand === 'function'
+          ? (options.editor as ObjectOuterMarginsEditor)
+          : undefined,
+        () => port.current(capture),
       ),
   });
   return {

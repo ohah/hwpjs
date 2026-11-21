@@ -338,6 +338,32 @@ export async function resizeObject(editor: HeadlessEditor, selector: ObjectGeome
 
 현재 경로는 지원하는 원본 HWPX 차트·글상자와 HWP5 글상자를 대상으로 합니다. 크기·위치 편집, 저장·다시 열기, 실행 취소·다시 실행을 별도로 검증했습니다. HWP5 변경 뒤 일반 저장이 `LayoutReflowRequired`로 거부되면 레이아웃 제한을 확인한 뒤 `save({ allowStaleLayout: true })`로 명시 동의할 수 있습니다. 완전 재조판이나 그룹·회전·임의 OLE 편집을 뜻하지 않습니다.
 
+## HWPX 글상자의 바깥 여백
+
+`getObjectOuterMargins(selector)`는 사각형 어울림이 지정된 본문 글상자의 네 방향 여백과 편집 대상을 조회합니다. 문서에 네 방향 값이 저장돼 있어야 합니다.
+
+```ts
+import {
+  SET_OBJECT_OUTER_MARGINS_COMMAND,
+  type HeadlessEditor,
+  type ObjectOuterMarginsSelector,
+} from '@ohah/hwpjs';
+
+export async function editTextBoxMargins(
+  editor: HeadlessEditor,
+  selector: ObjectOuterMarginsSelector,
+) {
+  const read = await editor.getObjectOuterMargins(selector);
+  if (read.state !== 'available') return read;
+  return editor.dispatchCommand(SET_OBJECT_OUTER_MARGINS_COMMAND, {
+    target: read.target,
+    margins: { ...read.observation.margins, left: 720, right: 2160 },
+  });
+}
+```
+
+각 방향은 0~32767 범위의 정수 HWPUNIT입니다. 예제의 왼쪽과 오른쪽 여백은 각각 2.54mm와 7.62mm입니다. 한 번 적용하면 실행 취소 한 단계가 생깁니다. 문서 상태나 이력이 바뀌면 다시 조회하세요. 구형 엔진이나 지원 범위를 벗어난 개체의 조회 결과는 `unavailable`입니다.
+
 ## 생성 셀을 DOM 없이 편집하기
 
 새 정상 엔진을 포함한 공개 패키지 소스에서는 `getCreatedCellTextTarget`으로 현재 논리 셀의 입력 권한을 발급받습니다. 셀의 십진 u64 `identity`와 구역·행·열은 실제 표 생성 결과에서 가져옵니다. 임의 Native 문단 번호나 Surface 선택을 만들지 않습니다. 구형 엔진이나 사용할 수 없는 셀은 명시적인 오류로 거부합니다.

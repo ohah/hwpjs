@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import {
   ABI_VERSION,
+  HWPX_OBJECT_OUTER_MARGINS_ABI,
   LIVE_IMAGE_INSERT_ABI,
   CREATED_CELL_PROPERTIES_ABI,
   LIVE_PICTURE_REPLACEMENT_ABI,
@@ -128,6 +129,14 @@ const generated =
   '};\n' +
   'pub const live_picture_replacement_signatures = [_]OptionalFunctionSignature{\n' +
   Object.entries(LIVE_PICTURE_REPLACEMENT_ABI)
+    .map(
+      ([name, signature]) =>
+        `    .{ .name = ${JSON.stringify(name)}, .params = ${signatureTypes(signature.params)}, .results = ${signatureTypes(signature.results)} },\n`,
+    )
+    .join('') +
+  '};\n' +
+  'pub const hwpx_object_outer_margins_signatures = [_]OptionalFunctionSignature{\n' +
+  Object.entries(HWPX_OBJECT_OUTER_MARGINS_ABI)
     .map(
       ([name, signature]) =>
         `    .{ .name = ${JSON.stringify(name)}, .params = ${signatureTypes(signature.params)}, .results = ${signatureTypes(signature.results)} },\n`,

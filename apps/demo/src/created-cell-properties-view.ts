@@ -45,6 +45,11 @@ export function createCreatedCellPropertiesView(
     height = add('height', '셀 높이');
   width.value = sizes.read().width;
   height.value = sizes.read().height;
+  const fillMode = add('fill-mode', '채우기', ['', 'none', 'solid']);
+  for (const option of Array.from(fillMode.children)) {
+    if ((option as HTMLOptionElement).value === 'none') option.textContent = '채우기 없음';
+    if ((option as HTMLOptionElement).value === 'solid') option.textContent = '단색';
+  }
   const fill = add('fill', '배경색 RGB (변경할 때만 6자리 입력)');
   const style = add('border-style', '바깥 테두리 종류', ['', 'NONE', 'SOLID', 'DOUBLE_SLIM']);
   const borderWidth = add('border-width', '바깥 테두리 굵기 (0.01mm)', [
@@ -102,7 +107,11 @@ export function createCreatedCellPropertiesView(
       ...(borderColor.value ? { color: rgb(borderColor.value) } : {}),
     };
     const appearance = {
-      ...(fill.value ? { fill: { kind: 'solid', color: rgb(fill.value) } } : {}),
+      ...(fillMode.value === 'none'
+        ? { fill: { kind: 'none' } }
+        : fillMode.value === 'solid'
+          ? { fill: { kind: 'solid', color: rgb(fill.value) } }
+          : {}),
       ...(Object.keys(stroke).length
         ? {
             borders: Object.fromEntries(
@@ -127,6 +136,7 @@ export function createCreatedCellPropertiesView(
     }
     const blocked = disposed || busy || stale || !!writeReason;
     for (const input of Object.values(fields)) input.disabled = blocked;
+    fill.disabled = blocked || fillMode.value === 'none';
     apply.disabled = blocked || composing || !!error;
     status.textContent = stale ? '선택이나 문서가 바뀌었습니다. 창을 다시 여세요.' : (error ?? '');
   }
@@ -138,7 +148,11 @@ export function createCreatedCellPropertiesView(
       if (!busy && !stale && !writeReason) sizes.edit(axis, input.value);
       refresh();
     });
-  for (const input of [fill, style, borderWidth, borderColor]) {
+  fill.addEventListener('input', () => {
+    if (!busy && !stale && !writeReason && fillMode.value !== 'none' && fill.value)
+      fillMode.value = 'solid';
+  });
+  for (const input of [fillMode, fill, style, borderWidth, borderColor]) {
     input.addEventListener('input', refresh);
     input.addEventListener('change', refresh);
   }

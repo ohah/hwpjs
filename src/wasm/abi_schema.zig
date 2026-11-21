@@ -139,6 +139,11 @@ pub const live_picture_replacement_signatures = [_]OptionalFunctionSignature{
     .{ .name = "hwpx_edit_picture_replace_owner", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
     .{ .name = "hwpx_edit_replace_picture", .params = &.{ "i32", "i32", "i32", "i32" }, .results = &.{"i32"} },
 };
+pub const hwpx_object_outer_margins_signatures = [_]OptionalFunctionSignature{
+    .{ .name = "hwpx_edit_object_outer_margins_version", .params = &.{}, .results = &.{"i32"} },
+    .{ .name = "hwpx_edit_object_outer_margins", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+    .{ .name = "hwpx_edit_set_object_outer_margins", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+};
 pub const document = struct {
     pub const header_bytes: usize = 8;
     pub const node_bytes: usize = 56;

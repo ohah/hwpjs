@@ -1,0 +1,1 @@
+export{createHwpxEditor2 as createHwpxEditor}from"./index-56msgffe.js";import"./index-pg1srdbc.js";

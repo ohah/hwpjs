@@ -280,7 +280,13 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
       !closed &&
       !poisoned &&
       !custom &&
-      (!['picture-replacement-query', 'picture-replace'].includes(kind ?? '') || valid()) &&
+      (![
+        'picture-replacement-query',
+        'picture-replace',
+        'object-outer-margins-query',
+        'object-outer-margins-set',
+      ].includes(kind ?? '') ||
+        valid()) &&
       // This command re-resolves its complete value target inside the worker.
       // Its transport fence conveys no native binding or geometry authority.
       (kind === 'set-named-field-value' ||

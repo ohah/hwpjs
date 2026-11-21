@@ -60,6 +60,24 @@ function mock(prefix, result = 1) {
   };
 }
 for (const prefix of ['hwp5_edit', 'hwpx_edit']) {
+  test(prefix + ' explicit none survives typed wire once; absent fill stays absent', () => {
+    const m = mock(prefix),
+      r = request();
+    r.appearance = { fill: { kind: 'none' } };
+    delete r.size;
+    assert.equal(m.api.editCreatedCellProperties(r).changed, true);
+    assert.equal(m.writes, 1);
+    assert.deepEqual(m.captured.appearance, { background: { none: {} } });
+    assert.equal(Object.hasOwn(m.captured, 'size'), false);
+    const untouched = mock(prefix),
+      sizeOnly = request();
+    delete sizeOnly.appearance;
+    untouched.api.editCreatedCellProperties(sizeOnly);
+    assert.deepEqual(untouched.captured.appearance, {});
+    assert.equal(Object.hasOwn(untouched.captured.appearance, 'background'), false);
+    assert.equal(untouched.writes, 1);
+  });
+
   test(prefix + ' exact owner full witness sparse write and one Native call', () => {
     const m = mock(prefix);
     assert.equal(m.api.supportsCreatedCellProperties(), true);

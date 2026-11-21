@@ -1361,6 +1361,40 @@ export function createReaderRuntime({
         });
         return;
       }
+      if (message.kind === 'object-outer-margins-query') {
+        if (format !== 'hwpx' || !historyEnabled || !editor?.supportsObjectOuterMargins?.()) {
+          reply({
+            kind: message.kind,
+            outerMargins: null,
+            reason: 'ObjectOuterMarginsUnavailable',
+          });
+          return;
+        }
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        reply({ kind: message.kind, outerMargins: editor.objectOuterMargins(message.selector) });
+        return;
+      }
+      if (message.kind === 'object-outer-margins-set') {
+        if (format !== 'hwpx' || !historyEnabled || !editor?.supportsObjectOuterMargins?.())
+          throw Error('ObjectOuterMarginsUnavailable');
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        atomicOutcome = editor.setObjectOuterMargins(message.request);
+        applied = atomicOutcome.application === 'applied';
+        mutationUncertain = atomicOutcome.application === 'unknown';
+        if (mutationUncertain) historyPoisoned = true;
+        if (atomicOutcome.error || atomicOutcome.cleanupError)
+          throw Error(atomicOutcome.error || atomicOutcome.cleanupError);
+        if (atomicOutcome.nativeCode === 2) {
+          reply({ kind: message.kind, changed: false });
+          return;
+        }
+        documentWindow = null;
+        reader = await createHwpxReader(module);
+        preview = reader.readTextEvents(editor.saveForDisplay());
+        displayResources.invalidate();
+        reply({ kind: message.kind, content: hwpxDisplay() });
+        return;
+      }
       if (message.kind === 'picture-replacement-query') {
         if (
           !['hwp5', 'hwpx'].includes(format) ||

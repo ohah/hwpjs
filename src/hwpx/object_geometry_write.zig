@@ -128,6 +128,19 @@ pub fn prepare(a: std.mem.Allocator, before: []const u8, request: t.Request, opt
     if (std.meta.eql(after, request.expected)) return null;
     var current = try editor.open(a, before, options);
     defer current.deinit();
+    const selector = try rebindSaved(a, &current, request);
+    const tree = &current.sections[request.selector.section].tree;
+    const edited = try writeTree(a, tree, selector, request.expected, after, options.max_xml_bytes);
+    defer a.free(edited);
+    const bytes = try @import("page_settings_layout_cache.zig").remove(a, edited, request.selector.section, tree.item_index, options.max_xml_bytes);
+    defer a.free(bytes);
+    const package = try @import("../zip/replace_writer.zig").write(a, before, &.{.{ .entry_index = current.sections[request.selector.section].entry_index, .bytes = bytes }}, .{ .max_output_bytes = options.max_output_bytes });
+    defer a.free(package);
+    return try editor.open(a, package, options);
+}
+
+/// Shared saved-source link/anchor rebind; never assumes old XML node numbers survive save.
+pub fn rebindSaved(a: std.mem.Allocator, current: *const editor.Session, request: t.Request) !t.Selector {
     if (request.selector.section >= current.sections.len) return error.StaleObjectGeometryOwner;
     const tree = &current.sections[request.selector.section].tree;
     var selected: ?t.Selector = null;
@@ -151,7 +164,7 @@ pub fn prepare(a: std.mem.Allocator, before: []const u8, request: t.Request, opt
         try eligible.put(candidate.node, {});
     }
     if (request.selector.kind == .drawing) {
-        const hosts = try @import("rectangle_display_host.zig").readMany(a, &current, request.selector.section, candidates.items);
+        const hosts = try @import("rectangle_display_host.zig").readMany(a, current, request.selector.section, candidates.items);
         defer a.free(hosts);
         for (hosts, candidates.items) |host, node| {
             if (host.paragraph != request.owner.paragraph or host.anchor_unit != request.owner.anchorUnit) continue;
@@ -159,7 +172,7 @@ pub fn prepare(a: std.mem.Allocator, before: []const u8, request: t.Request, opt
             selected = .{ .kind = .drawing, .section = request.selector.section, .node = @intCast(node) };
         }
     } else {
-        const sites = try @import("chart_display_sites.zig").read(a, &current, request.selector.section);
+        const sites = try @import("chart_display_sites.zig").read(a, current, request.selector.section);
         defer a.free(sites);
         for (sites) |site| {
             if (!eligible.contains(@intCast(site.wrapper)) or site.error_name != null or site.paragraph != request.owner.paragraph or site.anchorUnit != request.owner.anchorUnit) continue;
@@ -168,16 +181,10 @@ pub fn prepare(a: std.mem.Allocator, before: []const u8, request: t.Request, opt
         }
     }
     const selector = selected orelse return error.StaleObjectGeometryOwner;
-    var observed = try owners.observe(a, &current, selector, request.historyRevision, request.binding);
+    var observed = try owners.observe(a, current, selector, request.historyRevision, request.binding);
     defer observed.deinit(a);
     if (!std.meta.eql(observed.frame, request.expected) or observed.owner.paragraph != request.owner.paragraph or observed.owner.anchorUnit != request.owner.anchorUnit) return error.StaleObjectGeometryOwner;
     if ((request.patch.width != null or request.patch.height != null) and !observed.editable.size) return error.ObjectGeometryReadOnly;
     if ((request.patch.horizontalOffset != null or request.patch.verticalOffset != null or request.patch.treatAsCharacter != null) and !observed.editable.position) return error.ObjectGeometryReadOnly;
-    const edited = try writeTree(a, tree, selector, request.expected, after, options.max_xml_bytes);
-    defer a.free(edited);
-    const bytes = try @import("page_settings_layout_cache.zig").remove(a, edited, request.selector.section, tree.item_index, options.max_xml_bytes);
-    defer a.free(bytes);
-    const package = try @import("../zip/replace_writer.zig").write(a, before, &.{.{ .entry_index = current.sections[request.selector.section].entry_index, .bytes = bytes }}, .{ .max_output_bytes = options.max_output_bytes });
-    defer a.free(package);
-    return try editor.open(a, package, options);
+    return selector;
 }
