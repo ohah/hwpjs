@@ -56,6 +56,7 @@ pub const Command = union(enum) {
     edit_object_outer_margins: @import("object_outer_margins.zig").Request,
     edit_object_vertical_margins: @import("object_outer_margins.zig").Request,
     set_cell_vertical_alignment: @import("cell_vertical_alignment_plan.zig").Request,
+    set_cell_vertical_alignment_block: @import("cell_vertical_alignment_batch_plan.zig").Request,
     edit_page_settings: *const @import("page_settings_types.zig").Request,
     edit_bullet_definition: @import("../../model/paragraph_bullet_definition.zig").Request,
     set_paragraph_alignment: struct { section: usize, paragraph: usize, alignment: u32 },
@@ -655,11 +656,13 @@ pub const Session = opaque {
     }
     /// Checkpoint must represent the current model; history reserves first.
     pub fn applyCheckpointed(self: *Session, checkpoint: *Checkpoint, limit: usize, command: Command) !bool {
+        if (command == .set_cell_vertical_alignment_block) try self.requireManagedCellBlock();
         try self.materializeLiveText();
         return self.applyBatchCheckpointed(checkpoint, limit, &.{command});
     }
 
     pub fn applyBatchCheckpointed(self: *Session, checkpoint: *Checkpoint, limit: usize, commands: []const Command) !bool {
+        for (commands) |command| if (command == .set_cell_vertical_alignment_block) try self.requireManagedCellBlock();
         try self.materializeLiveText();
         const before = try self.externalHistoryBegin();
         const result = self.applyBatchCheckpointedBody(checkpoint, limit, commands) catch |err| {
@@ -926,6 +929,23 @@ pub const Session = opaque {
         try self.materializeLiveText();
         if (paragraph_index >= try self.paragraphCount(section)) return error.InvalidParagraph;
         return self.stateConst().document.sections[section].paragraphs[paragraph_index].para_shape_id;
+    }
+    /// Owned immutable batch witness; managed history remains the only publisher.
+    pub fn cellVerticalAlignmentBlock(self: *const Session, a: std.mem.Allocator, witness: @import("cell_vertical_alignment_batch_plan.zig").Witness) !@import("cell_vertical_alignment_batch_plan.zig").Observation {
+        const state = self.stateConst();
+        if (witness.section >= state.document.sections.len) return error.InvalidSection;
+        const read_only = state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview);
+        return @import("cell_vertical_alignment_batch_plan.zig").observe(a, state.decoded[witness.section], state.source.header.version(), state.document.sections[witness.section], witness.section, witness, try self.historyTicket(), read_only);
+    }
+    pub fn validateCellVerticalAlignmentBlock(self: *const Session, request: @import("cell_vertical_alignment_batch_plan.zig").Request) !bool {
+        const state = self.stateConst();
+        const index = request.before.section;
+        if (index >= state.document.sections.len) return error.InvalidSection;
+        const read_only = state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview);
+        return @import("cell_vertical_alignment_batch_plan.zig").validate(state.allocator, state.decoded[index], state.source.header.version(), state.document.sections[index], index, request.before, request.value, try self.historyTicket(), read_only);
+    }
+    fn requireManagedCellBlock(self: *const Session) !void {
+        if (!self.historyTransactionActive() or self.stateConst().history_poison_observer == null) return error.HistoryProtocol2Required;
     }
     pub fn cellVerticalAlignment(self: *const Session, a: std.mem.Allocator, selector: @import("cell_vertical_alignment_plan.zig").Selector) !@import("cell_vertical_alignment_plan.zig").Observation {
         try self.materializeLiveText();
@@ -1790,9 +1810,11 @@ pub const Session = opaque {
     }
 
     pub fn apply(self: *Session, command: Command) !void {
+        if (command == .set_cell_vertical_alignment_block) return error.HistoryProtocol2Required;
         return self.applyWithFontCache(command, null);
     }
     pub fn applyWithFontCache(self: *Session, command: Command, font_cache: ?*@import("../../model/batch_font_lookup.zig").Cache) !void {
+        if (command == .set_cell_vertical_alignment_block) try self.requireManagedCellBlock();
         self.invalidateStrictLayout();
         // Helpers may replace a whole Section clone. Refresh borrowed bases before returning.
         defer if (self.getState().has_source_rebases) self.getState().refreshSourceViews();
@@ -2209,6 +2231,25 @@ pub const Session = opaque {
                 const offsets = try state.allocator.dupe(usize, state.style_offsets[index]);
                 var old = section.rebased_source;
                 section.rebased_source = .{ .bytes = bytes, .style_offsets = offsets, .original_record_count = if (old) |basis| basis.original_record_count else section.source_record_count };
+                state.refreshSourceViews();
+                if (old) |*basis| basis.deinit(state.allocator);
+            },
+            .set_cell_vertical_alignment_block => |request| {
+                try self.requireManagedCellBlock();
+                const state = self.getState();
+                const index = request.before.section;
+                if (index >= state.document.sections.len) return error.InvalidSection;
+                if (state.formatting_batch != null) return error.MutationInProgress;
+                const section = &state.document.sections[index];
+                const read_only = state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview);
+                var prepared = (try @import("cell_vertical_alignment_batch_plan.zig").prepare(state.allocator, state.decoded[index], state.source.header.version(), section.*, index, request.before, request.value, try self.historyTicket(), read_only, max_stream)) orelse return;
+                var adopted = false;
+                defer if (!adopted) prepared.deinit(state.allocator);
+                if (prepared.bytes.len != state.decoded[index].len) return error.SourceBindingMismatch;
+                const offsets = try state.allocator.dupe(usize, state.style_offsets[index]);
+                var old = section.rebased_source;
+                section.rebased_source = .{ .bytes = prepared.bytes, .style_offsets = offsets, .original_record_count = if (old) |basis| basis.original_record_count else section.source_record_count };
+                adopted = true;
                 state.refreshSourceViews();
                 if (old) |*basis| basis.deinit(state.allocator);
             },

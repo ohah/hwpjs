@@ -1,3 +1,4 @@
+import { createOriginalCellVerticalAlignmentBatchApi } from './original-cell-vertical-alignment-batch.mjs';
 import { createOriginalCellVerticalAlignmentApi } from './original-cell-vertical-alignment.mjs';
 import { createHwp5VerticalMarginsApi } from './hwp5-vertical-outer-margins.mjs';
 import { createHwp5OuterMarginsApi } from './hwp5-object-outer-margins.mjs';
@@ -257,6 +258,12 @@ export async function createExperimentalHwp5Editor(
   };
   const api = {
     ...createOriginalCellVerticalAlignmentApi({ wasm, memory, check: check, prefix: 'hwp5_edit' }),
+    ...createOriginalCellVerticalAlignmentBatchApi({
+      wasm,
+      memory,
+      check: check,
+      prefix: 'hwp5_edit',
+    }),
     ...createCreatedCellPropertiesApi({ wasm, memory, check: check, prefix: 'hwp5_edit' }),
     ...createHwp5EquationApi({ wasm, check, output, u32 }),
     measureEquation(source, settings) {

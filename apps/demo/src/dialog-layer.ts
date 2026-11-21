@@ -137,10 +137,11 @@ export function createDialogLayer(root: HTMLElement, options: DialogLayerOptions
       title.textContent = value;
       element.setAttribute('aria-label', value);
     },
-    show(focus?: HTMLElement) {
+    show(focus?: HTMLElement, beforeOpen?: (element: HTMLDialogElement) => void) {
       if (disposed) return;
       if (!element.parentElement) root.append(element);
       if (!element.open) {
+        beforeOpen?.(element);
         if (options.mode === 'modal') element.showModal();
         else element.show();
       }

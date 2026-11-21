@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import {
   ABI_VERSION,
   ORIGINAL_CELL_VERTICAL_ALIGNMENT_ABI,
+  ORIGINAL_CELL_VERTICAL_ALIGNMENT_BATCH_ABI,
   HWP5_VERTICAL_OUTER_MARGINS_ABI,
   HWPX_OBJECT_BODY_FLOW_ABI,
   HWP5_OBJECT_OUTER_MARGINS_ABI,
@@ -182,6 +183,14 @@ const generated =
   '};\n' +
   'pub const original_cell_vertical_alignment_signatures = [_]OptionalFunctionSignature{\n' +
   Object.entries(ORIGINAL_CELL_VERTICAL_ALIGNMENT_ABI)
+    .map(
+      ([name, signature]) =>
+        `    .{ .name = ${JSON.stringify(name)}, .params = ${signatureTypes(signature.params)}, .results = ${signatureTypes(signature.results)} },\n`,
+    )
+    .join('') +
+  '};\n' +
+  'pub const original_cell_vertical_alignment_batch_signatures = [_]OptionalFunctionSignature{\n' +
+  Object.entries(ORIGINAL_CELL_VERTICAL_ALIGNMENT_BATCH_ABI)
     .map(
       ([name, signature]) =>
         `    .{ .name = ${JSON.stringify(name)}, .params = ${signatureTypes(signature.params)}, .results = ${signatureTypes(signature.results)} },\n`,

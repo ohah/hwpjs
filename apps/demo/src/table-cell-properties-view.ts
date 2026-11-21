@@ -18,7 +18,9 @@ export function createTableCellPropertiesView(
     appearance?: () => void;
     appearanceEnabled?: boolean;
     verticalAlignment?: {
-      value: OriginalCellAlignment | null;
+      value: OriginalCellAlignment | null | 'mixed';
+      cellCount?: number;
+      prepareDialog?(element: HTMLDialogElement): void;
       bindDialog(element: HTMLDialogElement): boolean;
       apply(value: OriginalCellAlignment): void;
     };
@@ -43,7 +45,10 @@ export function createTableCellPropertiesView(
     cancel = doc.createElement('button'),
     unitNote = doc.createElement('p'),
     appearance = callbacks.appearance ? doc.createElement('button') : undefined;
-  const sizes = createCellSizeUnitDraft(capture.cell!);
+  const cellCount = callbacks.verticalAlignment?.cellCount ?? 1;
+  const batch = cellCount > 1;
+  const geometry = capture.cell ?? { width: 0, height: 0 };
+  const sizes = createCellSizeUnitDraft(geometry);
   const vertical = doc.createElement('select'),
     verticalGroup = doc.createElement('fieldset'),
     verticalLegend = doc.createElement('legend'),
@@ -60,7 +65,12 @@ export function createTableCellPropertiesView(
   const originalAlignment = knownAlignment(observedAlignment) ? observedAlignment : '';
   const placeholder = doc.createElement('option');
   placeholder.value = '';
-  placeholder.textContent = observedAlignment === null ? '미지정' : '확인할 수 없음';
+  placeholder.textContent =
+    observedAlignment === 'mixed'
+      ? '여러 값'
+      : observedAlignment === null
+        ? '미지정'
+        : '확인할 수 없음';
   placeholder.disabled = true;
   vertical.append(placeholder);
   for (const [value, text] of [
@@ -106,7 +116,7 @@ export function createTableCellPropertiesView(
   dimensions.className = 'hwp-table-cell-properties-group';
   legend.textContent = '셀 크기';
   dimensions.append(legend);
-  layer.body.append(dimensions);
+  if (!batch) layer.body.append(dimensions);
   const captions = new Map<HTMLElement, HTMLElement>();
   for (const [input, label] of [
     [unit, '단위'],
@@ -166,7 +176,7 @@ export function createTableCellPropertiesView(
     ...sizes.points(),
     mode: mode.value as TableCellDraft['mode'],
   });
-  const blocked = () => disposed || busy || !!capture.writeReason || !!stale;
+  const blocked = () => batch || disposed || busy || !!capture.writeReason || !!stale;
   function refresh() {
     const selectedUnit = sizes.read().unit;
     for (const [field, label] of [
@@ -181,15 +191,18 @@ export function createTableCellPropertiesView(
     let invalid = '';
     let dimensionsChanged = false;
     try {
-      const size = tableCellDimensions(draft(), capture.cell!);
-      dimensionsChanged =
-        size.width !== capture.cell!.width || size.height !== capture.cell!.height;
+      const size = tableCellDimensions(draft(), geometry);
+      dimensionsChanged = size.width !== geometry.width || size.height !== geometry.height;
       if (!dimensionsChanged) invalid = '변경한 값이 없습니다.';
     } catch {
       dimensionsChanged = true;
       invalid = unitBlocked
         ? '단위를 바꾸기 전에 올바른 크기를 입력하세요.'
         : `0 이상 ${selectedUnit} 값으로 입력하세요. 0.01${selectedUnit} 단위만 허용하며 공유 열 너비는 양수여야 합니다.`;
+    }
+    if (batch) {
+      dimensionsChanged = false;
+      invalid = '변경할 세로 정렬을 선택하세요.';
     }
     let reason =
       stale ??
@@ -207,7 +220,9 @@ export function createTableCellPropertiesView(
     }
     vertical.disabled = disposed || busy || composing || !!stale || !verticalAvailable;
     verticalHint.textContent = verticalAvailable
-      ? '현재 원본 셀 하나에 적용합니다. 크기와 세로 정렬은 따로 적용하세요.'
+      ? batch
+        ? `선택한 셀 ${cellCount}개에 같은 정렬을 적용합니다.`
+        : '현재 원본 셀 하나에 적용합니다. 크기와 세로 정렬은 따로 적용하세요.'
       : '현재 셀의 세로 정렬을 변경할 수 없습니다.';
     apply.disabled = disposed || busy || composing || !!reason || !!invalid;
     for (const field of [width, height, mode]) field.disabled = blocked();
@@ -247,7 +262,7 @@ export function createTableCellPropertiesView(
     }
     let valid = true;
     try {
-      tableCellDimensions(draft(), capture.cell!);
+      tableCellDimensions(draft(), geometry);
     } catch {
       valid = false;
     }
@@ -278,20 +293,29 @@ export function createTableCellPropertiesView(
     if (disposed || apply.disabled || (event as any).isComposing) return;
     if (verticalChanged()) {
       if (knownAlignment(vertical.value)) callbacks.verticalAlignment?.apply(vertical.value);
-    } else callbacks.apply(draft());
+    } else if (!batch) callbacks.apply(draft());
   });
   cancel.addEventListener('click', callbacks.dismiss);
-  layer.body.append(verticalGroup, note, status);
+  layer.body.append(verticalGroup);
+  if (!batch) layer.body.append(note);
+  layer.body.append(status);
   if (appearance) layer.footer.append(appearance);
   layer.footer.append(apply, cancel);
   refresh();
-  layer.show(width);
+  try {
+    layer.show(batch ? cancel : width, callbacks.verticalAlignment?.prepareDialog);
+  } catch (error) {
+    layer.destroy();
+    throw error;
+  }
   // The Surface accepts only this connected, open modal.
   if (
     capture.writeReason !== 'ReadOnlyDocument' &&
     capture.writeReason !== 'HistoryRecoveryRequired' &&
     callbacks.verticalAlignment &&
-    (observedAlignment === null || knownAlignment(observedAlignment))
+    (observedAlignment === null ||
+      (batch && observedAlignment === 'mixed') ||
+      knownAlignment(observedAlignment))
   ) {
     try {
       verticalAvailable = callbacks.verticalAlignment.bindDialog(layer.element);
@@ -301,7 +325,7 @@ export function createTableCellPropertiesView(
   }
   refresh();
   return {
-    focus: () => width.focus(),
+    focus: () => (batch ? (verticalAvailable ? vertical : cancel) : width).focus(),
     setBusy(value: boolean) {
       busy = value;
       refresh();

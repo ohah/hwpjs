@@ -302,3 +302,23 @@ export const ORIGINAL_CELL_VERTICAL_ALIGNMENT_ABI = Object.freeze(
     ]),
   ),
 );
+
+// Optional original-cell block alignment; single v1 and required ABI6 stay intact.
+export const ORIGINAL_CELL_VERTICAL_ALIGNMENT_BATCH_ABI = Object.freeze(
+  Object.fromEntries(
+    ['hwp5_edit', 'hwpx_edit'].flatMap((prefix) => [
+      [
+        `${prefix}_original_cell_vertical_alignment_batch_version`,
+        { params: [], results: ['i32'] },
+      ],
+      [
+        `${prefix}_original_cell_vertical_alignment_batch`,
+        { params: ['i32', 'i32'], results: ['i32'] },
+      ],
+      [
+        `${prefix}_set_original_cell_vertical_alignment_batch`,
+        { params: ['i32', 'i32'], results: ['i32'] },
+      ],
+    ]),
+  ),
+);

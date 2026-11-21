@@ -55,6 +55,7 @@ export fn hwp5_edit_reflow() u32 {
 }
 export fn hwp5_edit_close() void {
     clearOriginalCellLease();
+    clearOriginalCellBlockLease();
     document_text_generation.invalidate();
     hwp5_edit_strict_layout_cancel();
     formatting_lifetime.close();
@@ -2385,6 +2386,60 @@ export fn hwp5_edit_set_original_cell_vertical_alignment(ptr: [*]const u8, size:
     defer clearOriginalCellLease();
     const revision = h.revision();
     apply(.{ .set_cell_vertical_alignment = .{ .before = lease.before, .value = request.value } }) catch |err| {
+        _ = fail(err);
+        return if (h.stats().poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    return if (h.revision() != revision) 1 else 2;
+}
+
+// Optional original physical-cell BLOCK alignment. Single-cell v1 is unchanged.
+const original_cell_block_wire = @import("original_cell_vertical_alignment_batch_wire.zig");
+var original_cell_block_serial: u64 = 0;
+var original_cell_block_lease: ?struct { id: u64, before: @import("../hwp5/edit/cell_vertical_alignment_batch_plan.zig").Observation, revision: u32 } = null;
+fn clearOriginalCellBlockLease() void {
+    if (original_cell_block_lease) |*lease| lease.before.deinit(a);
+    original_cell_block_lease = null;
+}
+export fn hwp5_edit_original_cell_vertical_alignment_batch_version() u32 {
+    const h = if (history) |*value| value else return 0;
+    const owned = h.owned orelse return 0;
+    return if (owned.managed and !h.stats().poisoned) 1 else 0;
+}
+export fn hwp5_edit_original_cell_vertical_alignment_batch(ptr: [*]const u8, len: usize) u32 {
+    hwp5_edit_output_free();
+    clearOriginalCellBlockLease();
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    if (h.stats().poisoned) return fail(error.HistoryMutationUncertain);
+    if (hwp5_edit_original_cell_vertical_alignment_batch_version() != 1) return fail(error.HistoryProtocol2Required);
+    var query = original_cell_block_wire.decodeQuery(a, ptr[0..len]) catch |err| return fail(err);
+    defer query.deinit(a);
+    const current = session() catch |err| return fail(err);
+    var before = current.cellVerticalAlignmentBlock(a, .{ .section = query.section, .table_node = query.table_node, .selection = query.selection }) catch |err| return fail(err);
+    const token = std.math.add(u64, original_cell_block_serial, 1) catch {
+        before.deinit(a);
+        return fail(error.CellVerticalAlignmentScopeExhausted);
+    };
+    const bytes = original_cell_block_wire.observation(a, .hwp5, before, token, h.revision()) catch |err| {
+        before.deinit(a);
+        return fail(err);
+    };
+    original_cell_block_serial = token;
+    original_cell_block_lease = .{ .id = token, .before = before, .revision = h.revision() };
+    output = bytes;
+    return 1;
+}
+export fn hwp5_edit_set_original_cell_vertical_alignment_batch(ptr: [*]const u8, size: usize) u32 {
+    hwp5_edit_output_free();
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    if (h.stats().poisoned) return fail(error.HistoryMutationUncertain);
+    if (hwp5_edit_original_cell_vertical_alignment_batch_version() != 1) return fail(error.HistoryProtocol2Required);
+    const request = original_cell_wire.decode(a, ptr[0..size]) catch |err| return fail(err);
+    const lease = original_cell_block_lease orelse return fail(error.StaleOriginalCellLease);
+    if (lease.id != request.lease) return fail(error.StaleOriginalCellLease);
+    defer clearOriginalCellBlockLease();
+    if (lease.revision != h.revision()) return fail(error.StaleCellVerticalAlignment);
+    const revision = h.revision();
+    apply(.{ .set_cell_vertical_alignment_block = .{ .before = lease.before, .value = request.value } }) catch |err| {
         _ = fail(err);
         return if (h.stats().poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) 3 else 0;
     };

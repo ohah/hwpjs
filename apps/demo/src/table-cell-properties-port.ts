@@ -1,5 +1,8 @@
 import {
   SET_ORIGINAL_CELL_VERTICAL_ALIGNMENT_COMMAND,
+  SET_ORIGINAL_CELL_ALIGNMENT_BLOCK_COMMAND,
+  type OriginalCellAlignmentBlockSelection,
+  type OriginalCellAlignmentBlockTarget,
   type OriginalCellSelectionTarget,
   type OriginalCellVerticalAlignmentTarget,
   type OriginalCellAlignment,
@@ -23,6 +26,13 @@ export type TableCellCore = Pick<
   'getSelectionFormatting' | 'createParagraphSelection'
 > & {
   canEditCellProperties?: (section: number, listNode: number) => boolean;
+  captureOriginalCellAlignmentBlock?: () => {
+    state: EditorState;
+    target: OriginalCellAlignmentBlockSelection;
+    current(): boolean;
+    prepareDialog(element: HTMLDialogElement): boolean;
+    bindDialog(element: HTMLDialogElement): boolean;
+  } | null;
   captureOriginalCellPropertiesSelection?: () => {
     state: EditorState;
     target: OriginalCellSelectionTarget;
@@ -104,7 +114,9 @@ export function createTableCellPropertiesPort(
     object,
     {
       state: EditorState;
-      target: OriginalCellVerticalAlignmentTarget;
+      target:
+        | { kind: 'single'; value: OriginalCellVerticalAlignmentTarget }
+        | { kind: 'block'; value: OriginalCellAlignmentBlockTarget };
       current(): boolean;
       bindDialog(element: HTMLDialogElement): boolean;
     }
@@ -440,7 +452,43 @@ export function createTableCellPropertiesPort(
       });
       alignmentLeases.set(capture, {
         state: selected.state,
-        target: read.target,
+        target: { kind: 'single', value: read.target },
+        current: selected.current,
+        bindDialog: selected.bindDialog,
+      });
+      return Object.freeze({ state: 'available' as const, capture });
+    },
+    captureAlignmentBlockSelection() {
+      const selected = core.captureOriginalCellAlignmentBlock?.();
+      if (
+        disposed ||
+        pending ||
+        !selected ||
+        selected.state !== editor.getEditorState() ||
+        !selected.current()
+      )
+        return null;
+      return selected;
+    },
+    async readAlignmentBlock(
+      selected: NonNullable<
+        ReturnType<NonNullable<TableCellCore['captureOriginalCellAlignmentBlock']>>
+      >,
+    ) {
+      if (disposed || pending || selected.state !== editor.getEditorState() || !selected.current())
+        throw Error('StaleOriginalCellAlignmentBlock');
+      const read = await editor.getOriginalCellAlignmentBlock(selected.target);
+      if (disposed || selected.state !== editor.getEditorState() || !selected.current())
+        throw Error('StaleOriginalCellAlignmentBlock');
+      if (read.state !== 'available') return read;
+      const capture = Object.freeze({
+        state: selected.state,
+        value: read.value,
+        cellCount: read.cellCount,
+      });
+      alignmentLeases.set(capture, {
+        state: selected.state,
+        target: { kind: 'block', value: read.target },
         current: selected.current,
         bindDialog: selected.bindDialog,
       });
@@ -470,10 +518,16 @@ export function createTableCellPropertiesPort(
       alignmentLeases.delete(capture);
       pending = true;
       try {
-        return await editor.dispatchCommand(SET_ORIGINAL_CELL_VERTICAL_ALIGNMENT_COMMAND, {
-          target: lease.target,
-          value,
-        });
+        const target = lease.target;
+        return target.kind === 'single'
+          ? await editor.dispatchCommand(SET_ORIGINAL_CELL_VERTICAL_ALIGNMENT_COMMAND, {
+              target: target.value,
+              value,
+            })
+          : await editor.dispatchCommand(SET_ORIGINAL_CELL_ALIGNMENT_BLOCK_COMMAND, {
+              target: target.value,
+              value,
+            });
       } finally {
         pending = false;
       }
@@ -494,8 +548,14 @@ export function createTableCellPropertiesPort(
     // Headless 표시 경로는 기존처럼 가볍게 유지하고, view guard가 있으면 현재 셀을 확인한다.
     presentation() {
       const state = editor.getEditorState();
-      const enabled = !disposed && !pending && state.status === 'ready' && !!state.selection;
+      const ready = !disposed && !pending && state.status === 'ready';
+      const enabled = ready && !!state.selection;
       try {
+        if (ready) {
+          const selected = core.captureOriginalCellAlignmentBlock?.();
+          if (selected?.state === state && selected.current())
+            return { enabled: true, surfaceSelection: true };
+        }
         if (enabled && core.canEditCellProperties !== undefined) {
           const current = capture();
           if (current.reason) return { enabled: false, reason: tableCellReason(current.reason) };

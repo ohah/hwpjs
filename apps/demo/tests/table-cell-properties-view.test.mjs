@@ -291,3 +291,42 @@ test('unit edits never refresh a stale source lease in the actual port', async (
   assert.equal(s.f.mutationCalls().length, 0);
   s.view.destroy();
 });
+
+test('다중 셀의 서로 다른 세로 정렬을 표시하고 크기 변경 없이 한 번 적용한다', () => {
+  const f = fixture(),
+    dom = documentFixture(),
+    calls = [];
+  const capture = createTableCellPropertiesPort(f.editor, f.api).capture();
+  const view = createTableCellPropertiesView(
+    dom.root,
+    { ...capture, cell: null },
+    {
+      apply: () => assert.fail('다중 셀 정렬에서 크기 명령 접수'),
+      dismiss() {},
+      verticalAlignment: {
+        value: 'mixed',
+        cellCount: 2,
+        bindDialog: (element) => element.open,
+        apply: (value) => calls.push(value),
+      },
+    },
+  );
+  try {
+    const menu = dom.role('cell-vertical-alignment');
+    const apply = dom.role('cell-properties-apply');
+    assert.equal(menu.value, '');
+    assert.equal(menu.children[0].textContent, '여러 값');
+    assert.equal(menu.disabled, false);
+    assert.equal(dom.role('cell-width'), undefined);
+    assert.equal(apply.disabled, true);
+    menu.value = 'CENTER';
+    fire(menu, 'change');
+    fire(apply, 'click');
+    assert.deepEqual(calls, ['CENTER']);
+    view.setStale('StaleTableCellSelection');
+    fire(apply, 'click');
+    assert.deepEqual(calls, ['CENTER']);
+  } finally {
+    view.destroy();
+  }
+});

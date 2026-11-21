@@ -411,3 +411,10 @@ export type {
   OriginalCellAlignment,
   SetOriginalCellVerticalAlignmentPayload,
 } from './commands/original-cell-vertical-alignment.ts';
+
+export { SET_ORIGINAL_CELL_ALIGNMENT_BLOCK_COMMAND } from './commands/original-cell-vertical-alignment-batch.ts';
+export type {
+  OriginalCellAlignmentBlockSelection,
+  OriginalCellAlignmentBlockTarget,
+  SetOriginalCellAlignmentBlockPayload,
+} from './commands/original-cell-vertical-alignment-batch.ts';

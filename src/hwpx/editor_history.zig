@@ -5,7 +5,7 @@ const checkpoints = @import("editor_checkpoint.zig");
 const Stacks = @import("../model/history_stack.zig").Stack(checkpoints.Checkpoint, release);
 
 pub const Command = struct {
-    kind: enum { plain, anchored, field, named_field_rename, named_field_create, named_field_parameters, split, merge, format, character_properties, character_font_name, cell_size, cell_vertical_alignment, cell_background, cell_border, cell_borders, cell_fills, cell_styles, paragraph_format, paragraph_alignment, paragraph_bullet, bullet_definition, page_settings, object_geometry, object_outer_margins, object_body_flow, paragraph_flags, paragraph_border_fill, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state, form_radio_select, form_text, created_table_stage, created_table_grid, created_cell_properties, source_table_grid, source_table_cell_merge, source_table_cell_split, created_cell_text, splice_created_cell, formula_result_override, chart_numeric_point, chart_point, chart_points, chart_series_text, chart_rich_text, dutmal_text, equation_script, formula_result_splice, independent_text, document_text, insert_document, equation_insert, chart_create, image_insert, picture_replace, note_delete, note_create } = .plain,
+    kind: enum { plain, anchored, field, named_field_rename, named_field_create, named_field_parameters, split, merge, format, character_properties, character_font_name, cell_size, cell_vertical_alignment, cell_vertical_alignment_block, cell_background, cell_border, cell_borders, cell_fills, cell_styles, paragraph_format, paragraph_alignment, paragraph_bullet, bullet_definition, page_settings, object_geometry, object_outer_margins, object_body_flow, paragraph_flags, paragraph_border_fill, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state, form_radio_select, form_text, created_table_stage, created_table_grid, created_cell_properties, source_table_grid, source_table_cell_merge, source_table_cell_split, created_cell_text, splice_created_cell, formula_result_override, chart_numeric_point, chart_point, chart_points, chart_series_text, chart_rich_text, dutmal_text, equation_script, formula_result_splice, independent_text, document_text, insert_document, equation_insert, chart_create, image_insert, picture_replace, note_delete, note_create } = .plain,
     document_text_intent: ?*const @import("document_replace_all.zig").Intent = null,
     independent_text_edits: []const @import("../model/independent_text_edits.zig").Edit = &.{},
     /// Borrowed only for the owned independent-text batch.
@@ -46,6 +46,7 @@ pub const Command = struct {
     cell_border_color: u32 = 0,
     cell_size: @import("table_cell_size_write.zig").Size = .{ .width = 0, .height = 0 },
     cell_vertical_alignment: ?*const @import("cell_vertical_alignment_history.zig").Request = null,
+    cell_vertical_alignment_block: ?*const @import("cell_vertical_alignment_batch_plan.zig").Request = null,
     picture_node: usize = 0,
     picture_dimensions: @import("picture_dimension_write.zig").Update = .{},
     picture_size: [2]u32 = .{ 0, 0 },
@@ -123,6 +124,10 @@ pub const History = struct {
     fn bind(self: *const History, session: *const editor.Session) !void {
         if (self.source_pointer != session.source.ptr or self.allocator.ptr != session.allocator.ptr or self.allocator.vtable != session.allocator.vtable) return error.SourceBindingMismatch;
     }
+    pub fn cellVerticalAlignmentBlock(self: *History, session: *editor.Session, a: std.mem.Allocator, witness: @import("cell_vertical_alignment_batch_plan.zig").Witness) !@import("cell_vertical_alignment_batch_plan.zig").Observation {
+        const owned = self.owned orelse return error.HistoryProtocol2Required;
+        return owned.cellVerticalAlignmentBlock(session, a, witness);
+    }
     pub fn cellVerticalAlignment(self: *History, session: *editor.Session, a: std.mem.Allocator, section: usize, paragraph: usize) !@import("cell_vertical_alignment_plan.zig").Observation {
         const owned = self.owned orelse return error.HistoryProtocol2Required;
         return owned.cellVerticalAlignment(session, a, section, paragraph);
@@ -135,7 +140,7 @@ pub const History = struct {
         if (self.owned) |h| return h.applyBatch(session, commands);
         try self.bind(session);
         for (commands) |command| {
-            if (command.kind == .note_delete or command.kind == .note_create or command.kind == .document_text or command.kind == .insert_document or command.kind == .equation_insert or command.kind == .chart_create or command.kind == .image_insert or command.kind == .picture_replace or command.kind == .bullet_definition or command.kind == .page_settings or command.kind == .object_geometry or command.kind == .object_outer_margins or command.kind == .object_body_flow or command.kind == .named_field_create or command.kind == .named_field_parameters or command.kind == .cell_vertical_alignment)
+            if (command.kind == .note_delete or command.kind == .note_create or command.kind == .document_text or command.kind == .insert_document or command.kind == .equation_insert or command.kind == .chart_create or command.kind == .image_insert or command.kind == .picture_replace or command.kind == .bullet_definition or command.kind == .page_settings or command.kind == .object_geometry or command.kind == .object_outer_margins or command.kind == .object_body_flow or command.kind == .named_field_create or command.kind == .named_field_parameters or command.kind == .cell_vertical_alignment or command.kind == .cell_vertical_alignment_block)
                 return error.HistoryProtocol2Required;
         }
         for (commands) |command| if (command.break_before != null and command.kind != .split) return error.InvalidStructureCommand;
@@ -222,7 +227,7 @@ pub const History = struct {
             else => font_cache.clear(),
         }
         return switch (command.kind) {
-            .insert_document, .equation_insert, .chart_create, .image_insert, .picture_replace, .note_delete, .note_create, .cell_vertical_alignment => error.InvalidInsertDocumentBatch,
+            .insert_document, .equation_insert, .chart_create, .image_insert, .picture_replace, .note_delete, .note_create, .cell_vertical_alignment, .cell_vertical_alignment_block => error.InvalidInsertDocumentBatch,
             .independent_text => error.InvalidIndependentTextCommand,
             .document_text => block: {
                 if (command.break_before != null or command.section != 0 or command.paragraph != 0 or command.start != 0 or

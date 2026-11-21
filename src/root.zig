@@ -1571,4 +1571,5 @@ test {
 // Generated single-cell alignment: one regular registration, shared focused probe.
 test {
     _ = @import("created_cell_vertical_alignment_probe.zig");
+    _ = @import("original_cell_block_alignment_probe.zig");
 }

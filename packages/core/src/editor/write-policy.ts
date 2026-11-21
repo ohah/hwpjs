@@ -41,6 +41,7 @@ export class EditorWritePolicy {
           createdCellPropertiesAvailable: false,
           createdCellVerticalAlignmentAvailable: false,
           originalCellVerticalAlignmentAvailable: false,
+          originalCellVerticalAlignmentBatchAvailable: false,
           sourceTableGridAvailable: false,
         };
   }

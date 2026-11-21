@@ -1236,11 +1236,18 @@ export function createReaderRuntime({
                 editor?.supportsChartCreationAbi?.() === true,
             },
           };
+        const originalCellVerticalAlignmentBatchAvailable =
+          historyEnabled &&
+          historyStats?.protocolVersion === 2 &&
+          !historyPoisoned &&
+          !documentWindow &&
+          editor?.supportsOriginalCellVerticalAlignmentBatch?.() === true;
         if (value.content?.format === format)
           value = {
             ...value,
             content: {
               ...value.content,
+              originalCellVerticalAlignmentBatchAvailable,
               strictMeasuredSaveAvailable: strictLayout.available(),
               createdCellTypingScope:
                 historyEnabled &&
@@ -1280,6 +1287,7 @@ export function createReaderRuntime({
           sourceTableGridAvailable: historyEnabled && editor?.supportsSourceTableGrid?.() === true,
           createdTableGridAvailable:
             historyEnabled && editor?.supportsCreatedTableGrid?.() === true,
+          originalCellVerticalAlignmentBatchAvailable,
           originalCellVerticalAlignmentAvailable:
             historyEnabled &&
             historyStats?.protocolVersion === 2 &&
@@ -1434,16 +1442,45 @@ export function createReaderRuntime({
         });
         return;
       }
-      if (message.kind === 'original-cell-vertical-alignment-set') {
+      if (message.kind === 'original-cell-vertical-alignment-batch-query') {
         if (
           !['hwp5', 'hwpx'].includes(format) ||
           !historyEnabled ||
           historyPoisoned ||
           documentWindow ||
-          editor?.supportsOriginalCellVerticalAlignment?.() !== true
+          editor?.supportsOriginalCellVerticalAlignmentBatch?.() !== true
+        ) {
+          reply({
+            kind: message.kind,
+            originalCellBatch: null,
+            reason: 'OriginalCellVerticalAlignmentBatchUnavailable',
+          });
+          return;
+        }
+        reply({
+          kind: message.kind,
+          originalCellBatch: editor.originalCellVerticalAlignmentBatch(message.witness),
+        });
+        return;
+      }
+      if (
+        message.kind === 'original-cell-vertical-alignment-set' ||
+        message.kind === 'original-cell-vertical-alignment-batch-set'
+      ) {
+        const batch = message.kind === 'original-cell-vertical-alignment-batch-set';
+        if (
+          !['hwp5', 'hwpx'].includes(format) ||
+          !historyEnabled ||
+          historyPoisoned ||
+          documentWindow ||
+          (batch
+            ? editor?.supportsOriginalCellVerticalAlignmentBatch?.() !== true
+            : editor?.supportsOriginalCellVerticalAlignment?.() !== true)
         )
           throw Error('OriginalCellVerticalAlignmentUnavailable');
-        atomicOutcome = editor.setOriginalCellVerticalAlignment(message.request);
+        atomicOutcome = batch
+          ? editor.setOriginalCellVerticalAlignmentBatch(message.request)
+          : editor.setOriginalCellVerticalAlignment(message.request);
         applied = atomicOutcome.application === 'applied';
         mutationUncertain = atomicOutcome.application === 'unknown';
         if (mutationUncertain) historyPoisoned = true;

@@ -24403,7 +24403,7 @@ function parseObjectReference(reference, expected = {}) {
 		kind: match[4],
 		node: Number(match[5])
 	};
-	if (!uint$63(result.section) || !uint$63(result.node)) throw new TypeError("InvalidObjectReference");
+	if (!uint$64(result.section) || !uint$64(result.node)) throw new TypeError("InvalidObjectReference");
 	if (expectedSha256 !== void 0 && expectedSha256 !== result.sourceSha256) throw new Error("StaleObjectReference");
 	if (expectedFormat !== void 0 && expectedFormat !== result.format) throw new Error("ObjectReferenceFormatMismatch");
 	return result;
@@ -24418,7 +24418,7 @@ function canonicalImageId(value) {
 	})) throw new TypeError("InvalidImageIdentity");
 	return `${documentFormat}:s${section}:i${node}`;
 }
-var KINDS, SHA, REFERENCE, object$12, uint$63, format$1, identity$1;
+var KINDS, SHA, REFERENCE, object$12, uint$64, format$1, identity$1;
 var init_object_reference$1 = __esmMin((() => {
 	KINDS = /* @__PURE__ */ new Set([
 		"image",
@@ -24433,9 +24433,9 @@ var init_object_reference$1 = __esmMin((() => {
 	SHA = /^[a-f0-9]{64}$/u;
 	REFERENCE = /^hwpjs-object:([a-f0-9]{64})\/(hwp5|hwpx)\/s(0|[1-9]\d*)\/(image|table|chart|equation|drawing|ole|form|unknown)\/(0|[1-9]\d*)$/u;
 	object$12 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	uint$63 = (value) => typeof value === "number" && Number.isSafeInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
+	uint$64 = (value) => typeof value === "number" && Number.isSafeInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
 	format$1 = (value) => value === "hwp5" || value === "hwpx";
-	identity$1 = (value) => object$12(value) && format$1(value.format) && uint$63(value.section) && uint$63(value.node);
+	identity$1 = (value) => object$12(value) && format$1(value.format) && uint$64(value.section) && uint$64(value.node);
 }));
 // src/object-reference.ts
 var init_object_reference = __esmMin((() => {
@@ -26166,6 +26166,20 @@ var init_abi_schema = __esmMin((() => {
 			results: ["i32"]
 		}]
 	])));
+	Object.freeze(Object.fromEntries(["hwp5_edit", "hwpx_edit"].flatMap((prefix) => [
+		[`${prefix}_original_cell_vertical_alignment_batch_version`, {
+			params: [],
+			results: ["i32"]
+		}],
+		[`${prefix}_original_cell_vertical_alignment_batch`, {
+			params: ["i32", "i32"],
+			results: ["i32"]
+		}],
+		[`${prefix}_set_original_cell_vertical_alignment_batch`, {
+			params: ["i32", "i32"],
+			results: ["i32"]
+		}]
+	])));
 }));
 // ../../js/hwp5-drawing-sources.mjs
 function validateHwp5DrawingSources(rows) {
@@ -26256,7 +26270,7 @@ function chartDisplayOwnerLimits(plots, axes) {
 var init_chart_display_owner_limits = __esmMin((() => {}));
 // ../../js/chart-display-fields.mjs
 function field$3(value, accepts, owner) {
-	return value === null || object$11(value) && uint$62(value.node) && value.node > owner && (value.value === null || accepts(value.value));
+	return value === null || object$11(value) && uint$63(value.node) && value.node > owner && (value.value === null || accepts(value.value));
 }
 function number$1(value) {
 	return object$11(value) && (value.kind === "finite" ? typeof value.value === "number" && Number.isFinite(value.value) : [
@@ -26266,18 +26280,18 @@ function number$1(value) {
 	].includes(value.kind) && value.value === null);
 }
 function scaling(value, owner) {
-	return value === null || object$11(value) && uint$62(value.node) && value.node > owner && field$3(value.orientation, oneOf(["minMax", "maxMin"]), value.node) && [
+	return value === null || object$11(value) && uint$63(value.node) && value.node > owner && field$3(value.orientation, oneOf(["minMax", "maxMin"]), value.node) && [
 		value.minimum,
 		value.maximum,
 		value.log_base
 	].every((item) => field$3(item, number$1, value.node));
 }
-var object$11, uint$62, text$4, nullableUint, oneOf;
+var object$11, uint$63, text$4, nullableUint, oneOf;
 var init_chart_display_fields = __esmMin((() => {
 	object$11 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	uint$62 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$63 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	text$4 = (value) => typeof value === "string" && value.isWellFormed();
-	nullableUint = (value) => value === null || uint$62(value);
+	nullableUint = (value) => value === null || uint$63(value);
 	oneOf = (values) => (value) => values.includes(value);
 }));
 // ../../js/hwpx-chart-series-text.mjs
@@ -26337,7 +26351,7 @@ function validChartSeriesSettings(values, plots, series, occupied = null) {
 	for (const [node, plotNode] of series) {
 		const row = values[index++], kind = plots.get(plotNode)?.kind;
 		if (!object$11(row) || row.series_node !== node || row.plot_node !== plotNode || !field$3(row.smooth, (v) => typeof v === "boolean", node)) return false;
-		if (!field$3(row.index, uint$62, node) || !field$3(row.order, uint$62, node)) return false;
+		if (!field$3(row.index, uint$63, node) || !field$3(row.order, uint$63, node)) return false;
 		const line = [
 			"lineChart",
 			"line3DChart",
@@ -26345,7 +26359,7 @@ function validChartSeriesSettings(values, plots, series, occupied = null) {
 			"scatterChart"
 		].includes(kind);
 		if (row.smooth !== null && !line) return false;
-		if (!field$3(row.explosion, uint$62, node)) return false;
+		if (!field$3(row.explosion, uint$63, node)) return false;
 		if (row.explosion !== null && ![
 			"pieChart",
 			"pie3DChart",
@@ -26353,7 +26367,7 @@ function validChartSeriesSettings(values, plots, series, occupied = null) {
 			"doughnutChart"
 		].includes(kind)) return false;
 		const marker = row.marker;
-		if (marker !== null && (!line && kind !== "radarChart" || !object$11(marker) || !uint$62(marker.node) || marker.node <= node || !field$3(marker.symbol, oneOf(symbols), marker.node) || !field$3(marker.size, (v) => uint$62(v) && v >= 2 && v <= 72, marker.node))) return false;
+		if (marker !== null && (!line && kind !== "radarChart" || !object$11(marker) || !uint$63(marker.node) || marker.node <= node || !field$3(marker.symbol, oneOf(symbols), marker.node) || !field$3(marker.size, (v) => uint$63(v) && v >= 2 && v <= 72, marker.node))) return false;
 		const leaves = [
 			row.index,
 			row.order,
@@ -26367,7 +26381,7 @@ function validChartSeriesSettings(values, plots, series, occupied = null) {
 		].filter((value) => value !== null);
 		const stroke = row.stroke, strokeNodes = [];
 		if (stroke !== void 0 && stroke !== null) {
-			if (!object$11(stroke) || !uint$62(stroke.node) || stroke.node <= node || !(stroke.no_fill_node === null || uint$62(stroke.no_fill_node) && stroke.no_fill_node > stroke.node)) return false;
+			if (!object$11(stroke) || !uint$63(stroke.node) || stroke.node <= node || !(stroke.no_fill_node === null || uint$63(stroke.no_fill_node) && stroke.no_fill_node > stroke.node)) return false;
 			strokeNodes.push(stroke.node);
 			if (stroke.no_fill_node !== null) strokeNodes.push(stroke.no_fill_node);
 		}
@@ -26401,7 +26415,7 @@ function validChartPointSettings(values, series, occupied = null) {
 	if (!Array.isArray(values)) return false;
 	let previous = -1;
 	for (const row of values) {
-		if (!object$11(row) || !uint$62(row.node) || row.node <= previous || !series.has(row.series_node) || series.get(row.series_node) !== row.plot_node || row.node <= row.series_node || typeof row.unparsed_children !== "boolean" || !field$3(row.index, uint$62, row.node) || !field$3(row.explosion, uint$62, row.node)) return false;
+		if (!object$11(row) || !uint$63(row.node) || row.node <= previous || !series.has(row.series_node) || series.get(row.series_node) !== row.plot_node || row.node <= row.series_node || typeof row.unparsed_children !== "boolean" || !field$3(row.index, uint$63, row.node) || !field$3(row.explosion, uint$63, row.node)) return false;
 		if (row.index !== null && row.explosion !== null && row.index.node === row.explosion.node) return false;
 		occupied?.add(row.node);
 		if (row.index !== null) occupied?.add(row.index.node);
@@ -26425,7 +26439,7 @@ function validChartStockSettings(stock, kind, plotNode, usedNodes) {
 	]) if (!nullableUint(stock[key])) return false;
 	if (stock.up_down_node === null && (stock.up_node !== null || stock.down_node !== null || stock.gap_width !== null)) return false;
 	const parent = stock.up_down_node ?? plotNode;
-	if (!field$3(stock.gap_width, (value) => uint$62(value) && value <= 500, parent)) return false;
+	if (!field$3(stock.gap_width, (value) => uint$63(value) && value <= 500, parent)) return false;
 	for (const key of ["up_node", "down_node"]) if (stock[key] !== null && stock[key] <= parent) return false;
 	for (const node of [
 		stock.high_low_node,
@@ -26446,7 +26460,7 @@ var init_chart_stock_settings = __esmMin((() => {
 // ../../js/chart-view-3d.mjs
 function validChartView3D(value, occupied = null) {
 	if (value === void 0 || value === null) return true;
-	if (!object$11(value) || !uint$62(value.node) || value.node === 0 || occupied?.has(value.node) || typeof value.unparsed_children !== "boolean") return false;
+	if (!object$11(value) || !uint$63(value.node) || value.node === 0 || occupied?.has(value.node) || typeof value.unparsed_children !== "boolean") return false;
 	const ranges = {
 		rotation_x: [-90, 90],
 		rotation_y: [0, 360],
@@ -26477,7 +26491,7 @@ function validChartSpatialSettings(value, kind, owner, leaves) {
 		"line3DChart",
 		"area3DChart"
 	].includes(kind)) return value === null;
-	if (!object$11(value) || !field$3(value.gap_depth, (v) => uint$62(v) && v <= 500, owner) || !field$3(value.shape, oneOf([
+	if (!object$11(value) || !field$3(value.gap_depth, (v) => uint$63(v) && v <= 500, owner) || !field$3(value.shape, oneOf([
 		"box",
 		"cone",
 		"coneToMax",
@@ -26529,7 +26543,7 @@ var init_chart_family_display_settings = __esmMin((() => {
 	definitions = {
 		hole_size: {
 			kinds: ["doughnutChart"],
-			accepts: (v) => uint$62(v) && v >= 10 && v <= 90
+			accepts: (v) => uint$63(v) && v >= 10 && v <= 90
 		},
 		radar_style: {
 			kinds: ["radarChart"],
@@ -26541,7 +26555,7 @@ var init_chart_family_display_settings = __esmMin((() => {
 		},
 		bubble_scale: {
 			kinds: ["bubbleChart"],
-			accepts: (v) => uint$62(v) && v <= 300
+			accepts: (v) => uint$63(v) && v <= 300
 		},
 		size_represents: {
 			kinds: ["bubbleChart"],
@@ -26584,14 +26598,14 @@ function validateChartDisplayData(value) {
 	const occupied = value.view_3d == null && value.blank_policy == null && !hasStrokes && !hasMajorTicks && !hasFamilies ? null : /* @__PURE__ */ new Set();
 	let previousPlot = -1;
 	for (const [index, plot] of value.plots.entries()) {
-		require$1(object$11(plot) && uint$62(plot.node) && plot.node > previousPlot && uint$62(plot.area_node) && plot.area_node < plot.node && plotKinds$1.has(plot.kind) && Array.isArray(plot.series_nodes));
+		require$1(object$11(plot) && uint$63(plot.node) && plot.node > previousPlot && uint$63(plot.area_node) && plot.area_node < plot.node && plotKinds$1.has(plot.kind) && Array.isArray(plot.series_nodes));
 		plots.set(plot.node, plot);
 		previousPlot = plot.node;
 		occupied?.add(plot.node);
 		occupied?.add(plot.area_node);
 		let previousSeries = plot.node;
 		for (const node of plot.series_nodes) {
-			require$1(uint$62(node) && node > previousSeries && !series.has(node));
+			require$1(uint$63(node) && node > previousSeries && !series.has(node));
 			series.set(node, plot.node);
 			previousSeries = node;
 			occupied?.add(node);
@@ -26603,7 +26617,7 @@ function validateChartDisplayData(value) {
 			"stacked",
 			"percentStacked"
 		]), plot.node) && field$3(settings.vary_colors, (v) => typeof v === "boolean", plot.node) && Array.isArray(settings.axis_references));
-		require$1(field$3(settings.gap_width, (v) => uint$62(v) && v <= 500, plot.node) && field$3(settings.overlap, (v) => Number.isInteger(v) && v >= -100 && v <= 100, plot.node));
+		require$1(field$3(settings.gap_width, (v) => uint$63(v) && v <= 500, plot.node) && field$3(settings.overlap, (v) => Number.isInteger(v) && v >= -100 && v <= 100, plot.node));
 		require$1(field$3(settings.scatter_style, oneOf([
 			"none",
 			"line",
@@ -26613,9 +26627,9 @@ function validateChartDisplayData(value) {
 			"smoothMarker"
 		]), plot.node));
 		if (settings.scatter_style !== null) require$1(plot.kind === "scatterChart");
-		require$1(field$3(settings.first_slice_angle, (v) => uint$62(v) && v <= 360, plot.node));
+		require$1(field$3(settings.first_slice_angle, (v) => uint$63(v) && v <= 360, plot.node));
 		if (settings.first_slice_angle !== null) require$1(["pieChart", "doughnutChart"].includes(plot.kind));
-		require$1(field$3(settings.of_pie_type, oneOf(["pie", "bar"]), plot.node) && field$3(settings.second_pie_size, (v) => uint$62(v) && v >= 5 && v <= 200, plot.node) && field$3(settings.split_type, oneOf([
+		require$1(field$3(settings.of_pie_type, oneOf(["pie", "bar"]), plot.node) && field$3(settings.second_pie_size, (v) => uint$63(v) && v >= 5 && v <= 200, plot.node) && field$3(settings.split_type, oneOf([
 			"auto",
 			"cust",
 			"percent",
@@ -26660,7 +26674,7 @@ function validateChartDisplayData(value) {
 			...settings.custom_split_node === null ? [] : [{ node: settings.custom_split_node }],
 			...settings.axis_references
 		]) if (leaf !== null) {
-			require$1(object$11(leaf) && uint$62(leaf.node) && !leaves.has(leaf.node));
+			require$1(object$11(leaf) && uint$63(leaf.node) && !leaves.has(leaf.node));
 			leaves.add(leaf.node);
 		}
 		require$1(validChartStockSettings(settings.stock, plot.kind, plot.node, leaves));
@@ -26674,7 +26688,7 @@ function validateChartDisplayData(value) {
 		}
 		for (const node of leaves) if (!localFamilyNodes.has(node)) occupied?.add(node);
 		for (const reference of settings.axis_references) {
-			require$1(reference !== null && field$3(reference, uint$62, plot.node));
+			require$1(reference !== null && field$3(reference, uint$63, plot.node));
 			const key = plot.node + ":" + reference.node;
 			require$1(!references.has(key));
 			references.set(key, reference.value);
@@ -26684,12 +26698,12 @@ function validateChartDisplayData(value) {
 	require$1(validChartSeriesSettings(value.series_settings, plots, series, occupied));
 	require$1(validChartPointSettings(value.point_settings, series, occupied));
 	for (const axis of value.axes) {
-		require$1(object$11(axis) && uint$62(axis.node) && !axes.has(axis.node) && uint$62(axis.area_node) && axis.area_node < axis.node && [
+		require$1(object$11(axis) && uint$63(axis.node) && !axes.has(axis.node) && uint$63(axis.area_node) && axis.area_node < axis.node && [
 			"catAx",
 			"valAx",
 			"dateAx",
 			"serAx"
-		].includes(axis.kind) && field$3(axis.id, uint$62, axis.node) && field$3(axis.cross_axis, uint$62, axis.node) && field$3(axis.position, oneOf([
+		].includes(axis.kind) && field$3(axis.id, uint$63, axis.node) && field$3(axis.cross_axis, uint$63, axis.node) && field$3(axis.position, oneOf([
 			"b",
 			"l",
 			"r",
@@ -26726,7 +26740,7 @@ function validateChartDisplayData(value) {
 	require$1(value.axis_links.length === references.size);
 	const seenLinks = /* @__PURE__ */ new Set();
 	for (const link of value.axis_links) {
-		require$1(object$11(link) && uint$62(link.plot_node) && plots.has(link.plot_node) && uint$62(link.reference_node) && nullableUint(link.id) && object$11(link.target));
+		require$1(object$11(link) && uint$63(link.plot_node) && plots.has(link.plot_node) && uint$63(link.reference_node) && nullableUint(link.id) && object$11(link.target));
 		const key = link.plot_node + ":" + link.reference_node;
 		require$1(references.has(key) && !seenLinks.has(key) && references.get(key) === link.id);
 		seenLinks.add(key);
@@ -26743,7 +26757,7 @@ function validateChartDisplayData(value) {
 			point.point_node,
 			point.value_node,
 			point.index
-		].every(uint$62) && point.cache_node < point.point_node && point.point_node < point.value_node && point.value_node > previousLeaf && !pointNodes.has(point.point_node) && pointKinds$1.has(point.kind) && text$4(point.value) && nullableUint(point.level_node) && (point.level_node === null || point.cache_node < point.level_node && point.level_node < point.point_node) && point.kind === "multilevel_cache" === (point.level_node !== null));
+		].every(uint$63) && point.cache_node < point.point_node && point.point_node < point.value_node && point.value_node > previousLeaf && !pointNodes.has(point.point_node) && pointKinds$1.has(point.kind) && text$4(point.value) && nullableUint(point.level_node) && (point.level_node === null || point.cache_node < point.level_node && point.level_node < point.point_node) && point.kind === "multilevel_cache" === (point.level_node !== null));
 		previousLeaf = point.value_node;
 		pointNodes.add(point.point_node);
 		for (const node of [
@@ -26887,9 +26901,9 @@ var init_chart_display_data = __esmMin((() => {
 }));
 // ../../js/hwp5-chart-display-api.mjs
 function envelope(bytes, kind) {
-	if (!(bytes instanceof Uint8Array) || bytes.length > 16777216) invalid$9();
+	if (!(bytes instanceof Uint8Array) || bytes.length > 16777216) invalid$10();
 	const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-	if (!value || value.format !== "hwp5" || value.version !== 1 || value.kind !== kind || typeof value.source_epoch !== "string" || !/^[1-9][0-9]{0,19}$/.test(value.source_epoch) || BigInt(value.source_epoch) > 18446744073709551615n || value.history_revision !== null && !uint$61(value.history_revision)) invalid$9();
+	if (!value || value.format !== "hwp5" || value.version !== 1 || value.kind !== kind || typeof value.source_epoch !== "string" || !/^[1-9][0-9]{0,19}$/.test(value.source_epoch) || BigInt(value.source_epoch) > 18446744073709551615n || value.history_revision !== null && !uint$62(value.history_revision)) invalid$10();
 	return value;
 }
 function owner$2(value, allowUnresolved = false) {
@@ -26903,42 +26917,42 @@ function owner$2(value, allowUnresolved = false) {
 		"current_unit",
 		"attributes",
 		"opaque_tail_bytes"
-	].every((key) => uint$61(value[key])) || !uint$61(value.ordinal, 65535) || !allowUnresolved && value.ordinal === 0 || !["spec24", "observed26"].includes(value.ole_layout) || ![value.extent_x, value.extent_y].every((number) => Number.isInteger(number) && number >= -2147483648 && number <= 2147483647) || !(value.paragraph_node < value.control_node && value.control_node < value.component_node && value.component_node < value.ole_node)) invalid$9();
-	if (!digest$5(value.section_source_sha256)) invalid$9();
+	].every((key) => uint$62(value[key])) || !uint$62(value.ordinal, 65535) || !allowUnresolved && value.ordinal === 0 || !["spec24", "observed26"].includes(value.ole_layout) || ![value.extent_x, value.extent_y].every((number) => Number.isInteger(number) && number >= -2147483648 && number <= 2147483647) || !(value.paragraph_node < value.control_node && value.control_node < value.component_node && value.component_node < value.ole_node)) invalid$10();
+	if (!digest$5(value.section_source_sha256)) invalid$10();
 	validateHwp5DrawingSources([value.geometry]);
 	if (value.geometry.kind_id !== 611282021 || [
 		"control_node",
 		"component_node",
 		"paragraph_node"
-	].some((key) => value[key] !== value.geometry[key])) invalid$9();
+	].some((key) => value[key] !== value.geometry[key])) invalid$10();
 	return value;
 }
 function decodeHwp5ChartCandidates(bytes) {
 	const value = envelope(bytes, "hwp5_chart_candidates");
-	if (!Array.isArray(value.candidates) || value.candidates.length > 4096) invalid$9();
+	if (!Array.isArray(value.candidates) || value.candidates.length > 4096) invalid$10();
 	const seen = /* @__PURE__ */ new Map();
 	for (const row of value.candidates) {
-		if (!row || !uint$61(row.section)) invalid$9();
+		if (!row || !uint$62(row.section)) invalid$10();
 		owner$2(row.owner, true);
 		const key = row.section + ":" + row.owner.control_node;
-		if (seen.has(key)) invalid$9();
+		if (seen.has(key)) invalid$10();
 		seen.set(key, row);
 		const r = row.resource;
 		if (!r || ![
 			"modern_chart",
 			"unresolved_ole",
 			"unavailable"
-		].includes(r.state)) invalid$9();
+		].includes(r.state)) invalid$10();
 		if (r.state === "modern_chart") {
-			if (row.owner.ordinal === 0 || !uint$61(r.physical_id, 65535) || !digest$5(r.resource_sha256) || !uint$61(r.stream_entry) || typeof r.legacy_backup_present !== "boolean" || !uint$61(r.presentation_streams) || r.error_name !== null) invalid$9();
-		} else if (typeof r.error_name !== "string" || !r.error_name.length || r.physical_id !== null || r.resource_sha256 !== null || r.stream_entry !== null || r.legacy_backup_present !== null || r.presentation_streams !== null) invalid$9();
+			if (row.owner.ordinal === 0 || !uint$62(r.physical_id, 65535) || !digest$5(r.resource_sha256) || !uint$62(r.stream_entry) || typeof r.legacy_backup_present !== "boolean" || !uint$62(r.presentation_streams) || r.error_name !== null) invalid$10();
+		} else if (typeof r.error_name !== "string" || !r.error_name.length || r.physical_id !== null || r.resource_sha256 !== null || r.stream_entry !== null || r.legacy_backup_present !== null || r.presentation_streams !== null) invalid$10();
 	}
 	return value;
 }
 function decodeHwp5ChartDisplay(bytes) {
 	const value = envelope(bytes, "hwp5_chart_display");
 	owner$2(value.owner);
-	if (!uint$61(value.section) || !uint$61(value.physical_id, 65535) || !digest$5(value.resource_sha256) || !uint$61(value.stream_entry) || typeof value.legacy_backup_present !== "boolean" || !uint$61(value.presentation_streams) || Object.hasOwn(value, "pair") || Object.hasOwn(value, "host")) invalid$9();
+	if (!uint$62(value.section) || !uint$62(value.physical_id, 65535) || !digest$5(value.resource_sha256) || !uint$62(value.stream_entry) || typeof value.legacy_backup_present !== "boolean" || !uint$62(value.presentation_streams) || Object.hasOwn(value, "pair") || Object.hasOwn(value, "host")) invalid$10();
 	validateChartDisplayData(value.data);
 	return value;
 }
@@ -26964,29 +26978,29 @@ function createHwp5ChartDisplayApi({ wasm, check, output, u32 }) {
 			ready();
 			const s = u32(section, "section"), c = u32(control, "control");
 			const value = decodeHwp5ChartDisplay(output(() => wasm.hwp5_edit_chart_display(s, c)).bytes);
-			if (value.section !== s || value.owner.control_node !== c) invalid$9();
+			if (value.section !== s || value.owner.control_node !== c) invalid$10();
 			return value;
 		}
 	};
 }
-var invalid$9, uint$61, digest$5;
+var invalid$10, uint$62, digest$5;
 var init_hwp5_chart_display_api = __esmMin((() => {
 	init_abi_schema();
 	init_hwp5_drawing_sources();
 	init_chart_display_data();
-	invalid$9 = () => {
+	invalid$10 = () => {
 		throw Error("InvalidHwp5ChartReply");
 	};
-	uint$61 = (value, maximum = 4294967295) => Number.isInteger(value) && value >= 0 && value <= maximum;
-	digest$5 = (value) => Array.isArray(value) && value.length === 32 && value.every((byte) => uint$61(byte, 255));
+	uint$62 = (value, maximum = 4294967295) => Number.isInteger(value) && value >= 0 && value <= maximum;
+	digest$5 = (value) => Array.isArray(value) && value.length === 32 && value.every((byte) => uint$62(byte, 255));
 }));
 // ../document/src/hwp5-chart-object-detail.ts
-function same$3(left, right) {
+function same$4(left, right) {
 	if (left === right) return true;
-	if (Array.isArray(left) && Array.isArray(right)) return left.length === right.length && left.every((value, i) => same$3(value, right[i]));
+	if (Array.isArray(left) && Array.isArray(right)) return left.length === right.length && left.every((value, i) => same$4(value, right[i]));
 	if (!record$20(left) || !record$20(right)) return false;
 	const keys = Object.keys(left);
-	return keys.length === Object.keys(right).length && keys.every((key) => Object.hasOwn(right, key) && same$3(left[key], right[key]));
+	return keys.length === Object.keys(right).length && keys.every((key) => Object.hasOwn(right, key) && same$4(left[key], right[key]));
 }
 function decoded(decode, value) {
 	try {
@@ -26999,7 +27013,7 @@ function message$1(error) {
 	return record$20(error) && typeof error.message === "string" ? error.message : "NativeReadFailed";
 }
 function validateDisplayWitness(detail, packet, row, target) {
-	if (detail.section !== target.section || detail.source_epoch !== packet.source_epoch || detail.history_revision !== packet.history_revision || !same$3(detail.owner, row.owner) || !same$3({
+	if (detail.section !== target.section || detail.source_epoch !== packet.source_epoch || detail.history_revision !== packet.history_revision || !same$4(detail.owner, row.owner) || !same$4({
 		physical_id: detail.physical_id,
 		resource_sha256: detail.resource_sha256,
 		stream_entry: detail.stream_entry,
@@ -27011,7 +27025,7 @@ function validateDisplayWitness(detail, packet, row, target) {
 		stream_entry: row.resource.stream_entry,
 		legacy_backup_present: row.resource.legacy_backup_present,
 		presentation_streams: row.resource.presentation_streams
-	})) return invalid$8();
+	})) return invalid$9();
 }
 /** Internal per-read resolver. No public SDK methods or reference grammar added. */
 function createHwp5ChartDetailReader(sdk) {
@@ -27056,13 +27070,13 @@ function createHwp5ChartDetailReader(sdk) {
 		}
 	};
 	return (target, block) => {
-		if (target.format !== "hwp5" || target.kind !== "drawing" || block.type !== "unknown" || block.kind !== "drawing" || block.nativeKind !== 611282021 || block.source?.section !== target.section || block.source?.node !== target.node) return invalid$8();
+		if (target.format !== "hwp5" || target.kind !== "drawing" || block.type !== "unknown" || block.kind !== "drawing" || block.nativeKind !== 611282021 || block.source?.section !== target.section || block.source?.node !== target.node) return invalid$9();
 		if (block.detailUnavailable || block.diagnostic?.code !== "ObjectDetailsDeferred") return unavailable$16("Hwp5ChartInventoryOwnerUnverified");
 		const state = initialize();
 		if (state.state !== "ready") return state;
 		const row = state.byComponent.get(key(target.section, target.node));
 		if (row === void 0) return unavailable$16("Hwp5ChartCandidateNotFound");
-		if (row === null) return invalid$8();
+		if (row === null) return invalid$9();
 		if (row.resource.state !== "modern_chart") return unavailable$16(row.resource.error_name);
 		let raw;
 		try {
@@ -27082,7 +27096,7 @@ function createHwp5ChartDetailReader(sdk) {
 function readHwp5ChartObjectDetail(sdk, target, block) {
 	return createHwp5ChartDetailReader(sdk)(target, block);
 }
-var unavailable$16, record$20, invalid$8, key;
+var unavailable$16, record$20, invalid$9, key;
 var init_hwp5_chart_object_detail = __esmMin((() => {
 	init_hwp5_chart_display_api();
 	unavailable$16 = (reason) => ({
@@ -27090,7 +27104,7 @@ var init_hwp5_chart_object_detail = __esmMin((() => {
 		reason
 	});
 	record$20 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	invalid$8 = () => {
+	invalid$9 = () => {
 		throw Error("InvalidObjectDetail");
 	};
 	key = (section, component) => `${section}:${component}`;
@@ -27130,14 +27144,14 @@ function unique(rows, key, warnings, name) {
 	}
 	return map;
 }
-var LIMITS$1, uint$60, diagnostic;
+var LIMITS$1, uint$61, diagnostic;
 var init_common$2 = __esmMin((() => {
 	LIMITS$1 = Object.freeze({
 		maxDepth: 32,
 		maxBlocks: 2e5,
 		maxTextUnits: 4194304
 	});
-	uint$60 = (value) => typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$61 = (value) => typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	diagnostic = (code, message, source) => ({
 		code,
 		message: String(message).slice(0, 512),
@@ -27269,13 +27283,13 @@ function checkedObjectGeometrySelector(value) {
 		"section",
 		"node"
 	]);
-	if (!["chart", "drawing"].includes(p.kind) || !uint$59(p.section) || !uint$59(p.node)) throw Error("InvalidObjectGeometryTarget");
+	if (!["chart", "drawing"].includes(p.kind) || !uint$60(p.section) || !uint$60(p.node)) throw Error("InvalidObjectGeometryTarget");
 	return Object.freeze(p);
 }
 function checkedObjectGeometryPatch(value) {
 	const p = ownObjectGeometryRecord(value, fields$9, []);
 	for (const key of Object.keys(p)) if (key === "width" || key === "height") {
-		if (!uint$59(p[key]) || p[key] === 0) throw Error("InvalidObjectGeometrySize");
+		if (!uint$60(p[key]) || p[key] === 0) throw Error("InvalidObjectGeometrySize");
 	} else if (key === "treatAsCharacter") {
 		if (typeof p[key] !== "boolean") throw Error("InvalidObjectGeometryPlacement");
 	} else if (!signed$1(p[key])) throw Error("InvalidObjectGeometryOffset");
@@ -27297,14 +27311,14 @@ function checkedObjectGeometryOwner(value) {
 		p.ownerNode,
 		p.paragraph,
 		p.anchorUnit
-	].every(uint$59) || p.componentNode !== null && !uint$59(p.componentNode) || typeof p.link !== "string" || p.link.length === 0 || p.link.length > 8192) throw Error("InvalidObjectGeometryOwner");
+	].every(uint$60) || p.componentNode !== null && !uint$60(p.componentNode) || typeof p.link !== "string" || p.link.length === 0 || p.link.length > 8192) throw Error("InvalidObjectGeometryOwner");
 	if (!Array.isArray(p.sourceSha256) || Object.getPrototypeOf(p.sourceSha256) !== Array.prototype || p.sourceSha256.length !== 32) throw Error("InvalidObjectGeometryOwner");
 	const bytes = [];
 	const descriptors = Object.getOwnPropertyDescriptors(p.sourceSha256);
 	if (Reflect.ownKeys(descriptors).length !== 33) throw Error("InvalidObjectGeometryOwner");
 	for (let index = 0; index < 32; index++) {
 		const d = descriptors[index];
-		if (!d || !("value" in d) || !uint$59(d.value) || d.value > 255) throw Error("InvalidObjectGeometryOwner");
+		if (!d || !("value" in d) || !uint$60(d.value) || d.value > 255) throw Error("InvalidObjectGeometryOwner");
 		bytes.push(d.value);
 	}
 	return Object.freeze({
@@ -27338,7 +27352,7 @@ function checkedObjectGeometryObservation(value) {
 		binding: Object.freeze(binding)
 	});
 }
-var fields$9, uint$59, signed$1;
+var fields$9, uint$60, signed$1;
 var init_object_geometry_edit = __esmMin((() => {
 	fields$9 = [
 		"width",
@@ -27347,7 +27361,7 @@ var init_object_geometry_edit = __esmMin((() => {
 		"verticalOffset",
 		"treatAsCharacter"
 	];
-	uint$59 = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 4294967295 && !Object.is(value, -0);
+	uint$60 = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 4294967295 && !Object.is(value, -0);
 	signed$1 = (value) => Number.isSafeInteger(value) && value >= -2147483648 && value <= 2147483647 && !Object.is(value, -0);
 }));
 // ../../js/native-edit-outcome.mjs
@@ -27397,13 +27411,13 @@ function applyNativeEdit(memory, bytes, invoke, invalidResult) {
 var init_native_edit_outcome = __esmMin((() => {}));
 // ../../js/document-text-coordinates.mjs
 function nativeDocumentParagraph(format, displayParagraph) {
-	if (!uint$58(displayParagraph)) return void 0;
+	if (!uint$59(displayParagraph)) return void 0;
 	if (format === "hwp5") return displayParagraph;
 	if (format === "hwpx" && displayParagraph < 4294967295) return displayParagraph + 1;
 }
-var uint$58;
+var uint$59;
 var init_document_text_coordinates = __esmMin((() => {
-	uint$58 = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 4294967295;
+	uint$59 = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 4294967295;
 }));
 // ../../js/original-cell-vertical-alignment.mjs
 function checkedOriginalCellSelector(input) {
@@ -27413,7 +27427,7 @@ function checkedOriginalCellSelector(input) {
 		"tableNode",
 		"listNode"
 	]);
-	if (!Object.values(v).every(uint$57)) throw Error("InvalidOriginalCellOwner");
+	if (!Object.values(v).every(uint$58)) throw Error("InvalidOriginalCellOwner");
 	return Object.freeze(v);
 }
 function checkedOriginalCellAlignment(value) {
@@ -27455,7 +27469,7 @@ function checkedOriginalCellObservation(input) {
 		tableNode: v.tableNode,
 		listNode: v.listNode
 	});
-	if (v.schemaVersion !== 1 || !["hwp5", "hwpx"].includes(v.format) || !uint$57(v.historyRevision) || typeof v.editable !== "boolean" || typeof v.lease !== "string" || !/^[1-9][0-9]{0,19}$/.test(v.lease) || BigInt(v.lease) > 18446744073709551615n || v.scope !== void 0 && (typeof v.scope !== "string" || !/^[0-9a-f-]{36}$/i.test(v.scope))) throw Error("InvalidOriginalCellObservation");
+	if (v.schemaVersion !== 1 || !["hwp5", "hwpx"].includes(v.format) || !uint$58(v.historyRevision) || typeof v.editable !== "boolean" || typeof v.lease !== "string" || !/^[1-9][0-9]{0,19}$/.test(v.lease) || BigInt(v.lease) > 18446744073709551615n || v.scope !== void 0 && (typeof v.scope !== "string" || !/^[0-9a-f-]{36}$/i.test(v.scope))) throw Error("InvalidOriginalCellObservation");
 	if (v.value !== null) checkedOriginalCellAlignment(v.value);
 	return Object.freeze(v);
 }
@@ -27468,7 +27482,7 @@ function checkedOriginalCellRequest(input) {
 		value: checkedOriginalCellAlignment(v.value)
 	});
 }
-function same$2(a, b) {
+function same$3(a, b) {
 	return Object.keys(a).length === Object.keys(b).length && Object.keys(a).every((key) => a[key] === b[key]);
 }
 /** Full Native witnesses stay in Native. The scoped JS lease is single-use and never refreshed at commit. */
@@ -27518,23 +27532,258 @@ function createOriginalCellVerticalAlignmentApi({ wasm, memory, check, prefix })
 			check();
 			const request = checkedOriginalCellRequest(input);
 			if (!supported()) throw Error("OriginalCellVerticalAlignmentUnavailable");
-			if (!retained || !same$2(retained, request.before)) throw Error("StaleOriginalCellLease");
+			if (!retained || !same$3(retained, request.before)) throw Error("StaleOriginalCellLease");
 			retained = void 0;
-			return applyNativeEdit(memory, encoder$20.encode(JSON.stringify({
+			return applyNativeEdit(memory, encoder$21.encode(JSON.stringify({
 				lease: request.before.lease,
 				value: request.value
 			})), (ptr, size) => wasm[commit](ptr, size), "InvalidOriginalCellAlignmentOutcome");
 		}
 	};
 }
-var utf8$8, encoder$20, uint$57;
+var utf8$8, encoder$21, uint$58;
 var init_original_cell_vertical_alignment = __esmMin((() => {
 	init_object_geometry_edit();
 	init_native_edit_outcome();
 	init_document_text_coordinates();
 	utf8$8 = new TextDecoder("utf-8", { fatal: true });
+	encoder$21 = new TextEncoder();
+	uint$58 = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 4294967295 && !Object.is(n, -0);
+}));
+// ../../js/original-cell-vertical-alignment-batch.mjs
+function ownArray(input, limit) {
+	if (!Array.isArray(input)) return invalid$8();
+	const length = Object.getOwnPropertyDescriptor(input, "length")?.value;
+	if (!Number.isSafeInteger(length) || length < 1 || length > limit) return invalid$8();
+	const descriptors = Object.getOwnPropertyDescriptors(input);
+	if (Reflect.ownKeys(descriptors).length !== length + 1) return invalid$8();
+	const out = [];
+	for (let i = 0; i < length; i++) {
+		const row = descriptors[String(i)];
+		if (!row || !Object.hasOwn(row, "value")) return invalid$8();
+		out.push(row.value);
+	}
+	return out;
+}
+function checkedOriginalCellBlockWitness(input) {
+	const p = ownObjectGeometryRecord(input, [
+		"section",
+		"tableNode",
+		"rows",
+		"columns",
+		"rectangle",
+		"cells"
+	]);
+	if (![
+		p.section,
+		p.tableNode,
+		p.rows,
+		p.columns
+	].every(uint$57) || !p.rows || !p.columns || p.rows * p.columns > 4096) return invalid$8();
+	const rectangle = ownObjectGeometryRecord(p.rectangle, [
+		"top",
+		"left",
+		"bottom",
+		"right"
+	]);
+	if (!Object.values(rectangle).every(uint$57) || rectangle.top >= rectangle.bottom || rectangle.left >= rectangle.right || rectangle.bottom > p.rows || rectangle.right > p.columns) return invalid$8();
+	const owners = /* @__PURE__ */ new Set(), paragraphs = /* @__PURE__ */ new Set();
+	let total = 0;
+	const cells = ownArray(p.cells, 4096).map((input) => {
+		const cell = ownObjectGeometryRecord(input, [
+			"listNode",
+			"row",
+			"column",
+			"paragraphs"
+		]);
+		if (![
+			cell.listNode,
+			cell.row,
+			cell.column
+		].every(uint$57) || cell.row >= p.rows || cell.column >= p.columns || owners.has(cell.listNode)) return invalid$8();
+		owners.add(cell.listNode);
+		const members = ownArray(cell.paragraphs, 1e5);
+		total += members.length;
+		if (total > 1e5) return invalid$8();
+		for (const paragraph of members) {
+			if (!uint$57(paragraph) || paragraphs.has(paragraph)) return invalid$8();
+			paragraphs.add(paragraph);
+		}
+		return Object.freeze({
+			...cell,
+			paragraphs: Object.freeze(members)
+		});
+	});
+	return Object.freeze({
+		...p,
+		rectangle: Object.freeze(rectangle),
+		cells: Object.freeze(cells)
+	});
+}
+function checkedOriginalCellBlockObservation(input) {
+	const names = [
+		"schemaVersion",
+		"format",
+		"section",
+		"tableNode",
+		"rows",
+		"columns",
+		"rectangle",
+		"cells",
+		"lease",
+		"historyRevision",
+		"editable"
+	];
+	const p = ownObjectGeometryRecord(input, [...names, "scope"], names);
+	if (p.schemaVersion !== 1 || !["hwp5", "hwpx"].includes(p.format) || !uint$57(p.historyRevision) || typeof p.editable !== "boolean" || typeof p.lease !== "string" || !/^[1-9][0-9]{0,19}$/.test(p.lease) || BigInt(p.lease) > 18446744073709551615n || p.scope !== void 0 && (typeof p.scope !== "string" || !/^[0-9a-f-]{36}$/i.test(p.scope))) return invalid$8();
+	const rawCells = ownArray(p.cells, 4096).map((row) => ownObjectGeometryRecord(row, [
+		"listNode",
+		"row",
+		"column",
+		"paragraphs",
+		"value",
+		"editable"
+	]));
+	const witness = checkedOriginalCellBlockWitness({
+		section: p.section,
+		tableNode: p.tableNode,
+		rows: p.rows,
+		columns: p.columns,
+		rectangle: p.rectangle,
+		cells: rawCells.map(({ value: _value, editable: _editable, ...cell }) => cell)
+	});
+	const cells = witness.cells.map((cell, index) => {
+		const raw = rawCells[index];
+		if (raw.value !== null) checkedOriginalCellAlignment(raw.value);
+		if (typeof raw.editable !== "boolean") return invalid$8();
+		return Object.freeze({
+			...cell,
+			value: raw.value,
+			editable: raw.editable
+		});
+	});
+	if (p.editable !== cells.every((cell) => cell.editable)) return invalid$8();
+	return Object.freeze({
+		...p,
+		rectangle: witness.rectangle,
+		cells: Object.freeze(cells)
+	});
+}
+function checkedOriginalCellBlockRequest(input) {
+	const p = ownObjectGeometryRecord(input, ["before", "value"]);
+	const before = checkedOriginalCellBlockObservation(p.before);
+	if (!before.editable || !before.scope) throw Error("OriginalCellVerticalAlignmentReadOnly");
+	return Object.freeze({
+		before,
+		value: checkedOriginalCellAlignment(p.value)
+	});
+}
+function same$2(left, right) {
+	if (left === right) return true;
+	if (!left || !right || typeof left !== "object" || typeof right !== "object") return false;
+	const keys = Object.keys(left);
+	return keys.length === Object.keys(right).length && keys.every((key) => Object.hasOwn(right, key) && same$2(left[key], right[key]));
+}
+function createOriginalCellVerticalAlignmentBatchApi({ wasm, memory, check, prefix }) {
+	if (!["hwp5_edit", "hwpx_edit"].includes(prefix)) throw Error("InvalidOriginalCellFormat");
+	const format = prefix === "hwp5_edit" ? "hwp5" : "hwpx";
+	const version = `${prefix}_original_cell_vertical_alignment_batch_version`, query = `${prefix}_original_cell_vertical_alignment_batch`, commit = `${prefix}_set_original_cell_vertical_alignment_batch`;
+	let retained;
+	const supported = () => [
+		version,
+		query,
+		commit
+	].every((name) => typeof wasm[name] === "function") && wasm[version]() === 1 && typeof globalThis.crypto?.randomUUID === "function";
+	return {
+		supportsOriginalCellVerticalAlignmentBatch() {
+			check();
+			return supported();
+		},
+		originalCellVerticalAlignmentBatch(input) {
+			check();
+			retained = void 0;
+			const witness = checkedOriginalCellBlockWitness(input);
+			const native = checkedOriginalCellBlockWitness({
+				...witness,
+				cells: witness.cells.map((cell) => ({
+					...cell,
+					paragraphs: cell.paragraphs.map((paragraph) => {
+						const value = nativeDocumentParagraph(format, paragraph);
+						if (value === void 0) throw Error("InvalidOriginalCellOwner");
+						return value;
+					})
+				}))
+			});
+			const bytes = encoder$20.encode(JSON.stringify(native));
+			if (bytes.byteLength > 1048576) throw RangeError("LimitExceeded");
+			check();
+			if (!supported()) throw Error("OriginalCellVerticalAlignmentBatchUnavailable");
+			let raw;
+			try {
+				raw = memory.withBytes(bytes, (ptr, len) => {
+					if (wasm[query](ptr, len) !== 1) throw memory.error();
+					const size = wasm[`${prefix}_output_len`]();
+					if (!Number.isSafeInteger(size) || size < 1 || size > 4194304) throw RangeError("LimitExceeded");
+					return checkedOriginalCellBlockObservation(JSON.parse(decoder$8.decode(memory.copy(wasm[`${prefix}_output_ptr`](), size))));
+				});
+			} finally {
+				wasm[`${prefix}_output_free`]();
+			}
+			if (raw.scope !== void 0 || raw.format !== format || ![
+				"section",
+				"tableNode",
+				"rows",
+				"columns",
+				"rectangle"
+			].every((key) => same$2(raw[key], native[key])) || raw.cells.length !== native.cells.length) throw Error("OriginalCellOwnerMismatch");
+			const expected = new Map(native.cells.map((cell) => [cell.listNode, cell]));
+			const publicCells = new Map(witness.cells.map((cell) => [cell.listNode, cell]));
+			const cells = raw.cells.map((cell) => {
+				const target = expected.get(cell.listNode);
+				if (!target || ![
+					"listNode",
+					"row",
+					"column",
+					"paragraphs"
+				].every((key) => same$2(cell[key], target[key]))) throw Error("OriginalCellOwnerMismatch");
+				return {
+					...cell,
+					paragraphs: publicCells.get(cell.listNode).paragraphs
+				};
+			});
+			const before = checkedOriginalCellBlockObservation({
+				...raw,
+				cells,
+				scope: globalThis.crypto.randomUUID()
+			});
+			retained = before;
+			return before;
+		},
+		setOriginalCellVerticalAlignmentBatch(input) {
+			check();
+			const request = checkedOriginalCellBlockRequest(input);
+			if (!supported()) throw Error("OriginalCellVerticalAlignmentBatchUnavailable");
+			if (!retained || !same$2(retained, request.before)) throw Error("StaleOriginalCellLease");
+			retained = void 0;
+			return applyNativeEdit(memory, encoder$20.encode(JSON.stringify({
+				lease: request.before.lease,
+				value: request.value
+			})), (ptr, len) => wasm[commit](ptr, len), "InvalidOriginalCellAlignmentOutcome");
+		}
+	};
+}
+var encoder$20, decoder$8, uint$57, invalid$8;
+var init_original_cell_vertical_alignment_batch = __esmMin((() => {
+	init_object_geometry_edit();
+	init_original_cell_vertical_alignment();
+	init_document_text_coordinates();
+	init_native_edit_outcome();
 	encoder$20 = new TextEncoder();
-	uint$57 = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 4294967295 && !Object.is(n, -0);
+	decoder$8 = new TextDecoder("utf-8", { fatal: true });
+	uint$57 = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 4294967295 && !Object.is(value, -0);
+	invalid$8 = () => {
+		throw Error("InvalidOriginalCellBlock");
+	};
 }));
 // ../../js/object-outer-margins.mjs
 function checkedObjectOuterMargins(value) {
@@ -39767,6 +40016,12 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			check,
 			prefix: "hwp5_edit"
 		}),
+		...createOriginalCellVerticalAlignmentBatchApi({
+			wasm,
+			memory,
+			check,
+			prefix: "hwp5_edit"
+		}),
 		...createCreatedCellPropertiesApi({
 			wasm,
 			memory,
@@ -40826,6 +41081,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 }
 var encoder$9, decoder, u32$2;
 var init_hwp5_editor = __esmMin((() => {
+	init_original_cell_vertical_alignment_batch();
 	init_original_cell_vertical_alignment();
 	init_hwp5_vertical_outer_margins();
 	init_hwp5_object_outer_margins();
@@ -42641,9 +42897,9 @@ function encodeChartPointBatch(edits, { maxEdits, maxBytes }, encodeValue) {
 var init_chart_point_batch = __esmMin((() => {}));
 // ../../js/chart-display-host.mjs
 function chartDisplayHost(value, wrapper) {
-	if (!object$11(value) || value.wrapper_node !== wrapper || !uint$62(value.chart_node) || value.chart_node <= wrapper) return false;
+	if (!object$11(value) || value.wrapper_node !== wrapper || !uint$63(value.chart_node) || value.chart_node <= wrapper) return false;
 	const g = value.geometry, p = value.position;
-	return object$11(g) && object$11(p) && [g.width, g.height].every(optional(uint$62)) && optional(bounded(4))(g.width_relative) && optional(bounded(2))(g.height_relative) && optional(boolean$1)(g.treat_as_character) && [g.horizontal_offset, g.vertical_offset].every(optional(offset)) && Array.isArray(p.flags) && p.flags.length === 4 && p.flags.every(optional(boolean$1)) && Array.isArray(p.relations) && p.relations.length === 4 && p.relations.every((v, i) => optional(bounded([
+	return object$11(g) && object$11(p) && [g.width, g.height].every(optional(uint$63)) && optional(bounded(4))(g.width_relative) && optional(bounded(2))(g.height_relative) && optional(boolean$1)(g.treat_as_character) && [g.horizontal_offset, g.vertical_offset].every(optional(offset)) && Array.isArray(p.flags) && p.flags.length === 4 && p.flags.every(optional(boolean$1)) && Array.isArray(p.relations) && p.relations.length === 4 && p.relations.every((v, i) => optional(bounded([
 		2,
 		3,
 		4,
@@ -42654,7 +42910,7 @@ var optional, bounded, boolean$1, offset;
 var init_chart_display_host = __esmMin((() => {
 	init_chart_display_fields();
 	optional = (accepts) => (value) => value === null || accepts(value);
-	bounded = (max) => (value) => uint$62(value) && value <= max;
+	bounded = (max) => (value) => uint$63(value) && value <= max;
 	boolean$1 = (value) => typeof value === "boolean";
 	offset = (value) => Number.isInteger(value) && value >= -2147483648 && value <= 4294967295;
 }));
@@ -42673,7 +42929,7 @@ function decodeChartDisplay(bytes) {
 		"rich_text"
 	]) require(Array.isArray(value[name]));
 	const pair = value.pair;
-	require(object$11(pair) && text$4(pair.chart_path) && pair.chart_path.length > 0 && text$4(pair.ole_path) && pair.ole_path.length > 0 && uint$62(pair.wrapper_node) && uint$62(pair.section_ordinal) && typeof pair.declared_external === "boolean" && Array.isArray(pair.section_sha256) && pair.section_sha256.length === 32 && pair.section_sha256.every((n) => uint$62(n) && n <= 255));
+	require(object$11(pair) && text$4(pair.chart_path) && pair.chart_path.length > 0 && text$4(pair.ole_path) && pair.ole_path.length > 0 && uint$63(pair.wrapper_node) && uint$63(pair.section_ordinal) && typeof pair.declared_external === "boolean" && Array.isArray(pair.section_sha256) && pair.section_sha256.length === 32 && pair.section_sha256.every((n) => uint$63(n) && n <= 255));
 	require(chartDisplayHost(value.host, pair.wrapper_node));
 	require(value.plots.length === value.plot_settings.length);
 	const plots = /* @__PURE__ */ new Map(), series = /* @__PURE__ */ new Map(), references = /* @__PURE__ */ new Map();
@@ -42684,14 +42940,14 @@ function decodeChartDisplay(bytes) {
 	const occupied = value.view_3d == null && value.blank_policy == null && !hasStrokes && !hasMajorTicks && !hasFamilies ? null : /* @__PURE__ */ new Set();
 	let previousPlot = -1;
 	for (const [index, plot] of value.plots.entries()) {
-		require(object$11(plot) && uint$62(plot.node) && plot.node > previousPlot && uint$62(plot.area_node) && plot.area_node < plot.node && plotKinds.has(plot.kind) && Array.isArray(plot.series_nodes));
+		require(object$11(plot) && uint$63(plot.node) && plot.node > previousPlot && uint$63(plot.area_node) && plot.area_node < plot.node && plotKinds.has(plot.kind) && Array.isArray(plot.series_nodes));
 		plots.set(plot.node, plot);
 		previousPlot = plot.node;
 		occupied?.add(plot.node);
 		occupied?.add(plot.area_node);
 		let previousSeries = plot.node;
 		for (const node of plot.series_nodes) {
-			require(uint$62(node) && node > previousSeries && !series.has(node));
+			require(uint$63(node) && node > previousSeries && !series.has(node));
 			series.set(node, plot.node);
 			previousSeries = node;
 			occupied?.add(node);
@@ -42703,7 +42959,7 @@ function decodeChartDisplay(bytes) {
 			"stacked",
 			"percentStacked"
 		]), plot.node) && field$3(settings.vary_colors, (v) => typeof v === "boolean", plot.node) && Array.isArray(settings.axis_references));
-		require(field$3(settings.gap_width, (v) => uint$62(v) && v <= 500, plot.node) && field$3(settings.overlap, (v) => Number.isInteger(v) && v >= -100 && v <= 100, plot.node));
+		require(field$3(settings.gap_width, (v) => uint$63(v) && v <= 500, plot.node) && field$3(settings.overlap, (v) => Number.isInteger(v) && v >= -100 && v <= 100, plot.node));
 		require(field$3(settings.scatter_style, oneOf([
 			"none",
 			"line",
@@ -42713,9 +42969,9 @@ function decodeChartDisplay(bytes) {
 			"smoothMarker"
 		]), plot.node));
 		if (settings.scatter_style !== null) require(plot.kind === "scatterChart");
-		require(field$3(settings.first_slice_angle, (v) => uint$62(v) && v <= 360, plot.node));
+		require(field$3(settings.first_slice_angle, (v) => uint$63(v) && v <= 360, plot.node));
 		if (settings.first_slice_angle !== null) require(["pieChart", "doughnutChart"].includes(plot.kind));
-		require(field$3(settings.of_pie_type, oneOf(["pie", "bar"]), plot.node) && field$3(settings.second_pie_size, (v) => uint$62(v) && v >= 5 && v <= 200, plot.node) && field$3(settings.split_type, oneOf([
+		require(field$3(settings.of_pie_type, oneOf(["pie", "bar"]), plot.node) && field$3(settings.second_pie_size, (v) => uint$63(v) && v >= 5 && v <= 200, plot.node) && field$3(settings.split_type, oneOf([
 			"auto",
 			"cust",
 			"percent",
@@ -42760,7 +43016,7 @@ function decodeChartDisplay(bytes) {
 			...settings.custom_split_node === null ? [] : [{ node: settings.custom_split_node }],
 			...settings.axis_references
 		]) if (leaf !== null) {
-			require(object$11(leaf) && uint$62(leaf.node) && !leaves.has(leaf.node));
+			require(object$11(leaf) && uint$63(leaf.node) && !leaves.has(leaf.node));
 			leaves.add(leaf.node);
 		}
 		require(validChartStockSettings(settings.stock, plot.kind, plot.node, leaves));
@@ -42774,7 +43030,7 @@ function decodeChartDisplay(bytes) {
 		}
 		for (const node of leaves) if (!localFamilyNodes.has(node)) occupied?.add(node);
 		for (const reference of settings.axis_references) {
-			require(reference !== null && field$3(reference, uint$62, plot.node));
+			require(reference !== null && field$3(reference, uint$63, plot.node));
 			const key = plot.node + ":" + reference.node;
 			require(!references.has(key));
 			references.set(key, reference.value);
@@ -42784,12 +43040,12 @@ function decodeChartDisplay(bytes) {
 	require(validChartSeriesSettings(value.series_settings, plots, series, occupied));
 	require(validChartPointSettings(value.point_settings, series, occupied));
 	for (const axis of value.axes) {
-		require(object$11(axis) && uint$62(axis.node) && !axes.has(axis.node) && uint$62(axis.area_node) && axis.area_node < axis.node && [
+		require(object$11(axis) && uint$63(axis.node) && !axes.has(axis.node) && uint$63(axis.area_node) && axis.area_node < axis.node && [
 			"catAx",
 			"valAx",
 			"dateAx",
 			"serAx"
-		].includes(axis.kind) && field$3(axis.id, uint$62, axis.node) && field$3(axis.cross_axis, uint$62, axis.node) && field$3(axis.position, oneOf([
+		].includes(axis.kind) && field$3(axis.id, uint$63, axis.node) && field$3(axis.cross_axis, uint$63, axis.node) && field$3(axis.position, oneOf([
 			"b",
 			"l",
 			"r",
@@ -42826,7 +43082,7 @@ function decodeChartDisplay(bytes) {
 	require(value.axis_links.length === references.size);
 	const seenLinks = /* @__PURE__ */ new Set();
 	for (const link of value.axis_links) {
-		require(object$11(link) && uint$62(link.plot_node) && plots.has(link.plot_node) && uint$62(link.reference_node) && nullableUint(link.id) && object$11(link.target));
+		require(object$11(link) && uint$63(link.plot_node) && plots.has(link.plot_node) && uint$63(link.reference_node) && nullableUint(link.id) && object$11(link.target));
 		const key = link.plot_node + ":" + link.reference_node;
 		require(references.has(key) && !seenLinks.has(key) && references.get(key) === link.id);
 		seenLinks.add(key);
@@ -42843,7 +43099,7 @@ function decodeChartDisplay(bytes) {
 			point.point_node,
 			point.value_node,
 			point.index
-		].every(uint$62) && point.cache_node < point.point_node && point.point_node < point.value_node && point.value_node > previousLeaf && !pointNodes.has(point.point_node) && pointKinds.has(point.kind) && text$4(point.value) && nullableUint(point.level_node) && (point.level_node === null || point.cache_node < point.level_node && point.level_node < point.point_node) && point.kind === "multilevel_cache" === (point.level_node !== null));
+		].every(uint$63) && point.cache_node < point.point_node && point.point_node < point.value_node && point.value_node > previousLeaf && !pointNodes.has(point.point_node) && pointKinds.has(point.kind) && text$4(point.value) && nullableUint(point.level_node) && (point.level_node === null || point.cache_node < point.level_node && point.level_node < point.point_node) && point.kind === "multilevel_cache" === (point.level_node !== null));
 		previousLeaf = point.value_node;
 		pointNodes.add(point.point_node);
 		for (const node of [
@@ -44576,6 +44832,12 @@ async function createHwpxEditor(source) {
 	});
 	return {
 		...createOriginalCellVerticalAlignmentApi({
+			wasm,
+			memory,
+			check: ready,
+			prefix: "hwpx_edit"
+		}),
+		...createOriginalCellVerticalAlignmentBatchApi({
 			wasm,
 			memory,
 			check: ready,
@@ -46984,6 +47246,7 @@ async function createHwpxEditor(source) {
 	};
 }
 var init_hwpx_editor = __esmMin((() => {
+	init_original_cell_vertical_alignment_batch();
 	init_original_cell_vertical_alignment();
 	init_object_body_flow();
 	init_object_outer_margins();
@@ -47212,18 +47475,18 @@ function collectHwp5({ sdk, sectionCount }) {
 		const flowResult = get("paragraphFlow"), flows = array$1(flowResult, warnings, "paragraphFlow", source);
 		const flowMap = unique(flows, (r) => r.paragraph, warnings, "paragraphFlow");
 		const countResult = get("paragraphCount");
-		const count = countResult.ok && uint$60(countResult.value) && countResult.value <= 1e5 ? countResult.value : null;
+		const count = countResult.ok && uint$61(countResult.value) && countResult.value <= 1e5 ? countResult.value : null;
 		const previewRows = previewSections.get(section)?.paragraphs;
 		const paragraphs = [], objectTokens = [];
 		let objectTokensKnown = count !== null && preview.ok && Array.isArray(previewRows) && previewRows.length === count;
 		const ordinals = count !== null ? Array.from({ length: count }, (_, ordinal) => ordinal) : [...new Set(flows.map((row) => row.paragraph))];
 		for (const paragraph of ordinals) {
 			const p = previewRows?.[paragraph], flow = flowMap.get(paragraph);
-			const node = uint$60(flow?.source_node) ? flow.source_node : uint$60(p?.nodeIndex) ? p.nodeIndex : null;
-			const emptyParagraph = p?.textPresent === false && p.text === "" && uint$60(p.nodeIndex) && uint$60(p.declaredUnits) && p.declaredUnits <= 1 && Array.isArray(p.tokens) && p.tokens.length === 0;
+			const node = uint$61(flow?.source_node) ? flow.source_node : uint$61(p?.nodeIndex) ? p.nodeIndex : null;
+			const emptyParagraph = p?.textPresent === false && p.text === "" && uint$61(p.nodeIndex) && uint$61(p.declaredUnits) && p.declaredUnits <= 1 && Array.isArray(p.tokens) && p.tokens.length === 0;
 			let displayText = typeof p?.text === "string" && (p.textPresent === true || emptyParagraph) ? p.text : null;
-			let identityKnown = uint$60(node) && flow?.generated !== true;
-			if (uint$60(p?.nodeIndex) && uint$60(flow?.source_node) && p.nodeIndex !== flow.source_node) {
+			let identityKnown = uint$61(node) && flow?.generated !== true;
+			if (uint$61(p?.nodeIndex) && uint$61(flow?.source_node) && p.nodeIndex !== flow.source_node) {
 				identityKnown = false;
 				displayText = null;
 				warnings.push(diagnostic("ParagraphSourceMismatch", "Native source identities disagree", {
@@ -47241,7 +47504,7 @@ function collectHwp5({ sdk, sectionCount }) {
 			if (!Array.isArray(p?.tokens)) objectTokensKnown = false;
 			else for (const token of p.tokens) {
 				if (token?.type !== "control" || token.code !== 11) continue;
-				if (!uint$60(token.startUnit)) {
+				if (!uint$61(token.startUnit)) {
 					objectTokensKnown = false;
 					continue;
 				}
@@ -47268,9 +47531,9 @@ function collectHwp5({ sdk, sectionCount }) {
 			const draw = drawByComponent.get(row.component_node), anchor = anchorByComponent.get(row.component_node);
 			const owner = draw?.control_node === row.owner_node && anchor?.control_node === row.owner_node;
 			return {
-				inventorySiteKnown: uint$60(row.component_node) && uint$60(row.picture_node) && uint$60(row.owner_node) && uint$60(row.bin_data_id) && row.bin_data_id > 0,
+				inventorySiteKnown: uint$61(row.component_node) && uint$61(row.picture_node) && uint$61(row.owner_node) && uint$61(row.bin_data_id) && row.bin_data_id > 0,
 				pictureNode: row.component_node,
-				parentParagraph: owner && uint$60(anchor?.paragraph) ? anchor.paragraph : null,
+				parentParagraph: owner && uint$61(anchor?.paragraph) ? anchor.paragraph : null,
 				sourceInfo: {
 					section,
 					pictureNode: row.component_node,
@@ -47279,8 +47542,8 @@ function collectHwp5({ sdk, sectionCount }) {
 					ownerNode: row.owner_node,
 					resourceId: row.bin_data_id
 				},
-				width: owner && uint$60(draw?.width) ? draw.width : null,
-				height: owner && uint$60(draw?.height) ? draw.height : null,
+				width: owner && uint$61(draw?.width) ? draw.width : null,
+				height: owner && uint$61(draw?.height) ? draw.height : null,
 				reason: owner ? null : "PictureOwnerUnverified"
 			};
 		});
@@ -47289,7 +47552,7 @@ function collectHwp5({ sdk, sectionCount }) {
 		for (const draw of drawByComponent.values()) {
 			if (draw?.kind_id !== 611346787 || representedPictures.has(draw.component_node)) continue;
 			const anchor = anchorByComponent.get(draw.component_node);
-			const ownerKnown = anchor?.control_node === draw.control_node && uint$60(anchor?.paragraph);
+			const ownerKnown = anchor?.control_node === draw.control_node && uint$61(anchor?.paragraph);
 			pictures.push({
 				inventorySiteKnown: false,
 				pictureNode: draw.component_node,
@@ -47300,8 +47563,8 @@ function collectHwp5({ sdk, sectionCount }) {
 					componentNode: draw.component_node,
 					ownerNode: draw.control_node
 				},
-				width: uint$60(draw?.width) ? draw.width : null,
-				height: uint$60(draw?.height) ? draw.height : null,
+				width: uint$61(draw?.width) ? draw.width : null,
+				height: uint$61(draw?.height) ? draw.height : null,
 				reason: "PictureSourceUnobserved"
 			});
 			representedPictures.add(draw.component_node);
@@ -47313,7 +47576,7 @@ function collectHwp5({ sdk, sectionCount }) {
 		const components = unique(array$1(componentsResult, warnings, "drawingComponentSources", source), (r) => r.component_node, warnings, "drawing component inventory");
 		let componentsKnown = componentsResult.ok;
 		for (const row of components.values()) {
-			if (!row || !uint$60(row.component_node) || !uint$60(row.kind_id) || !uint$60(row.owner_node)) {
+			if (!row || !uint$61(row.component_node) || !uint$61(row.kind_id) || !uint$61(row.owner_node)) {
 				componentsKnown = false;
 				continue;
 			}
@@ -47342,7 +47605,7 @@ function collectHwp5({ sdk, sectionCount }) {
 				kind: "drawing",
 				node: row.component_node,
 				siteKnown: true,
-				parentParagraph: ownerKnown && uint$60(anchor?.paragraph) ? anchor.paragraph : null,
+				parentParagraph: ownerKnown && uint$61(anchor?.paragraph) ? anchor.paragraph : null,
 				parentObjectNode: components.get(row.owner_node)?.kind_id === 610496366 ? row.owner_node : null,
 				nativeKind: row.kind_id,
 				reason: ownerKnown ? "ObjectDetailsDeferred" : "ObjectOwnerUnverified"
@@ -47351,7 +47614,7 @@ function collectHwp5({ sdk, sectionCount }) {
 		const knownAnchors = /* @__PURE__ */ new Set();
 		let anchorsKnown = anchors.ok && drawingAnchors.ok;
 		for (const row of [...array$1(anchors, warnings, "tableAnchors", source), ...array$1(drawingAnchors, warnings, "drawingAnchors", source)]) {
-			if (!uint$60(row?.paragraph) || !uint$60(row?.current_unit)) {
+			if (!uint$61(row?.paragraph) || !uint$61(row?.current_unit)) {
 				anchorsKnown = false;
 				continue;
 			}
@@ -47377,7 +47640,7 @@ function collectHwp5({ sdk, sectionCount }) {
 				row.paragraph,
 				row.sourceUnit,
 				row.currentUnit
-			].some((value) => !uint$60(value) || Object.is(value, -0)) || row.controlNode <= row.paragraphNode || row.equationNode <= row.controlNode || equationNodes.has(row.equationNode) || equationControls.has(row.controlNode) || equationAnchors.has(key) || knownAnchors.has(key) || paragraph?.identityKnown !== true || paragraph.node !== row.paragraphNode || tokenCounts.get(key) !== 1) equationsValid = false;
+			].some((value) => !uint$61(value) || Object.is(value, -0)) || row.controlNode <= row.paragraphNode || row.equationNode <= row.controlNode || equationNodes.has(row.equationNode) || equationControls.has(row.controlNode) || equationAnchors.has(key) || knownAnchors.has(key) || paragraph?.identityKnown !== true || paragraph.node !== row.paragraphNode || tokenCounts.get(key) !== 1) equationsValid = false;
 			equationNodes.add(row?.equationNode);
 			equationControls.add(row?.controlNode);
 			equationAnchors.add(key);
@@ -47477,7 +47740,7 @@ function consumeParagraphAxis(block) {
 function observeControlAwareParagraphs(sdk, section, rows, flows, warnings) {
 	const eligible = (row) => {
 		const flow = flows.get(row.paragraph);
-		return typeof row.text === "string" && uint$60(row.paragraph) && row.paragraph > 0 && flow?.paragraph === row.paragraph && uint$60(flow.source_node);
+		return typeof row.text === "string" && uint$61(row.paragraph) && row.paragraph > 0 && flow?.paragraph === row.paragraph && uint$61(flow.source_node);
 	};
 	let batch = null;
 	let unavailable = "ControlAwareBatchUnavailable";
@@ -47499,8 +47762,8 @@ function observeControlAwareParagraphs(sdk, section, rows, flows, warnings) {
 		const plain = typeof row.text === "string" ? row.text : null;
 		const paragraph = {
 			paragraph: row.paragraph,
-			node: uint$60(flow?.source_node) ? flow.source_node : null,
-			identityKnown: uint$60(flow?.source_node),
+			node: uint$61(flow?.source_node) ? flow.source_node : null,
+			identityKnown: uint$61(flow?.source_node),
 			displayText: plain,
 			flow: flow ?? null
 		};
@@ -47573,7 +47836,7 @@ function collectSection(sdk, section, warnings) {
 	const sitesResult = get("pictureSites"), ownersResult = get("pictureOwners");
 	const owners = unique(array$1(ownersResult, warnings, "pictureOwners", source), (row) => row.pictureNode, warnings, "picture owner");
 	const sites = array$1(sitesResult, warnings, "pictureSites", source).slice();
-	const inventoryPictures = new Set(sites.filter((row) => uint$60(row?.pictureNode)).map((row) => row.pictureNode));
+	const inventoryPictures = new Set(sites.filter((row) => uint$61(row?.pictureNode)).map((row) => row.pictureNode));
 	const seenPictures = new Set(sites.map((row) => row.pictureNode));
 	for (const owner of owners.values()) if (owner && !seenPictures.has(owner.pictureNode)) {
 		sites.push({
@@ -47595,13 +47858,13 @@ function collectSection(sdk, section, warnings) {
 			},
 			width: null,
 			height: null,
-			reason: uint$60(parentParagraph) ? null : owner?.error ?? "PictureOwnerUnverified"
+			reason: uint$61(parentParagraph) ? null : owner?.error ?? "PictureOwnerUnverified"
 		};
 	});
 	const objects = /* @__PURE__ */ new Map();
 	let objectsKnown = true;
 	const addObject = (row) => {
-		if (!uint$60(row.node)) {
+		if (!uint$61(row.node)) {
 			objectsKnown = false;
 			return;
 		}
@@ -47622,10 +47885,10 @@ function collectSection(sdk, section, warnings) {
 	for (const row of inventory("chartSites")) addObject({
 		kind: "chart",
 		node: row?.wrapper,
-		parentParagraph: row?.error_name === null && uint$60(row?.paragraph) && uint$60(row?.anchorUnit) ? row.paragraph : null,
+		parentParagraph: row?.error_name === null && uint$61(row?.paragraph) && uint$61(row?.anchorUnit) ? row.paragraph : null,
 		detailUnavailable: row?.error_name !== null,
 		reason: row?.error_name ?? "ObjectDetailsDeferred",
-		...row?.error_name === null && uint$60(row?.paragraph) && uint$60(row?.anchorUnit) ? {
+		...row?.error_name === null && uint$61(row?.paragraph) && uint$61(row?.anchorUnit) ? {
 			paragraph: row.paragraph,
 			anchorUnit: row.anchorUnit
 		} : {}
@@ -47633,10 +47896,10 @@ function collectSection(sdk, section, warnings) {
 	for (const row of inventory("equationSites")) addObject({
 		kind: "equation",
 		node: row?.source?.node,
-		parentParagraph: row?.source?.issue === null && row?.error_name === null && uint$60(row?.paragraph) ? row.paragraph : null,
+		parentParagraph: row?.source?.issue === null && row?.error_name === null && uint$61(row?.paragraph) ? row.paragraph : null,
 		detailUnavailable: row?.source?.issue !== null || row?.error_name !== null,
 		reason: row?.source?.issue ?? row?.error_name ?? "ObjectDetailsDeferred",
-		...row?.source?.issue === null && row?.error_name === null && uint$60(row?.paragraph) && uint$60(row?.anchor_unit) ? {
+		...row?.source?.issue === null && row?.error_name === null && uint$61(row?.paragraph) && uint$61(row?.anchor_unit) ? {
 			paragraph: row.paragraph,
 			anchorUnit: row.anchor_unit
 		} : {}
@@ -47644,7 +47907,7 @@ function collectSection(sdk, section, warnings) {
 	for (const row of inventory("oleSites")) addObject({
 		kind: "ole",
 		node: row?.ole_node,
-		parentParagraph: row?.error_name === null && uint$60(row?.paragraph) ? row.paragraph : null,
+		parentParagraph: row?.error_name === null && uint$61(row?.paragraph) ? row.paragraph : null,
 		detailUnavailable: row?.error_name !== null,
 		reason: row?.error_name ?? "ObjectDetailsDeferred"
 	});
@@ -47662,7 +47925,7 @@ function collectSection(sdk, section, warnings) {
 	for (const row of inventory("ellipseSources")) addObject({
 		kind: "drawing",
 		node: row?.node,
-		parentParagraph: uint$60(row?.owner?.paragraph) ? row.owner.paragraph : null,
+		parentParagraph: uint$61(row?.owner?.paragraph) ? row.owner.paragraph : null,
 		subtype: "ellipse",
 		reason: "ObjectDetailsDeferred"
 	});
@@ -47806,7 +48069,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 		}
 		if (!observation.flowsKnown || !observation.areas?.ok || !observation.picturesKnown) model.coverage.inventoryComplete = false;
 		function definition(kind, owner, listNode, apply, declaredParagraphs, declaration) {
-			if (!uint$60(owner) || !uint$60(listNode)) throw new Error("InvalidPageAreaIdentity");
+			if (!uint$61(owner) || !uint$61(listNode)) throw new Error("InvalidPageAreaIdentity");
 			const key = `${owner}:${listNode}`;
 			const existing = defs.get(key);
 			if (existing) {
@@ -47826,7 +48089,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 				range: { state: "unresolved" },
 				blocks: [],
 				observedParagraphs: 0,
-				...uint$60(declaredParagraphs) ? { declaredParagraphs } : {}
+				...uint$61(declaredParagraphs) ? { declaredParagraphs } : {}
 			};
 			section[kind].definitions.push(block);
 			const node = add({
@@ -47843,8 +48106,8 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 			section.header.declarations = section.footer.declarations = "unavailable";
 			model.coverage.pageAreasKnown = false;
 		} else if (format === "hwp5") for (const area of list(observation.areas)) {
-			if (!isPageArea(area.kind) || !uint$60(area.owner_node) || !uint$60(area.list_node)) throw new Error("InvalidPageAreaObservation");
-			const apply = uint$60(area.control_attributes) ? [
+			if (!isPageArea(area.kind) || !uint$61(area.owner_node) || !uint$61(area.list_node)) throw new Error("InvalidPageAreaObservation");
+			const apply = uint$61(area.control_attributes) ? [
 				"both",
 				"even",
 				"odd"
@@ -47877,7 +48140,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 			}
 		}
 		function table(tableNode, rows = null, columns = null) {
-			if (!uint$60(tableNode)) throw new Error("InvalidTableIdentity");
+			if (!uint$61(tableNode)) throw new Error("InvalidTableIdentity");
 			const previous = byTable.get(tableNode);
 			if (previous) return previous;
 			const block = {
@@ -47894,8 +48157,8 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 					section: s,
 					tableNode
 				},
-				rows: uint$60(rows) ? rows : null,
-				columns: uint$60(columns) ? columns : null,
+				rows: uint$61(rows) ? rows : null,
+				columns: uint$61(columns) ? columns : null,
 				cells: []
 			};
 			const node = add({
@@ -47911,15 +48174,15 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 			return node;
 		}
 		function cell(tableNode, listNode, cellNode) {
-			if (!uint$60(listNode)) throw new Error("InvalidCellIdentity");
+			if (!uint$61(listNode)) throw new Error("InvalidCellIdentity");
 			const t = table(tableNode), id = cellKey(s, tableNode, listNode);
 			const previousOwner = cellOwners.get(listNode);
 			if (previousOwner !== void 0 && previousOwner !== tableNode) throw new Error("ConflictingCellSourceIdentity");
 			cellOwners.set(listNode, tableNode);
 			if (cells.has(id)) {
 				const existing = cells.get(id);
-				if (uint$60(cellNode)) {
-					if (uint$60(existing.block.source.cellNode) && existing.block.source.cellNode !== cellNode) throw new Error("ConflictingCellSourceIdentity");
+				if (uint$61(cellNode)) {
+					if (uint$61(existing.block.source.cellNode) && existing.block.source.cellNode !== cellNode) throw new Error("ConflictingCellSourceIdentity");
 					existing.block.source.cellNode = cellNode;
 				}
 				return existing;
@@ -47930,7 +48193,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 					section: s,
 					tableNode,
 					listNode,
-					...uint$60(cellNode) ? { cellNode } : {}
+					...uint$61(cellNode) ? { cellNode } : {}
 				},
 				row: null,
 				column: null,
@@ -47961,7 +48224,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 			else warn("CellInventoryUnavailable", "Native original-cell inventory unavailable", source);
 		}
 		for (const binding of bindings) {
-			if (!uint$60(binding.rows) || !binding.rows || !uint$60(binding.columns) || !binding.columns) throw new Error("InvalidTableGeometry");
+			if (!uint$61(binding.rows) || !binding.rows || !uint$61(binding.columns) || !binding.columns) throw new Error("InvalidTableGeometry");
 			const t = table(binding.tableNode, binding.rows, binding.columns), c = cell(binding.tableNode, binding.listNode);
 			if (t.block.rows === null) t.block.rows = binding.rows;
 			if (t.block.columns === null) t.block.columns = binding.columns;
@@ -47972,20 +48235,20 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 				"rowSpan",
 				"columnSpan"
 			];
-			if (!names.every((n) => uint$60(binding[n])) || !binding.rowSpan || !binding.columnSpan || binding.row + binding.rowSpan > binding.rows || binding.column + binding.columnSpan > binding.columns) throw new Error("InvalidCellGeometry");
+			if (!names.every((n) => uint$61(binding[n])) || !binding.rowSpan || !binding.columnSpan || binding.row + binding.rowSpan > binding.rows || binding.column + binding.columnSpan > binding.columns) throw new Error("InvalidCellGeometry");
 			if (c.block.geometryKnown && names.some((n) => c.block[n] !== binding[n])) throw new Error("ConflictingCellGeometry");
 			for (const n of names) c.block[n] = binding[n];
 			c.block.geometryKnown = true;
 		}
 		for (const p of observation.paragraphs) {
-			if (!uint$60(p.paragraph) || format === "hwpx" && !p.paragraph) throw new Error("InvalidNativeParagraphOrdinal");
+			if (!uint$61(p.paragraph) || format === "hwpx" && !p.paragraph) throw new Error("InvalidNativeParagraphOrdinal");
 			const id = paragraphId(s, p.paragraph), pSource = {
 				section: s,
 				paragraph: p.paragraph,
-				...uint$60(p.node) ? { node: p.node } : {}
+				...uint$61(p.node) ? { node: p.node } : {}
 			};
 			if (paragraphs.has(id)) throw new Error("DuplicateParagraphIdentity");
-			if (p.identityKnown && uint$60(p.node)) {
+			if (p.identityKnown && uint$61(p.node)) {
 				if (paragraphSources.has(p.node)) throw new Error("DuplicateParagraphSourceIdentity");
 				paragraphSources.add(p.node);
 			}
@@ -48063,10 +48326,10 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 			warn(code, code, c.block.source);
 		} else geometryCount.set(c.block.source.tableNode, (geometryCount.get(c.block.source.tableNode) ?? 0) + 1);
 		for (const [n, t] of byTable) if (t.block.cells.length > 0 && geometryCount.get(n) === t.block.cells.length && known(observation.tableInventory) && (format !== "hwp5" || known(observation.cellInventory))) model.coverage.tablesWithCompleteCellInventory++;
-		for (const def of defs.values()) if (uint$60(def.block.declaredParagraphs) && def.block.observedParagraphs !== def.block.declaredParagraphs) warn("PageAreaParagraphCountMismatch", "Native definition count differs from observed direct paragraph owners", def.block.source);
+		for (const def of defs.values()) if (uint$61(def.block.declaredParagraphs) && def.block.observedParagraphs !== def.block.declaredParagraphs) warn("PageAreaParagraphCountMismatch", "Native definition count differs from observed direct paragraph owners", def.block.source);
 		if (!observation.picturesKnown) model.coverage.imagesKnown = false;
 		for (const image of observation.pictures) {
-			if (!uint$60(image.pictureNode)) throw new Error("InvalidPictureIdentity");
+			if (!uint$61(image.pictureNode)) throw new Error("InvalidPictureIdentity");
 			const id = `s${s}:i${image.pictureNode}`;
 			const sourceInfo = {};
 			for (const name of [
@@ -48076,7 +48339,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 				"componentNode",
 				"ownerNode",
 				"resourceId"
-			]) if (uint$60(image.sourceInfo?.[name])) sourceInfo[name] = image.sourceInfo[name];
+			]) if (uint$61(image.sourceInfo?.[name])) sourceInfo[name] = image.sourceInfo[name];
 			add({
 				id,
 				kind: "image",
@@ -48099,11 +48362,11 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 					alt: null,
 					altState: "not-exposed",
 					sourceInfo,
-					...uint$60(image.width) ? { width: image.width } : {},
-					...uint$60(image.height) ? { height: image.height } : {},
+					...uint$61(image.width) ? { width: image.width } : {},
+					...uint$61(image.height) ? { height: image.height } : {},
 					sizeUnit: "hwp-unit"
 				},
-				parent: uint$60(image.parentParagraph) && byOrdinal.has(image.parentParagraph) ? paragraphId(s, image.parentParagraph) : null,
+				parent: uint$61(image.parentParagraph) && byOrdinal.has(image.parentParagraph) ? paragraphId(s, image.parentParagraph) : null,
 				reason: image.reason ?? "PictureOwnerUnverified",
 				native: image.pictureNode
 			});
@@ -48116,13 +48379,13 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 		}
 		const objectNodes = /* @__PURE__ */ new Map();
 		for (const object of observation.objects ?? []) {
-			const nodeKnown = object.siteKnown === true && uint$60(object.node);
+			const nodeKnown = object.siteKnown === true && uint$61(object.node);
 			const id = nodeKnown ? `s${s}:o${object.node}` : `s${s}:object:p${object.paragraph}:u${object.anchorUnit}`;
 			const objectSource = {
 				section: s,
-				...uint$60(object.node) ? { node: object.node } : {},
-				...uint$60(object.paragraph) ? { paragraph: object.paragraph } : {},
-				...uint$60(object.anchorUnit) ? { anchorUnit: object.anchorUnit } : {}
+				...uint$61(object.node) ? { node: object.node } : {},
+				...uint$61(object.paragraph) ? { paragraph: object.paragraph } : {},
+				...uint$61(object.anchorUnit) ? { anchorUnit: object.anchorUnit } : {}
 			};
 			const node = add({
 				id,
@@ -48137,10 +48400,10 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 						node: object.node
 					}) : null,
 					detailUnavailable: object.detailUnavailable === true,
-					...uint$60(object.nativeKind) ? { nativeKind: object.nativeKind } : {},
+					...uint$61(object.nativeKind) ? { nativeKind: object.nativeKind } : {},
 					...typeof object.subtype === "string" ? { subtype: object.subtype } : {}
 				},
-				parent: uint$60(object.parentParagraph) && byOrdinal.has(object.parentParagraph) ? paragraphId(s, object.parentParagraph) : null,
+				parent: uint$61(object.parentParagraph) && byOrdinal.has(object.parentParagraph) ? paragraphId(s, object.parentParagraph) : null,
 				reason: object.reason ?? "ObjectOwnerUnverified"
 			});
 			if (nodeKnown) objectNodes.set(object.node, node);
@@ -48148,7 +48411,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 			model.coverage.objectTotal++;
 		}
 		for (const object of observation.objects ?? []) {
-			if (!uint$60(object.node) || !uint$60(object.parentObjectNode)) continue;
+			if (!uint$61(object.node) || !uint$61(object.parentObjectNode)) continue;
 			const node = objectNodes.get(object.node), parent = objectNodes.get(object.parentObjectNode);
 			if (node && parent && node.parent === null) node.parent = parent.id;
 		}
@@ -55076,7 +55339,7 @@ function fileVersion(document, diagnostics) {
 	if (document.format !== "hwp5" || !has(document.sdk, "fileVersion")) return unsupported("FileVersionNotExposedBySdk");
 	try {
 		const value = invoke(document.sdk, "fileVersion");
-		if (!uint$60(value) || value === 0) throw Error("InvalidFileVersionObservation");
+		if (!uint$61(value) || value === 0) throw Error("InvalidFileVersionObservation");
 		return observed(value, "sdk.fileVersion");
 	} catch (error) {
 		return failedObservation(diagnostics, "fileVersion", error);
@@ -55099,7 +55362,7 @@ function textSourceProtection(document, diagnostics) {
 	let paragraphs = 0;
 	for (let section = 0; section < document.sectionCount; section++) try {
 		const count = invoke(sdk, "paragraphCount", [section]);
-		if (!uint$60(count) || count > 1e5) throw Error("InvalidParagraphCountObservation");
+		if (!uint$61(count) || count > 1e5) throw Error("InvalidParagraphCountObservation");
 		paragraphs += count;
 		if (paragraphs > LIMITS$1.maxBlocks) {
 			diagnostics.push(diagnostic("ObservationLimitExceeded", "textSourceProtection", { section }));

@@ -30,9 +30,13 @@ export function createTableCellPropertiesController(options: {
     Awaited<ReturnType<TableCellPropertiesPort['captureVerticalAlignment']>>,
     { state: 'available' }
   >['capture'];
+  type BlockCapture = Extract<
+    Awaited<ReturnType<TableCellPropertiesPort['readAlignmentBlock']>>,
+    { state: 'available' }
+  >['capture'];
   let view: TableCellPropertiesView | undefined,
     captured: TableCellCapture | undefined,
-    verticalCaptured: VerticalCapture | undefined;
+    verticalCaptured: VerticalCapture | BlockCapture | undefined;
   const sameDocument = (a: TableCellCapture, b: TableCellCapture) =>
     a.state.editorId === b.state.editorId &&
     a.state.documentId === b.state.documentId &&
@@ -78,14 +82,15 @@ export function createTableCellPropertiesController(options: {
       if (disposed || ticket !== epoch || !sameDocument(lease, options.port.capture())) return;
       const status = 'status' in result && typeof result.status === 'string' ? result.status : '';
       if (status.startsWith('committed')) {
-        const restored = await options.port.restoreSelection(lease, result);
+        const block = verticalLease && 'cellCount' in verticalLease;
+        const restored = block ? false : await options.port.restoreSelection(lease, result);
         if (disposed || ticket !== epoch || !sameDocument(lease, options.port.capture())) return;
         close(false);
         const completed = epoch;
         options.onStatus(
           status === 'committed-with-snapshot'
             ? (alignment ? '셀 세로 정렬을 적용했습니다.' : '셀 크기를 적용했습니다.') +
-                (restored ? '' : ' 커서 위치를 다시 선택해주세요.')
+                (restored || block ? '' : ' 커서 위치를 다시 선택해주세요.')
             : (alignment ? '정렬은' : '크기는') +
                 ' 반영됐지만 표시 확인이 필요합니다. 다시 적용하지 마세요.',
         );
@@ -145,6 +150,52 @@ export function createTableCellPropertiesController(options: {
         return;
       }
       const lease = options.port.capture();
+      const selection = options.port.captureAlignmentBlockSelection();
+      if (selection) {
+        captured = lease;
+        const ticket = ++epoch;
+        opening = true;
+        void options.port
+          .readAlignmentBlock(selection)
+          .then((read) => {
+            if (disposed || ticket !== epoch) return;
+            if (read.state !== 'available' || !selection.current()) {
+              close(false);
+              options.onStatus('선택한 셀의 세로 정렬을 변경할 수 없습니다.');
+              return;
+            }
+            const block = read.capture;
+            verticalCaptured = block;
+            let bound = false;
+            view = (options.createView ?? createTableCellPropertiesView)(options.root, lease, {
+              apply() {},
+              dismiss: () => close(true),
+              verticalAlignment: {
+                value: block.value,
+                cellCount: block.cellCount,
+                prepareDialog(element) {
+                  if (!selection.prepareDialog(element))
+                    throw Error('StaleOriginalCellAlignmentBlock');
+                },
+                bindDialog(element) {
+                  bound = options.port.bindVerticalAlignmentDialog(block, element);
+                  return bound;
+                },
+                apply(value) {
+                  if (bound) void submit({ verticalAlignment: value });
+                },
+              },
+            });
+            opening = false;
+          })
+          .catch(() => {
+            if (!disposed && ticket === epoch) {
+              close(false);
+              options.onStatus('선택한 셀의 속성을 다시 열어주세요.');
+            }
+          });
+        return;
+      }
       if (lease.reason || !lease.cell) {
         options.onStatus(lease.reason ? tableCellReason(lease.reason) : '표 셀을 선택하세요.');
         return;

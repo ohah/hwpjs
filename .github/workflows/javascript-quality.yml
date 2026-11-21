@@ -992,6 +992,8 @@ jobs:
             ./apps/demo/tests/table-cell-properties-tool.test.mjs \
             ./apps/demo/tests/table-cell-properties-appearance-handoff.test.mjs \
             ./apps/demo/tests/table-cell-properties-vertical-alignment.test.mjs \
+            ./packages/core/tests/commands/original-cell-alignment-block.test.mjs \
+            ./tests/original-cell-block/handshake.test.mjs \
             ./apps/demo/tests/object-properties-port.test.mjs \
             ./apps/demo/tests/object-properties-controller.test.mjs \
             ./apps/demo/tests/object-properties-view.test.mjs \

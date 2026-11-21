@@ -856,8 +856,18 @@ export function createCanvasEditor({
   const captureSourceTableCellBlock = (purpose = 'merge') => {
     const split = purpose === 'split';
     const appearance = purpose === 'appearance';
+    const alignment = purpose === 'vertical-alignment';
     const equalizeWidth = purpose === 'width';
     const equalizeHeight = purpose === 'height';
+    const capability = alignment
+      ? 'originalCellVerticalAlignmentBatchAvailable'
+      : split
+        ? 'sourceTableCellSplitAvailable'
+        : equalizeHeight
+          ? 'sourceTableCellHeightAvailable'
+          : equalizeWidth
+            ? 'sourceTableCellWidthAvailable'
+            : 'sourceTableCellMergeAvailable';
     const block = cellBlock;
     const context = currentCellBlockContext();
     const savedFocus = focus;
@@ -866,18 +876,10 @@ export function createCanvasEditor({
       !context ||
       context.created ||
       (!split && !appearance && (!block || block.paint.cells.size < 2)) ||
-      (split || appearance || equalizeWidth || equalizeHeight
+      (split || appearance || alignment || equalizeWidth || equalizeHeight
         ? !['hwpx', 'hwp5'].includes(content?.format)
         : content?.format !== 'hwpx') ||
-      (appearance
-        ? false
-        : split
-          ? content.sourceTableCellSplitAvailable !== true
-          : equalizeHeight
-            ? content.sourceTableCellHeightAvailable !== true
-            : equalizeWidth
-              ? content.sourceTableCellWidthAvailable !== true
-              : content.sourceTableCellMergeAvailable !== true) ||
+      (!appearance && content[capability] !== true) ||
       renderer.viewEditPolicyActive?.() === true
     )
       return null;

@@ -2258,3 +2258,12 @@ nice -n 10 mise exec -- zig build test-created-cell-vertical-alignment -Doptimiz
 
 이는 준비된 명령이며 현재 소스 패킷에서 실행하지 않았다. 실제 WASM optional4,
 SDK, Canvas 입력과 독립 raw oracle 증거는 별도 승인이 필요하다.
+
+## 원본 표 여러 셀 세로 정렬
+
+```sh
+zig build test-original-cell-alignment-block -Doptimize=ReleaseSafe -j1
+node --test packages/core/tests/commands/original-cell-alignment-block.test.mjs tests/original-cell-block/handshake.test.mjs
+```
+
+Native는 병합 셀과 여러 문단의 소유권, 보호·미지원 값의 거부, 기존 편집 보존과 실행 취소·다시 실행을 확인한다. Node는 현재 선택을 넘긴 뒤 SDK 응답과 이력이 일치하는 경우에만 적용하는 계약을 검사한다. 브라우저 조작과 실제 저장본 검사는 [여러 셀 세로 정렬 계약](original-cell-block-vertical-alignment.md)의 범위에서 별도로 수행한다.

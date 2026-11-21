@@ -1,7 +1,10 @@
 // Source-only real view/controller/port tests with synthetic Core and DOM.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SET_ORIGINAL_CELL_VERTICAL_ALIGNMENT_COMMAND } from '@hwpjs/core';
+import {
+  SET_ORIGINAL_CELL_VERTICAL_ALIGNMENT_COMMAND,
+  SET_ORIGINAL_CELL_ALIGNMENT_BLOCK_COMMAND,
+} from '@hwpjs/core';
 import { createTableCellPropertiesPort } from '../src/table-cell-properties-port.ts';
 import { createTableCellPropertiesController } from '../src/table-cell-properties-tool.ts';
 import { fixture } from './table-cell-properties-fixture.mjs';
@@ -67,6 +70,22 @@ function setup(options = {}) {
       },
     };
   };
+  if (options.block) {
+    f.state.selection = null;
+    f.api.captureOriginalCellAlignmentBlock = () => ({
+      ...f.api.captureOriginalCellPropertiesSelection(),
+      prepareDialog(element) {
+        events.push('prepare');
+        return !element.open && options.prepareBlock !== false;
+      },
+    });
+    f.editor.getOriginalCellAlignmentBlock = async (selected) => {
+      assert.equal(selected, source);
+      assert.equal(dom.root.querySelector('dialog:modal'), null);
+      events.push('batch-query');
+      return { state: 'available', target, value: 'mixed', cellCount: 3 };
+    };
+  }
   f.editor.dispatchCommand = async (command, payload) => {
     writes.push({ command, payload });
     if (options.delayedWrite)
@@ -359,3 +378,41 @@ for (const result of [
       }
     },
   );
+
+test('block properties dispatch exactly one batch and never retarget the active cell', async () => {
+  const h = setup({ block: true, delayedWrite: true });
+  try {
+    await tick();
+    assert.deepEqual(h.events, ['batch-query', 'prepare', 'bind']);
+    assert.equal(h.controller.presentation().enabled, true);
+    h.choose('BOTTOM');
+    h.apply();
+    h.apply();
+    assert.deepEqual(h.writes, [
+      {
+        command: SET_ORIGINAL_CELL_ALIGNMENT_BLOCK_COMMAND,
+        payload: { target: h.target, value: 'BOTTOM' },
+      },
+    ]);
+    assert.equal(h.f.mutationCalls().length, 0);
+    h.finishWrite();
+    await tick();
+    assert.equal(h.dom.root.querySelector('dialog:modal'), null);
+    assert.match(h.messages[0], /세로 정렬을 적용했습니다/);
+  } finally {
+    h.controller.dispose();
+  }
+});
+
+test('a block that goes stale before modal focus never opens or writes', async () => {
+  const h = setup({ block: true, prepareBlock: false });
+  try {
+    await tick();
+    assert.deepEqual(h.events, ['batch-query', 'prepare']);
+    assert.equal(h.dom.root.querySelector('dialog:modal'), null);
+    assert.equal(h.writes.length, 0);
+    assert.match(h.messages[0], /다시 열어주세요/);
+  } finally {
+    h.controller.dispose();
+  }
+});

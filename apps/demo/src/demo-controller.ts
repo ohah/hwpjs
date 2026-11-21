@@ -134,6 +134,9 @@ export interface DemoHost
   registerObjectActivation?(listener: (event: CanvasObjectActivation) => void): () => void;
   canRequestHistory?(kind: 'undo' | 'redo'): boolean;
   canEditCellProperties?(section: number, listNode: number): boolean;
+  captureOriginalCellAlignmentBlock?: NonNullable<
+    import('./table-cell-properties-port.ts').TableCellCore['captureOriginalCellAlignmentBlock']
+  >;
   captureOriginalCellPropertiesSelection?: NonNullable<
     import('./table-cell-properties-port.ts').TableCellCore['captureOriginalCellPropertiesSelection']
   >;
@@ -344,6 +347,7 @@ export async function mountDemo(
   });
   const cellCore = {
     ...paragraphShapeCore,
+    captureOriginalCellAlignmentBlock: () => host?.captureOriginalCellAlignmentBlock?.() ?? null,
     captureOriginalCellPropertiesSelection: () =>
       host?.captureOriginalCellPropertiesSelection?.() ?? null,
     canEditCellProperties: (section: number, listNode: number) =>
@@ -678,11 +682,16 @@ export async function mountDemo(
         reason: !host ? 'Canvas 표시 기능이 연결되지 않았습니다.' : '최소 배율입니다.',
       },
     };
-    // Cell blocks carry display cells only. Keep edit commands scoped to ordinary caret selections.
+    // Block properties require a current Surface-owned batch target.
     if (host?.hasCellBlock?.())
       for (const command of DEMO_COMMANDS) {
         if (
           command !== 'format-copy' &&
+          !(
+            command === 'table-cell-properties' &&
+            availability[command]?.surfaceSelection === true &&
+            availability[command]?.enabled === true
+          ) &&
           DEMO_COMMAND_REGISTRY[command].selection &&
           command in availability
         )

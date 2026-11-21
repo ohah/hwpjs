@@ -1,3 +1,4 @@
+import type { OriginalCellAlignmentBlockSelection } from './commands/original-cell-vertical-alignment-batch.ts';
 import type {
   OriginalCellSelectionTarget,
   OriginalCellSelector,
@@ -36,6 +37,10 @@ export interface InputSurfaceLease {
     message: RuntimeMessage,
     options: SurfaceRequestOptions,
   ): Promise<CommandResult | RuntimeReply>;
+  captureOriginalCellAlignmentBlock?(
+    witness: SourceTableCellBlockWitness,
+    current: () => boolean,
+  ): OriginalCellAlignmentBlockSelection | null;
   captureOriginalCellVerticalAlignment?(
     selector: OriginalCellSelector,
     current: () => boolean,

@@ -606,3 +606,4 @@
 - [신규 그림 source crop과 display 기하](hwp5-image-source-crop.md)
 
 - [생성 단일 셀 세로 정렬](created-cell-vertical-alignment.md) — format-owned 기본값과 nullable override, 단일 History 및 optional ABI.
+- [원본 표 여러 셀 세로 정렬](original-cell-block-vertical-alignment.md) — 셀 범위와 물리 소유권, 한 번의 이력·저장 거래.

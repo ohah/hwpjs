@@ -3158,6 +3158,72 @@ export function createCanvasSurface({
         },
       });
     },
+    captureOriginalCellAlignmentBlock() {
+      const state = editor.getEditorState();
+      const modal = formattingModalOwner();
+      const canonical = () =>
+        !closed &&
+        !nonTextHistoryPending &&
+        lease?.isActive() === true &&
+        !bridge?.busy() &&
+        editor.getEditorState() === state &&
+        state.status === 'ready' &&
+        state.stateVersion === observedStateVersion &&
+        displayed ===
+          `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}` &&
+        viewAllowsCurrentSelection() &&
+        direct.settled() &&
+        renderer.historyModelMatches(state);
+      if (!canonical() || !modal.current()) return null;
+      const captured = direct.captureSourceTableCellBlock('vertical-alignment');
+      if (!captured?.current() || !canonical()) return null;
+      const raw: Parameters<
+        NonNullable<InputSurfaceLease['captureOriginalCellAlignmentBlock']>
+      >[0] = captured.witness;
+      const witness = Object.freeze({
+        ...raw,
+        cells: Object.freeze(
+          raw.cells.map((cell) =>
+            Object.freeze({ ...cell, paragraphs: Object.freeze([...cell.paragraphs]) }),
+          ),
+        ),
+      });
+      let invalid = false;
+      let preparedDialog: HTMLDialogElement | undefined;
+      const current = () => {
+        if (invalid) return false;
+        if (canonical() && modal.current() && captured.current() && canonical()) return true;
+        invalid = true;
+        return false;
+      };
+      const target = lease?.captureOriginalCellAlignmentBlock?.(witness, current);
+      if (!target || !current()) return null;
+      return Object.freeze({
+        state,
+        target,
+        current,
+        prepareDialog(element: HTMLDialogElement) {
+          if (
+            preparedDialog ||
+            !current() ||
+            element.open ||
+            !element.isConnected ||
+            element.ownerDocument !== doc
+          )
+            return false;
+          preparedDialog = element;
+          direct.registerCellBlockMenu(element, () => {
+            if (invalid || !canonical() || !captured.current() || !element.open) return false;
+            const active = doc.querySelectorAll('dialog:modal');
+            return active.length === 1 && active[0] === element;
+          });
+          return true;
+        },
+        bindDialog(element: HTMLDialogElement) {
+          return element === preparedDialog && modal.bind(element, current);
+        },
+      });
+    },
     captureSourceTableCellMerge() {
       const state = editor.getEditorState();
       const current = () =>
