@@ -60,18 +60,25 @@ export function pictureResizeHandles(basis) {
   if (!basis) return [];
   const { origin, x, y } = basis;
   const handles = [
-    { horizontal: true, vertical: true, point: basis.corner },
-    {
-      horizontal: true,
-      vertical: false,
-      point: [origin[0] + x[0] + y[0] / 2, origin[1] + x[1] + y[1] / 2],
-    },
-    {
-      horizontal: false,
-      vertical: true,
-      point: [origin[0] + x[0] / 2 + y[0], origin[1] + x[1] / 2 + y[1]],
-    },
-  ];
+    [1, 1],
+    [1, 0],
+    [0, 1],
+    [-1, -1],
+    [1, -1],
+    [-1, 1],
+    [0, -1],
+    [-1, 0],
+  ].map(([xSide, ySide]) => {
+    const u = (xSide + 1) / 2,
+      v = (ySide + 1) / 2;
+    return {
+      horizontal: xSide !== 0,
+      vertical: ySide !== 0,
+      xSide,
+      ySide,
+      point: [origin[0] + x[0] * u + y[0] * v, origin[1] + x[1] * u + y[1] * v],
+    };
+  });
   return handles.filter(
     (handle) => basis.pageClip === undefined || pageContainsPoint(basis.pageClip, ...handle.point),
   );
@@ -80,14 +87,16 @@ export function pictureResizeHandles(basis) {
 export function resizedPicture(
   basis,
   point,
-  { horizontal = true, vertical = true, preserveAspect = false } = {},
+  { horizontal = true, vertical = true, xSide = 1, ySide = 1, preserveAspect = false } = {},
 ) {
   if (!basis || !Array.isArray(point) || point.length !== 2 || !point.every(Number.isFinite))
     return null;
   const dx = point[0] - basis.origin[0],
     dy = point[1] - basis.origin[1];
-  const u = (dx * basis.y[1] - dy * basis.y[0]) / basis.determinant;
-  const v = (dy * basis.x[0] - dx * basis.x[1]) / basis.determinant;
+  const horizontalPosition = (dx * basis.y[1] - dy * basis.y[0]) / basis.determinant,
+    verticalPosition = (dy * basis.x[0] - dx * basis.x[1]) / basis.determinant;
+  const u = xSide < 0 ? 1 - horizontalPosition : horizontalPosition,
+    v = ySide < 0 ? 1 - verticalPosition : verticalPosition;
   if (preserveAspect) {
     if (!horizontal && !vertical) return null;
     const factor =

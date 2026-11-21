@@ -144,11 +144,11 @@ test('actual renderer requests resize overlay only after completed current stamp
     h.calls.every((c) => c.current && c.acknowledged),
     'ResizeQueryBeforeCompletedReceipt',
   );
-  assert.equal(h.blue().filter((f) => f.r[2] === 8).length, 3);
+  assert.equal(h.blue().filter((f) => f.r[2] === 8).length, 8);
   h.fills.length = 0;
   h.renderer.select({ active: false });
   h.paint();
-  assert.equal(h.blue().filter((f) => f.r[2] === 8).length, 3);
+  assert.equal(h.blue().filter((f) => f.r[2] === 8).length, 8);
 });
 test('invalid current scope suppresses both old guide and handles without admitting stale coordinates', async (t) => {
   const h = await fixture(t);

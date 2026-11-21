@@ -426,3 +426,39 @@ test('size protection acquired during a live drag retires guide and cannot commi
   assert.deepEqual(f.requests, []);
   f.controls.close();
 });
+
+test('each visible corner and edge midpoint resizes its intended axes on release', () => {
+  for (const format of ['hwp5', 'hwpx']) {
+    for (const xSide of [-1, 0, 1]) {
+      for (const ySide of [-1, 0, 1]) {
+        if (!xSide && !ySide) continue;
+        const f = fixture(format);
+        try {
+          const clientX = (xSide + 1) * 48,
+            clientY = (ySide + 1) * 24;
+          f.canvas.send('pointermove', { clientX, clientY });
+          assert.equal(
+            f.canvas.style.cursor,
+            !xSide
+              ? 'ns-resize'
+              : !ySide
+                ? 'ew-resize'
+                : xSide === ySide
+                  ? 'nwse-resize'
+                  : 'nesw-resize',
+          );
+          assert.equal(f.canvas.send('pointerdown', { clientX, clientY }).defaultPrevented, true);
+          const end = { clientX: clientX + xSide * 48, clientY: clientY + ySide * 24 };
+          f.canvas.send('pointermove', end);
+          assert.equal(f.requests.length, 0);
+          f.canvas.send('pointerup', end);
+          assert.equal(f.requests.length, 1);
+          assert.equal(f.requests[0].width, xSide ? 10800 : 7200);
+          assert.equal(f.requests[0].height, ySide ? 5400 : 3600);
+        } finally {
+          f.controls.close();
+        }
+      }
+    }
+  }
+});

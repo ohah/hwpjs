@@ -49,12 +49,19 @@ export function createPictureResizeControls({
     );
   const visible = (value, position) =>
     value.pageClip === undefined || pageContainsPoint(value.pageClip, ...position);
-  const hit = (value, position) =>
-    value && visible(value, position)
-      ? pictureResizeHandles(value).find(
-          (handle) => Math.hypot(position[0] - handle.point[0], position[1] - handle.point[1]) <= 7,
-        )
-      : null;
+  const hit = (value, position) => {
+    if (!value || !visible(value, position)) return null;
+    let closest = null,
+      distance = Infinity;
+    for (const handle of pictureResizeHandles(value)) {
+      const next = Math.hypot(position[0] - handle.point[0], position[1] - handle.point[1]);
+      if (next <= 7 && next < distance) {
+        closest = handle;
+        distance = next;
+      }
+    }
+    return closest;
+  };
   renderer.pictureResizeSelection?.(basis);
   const reset = () => {
     const previous = drag;
@@ -104,8 +111,8 @@ export function createPictureResizeControls({
         const vector =
           handle.horizontal && handle.vertical
             ? [
-                value.x[0] / xLength + value.y[0] / yLength,
-                value.x[1] / xLength + value.y[1] / yLength,
+                (handle.xSide * value.x[0]) / xLength + (handle.ySide * value.y[0]) / yLength,
+                (handle.xSide * value.x[1]) / xLength + (handle.ySide * value.y[1]) / yLength,
               ]
             : handle.horizontal
               ? value.x
