@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import {
   ABI_VERSION,
+  HWP5_EQUATION_SCRIPT_EDIT_ABI,
+  HWP5_EQUATION_SCRIPT_EDIT_FUNCTIONS,
   ORIGINAL_CELL_INSETS_ABI,
   ORIGINAL_CELL_VERTICAL_ALIGNMENT_ABI,
   ORIGINAL_CELL_VERTICAL_ALIGNMENT_BATCH_ABI,
@@ -75,6 +77,17 @@ const generated =
   '};\n' +
   'pub const hwp5_chart_literal_edit_signatures = [_]OptionalFunctionSignature{\n' +
   Object.entries(HWP5_CHART_LITERAL_EDIT_ABI)
+    .map(
+      ([name, signature]) =>
+        `    .{ .name = ${JSON.stringify(name)}, .params = ${signatureTypes(signature.params)}, .results = ${signatureTypes(signature.results)} },\n`,
+    )
+    .join('') +
+  '};\n' +
+  'pub const hwp5_equation_script_edit_exports = [_][]const u8{\n' +
+  HWP5_EQUATION_SCRIPT_EDIT_FUNCTIONS.map((name) => `    ${JSON.stringify(name)},\n`).join('') +
+  '};\n' +
+  'pub const hwp5_equation_script_edit_signatures = [_]OptionalFunctionSignature{\n' +
+  Object.entries(HWP5_EQUATION_SCRIPT_EDIT_ABI)
     .map(
       ([name, signature]) =>
         `    .{ .name = ${JSON.stringify(name)}, .params = ${signatureTypes(signature.params)}, .results = ${signatureTypes(signature.results)} },\n`,

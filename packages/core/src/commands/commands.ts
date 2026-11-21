@@ -141,6 +141,11 @@ export const REPLACE_ALL_COMMAND = createCommand<ReplaceAllPlanRequest>('replace
 import type { InsertDocumentPayload } from './document-insert.ts';
 export const INSERT_DOCUMENT_COMMAND = createCommand<InsertDocumentPayload>('insert-document');
 
+import type { EditHwp5EquationScriptPayload } from './hwp5-equation-script-dto.ts';
+export const EDIT_HWP5_EQUATION_SCRIPT_COMMAND = createCommand<EditHwp5EquationScriptPayload>(
+  'hwp5-equation-script-edit',
+);
+
 import type { EditPageRestartPayload } from './page-restart.ts';
 export const EDIT_PAGE_RESTART_COMMAND = createCommand<EditPageRestartPayload>('edit-page-restart');
 

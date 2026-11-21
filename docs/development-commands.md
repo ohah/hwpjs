@@ -2277,3 +2277,17 @@ node --test packages/core/tests/commands/original-cell-alignment-block.test.mjs 
 ```
 
 Native는 병합 셀과 여러 문단의 소유권, 보호·미지원 값의 거부, 기존 편집 보존과 실행 취소·다시 실행을 확인한다. Node는 현재 선택을 넘긴 뒤 SDK 응답과 이력이 일치하는 경우에만 적용하는 계약을 검사한다. 브라우저 조작과 실제 저장본 검사는 [여러 셀 세로 정렬 계약](original-cell-block-vertical-alignment.md)의 범위에서 별도로 수행한다.
+
+
+## HWP5 수식 스크립트 Native와 optional lease
+
+[편집 계약](hwp5-equation-script-edit.md)과 [ABI 계약](hwp5-equation-script-edit-abi.md)을 따른다. 슬롯 승인 후 실제 컴파일러/입력 핀과 전용 캐시를 사용하며 아래 등록은 실행 통과를 뜻하지 않는다.
+
+```sh
+nice -n 10 zig build test-hwp5-equation-script-edit -Doptimize=ReleaseSafe -j1 --summary all
+nice -n 10 zig build test-hwp5-equation-script-abi -Doptimize=ReleaseSafe -j1 --summary all
+node --test --test-concurrency=1 tests/own-equation-script/lease-api.test.mjs
+node tools/generate-abi.mjs --check
+```
+
+Native 본체6개, issuer/wire7개와 각각 registrar를 구분한다. 실제 WASM/일반 패키지 선언·SDK/Worker/GUI는 별도 승인과 검증이 필요하다.

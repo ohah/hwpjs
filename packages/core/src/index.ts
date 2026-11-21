@@ -247,6 +247,21 @@ export type {
   EditParagraphBulletDefinitionPayload,
 } from './commands/paragraph-bullet-definition.ts';
 
+export { EDIT_HWP5_EQUATION_SCRIPT_COMMAND } from './commands/commands.ts';
+export {
+  hwp5EquationScriptAvailability,
+  hwp5EquationScriptSources,
+  checkedHwp5EquationScriptDraft,
+} from './commands/hwp5-equation-script.ts';
+export type {
+  Hwp5EquationScriptLayout,
+  Hwp5EquationScriptSelector,
+  Hwp5EquationScriptTarget,
+  Hwp5EquationScriptSource,
+  Hwp5EquationScriptRead,
+  EditHwp5EquationScriptPayload,
+} from './commands/hwp5-equation-script-dto.ts';
+
 export { EDIT_PAGE_RESTART_COMMAND } from './commands/commands.ts';
 export type {
   PageRestartTarget,

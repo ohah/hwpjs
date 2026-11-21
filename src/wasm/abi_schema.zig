@@ -69,6 +69,16 @@ pub const hwp5_chart_literal_edit_signatures = [_]OptionalFunctionSignature{
     .{ .name = "hwp5_edit_chart_literal_edit_preview", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
     .{ .name = "hwp5_edit_chart_literal_edit_commit", .params = &.{ "i32", "i32", "i32", "i32" }, .results = &.{"i32"} },
 };
+pub const hwp5_equation_script_edit_exports = [_][]const u8{
+    "hwp5_edit_equation_script_edit_version",
+    "hwp5_edit_equation_script_edit_capture",
+    "hwp5_edit_equation_script_edit_commit",
+};
+pub const hwp5_equation_script_edit_signatures = [_]OptionalFunctionSignature{
+    .{ .name = "hwp5_edit_equation_script_edit_version", .params = &.{}, .results = &.{"i32"} },
+    .{ .name = "hwp5_edit_equation_script_edit_capture", .params = &.{ "i32", "i32", "i32" }, .results = &.{"i32"} },
+    .{ .name = "hwp5_edit_equation_script_edit_commit", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+};
 pub const hwp5_chart_read_exports = [_][]const u8{
     "hwp5_edit_chart_display_profile_version",
     "hwp5_edit_chart_candidates",

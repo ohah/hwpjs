@@ -1,3 +1,7 @@
+import {
+  createHwp5EquationScriptEditApi,
+  clearHwp5EquationScriptCaptures,
+} from './hwp5-equation-script-edit.mjs';
 import { createPageRestartApi } from './page-restart-api.mjs';
 import { createPictureAnchoredResizeApi } from './picture-anchored-resize-api.mjs';
 import { createOriginalCellVerticalAlignmentBatchApi } from './original-cell-vertical-alignment-batch.mjs';
@@ -272,6 +276,7 @@ export async function createExperimentalHwp5Editor(
     }),
     ...createCreatedCellPropertiesApi({ wasm, memory, check: check, prefix: 'hwp5_edit' }),
     ...createHwp5EquationApi({ wasm, check, output, u32 }),
+    ...createHwp5EquationScriptEditApi({ wasm, memory, check, output }),
     measureEquation(source, settings) {
       check();
       return createEquationEngine(wasm).measure(source, settings);
@@ -1609,6 +1614,7 @@ export async function createExperimentalHwp5Editor(
       return output(() => wasm.hwp5_edit_save(allowStaleLayout ? 1 : 0));
     },
     close() {
+      clearHwp5EquationScriptCaptures(wasm);
       if (!closed) wasm.hwp5_edit_close();
       closed = true;
     },

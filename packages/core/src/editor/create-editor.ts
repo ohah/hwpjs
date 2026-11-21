@@ -188,6 +188,20 @@ import {
   type InsertEquationPayload,
   type CreateChartPayload,
 } from '../commands/inline-object-insert.ts';
+import { EDIT_HWP5_EQUATION_SCRIPT_COMMAND } from '../commands/commands.ts';
+import {
+  captureHwp5EquationScriptPayload,
+  hwp5EquationScriptSelector,
+  assertHwp5EquationScriptSelection,
+  checkedHwp5EquationScriptCapture,
+  hwp5EquationScriptAvailability,
+} from '../commands/hwp5-equation-script.ts';
+import type {
+  Hwp5EquationScriptTarget,
+  Hwp5EquationScriptRead,
+  Hwp5EquationScriptSelector,
+  EditHwp5EquationScriptPayload,
+} from '../commands/hwp5-equation-script-dto.ts';
 import { EDIT_PAGE_RESTART_COMMAND } from '../commands/commands.ts';
 import {
   capturePageRestartPayload,
@@ -1615,6 +1629,12 @@ export function createEditor(options: CreateEditorOptions) {
     ObjectGeometryTarget,
     { state: EditorState; native: ReturnType<typeof checkedObjectGeometryObservation> }
   >();
+  let activeHwp5EquationTarget: Hwp5EquationScriptTarget | undefined;
+  let hwp5EquationCaptureRequest = 0;
+  const hwp5EquationTargets = new WeakMap<
+    Hwp5EquationScriptTarget,
+    { state: EditorState; selector: Hwp5EquationScriptSelector; leaseKey: string }
+  >();
   const pageRestartTargets = new WeakMap<
     PageRestartTarget,
     { state: EditorState; leaseKey: string }
@@ -1640,6 +1660,7 @@ export function createEditor(options: CreateEditorOptions) {
     const merge = command.id === MERGE_SOURCE_TABLE_CELLS_COMMAND.id;
     const width = command.id === EQUALIZE_SOURCE_TABLE_CELL_WIDTH_COMMAND.id;
     const height = command.id === EQUALIZE_SOURCE_TABLE_CELL_HEIGHT_COMMAND.id;
+    const hwp5EquationScript = command.id === EDIT_HWP5_EQUATION_SCRIPT_COMMAND.id;
     const pageRestart = command.id === EDIT_PAGE_RESTART_COMMAND.id;
     const pageSettings = command.id === EDIT_PAGE_SETTINGS_COMMAND.id;
     const anchoredPicture = command.id === RESIZE_PICTURE_ANCHORED_COMMAND.id;
@@ -1658,6 +1679,7 @@ export function createEditor(options: CreateEditorOptions) {
       height ||
       pageSettings ||
       pageRestart ||
+      hwp5EquationScript ||
       anchoredPicture ||
       objectGeometry ||
       pictureReplacement ||
@@ -1710,22 +1732,24 @@ export function createEditor(options: CreateEditorOptions) {
                               ? captureObjectGeometryPayload(payload)
                               : inlineKind
                                 ? captureInlineObjectInsertPayload(payload, inlineKind)
-                                : pageRestart
-                                  ? capturePageRestartPayload(payload)
-                                  : pageSettings
-                                    ? capturePageSettingsPayload(payload)
-                                    : split
-                                      ? captureSourceTableCellSplitPayload(payload)
-                                      : merge || width || height
-                                        ? payload
-                                        : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
-                                          ? captureSourceTableGridRequest(
-                                              payload,
-                                              (snapshot.content as any)?.format,
-                                            )
-                                          : command.id === INSERT_DOCUMENT_COMMAND.id
-                                            ? captureDocumentInsertPayload(payload)
-                                            : copyOwned(payload);
+                                : hwp5EquationScript
+                                  ? captureHwp5EquationScriptPayload(payload)
+                                  : pageRestart
+                                    ? capturePageRestartPayload(payload)
+                                    : pageSettings
+                                      ? capturePageSettingsPayload(payload)
+                                      : split
+                                        ? captureSourceTableCellSplitPayload(payload)
+                                        : merge || width || height
+                                          ? payload
+                                          : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
+                                            ? captureSourceTableGridRequest(
+                                                payload,
+                                                (snapshot.content as any)?.format,
+                                              )
+                                            : command.id === INSERT_DOCUMENT_COMMAND.id
+                                              ? captureDocumentInsertPayload(payload)
+                                              : copyOwned(payload);
     return {
       command: command as EditorCommand<unknown>,
       payload: owned,
@@ -2239,6 +2263,28 @@ export function createEditor(options: CreateEditorOptions) {
           guard,
         );
       }
+      if (pending.command.id === EDIT_HWP5_EQUATION_SCRIPT_COMMAND.id) {
+        const payload = pending.payload as EditHwp5EquationScriptPayload;
+        const record = hwp5EquationTargets.get(payload.target);
+        if (!record || activeHwp5EquationTarget !== payload.target)
+          throw Error('ForeignHwp5EquationScriptTarget');
+        const guard = () => {
+          requireReady(record.state.token, true);
+          if (state !== record.state) throw Error('StaleHwp5EquationScriptTarget');
+          assertHwp5EquationScriptSelection(state, record.selector);
+        };
+        guard();
+        if (!hasRuntimeAdmission(active, 'hwp5-equation-script-edit'))
+          throw Error('UnsupportedAtomicRuntime');
+        hwp5EquationTargets.delete(payload.target);
+        activeHwp5EquationTarget = undefined;
+        return await mutate(
+          { kind: 'hwp5-equation-script-edit', leaseKey: record.leaseKey, script: payload.script },
+          record.state.token,
+          true,
+          guard,
+        );
+      }
       if (pending.command.id === EDIT_PAGE_RESTART_COMMAND.id) {
         const payload = pending.payload as EditPageRestartPayload;
         const capture = pageRestartTargets.get(payload.target);
@@ -2738,6 +2784,14 @@ export function createEditor(options: CreateEditorOptions) {
       if (state !== owned.state)
         return Promise.resolve(reject(context(pending.token), 'StaleObjectGeometryTarget'));
     }
+    if (command.id === EDIT_HWP5_EQUATION_SCRIPT_COMMAND.id) {
+      const target = (pending.payload as EditHwp5EquationScriptPayload).target;
+      const record = hwp5EquationTargets.get(target);
+      if (!record || activeHwp5EquationTarget !== target)
+        return Promise.resolve(reject(context(pending.token), 'ForeignHwp5EquationScriptTarget'));
+      if (state !== record.state)
+        return Promise.resolve(reject(context(pending.token), 'StaleHwp5EquationScriptTarget'));
+    }
     if (command.id === EDIT_PAGE_RESTART_COMMAND.id) {
       const owned = pageRestartTargets.get((pending.payload as EditPageRestartPayload).target);
       if (!owned)
@@ -3193,6 +3247,9 @@ export function createEditor(options: CreateEditorOptions) {
         'picture-replace',
         'object-geometry-query',
         'object-geometry-set',
+        'hwp5-equation-script-capture',
+        'hwp5-equation-script-edit',
+        'hwp5-equation-script-close',
         'page-restarts-query',
         'edit-page-restart',
         'page-settings-capabilities',
@@ -4080,6 +4137,91 @@ export function createEditor(options: CreateEditorOptions) {
       return Object.freeze({ state: 'available', target, observation: native });
     });
   }
+  function getHwp5EquationScript(
+    selector: Hwp5EquationScriptSelector,
+    options: { token?: StateToken } = {},
+  ): Promise<Hwp5EquationScriptRead> {
+    assertPublicMutation();
+    const request = ++hwp5EquationCaptureRequest;
+    activeHwp5EquationTarget = undefined;
+    const selected = hwp5EquationScriptSelector(selector),
+      settings = copyOwned(options);
+    if (
+      !settings ||
+      typeof settings !== 'object' ||
+      Array.isArray(settings) ||
+      Object.keys(settings).some((k) => k !== 'token') ||
+      settings.token === null
+    )
+      throw Error('InvalidHwp5EquationScriptOptions');
+    const snapshot = state,
+      token = copyOwned(settings.token ?? snapshot.token);
+    return enqueue(async () => {
+      requireReady(token, true);
+      if (state !== snapshot || request !== hwp5EquationCaptureRequest)
+        throw Error('StaleHwp5EquationScriptTarget');
+      if (!hwp5EquationScriptAvailability(state).enabled)
+        return { state: 'unavailable' as const, reason: 'Hwp5EquationScriptEditUnavailable' };
+      const guard = () => {
+        requireReady(token, true);
+        if (state !== snapshot || request !== hwp5EquationCaptureRequest)
+          throw Error('StaleHwp5EquationScriptTarget');
+        assertHwp5EquationScriptSelection(state, selected);
+      };
+      guard();
+      if (!hasRuntimeAdmission(active, 'hwp5-equation-script-capture'))
+        throw Error('UnsupportedAtomicRuntime');
+      const reply = await readRequest(
+        { kind: 'hwp5-equation-script-capture', ...selected },
+        token,
+        guard,
+        true,
+      );
+      guard();
+      const capture = checkedHwp5EquationScriptCapture(
+        reply.equationScriptCapture,
+        selected,
+        snapshot.nativeHistoryRevision!,
+      );
+      const target = Object.freeze({}) as Hwp5EquationScriptTarget;
+      hwp5EquationTargets.set(target, {
+        state: snapshot,
+        selector: selected,
+        leaseKey: capture.leaseKey,
+      });
+      activeHwp5EquationTarget = target;
+      return Object.freeze({
+        state: 'available' as const,
+        target,
+        selector: selected,
+        script: capture.script,
+        historyRevision: snapshot.nativeHistoryRevision!,
+      });
+    });
+  }
+  function releaseHwp5EquationScript(target: Hwp5EquationScriptTarget): Promise<boolean> {
+    assertPublicMutation();
+    const record = hwp5EquationTargets.get(target);
+    hwp5EquationTargets.delete(target);
+    if (activeHwp5EquationTarget === target) activeHwp5EquationTarget = undefined;
+    if (!record) return Promise.resolve(false);
+    return enqueue(async () => {
+      if (
+        !active ||
+        state.status !== 'ready' ||
+        state.editorId !== record.state.editorId ||
+        state.documentId !== record.state.documentId ||
+        state.generation !== record.state.generation ||
+        !hasRuntimeAdmission(active, 'hwp5-equation-script-close')
+      )
+        return false;
+      const reply = await readRequest(
+        { kind: 'hwp5-equation-script-close', leaseKey: record.leaseKey },
+        state.token,
+      );
+      return reply.released === true;
+    });
+  }
   function getPageRestarts(
     options: { token?: StateToken; section?: number } = {},
   ): Promise<PageRestartRead> {
@@ -4833,6 +4975,9 @@ export function createEditor(options: CreateEditorOptions) {
       );
     if (
       [
+        'hwp5-equation-script-capture',
+        'hwp5-equation-script-edit',
+        'hwp5-equation-script-close',
         'page-restarts-query',
         'edit-page-restart',
         'original-cell-insets-query',
@@ -5307,6 +5452,8 @@ export function createEditor(options: CreateEditorOptions) {
     getPictureReplacement: geometryGuard(getPictureReplacement),
     getAnchoredPictureResize: geometryGuard(getAnchoredPictureResize),
     getObjectGeometry: geometryGuard(getObjectGeometry),
+    getHwp5EquationScript: geometryGuard(getHwp5EquationScript),
+    releaseHwp5EquationScript: geometryGuard(releaseHwp5EquationScript),
     getPageRestarts: geometryGuard(getPageRestarts),
     getPageSettings: geometryGuard(getPageSettings),
     getSourceTableCellSplitCapabilities: geometryGuard(getSourceTableCellSplitCapabilities),

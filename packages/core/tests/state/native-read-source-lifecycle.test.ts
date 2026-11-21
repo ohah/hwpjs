@@ -79,6 +79,13 @@ test('read and save preserve current scope; transition revokes before awaiting i
   assert(origin.authority(), 'reading object geometry must preserve document read authority');
   assert.equal(surfaceOperation('page-restarts-query'), undefined);
   assert.equal(surfaceOperation('edit-page-restart'), undefined);
+  assert.equal(surfaceOperation('hwp5-equation-script-capture'), undefined);
+  assert.equal(surfaceOperation('hwp5-equation-script-close'), undefined);
+  assert.equal(surfaceOperation('hwp5-equation-script-edit'), undefined);
+  life.begin('hwp5-equation-script-capture');
+  assert(origin.authority());
+  life.begin('hwp5-equation-script-close');
+  assert(origin.authority());
   life.begin('page-restarts-query');
   assert(origin.authority(), 'typed restart query must preserve current read authority');
   life.begin('hwp5-chart-data-capture');
@@ -119,7 +126,14 @@ test('wrong request context and consumed reply cannot replay origin', () => {
   assert.equal(life.consume(r, context), undefined);
 });
 test('successful apply, undo, redo and refresh need exact Core reserved publication revision', () => {
-  for (const kind of ['hwp5-chart-data-apply', 'edit-page-restart', 'undo', 'redo', 'refresh']) {
+  for (const kind of [
+    'hwp5-chart-data-apply',
+    'edit-page-restart',
+    'hwp5-equation-script-edit',
+    'undo',
+    'redo',
+    'refresh',
+  ]) {
     const { life } = setup();
     const r = reply(kind);
     life.publish(life.begin(kind), r, context, 2, true);

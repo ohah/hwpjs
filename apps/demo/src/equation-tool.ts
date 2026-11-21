@@ -1,3 +1,4 @@
+import { createHwp5EquationScriptTool } from './hwp5-equation-script-tool.ts';
 import type { HeadlessEditor } from '@hwpjs/core';
 import { createEquationPort, equationAvailability } from './equation-port.ts';
 import { createEquationView } from './equation-view.ts';
@@ -10,6 +11,10 @@ export function createEquationTool(options: {
   onClose(): void;
   createView?: typeof createEquationView;
 }) {
+  const hwp5 = createHwp5EquationScriptTool(options);
+  const isHwp5 = () =>
+    (options.editor.getEditorState().content as { format?: unknown } | undefined)?.format ===
+    'hwp5';
   let disposed = false;
   let active:
     | { port: ReturnType<typeof createEquationPort>; view: ReturnType<typeof createEquationView> }
@@ -26,6 +31,10 @@ export function createEquationTool(options: {
   }
   return {
     presentation() {
+      if (isHwp5()) {
+        const value = hwp5.presentation();
+        return { ...value, enabled: !disposed && !modalOpen() && value.enabled };
+      }
       const value = equationAvailability(options.editor.getEditorState());
       return {
         enabled: !disposed && !active && !modalOpen() && value.enabled,
@@ -35,6 +44,10 @@ export function createEquationTool(options: {
       };
     },
     open() {
+      if (isHwp5()) {
+        if (this.presentation().enabled) hwp5.open();
+        return;
+      }
       if (!this.presentation().enabled) return;
       const port = createEquationPort(options.editor, {
         receive: (message) => active?.view.message(message),
@@ -65,6 +78,7 @@ export function createEquationTool(options: {
     dispose() {
       if (!disposed) {
         disposed = true;
+        hwp5.dispose();
         close(false);
       }
     },

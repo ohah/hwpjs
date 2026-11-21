@@ -16,6 +16,7 @@ const created_table_limits: @import("created_table_records.zig").Limits = .{ .ma
 
 pub const ParagraphInfo = struct { source_node: ?u32, parent_node: ?u32, style_id: u8 };
 pub const Command = union(enum) {
+    edit_equation_script: @import("equation_script_edit.zig").Request,
     edit_chart_literals: @import("../chart/literal_edit_request.zig").Request,
     insert_image: @import("image_create_request.zig").Request,
     replace_picture: @import("picture_replacement_current.zig").Request,
@@ -1039,6 +1040,32 @@ pub const Session = opaque {
         const state = self.stateConst();
         if (section >= state.document.sections.len) return error.InvalidSection;
         return @import("equation_sources.zig").sites(a, state.decoded[section], state.source.header.version(), state.document.sections[section].paragraphs, .{});
+    }
+    pub fn observeEquationScriptEdit(self: *const Session, a: std.mem.Allocator, selector: @import("equation_script_edit.zig").Selector) !@import("equation_script_edit.zig").Witness {
+        try self.materializeLiveText();
+        if (self.historyTransactionActive()) return error.MutationInProgress;
+        const state = self.stateConst();
+        if (state.formatting_batch != null) return error.MutationInProgress;
+        if (state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview)) return error.UnsupportedEquationSaveFeatures;
+        return @import("equation_script_edit.zig").observe(a, state.decoded, &state.document, state.source.header.version(), selector, try self.historyTicket());
+    }
+    pub const EquationScriptEditCapture = struct {
+        before: @import("equation_script_edit.zig").Witness,
+        script_units: []u16,
+        pub fn deinit(self: *EquationScriptEditCapture, allocator: std.mem.Allocator) void {
+            allocator.free(self.script_units);
+            self.* = undefined;
+        }
+    };
+    /// One explicit owner observation. Inventory/render paths never call this.
+    pub fn captureEquationScriptEdit(self: *const Session, allocator: std.mem.Allocator, selector: @import("equation_script_edit.zig").Selector) !EquationScriptEditCapture {
+        const before = try self.observeEquationScriptEdit(allocator, selector);
+        const state = self.stateConst();
+        const source = try @import("equation_sources.zig").readSelected(allocator, state.decoded[selector.section], state.source.header.version(), selector.equation_node, selector.layout, .{});
+        if (source.script.len % 2 != 0 or source.script.len / 2 > 65535) return error.InvalidEquationScriptEncoding;
+        const units = try allocator.alloc(u16, source.script.len / 2);
+        for (units, 0..) |*unit, i| unit.* = std.mem.readInt(u16, source.script[i * 2 ..][0..2], .little);
+        return .{ .before = before, .script_units = units };
     }
     pub fn equationSnapshot(self: *const Session, a: std.mem.Allocator, section: usize, layout: @import("../body/equation.zig").Layout) ![]u8 {
         try self.materializeLiveText();
@@ -2118,6 +2145,32 @@ pub const Session = opaque {
                 std.mem.swap(@import("created_table_values.zig").Values, &state.created_tables[request.target.section], &prepared.tables);
                 std.mem.swap(@import("cell_background_values.zig").Values, &state.cell_backgrounds, &prepared.backgrounds);
                 std.mem.swap(@import("../chart/created_resources.zig").Values, &state.chart_resources, &assets.values);
+                state.refreshSourceViews();
+            },
+            .edit_equation_script => |request| {
+                const state = self.getState();
+                if (state.formatting_batch != null) return error.MutationInProgress;
+                if (state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview)) return error.UnsupportedEquationSaveFeatures;
+                var candidate = (try @import("equation_script_edit.zig").prepare(state.allocator, state.decoded, &state.document, state.source.header.version(), request, try self.historyTicket(), state.style_count, max_stream)) orelse return;
+                defer candidate.deinit(state.allocator);
+                var prospective = state.*;
+                const sections = try state.allocator.dupe(model.Section, state.document.sections);
+                defer state.allocator.free(sections);
+                sections[request.before.selector.section] = candidate;
+                prospective.document.sections = sections;
+                const decoded = try state.allocator.dupe([]u8, state.decoded);
+                defer state.allocator.free(decoded);
+                const offsets = try state.allocator.dupe([]usize, state.style_offsets);
+                defer state.allocator.free(offsets);
+                prospective.decoded = decoded;
+                prospective.style_offsets = offsets;
+                prospective.refreshSourceViews();
+                const draft: *const Session = @ptrCast(&prospective);
+                const saved = try draft.save(state.allocator, .{ .allow_stale_layout = true, .max_output_bytes = max_bytes });
+                defer state.allocator.free(saved.bytes);
+                try @import("equation_script_edit.zig").verifySaved(state.allocator, saved.bytes, request);
+                // One publication after full save/reopen validation and allocation.
+                std.mem.swap(model.Section, &state.document.sections[request.before.selector.section], &candidate);
                 state.refreshSourceViews();
             },
             .insert_equation => |request| {

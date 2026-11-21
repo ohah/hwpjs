@@ -27,3 +27,8 @@ HWP5의 편집 가능한 일반 본문에 커서를 두고 **입력 → 수식**
 소스 `370794258`의 공개 번들 manifest `34385392`와 WASM `9235b243`에서 실제 UI로 `x over y`를 한 번 삽입했다. Worker 문서의 수식 수는 생성 전0, 삽입1, 실행 취소0, 다시 실행1이며 실제 Canvas 표시도 사라졌다가 복원됐다. 내려받은 4096bytes에서 독립 CFB 검사로 EQEDIT 한 개와 정확 스크립트를 확인했다. 새 페이지의 로컬 파일 선택으로 같은 bytes를 다시 열었을 때 분수 한 개와 초기 이력0을 확인했다.
 
 기본 저장은 `LayoutReflowRequired`로 거부됐다. 이 실패를 보존하고 UI의 줄 배치 변경 허용을 직접 선택한 뒤 저장했다. 따라서 이 근거는 기본 저장 성공이나 정식 재조판 완료를 뜻하지 않는다. 해당 앱 생성 파일을 `hwp5-equation-create.hwp` 예제 후보로 결속하며, 과거 b972 SDK·브라우저 근거와 현재 실행을 구분한다. 예제의 SHA256은 `ad090cb478e4e160e15d8d97e8c14b07e0d993fa533a993f48ea5b55158f58ef`이다.
+
+
+## 기존 수식 내용 편집 후속
+
+조회·생성과 별도로 [스크립트 편집 Native](hwp5-equation-script-edit.md)와 [Native 보관 lease ABI](hwp5-equation-script-edit-abi.md)를 격리 후보에서 준비한다. 기존 표시 snapshot과 구역별 Map 경로는 유지하며 새 capture를 inventory의 줄별 반복에 연결하지 않는다. 공용 SDK/UI와 실제 WASM의 추가 검증 완료를 뜻하지 않는다.

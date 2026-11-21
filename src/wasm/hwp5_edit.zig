@@ -21,6 +21,8 @@ var reflow: bool = false;
 var normalization: ?@import("../cfb/observed_repairs.zig").Deviations = null;
 var available_section_copy: ?@import("../hwp5/edit/available_section_copy.zig").Report = null;
 var view_epoch: @import("editor_view_epoch.zig").Epoch = .{};
+const equation_script_lease = @import("hwp5_equation_script_edit_lease.zig");
+var equation_script_leases: equation_script_lease.Store = .{};
 
 fn fail(err: anyerror) u32 {
     _ = errors.fail(err);
@@ -57,6 +59,7 @@ export fn hwp5_edit_reflow() u32 {
     return @intFromBool(reflow);
 }
 export fn hwp5_edit_close() void {
+    equation_script_leases.clear();
     clearOriginalCellInsetsLease();
     page_restart_leases.clear(a);
     clearOriginalCellLease();
@@ -2147,6 +2150,61 @@ export fn hwp5_edit_insert_image_current(ref_ptr: [*]const u8, ref_size: usize, 
         return if (h.owned.?.poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) 3 else 0;
     };
     return 1;
+}
+
+// Optional HWP5 script-only editing. The retained observation never leaves Native.
+fn equationScriptEditHistory() !*History {
+    const current = try session();
+    const h = if (history) |*value| value else return error.HistoryNotEnabled;
+    if (h.owned == null) return error.HistoryV2Required;
+    if (h.stats().poisoned) return error.HistoryMutationUncertain;
+    try h.owned.?.validateCurrentForLayout(current);
+    return h;
+}
+export fn hwp5_edit_equation_script_edit_version() u32 {
+    return 1;
+}
+export fn hwp5_edit_equation_script_edit_capture(section: u32, node: u32, selected_layout: u32) u32 {
+    // Clear first: invalid layout/selector, closed session and allocation errors
+    // must not leave a previous capture usable.
+    equation_script_leases.clear();
+    hwp5_edit_output_free();
+    const layout = @import("hwp5_equation_sources.zig").layout(selected_layout) catch |err| return fail(err);
+    const h = equationScriptEditHistory() catch |err| return fail(err);
+    const current = session() catch |err| return fail(err);
+    const view = view_epoch.current() catch |err| return fail(err);
+    var captured = current.captureEquationScriptEdit(a, .{ .section = section, .equation_node = node, .layout = layout }) catch |err| return fail(err);
+    defer captured.deinit(a);
+    const frame: equation_script_lease.Frame = .{ .session = @intFromPtr(current), .view_epoch = view, .history_revision = h.revision() };
+    const id = equation_script_leases.retain(captured.before, frame) catch |err| return fail(err);
+    output = @import("hwp5_equation_script_edit_wire.zig").capture(a, id, section, node, layout, h.revision(), captured.script_units) catch |err| {
+        equation_script_leases.clear();
+        return fail(err);
+    };
+    return 1;
+}
+export fn hwp5_edit_equation_script_edit_commit(ptr: [*]const u8, size: usize) u32 {
+    // Every attempt consumes the retained observation before parse/guards/no-op.
+    const retained = equation_script_leases.take();
+    hwp5_edit_output_free();
+    const lease = retained orelse return fail(error.StaleEquationScriptLease);
+    const wire = @import("hwp5_equation_script_edit_wire.zig");
+    if (size == 0 or size > wire.max_request_bytes) return fail(error.LimitExceeded);
+    const parsed = wire.parse(a, ptr[0..size]) catch |err| return fail(err);
+    defer parsed.deinit();
+    const h = equationScriptEditHistory() catch |err| {
+        _ = fail(err);
+        return if (err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    const current = session() catch |err| return fail(err);
+    const view = view_epoch.current() catch |err| return fail(err);
+    equation_script_lease.validate(lease, wire.leaseId(parsed.value.lease) catch |err| return fail(err), .{ .session = @intFromPtr(current), .view_epoch = view, .history_revision = h.revision() }, current.historyTicket() catch |err| return fail(err)) catch |err| return fail(err);
+    const revision = h.revision();
+    apply(.{ .edit_equation_script = .{ .before = lease.before, .script = parsed.value.script } }) catch |err| {
+        _ = fail(err);
+        return if (h.stats().poisoned or err == error.HistoryMutationUncertain or err == error.MutationUncertain) 3 else 0;
+    };
+    return if (h.revision() == revision) 2 else 1;
 }
 
 // Optional fixed-shape chart literal editing. No existing export body is changed.

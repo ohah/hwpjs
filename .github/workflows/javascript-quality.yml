@@ -188,6 +188,17 @@ jobs:
           node --test --test-concurrency=1 --test-reporter=tap tests/own-chart-create/current-transport.test.mjs tests/own-chart-create/pie-source-contract.test.mjs
           bun test --no-install ./tests/own-chart-create/pie-core-queue.test.mjs ./tests/own-chart-create/current-sdk-queue.test.mjs
           node --experimental-transform-types --import ./tools/tests/picture-resize-source-provider.mjs --test --test-concurrency=1 --test-reporter=tap apps/demo/tests/hwp5-pie-create-dialog.test.ts apps/demo/tests/inline-object-chart-kinds.test.ts apps/demo/tests/inline-object-insert-data-grid.test.ts apps/demo/tests/hwp5-chart-create-wired.test.mjs
+      - name: Existing HWP5 equation script Core and Worker source contracts
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          node node_modules/typescript/bin/tsc --noEmit -p apps/demo/tests/tsconfig.hwp5-equation-script.json
+          node --experimental-transform-types --import ./tools/tests/hwp5-equation-script-source-provider.mjs --test --test-concurrency=1 --test-reporter=tap apps/demo/tests/hwp5-equation-script.test.mjs 2>&1 | tee "$RUNNER_TEMP/hwp5-equation-script-source.tap"
+          grep -Eq '^# tests 13$' "$RUNNER_TEMP/hwp5-equation-script-source.tap"
+          grep -Eq '^# pass 13$' "$RUNNER_TEMP/hwp5-equation-script-source.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/hwp5-equation-script-source.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/hwp5-equation-script-source.tap"
       - name: Existing PAGE restart Core and UI source contracts
         timeout-minutes: 2
         shell: bash

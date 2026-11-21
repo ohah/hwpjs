@@ -477,3 +477,37 @@ if (read.state === 'available') {
 ```
 
 값은 HWPUNIT입니다. 예제의 `bottom_right`는 고정할 점이므로 왼쪽 위를 이동해 크기를 바꿉니다. 크기와 위치는 한 번의 문서 이력으로 기록됩니다. 페이지 기준 절대 위치를 가진 일부 떠 있는 그림을 지원합니다.
+
+## 기존 HWP5 수식 편집
+
+현재 소스의 `@ohah/hwpjs`에서 전체 HWP5 문서를 편집 모드로 열면 기존 본문 수식의 스크립트를 바꿀 수 있습니다. 수식이 있는 셀이나 머리말은 이 API의 지원 범위 밖입니다.
+
+```ts
+import {
+  createParagraphSelection,
+  EDIT_HWP5_EQUATION_SCRIPT_COMMAND,
+  hwp5EquationScriptSources,
+} from '@ohah/hwpjs';
+
+const state = editor.getEditorState();
+// 예제 문서의 본문 수식과 version-only 배치를 확인한 뒤 실행합니다.
+const row = hwp5EquationScriptSources(state).find((row) => row.issue === null);
+if (row) {
+  const { section, paragraph, unit, equationNode } = row;
+  await editor.setSelection(
+    createParagraphSelection(state, { section, paragraph, startUnit: unit, endUnit: unit + 1 }),
+  );
+  const read = await editor.getHwp5EquationScript({ section, equationNode, layout: 'version-only' });
+  if (read.state === 'available') {
+    const result = await editor.dispatchCommand(EDIT_HWP5_EQUATION_SCRIPT_COMMAND, {
+      target: read.target,
+      script: 'x over 7 + sqrt 2',
+    });
+    console.log(result.status);
+  }
+}
+```
+
+수식의 원본 배치를 확인한 뒤 `version-only` 또는 `with-font`를 전달합니다. 조회 후 적용하지 않을 때는 `editor.releaseHwp5EquationScript(read.target)`을 호출하세요. 대상은 한 번만 적용할 수 있습니다.
+
+수식 상자의 크기와 위치는 유지됩니다. 일반 저장이 `LayoutReflowRequired`를 반환하면 줄 배치 변경 가능성을 확인한 후 `editor.save({ allowStaleLayout: true })`로 저장할 수 있습니다.

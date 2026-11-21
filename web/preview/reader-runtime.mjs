@@ -1,3 +1,4 @@
+import { createHwp5EquationScriptCommands } from './hwp5-equation-script-command.mjs';
 import { createPageRestartCommands } from './page-restart-command.mjs';
 import { isHwp5ChartCreateProfileVersion } from '../../js/hwp5-chart-create-profiles.mjs';
 import {
@@ -295,6 +296,10 @@ export function createReaderRuntime({
       hwp5PreviewDirty = false;
     }
   }
+  const hwp5EquationScripts = createHwp5EquationScriptCommands(
+    () => editor,
+    () => format === 'hwp5' && historyEnabled && !historyPoisoned && !documentWindow,
+  );
   const pageRestarts = createPageRestartCommands(
     () => editor,
     () =>
@@ -1767,6 +1772,32 @@ export function createReaderRuntime({
         reply({ kind: message.kind, content: format === 'hwpx' ? hwpxDisplay() : hwp5Display() });
         return;
       }
+      if (message.kind === 'hwp5-equation-script-capture') {
+        reply({ kind: message.kind, equationScriptCapture: hwp5EquationScripts.capture(message) });
+        return;
+      }
+      if (message.kind === 'hwp5-equation-script-close') {
+        reply({ kind: message.kind, released: hwp5EquationScripts.close(message) });
+        return;
+      }
+      if (message.kind === 'hwp5-equation-script-edit') {
+        atomicOutcome = hwp5EquationScripts.edit(message);
+        applied = atomicOutcome.application === 'applied';
+        mutationUncertain = atomicOutcome.application === 'unknown';
+        if (mutationUncertain) historyPoisoned = true;
+        if (atomicOutcome.error || atomicOutcome.cleanupError)
+          throw Error(atomicOutcome.error || atomicOutcome.cleanupError);
+        if (atomicOutcome.nativeCode === 2) {
+          reply({ kind: message.kind, changed: false });
+          return;
+        }
+        documentWindow = null;
+        hwp5PreviewDirty = true;
+        await refreshHwp5PreviewFallback();
+        displayResources.invalidate();
+        reply({ kind: message.kind, content: hwp5Display() });
+        return;
+      }
       if (message.kind === 'page-restarts-query') {
         reply({ kind: message.kind, pageRestarts: pageRestarts.query() });
         return;
@@ -2438,6 +2469,7 @@ export function createReaderRuntime({
       if (message.kind === 'load') {
         hwp5ChartData.reset();
         pageRestarts.reset();
+        hwp5EquationScripts.reset();
         const availableSectionsOnly = availableSectionsRequest(message);
         const availableSectionCopy = availableSectionCopyRequest(message);
         const requestedPolicy =
@@ -4430,6 +4462,7 @@ export function createReaderRuntime({
   function clear() {
     hwp5ChartData.reset();
     pageRestarts.reset();
+    hwp5EquationScripts.reset();
     hwp5PreviewDirty = false;
     hwpxRichTypingOwners = null;
     displayResources.reset();

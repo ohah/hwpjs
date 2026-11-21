@@ -354,3 +354,22 @@ export const PAGE_RESTART_EDIT_ABI = Object.freeze(
     ]),
   ),
 );
+
+// Optional Native-retained equation script lease. Ordinary ABI stays unchanged.
+export const HWP5_EQUATION_SCRIPT_EDIT_ABI = Object.freeze({
+  hwp5_edit_equation_script_edit_version: Object.freeze({
+    params: Object.freeze([]),
+    results: Object.freeze(['i32']),
+  }),
+  hwp5_edit_equation_script_edit_capture: Object.freeze({
+    params: Object.freeze(['i32', 'i32', 'i32']),
+    results: Object.freeze(['i32']),
+  }),
+  hwp5_edit_equation_script_edit_commit: Object.freeze({
+    params: Object.freeze(['i32', 'i32']),
+    results: Object.freeze(['i32']),
+  }),
+});
+export const HWP5_EQUATION_SCRIPT_EDIT_FUNCTIONS = Object.freeze(
+  Object.keys(HWP5_EQUATION_SCRIPT_EDIT_ABI),
+);

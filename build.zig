@@ -147,6 +147,29 @@ pub fn build(b: *std.Build) void {
         core_test_step.dependOn(&run_equation_tests.step);
     }
 
+    const equation_script_tests = b.addTest(.{
+        .use_llvm = true,
+        .filters = &.{"H5 equation script"},
+        .root_module = b.createModule(.{ .root_source_file = b.path("src/hwp5_equation_script_edit_probe.zig"), .target = target, .optimize = optimize }),
+    });
+    const run_equation_script_tests = b.addRunArtifact(equation_script_tests);
+    run_equation_script_tests.step.dependOn(&abi_check.step);
+    run_equation_script_tests.step.dependOn(&icc_registry_check.step);
+    const equation_script_step = b.step("test-hwp5-equation-script-edit", "Verify current HWP5 equation scripts, source preservation and atomic history");
+    equation_script_step.dependOn(&run_equation_script_tests.step);
+    core_test_step.dependOn(&run_equation_script_tests.step);
+
+    const equation_script_abi_tests = b.addTest(.{
+        .use_llvm = true,
+        .filters = &.{"H5 equation script lease"},
+        .root_module = b.createModule(.{ .root_source_file = b.path("src/hwp5_equation_script_edit_abi_probe.zig"), .target = target, .optimize = optimize }),
+    });
+    const run_equation_script_abi_tests = b.addRunArtifact(equation_script_abi_tests);
+    run_equation_script_abi_tests.step.dependOn(&abi_check.step);
+    const equation_script_abi_step = b.step("test-hwp5-equation-script-abi", "Verify retained equation script lease and optional wire source contracts");
+    equation_script_abi_step.dependOn(&run_equation_script_abi_tests.step);
+    core_test_step.dependOn(&run_equation_script_abi_tests.step);
+
     const editor_extensions_step = b.step("test-editor-extensions", "Verify equation projection, source caret typing and editable object geometry");
     editor_extensions_step.dependOn(equation_display_step);
     editor_extensions_step.dependOn(control_text_read_step);
