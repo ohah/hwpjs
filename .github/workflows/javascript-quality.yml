@@ -1313,6 +1313,9 @@ jobs:
             assert((await readFile(`${shipped}/${name}`)).equals(await readFile(`zig-out/verification/ci-agent-skill/${name}`)), `SkillAssetOutOfDate:${name}`);
           }
           JS
+      - name: Test public SDK image insertion and saved bytes
+        timeout-minutes: 2
+        run: node --test --test-concurrency=1 tests/image/public-image-insertion.test.mjs
       - name: Test portable fixture author and independent oracle
         run: |
           python3 -B tools/testing/portable_five/test_portable_five.py
