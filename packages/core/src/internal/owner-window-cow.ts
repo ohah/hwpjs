@@ -9,7 +9,15 @@ import { validateFullSnapshotTextDelta, exactDisplayValue } from './full-snapsho
 // 내부 후보: origin 발급/등록은 하지 않는다. 기존 canonical origin의 소비자만 호출한다.
 
 // 명시 producer schema의 plain body/table/picture 부분집합. 문서 식별자나 SHA로 선택하지 않는다.
+// Typed current producer metadata only; never issues Native origin or edit authority.
+const PLAIN_BOOLEAN_CAPABILITY_KEYS = [
+  'equationInsertionAvailable',
+  'chartCreationAvailable',
+  'strictMeasuredSaveAvailable',
+] as const;
 const ROOT_KEYS = new Set([
+  ...PLAIN_BOOLEAN_CAPABILITY_KEYS,
+  'hwp5ChartCreateProfileVersion',
   ...HWP5_CHART_PLAIN_ROOT_KEYS,
   'format',
   'version',
@@ -263,11 +271,16 @@ export function isPlainOwnerBaseline(content: any, section: number, paragraph: n
       (Object.hasOwn(content, 'sourceTableCellSplitProfile') &&
         content.sourceTableCellSplitProfile !== 'single-unmerged-source-cell' &&
         content.sourceTableCellSplitProfile !== 'single-source-cell-with-spans') ||
+      (Object.hasOwn(content, 'hwp5ChartCreateProfileVersion') &&
+        ((content.hwp5ChartCreateProfileVersion !== 0 &&
+          content.hwp5ChartCreateProfileVersion !== 1) ||
+          Object.is(content.hwp5ChartCreateProfileVersion, -0))) ||
       !hasCanonicalCreatedCellTypingScope(content) ||
       Object.keys(content).some((k) => !ROOT_KEYS.has(k))
     )
       return false;
     for (const key of [
+      ...PLAIN_BOOLEAN_CAPABILITY_KEYS,
       'equationAvailable',
       'equationPaintAvailable',
       'equationSourceStylesAvailable',

@@ -38,6 +38,22 @@ test('actual HWP5 cell-size capabilities retain plain-owner admission and reject
     assert.equal(probe({ sourceTableCellSplitProfile: 'single-unmerged-source-cell' }), true);
     for (const value of [undefined, null, false, '', 'static-source-cell-rectangle', {}, []])
       assert.equal(probe({ sourceTableCellSplitProfile: value }), false);
+    for (const key of [
+      'equationInsertionAvailable',
+      'chartCreationAvailable',
+      'strictMeasuredSaveAvailable',
+    ]) {
+      for (const value of [true, false]) assert.equal(probe({ [key]: value }), true);
+      for (const value of [undefined, null, 0, 1, '', 'true', {}, []])
+        assert.equal(probe({ [key]: value }), false);
+    }
+    for (const value of [0, 1]) assert.equal(probe({ hwp5ChartCreateProfileVersion: value }), true);
+    for (const value of [undefined, null, false, true, -0, -1, 2, 1.5, '0', '1', {}, []])
+      assert.equal(probe({ hwp5ChartCreateProfileVersion: value }), false);
+    // These fields are absent from this exact producer; no future schema admission.
+    for (const key of ['imageInsertionAvailable', 'hwp5ChartLiteralEditAvailable'])
+      assert.equal(probe({ [key]: false }), false);
+    assert.equal(isPlainOwnerBaseline(Object.freeze({ ...state.content }), 0, 15), false);
     assert.equal(probe({ futureCellCapability: true }), false);
     for (const key of [
       'equationAvailable',

@@ -15,6 +15,7 @@ import {
   readNativeGeometryEvidence,
 } from '../../packages/core/src/internal/native-geometry-evidence.ts';
 import { createNativeGeometryDeps } from '../../web/preview/native-geometry-deps.mjs';
+import { readNativeReadSourceEvidence } from '../../packages/core/src/internal/native-read-source-evidence.ts';
 import {
   cloneData,
   row,
@@ -89,6 +90,28 @@ async function session(paragraph = 15, mode = 'registered') {
       projection = readGeometryProjection(lease, state);
     const original = cloneData(state.content);
     const originalCaps = state.capabilities;
+    let readBinding = cloneData(originalCaps.documentTextReadBinding);
+    assert.deepEqual(readBinding, {
+      schemaVersion: 1,
+      scope: 'native-document-text-read-binding',
+      executionAuthority: false,
+      format: 'hwp5',
+      session: readBinding.session,
+      epoch: readBinding.epoch,
+      serial: readBinding.serial,
+    });
+    assert.equal(typeof readBinding.session, 'string');
+    assert(readBinding.session.length > 0 && readBinding.session.length <= 256);
+    assert.match(readBinding.epoch, /^[1-9][0-9]{0,19}$/);
+    assert.match(readBinding.serial, /^(0|[1-9][0-9]{0,19})$/);
+    const nextReadBinding = (reply) => {
+      // Native enterMutation advances read serial even on a known no-op.
+      // This counter is independent of History revision and state installation.
+      const expected = { ...readBinding, serial: String(BigInt(readBinding.serial) + 1n) };
+      assert.deepEqual(cloneData(reply.documentTextReadBinding), expected);
+      readBinding = expected;
+      return expected;
+    };
     let historyCapsChanged = false;
     const historyPlan = createHistoryPlan();
     assert.equal(state.nativeHistoryRevision, 0);
@@ -120,6 +143,18 @@ async function session(paragraph = 15, mode = 'registered') {
         const revision = historyPlan.move(message.kind);
         assert.equal(state.nativeHistoryRevision, revision, 'Independent Native history plan');
         assert.equal(result.reply.historyRevision, revision);
+        const binding = nextReadBinding(result.reply);
+        assert.deepEqual(cloneData(state.capabilities.documentTextReadBinding), binding);
+        assert.equal(
+          readNativeReadSourceEvidence(before),
+          undefined,
+          'prior source authority revoked',
+        );
+        assert.equal(
+          readNativeReadSourceEvidence({ ...state }),
+          undefined,
+          'copied metadata grants no authority',
+        );
         assertFullSnapshot(state.content, expected, before.content, { revision, beforeRevision });
         assert.equal(
           result.reply.content,
@@ -133,13 +168,15 @@ async function session(paragraph = 15, mode = 'registered') {
             'COW keeps stable header identity',
           );
           if (['undo', 'redo'].includes(message.kind)) historyCapsChanged = true;
-          const expectedCaps = historyCapsChanged
-            ? { ...originalCaps, changed: true }
-            : originalCaps;
+          const expectedCaps = {
+            ...originalCaps,
+            ...(historyCapsChanged ? { changed: true } : {}),
+            documentTextReadBinding: binding,
+          };
           assert.deepEqual(
             cloneData(state.capabilities),
             cloneData(expectedCaps),
-            'whole caps from load baseline plus confirmed legacy changed key',
+            'whole caps from load baseline plus confirmed history and exact fresh Native binding',
           );
           if (
             ['undo', 'redo'].includes(message.kind) &&
@@ -162,8 +199,17 @@ async function session(paragraph = 15, mode = 'registered') {
               ),
               ['changed'],
             );
-          } else
-            assert.equal(state.capabilities, before.capabilities, 'same cap metadata reuses root');
+          } else {
+            assert.notEqual(
+              state.capabilities,
+              before.capabilities,
+              'fresh Native binding creates cap root',
+            );
+            assert.deepEqual(
+              Reflect.ownKeys(state.capabilities),
+              Reflect.ownKeys(before.capabilities),
+            );
+          }
         }
         if (mode !== 'registered') {
           assert.equal(projection, undefined);
@@ -210,7 +256,16 @@ async function session(paragraph = 15, mode = 'registered') {
           { token: state.token, coordinates: 'legacy-native' },
         );
         assert.equal(result.status, 'known-no-op');
+        const binding = nextReadBinding(result.reply);
         state = e.getEditorState();
+        assert.equal(state, before, 'no-change reply installs no new state');
+        assert.equal(state.capabilities, before.capabilities, 'no-change retains prior metadata');
+        assert.notDeepEqual(cloneData(state.capabilities.documentTextReadBinding), binding);
+        assert.equal(
+          readNativeReadSourceEvidence(before),
+          undefined,
+          'no-op cannot revive prior source authority',
+        );
         assert.equal(state.content, before.content);
         assert.equal(state.nativeHistoryRevision, before.nativeHistoryRevision);
         assert.equal(state.nativeHistoryRevision, historyPlan.revision);

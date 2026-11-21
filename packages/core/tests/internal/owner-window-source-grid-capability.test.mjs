@@ -296,3 +296,59 @@ test('created cell typing scope remains exact metadata across COW and full-snaps
     }
   }
 });
+
+for (const key of [
+  'equationInsertionAvailable',
+  'chartCreationAvailable',
+  'strictMeasuredSaveAvailable',
+]) {
+  test(`typed producer capability ${key} retains COW without issuing authority`, () => {
+    for (const value of [false, true]) {
+      const f = fixture({ [key]: value });
+      assert.equal(isPlainOwnerBaseline(f.before, 0, 0), true);
+      const next = f.merge();
+      assert(next);
+      assert.equal(next[key], value);
+      assert.equal(next.characterShapes, f.before.characterShapes);
+      assert.equal(isPlainOwnerBaseline(Object.freeze({ ...f.before }), 0, 0), false);
+    }
+    assert.throws(() => fixture({ [key]: new Boolean(true) }), /UnsupportedPayload/);
+    for (const value of [undefined, null, 0, 1, '', 'true', {}, []]) {
+      const f = fixture({ [key]: value });
+      assert.equal(isPlainOwnerBaseline(f.before, 0, 0), false);
+      assert.equal(f.merge(), null);
+    }
+  });
+}
+test('HWP5 chart create profile is exactly unavailable0 or supported1, never arbitrary positive version', () => {
+  for (const value of [NaN, Infinity])
+    assert.throws(() => fixture({ hwp5ChartCreateProfileVersion: value }), /InvalidNumber/);
+  for (const value of [0, 1]) {
+    const f = fixture({ hwp5ChartCreateProfileVersion: value });
+    assert.equal(isPlainOwnerBaseline(f.before, 0, 0), true);
+    const next = f.merge();
+    assert(next);
+    assert.equal(next.hwp5ChartCreateProfileVersion, value);
+  }
+  for (const value of [undefined, null, false, true, -0, -1, 2, 1.5, '0', '1', {}, []]) {
+    const f = fixture({ hwp5ChartCreateProfileVersion: value });
+    assert.equal(isPlainOwnerBaseline(f.before, 0, 0), false);
+    assert.equal(f.merge(), null);
+  }
+});
+test('complete current producer capabilities preserve strict unknown-key and ownership refusal', () => {
+  const keys = {
+    equationInsertionAvailable: true,
+    hwp5ChartCreateProfileVersion: 1,
+    chartCreationAvailable: false,
+    strictMeasuredSaveAvailable: true,
+  };
+  const f = fixture(keys);
+  assert.equal(isPlainOwnerBaseline(f.before, 0, 0), true);
+  const next = f.merge();
+  assert(next);
+  for (const [key, value] of Object.entries(keys)) assert.equal(next[key], value);
+  const unknown = fixture({ ...keys, futureInsertionCapability: true });
+  assert.equal(isPlainOwnerBaseline(unknown.before, 0, 0), false);
+  assert.equal(unknown.merge(), null);
+});
