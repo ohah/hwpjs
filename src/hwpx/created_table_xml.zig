@@ -37,7 +37,8 @@ pub fn write(a: std.mem.Allocator, table: *const model.Table, max_bytes: usize) 
         for (0..table.plan.columns) |column| {
             const geometry = try table.cell(@intCast(row), @intCast(column));
             const cell = table.cells[row * table.plan.columns + column];
-            try output.print("<hp:tc name=\"\" header=\"0\" hasMargin=\"0\" protect=\"0\" editable=\"0\" dirty=\"0\" borderFillIDRef=\"{d}\"><hp:subList id=\"\" textDirection=\"HORIZONTAL\" lineWrap=\"BREAK\" vertAlign=\"TOP\" linkListIDRef=\"0\" linkListNextIDRef=\"0\" textWidth=\"0\" textHeight=\"0\" hasTextRef=\"0\" hasNumRef=\"0\"><hp:p id=\"{d}\" paraPrIDRef=\"{d}\" styleIDRef=\"{d}\" pageBreak=\"0\" columnBreak=\"0\" merged=\"0\">", .{ try table.cellBorderFill(@intCast(row), @intCast(column)), cell.paragraph_id, table.resources.paragraph, table.resources.style });
+            const alignment = (try table.cellVerticalAlignment(@intCast(row), @intCast(column), .top)).?;
+            try output.print("<hp:tc name=\"\" header=\"0\" hasMargin=\"0\" protect=\"0\" editable=\"0\" dirty=\"0\" borderFillIDRef=\"{d}\"><hp:subList id=\"\" textDirection=\"HORIZONTAL\" lineWrap=\"BREAK\" vertAlign=\"{s}\" linkListIDRef=\"0\" linkListNextIDRef=\"0\" textWidth=\"0\" textHeight=\"0\" hasTextRef=\"0\" hasNumRef=\"0\"><hp:p id=\"{d}\" paraPrIDRef=\"{d}\" styleIDRef=\"{d}\" pageBreak=\"0\" columnBreak=\"0\" merged=\"0\">", .{ try table.cellBorderFill(@intCast(row), @intCast(column)), @import("../model/cell_vertical_alignment.zig").text(alignment), cell.paragraph_id, table.resources.paragraph, table.resources.style });
             var run_scratch: [1]@import("../model/document.zig").CharacterRun = undefined;
             var spans = try cell.spans(table.resources.character, &run_scratch);
             while (try spans.next()) |span| {

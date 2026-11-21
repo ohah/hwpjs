@@ -7,6 +7,7 @@ export interface CreatedCellPropertiesPayload {
   column: number;
   expected: { width: number; height: number };
   size?: { width?: number; height?: number };
+  verticalAlignment?: 0 | 1 | 2;
   appearance?: {
     borders?: Partial<
       Record<

@@ -76,6 +76,12 @@ pub const Table = struct {
             y = try std.math.add(u32, y, height);
         }
     }
+    /// Format-owned base is explicit; null means the source profile is unknown.
+    pub fn cellVerticalAlignment(self: *const Table, row: u32, column: u32, base: ?@import("cell_vertical_alignment.zig").Alignment) !?@import("cell_vertical_alignment.zig").Alignment {
+        _ = try self.cell(row, column);
+        if (self.cell_properties.len == 0) return base;
+        return self.cell_properties[@as(usize, row) * self.plan.columns + column].vertical_alignment orelse base;
+    }
     pub fn cellBorderFill(self: *const Table, row: u32, column: u32) !u32 {
         _ = try self.cell(row, column);
         if (self.cell_properties.len == 0) return self.resources.border_fill;

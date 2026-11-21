@@ -18,6 +18,9 @@ export function attachHwp5CreatedTables(
     content.limited === false &&
     !content.window &&
     !content.viewKind;
+  content.createdCellVerticalAlignmentAvailable =
+    content.createdCellPropertiesAvailable &&
+    editor.supportsCreatedCellVerticalAlignment?.() === true;
   content.tableCreationResources = available ? editor.tableCreationResources() : null;
   const tables = [];
   let units = 0;

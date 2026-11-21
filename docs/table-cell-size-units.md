@@ -60,3 +60,7 @@ capability는 조회를 준비할지 결정하는 표시 조건이다. 선택된
 - apps/demo/tests/table-cell-properties-port.test.mjs
 - apps/demo/tests/table-cell-size-units.test.mjs
 - apps/demo/tests/table-cell-properties-vertical-alignment.test.mjs
+
+## 편집 중 생성한 표의 셀 세로 정렬
+
+새로 만든 표의 셀 속성에서 세로 정렬을 함께 지정할 수 있다. 지원 조건과 저장 규칙은 [생성 단일 셀 세로 정렬](created-cell-vertical-alignment.md)을 따른다.

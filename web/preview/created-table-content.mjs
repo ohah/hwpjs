@@ -80,5 +80,8 @@ export function attachCreatedTables(editor, content, available, maxUnits, sectio
     content.limited === false &&
     !content.window &&
     !content.viewKind;
+  content.createdCellVerticalAlignmentAvailable =
+    content.createdCellPropertiesAvailable &&
+    editor.supportsCreatedCellVerticalAlignment?.() === true;
   return content;
 }

@@ -508,6 +508,19 @@ pub const Session = opaque {
     }
 
     /// Read only: materialize the exact save resource policy on detached clones.
+    /// Separate additive observation; existing v1 JSON remains byte-shape compatible.
+    pub fn createdCellVerticalAlignmentProjection(self: *const Session, allocator: std.mem.Allocator) ![]u8 {
+        try self.materializeLiveText();
+        const state = self.stateConst();
+        var builder = @import("../../model/created_cell_vertical_alignment_projection.zig").Builder.init(allocator, max_stream);
+        defer builder.deinit();
+        for (state.created_tables, 0..) |tables, section| for (tables.entries) |entry| {
+            _ = try @import("created_table_anchor.zig").resolve(allocator, &state.document.sections[section], entry.anchor);
+            const base = @import("../../model/cell_vertical_alignment.zig").fromRaw((entry.value.options.cell.attributes >> 5) & 3);
+            try builder.appendTable(section, &entry.value.table, base);
+        };
+        return builder.json("hwp5");
+    }
     pub fn createdCellPropertyStyles(self: *const Session, allocator: std.mem.Allocator) ![]@import("../../model/created_cell_properties_projection.zig").Style {
         return self.createdCellPropertyStylesWithStats(allocator, null);
     }
@@ -2042,7 +2055,9 @@ pub const Session = opaque {
                 var protection = try @import("text_source_protection.zig").read(state.allocator, state.decoded, state.source.header.version(), section, state.document.sections[section]);
                 defer protection.deinit(state.allocator);
                 if (host >= protection.protected_paragraphs.len or protection.protected_paragraphs[host]) return error.ProtectedCell;
-                var replacement = (try @import("../../model/created_cell_properties_table.zig").prepare(state.allocator, &entry.value.table, section, try self.historyTicket(), request, max_stream)) orelse return;
+                if (request.vertical_alignment != null and entry.value.options.cell.attributes & (@as(u32, 1) << 17) != 0) return error.ProtectedCell;
+                const alignment_base = @import("../../model/cell_vertical_alignment.zig").fromRaw((entry.value.options.cell.attributes >> 5) & 3);
+                var replacement = (try @import("../../model/created_cell_properties_table.zig").prepareWithAlignmentBase(state.allocator, &entry.value.table, section, try self.historyTicket(), request, max_stream, alignment_base)) orelse return;
                 defer replacement.deinit(state.allocator);
                 const cell_index = @as(usize, request.address.row) * replacement.plan.columns + request.address.column;
                 const info = try self.originalInfo();

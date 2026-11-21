@@ -2,7 +2,10 @@ import { createCreatedCellPropertiesApi } from '../js/created-cell-properties-ap
 import { layoutCreatedTable } from '../web/preview/created-table-layout.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { decodeCreatedCellProjection } from '../js/created-cell-properties-projection.mjs';
+import {
+  decodeCreatedCellDocumentProjection,
+  decodeCreatedCellProjection,
+} from '../js/created-cell-properties-projection.mjs';
 import { decodeCreatedTables } from '../js/hwpx-created-tables.mjs';
 import { decodeHwp5CreatedTables } from '../js/hwp5-created-tables.mjs';
 import { createdCellGrid } from '../web/preview/created-cell-grid.mjs';
@@ -281,3 +284,134 @@ for (const format of ['hwp5', 'hwpx'])
       assert.throws(() => api.createdCellPropertiesProjection(2), /Section/);
     },
   );
+
+for (const format of ['hwp5', 'hwpx']) {
+  const fixtureWithAlignment = () => {
+    const base = fixture(format);
+    return {
+      base,
+      supplemental: {
+        schemaVersion: 1,
+        format,
+        alignments: [0, 1, 2, null]
+          .map((value, index) => {
+            const { section, identity, row, column } = base.styles[index];
+            return { section, identity, row, column, value };
+          })
+          .reverse(),
+      },
+    };
+  };
+  test(
+    format + ' supplemental alignment joins the exact cell owner without altering v1 bytes',
+    () => {
+      const { base, supplemental } = fixtureWithAlignment();
+      function cells(alignment) {
+        const [table] = decodeCreatedCellDocumentProjection(bytes(base), format, alignment)[0];
+        return (format === 'hwp5' ? table.table : table).cells;
+      }
+      assert(cells(undefined).every((cell) => !Object.hasOwn(cell, 'verticalAlignment')));
+      assert.deepEqual(
+        cells(bytes(supplemental)).map((cell) => cell.verticalAlignment),
+        [0, 1, 2, null],
+      );
+      assert.deepEqual(
+        cells(bytes(supplemental)).map(({ verticalAlignment: _alignment, ...cell }) => cell),
+        cells(undefined),
+      );
+      const [table] = base.sections[0].tables;
+      (format === 'hwp5' ? table.table : table).cells[0].verticalAlignment = 1;
+      assert.throws(() => cells(undefined), /Created/);
+    },
+  );
+  test(
+    format + ' optional Native alignment shares the full projection ticket and owned output',
+    () => {
+      const prefix = format + '_edit';
+      const { base, supplemental } = fixtureWithAlignment();
+      let current;
+      let alignmentReads = 0;
+      let frees = 0;
+      let epoch = '0';
+      let status = 1;
+      let changeDuringAlignment = false;
+      const wasm = {
+        [prefix + '_created_cell_properties_version']: () => 1,
+        [prefix + '_created_cell_properties_ticket']: () => {
+          current = { document: '1', generation: '1', owner: '2', epoch };
+          return 1;
+        },
+        [prefix + '_created_cell_properties_projection']: () => {
+          current = base;
+          return 1;
+        },
+        [prefix + '_created_cell_vertical_alignment_projection']: () => {
+          alignmentReads++;
+          current = supplemental;
+          if (changeDuringAlignment) epoch = '2';
+          return status;
+        },
+        [prefix + '_set_created_cell_properties']: () => 1,
+        [prefix + '_output_ptr']: () => 1,
+        [prefix + '_output_len']: () => 1,
+        [prefix + '_output_free']: () => frees++,
+      };
+      const api = createCreatedCellPropertiesApi({
+        wasm,
+        prefix,
+        check() {},
+        memory: { copy: () => bytes(current), error: () => Error('NativeAlignmentRefusal') },
+      });
+      const cells = () => {
+        const [table] = api.createdCellPropertiesProjection(0);
+        return (format === 'hwp5' ? table.table : table).cells;
+      };
+      const first = cells();
+      assert.equal(alignmentReads, 1);
+      assert.equal(frees, 4);
+      assert.deepEqual(
+        first.map((cell) => cell.verticalAlignment),
+        [0, 1, 2, null],
+      );
+      first[1].verticalAlignment = 99;
+      assert.equal(cells()[1].verticalAlignment, 1);
+      assert.equal(alignmentReads, 1);
+      epoch = '1';
+      changeDuringAlignment = true;
+      assert.throws(cells, /StaleCreatedCellProjection/);
+      assert.equal(alignmentReads, 2);
+      changeDuringAlignment = false;
+      status = 0;
+      const beforeFailure = frees;
+      assert.throws(cells, /NativeAlignmentRefusal/);
+      assert.equal(frees - beforeFailure, 3);
+      status = 2;
+      assert.throws(cells, /NativeAlignmentRefusal/);
+      status = 1;
+      assert.equal(cells()[1].verticalAlignment, 1);
+      assert.equal(alignmentReads, 5);
+    },
+  );
+  test(format + ' supplemental alignment rejects incomplete or wrong observations', () => {
+    for (const mutate of [
+      (s) => (s.schemaVersion = 2),
+      (s) => (s.format = 'unknown'),
+      (s) => (s.extra = true),
+      (s) => s.alignments.pop(),
+      (s) => (s.alignments[1] = s.alignments[0]),
+      (s) => (s.alignments[0].identity = '171'),
+      (s) => (s.alignments[0].section = 1),
+      (s) => (s.alignments[0].column = '1'),
+      (s) => (s.alignments[0].value = 3),
+      (s) => (s.alignments[0].value = 'TOP'),
+      (s) => (s.alignments[0].extra = true),
+    ]) {
+      const { base, supplemental } = fixtureWithAlignment();
+      mutate(supplemental);
+      assert.throws(
+        () => decodeCreatedCellDocumentProjection(bytes(base), format, bytes(supplemental)),
+        /InvalidCreatedCellProjection/,
+      );
+    }
+  });
+}

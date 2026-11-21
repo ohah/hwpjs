@@ -2244,3 +2244,17 @@ Native source 등록은 신규6+writer4+live image8+기존chart5로 named23다. 
 zig build test-hwpx-image-source-crop -Doptimize=ReleaseSafe -j1 --summary all
 node --test --test-concurrency=1 tests/image/hwpx-source-crop-rendering.test.mjs
 ```
+
+## 생성 단일 셀 세로 정렬
+
+[소유권 계약](created-cell-vertical-alignment.md)의 모델, H5/HX raw 저장,
+단일 History·undo/redo와 additive wire 검사는 다음 집중 step으로 실행한다.
+정규 `zig build test`는 같은 probe를 root에서 한 번 import한다.
+집중 step을 정규 step에 다시 연결하지 않아 중복 실행하지 않는다.
+
+```sh
+nice -n 10 mise exec -- zig build test-created-cell-vertical-alignment -Doptimize=ReleaseSafe -j1
+```
+
+이는 준비된 명령이며 현재 소스 패킷에서 실행하지 않았다. 실제 WASM optional4,
+SDK, Canvas 입력과 독립 raw oracle 증거는 별도 승인이 필요하다.

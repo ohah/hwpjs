@@ -246,6 +246,16 @@ export const CREATED_CELL_PROPERTIES_ABI = Object.freeze(
   ),
 );
 
+// Additive optional generated-cell alignment; ordinary properties stay version1.
+export const CREATED_CELL_VERTICAL_ALIGNMENT_ABI = Object.freeze(
+  Object.fromEntries(
+    ['hwp5_edit', 'hwpx_edit'].flatMap((prefix) => [
+      [`${prefix}_created_cell_vertical_alignment_write_version`, { params: [], results: ['i32'] }],
+      [`${prefix}_created_cell_vertical_alignment_projection`, { params: [], results: ['i32'] }],
+    ]),
+  ),
+);
+
 // Optional HWPX existing-node margins; no expansion of required ABI6 or geometry V1.
 export const HWPX_OBJECT_BODY_FLOW_ABI = Object.freeze({
   hwpx_edit_object_body_flow_version: { params: [], results: ['i32'] },

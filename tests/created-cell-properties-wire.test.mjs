@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createCreatedCellPropertiesApi } from '../js/created-cell-properties-api.mjs';
+import { createdCellPropertiesMessage } from '../js/created-cell-properties.mjs';
 import { applyCreatedCellPropertiesCommand } from '../web/preview/created-cell-properties-command.mjs';
 const request = () => ({
   section: 0,
@@ -175,3 +176,150 @@ test('Worker V2, format, history, window and capability refuse before mutation',
   );
   assert.equal(calls, 1);
 });
+
+for (const prefix of ['hwp5_edit', 'hwpx_edit']) {
+  test(
+    prefix + ' generated-cell alignment is one exact-witness edit on the negotiated writer',
+    () => {
+      for (const verticalAlignment of [0, 1, 2]) {
+        const m = mock(prefix);
+        m.wasm[prefix + '_created_cell_vertical_alignment_write_version'] = () => 1;
+        const { size: _size, appearance: _appearance, ...owner } = request();
+        assert.equal(m.api.supportsCreatedCellVerticalAlignment(), true);
+        assert.equal(
+          m.api.editCreatedCellProperties({ ...owner, verticalAlignment }).changed,
+          true,
+        );
+        assert.deepEqual(m.captured, {
+          ...owner,
+          vertical_alignment: verticalAlignment,
+          appearance: {},
+          witness: { document: '123', generation: '1', owner: '456', epoch: '9007199254740993' },
+        });
+        assert.equal(m.writes, 1);
+        assert.equal(m.frees, 1);
+      }
+    },
+  );
+  test(
+    prefix + ' projection alone cannot negotiate a setter and existing writes keep their shape',
+    () => {
+      for (const v of [undefined, 0, 2]) {
+        const m = mock(prefix);
+        m.wasm[prefix + '_created_cell_vertical_alignment_projection'] = () => 1;
+        if (v !== undefined)
+          m.wasm[prefix + '_created_cell_vertical_alignment_write_version'] = () => v;
+        assert.equal(m.api.supportsCreatedCellVerticalAlignment(), false);
+        assert.throws(
+          () => m.api.editCreatedCellProperties({ ...request(), verticalAlignment: 1 }),
+          /CreatedCellVerticalAlignmentUnavailable/,
+        );
+        assert.equal(m.frees, 0);
+        assert.equal(m.writes, 0);
+        assert.equal(m.api.editCreatedCellProperties(request()).changed, true);
+        assert.equal(Object.hasOwn(m.captured, 'vertical_alignment'), false);
+        assert.equal(m.writes, 1);
+      }
+    },
+  );
+  test(prefix + ' invalid or unavailable alignment cannot reach Native', () => {
+    const m = mock(prefix);
+    m.wasm[prefix + '_created_cell_vertical_alignment_write_version'] = () => 1;
+    for (const value of [null, undefined, -0, -1, 3, 0.5, 'CENTER', NaN])
+      assert.throws(
+        () => m.api.editCreatedCellProperties({ ...request(), verticalAlignment: value }),
+        /InvalidCreatedCellProperties/,
+      );
+    assert.equal(m.frees, 0);
+    assert.equal(m.writes, 0);
+  });
+}
+
+for (const format of ['hwp5', 'hwpx']) {
+  test(
+    format + ' generated alignment requires support and known exact current owner in Core',
+    () => {
+      const { size: _size, appearance: _appearance, ...owner } = request();
+      const state = {
+        status: 'ready',
+        capabilities: {
+          createdCellPropertiesAvailable: true,
+          createdCellVerticalAlignmentAvailable: true,
+        },
+        content: {
+          format,
+          limited: false,
+          createdCellPropertiesAvailable: true,
+          createdCellVerticalAlignmentAvailable: true,
+          createdTables: [
+            {
+              section: owner.section,
+              identity: owner.identity,
+              rows: 1,
+              columns: 2,
+              cells: [{ row: 0, column: 1, ...owner.expected, verticalAlignment: 0 }],
+            },
+          ],
+        },
+      };
+      const patch = { ...owner, verticalAlignment: 1 };
+      assert.deepEqual(createdCellPropertiesMessage(patch, state), {
+        kind: 'created-cell-properties',
+        ...patch,
+        expected: Object.assign(Object.create(null), patch.expected),
+      });
+      for (const alter of [
+        (copy) => (copy.capabilities.createdCellVerticalAlignmentAvailable = false),
+        (copy) => (copy.content.createdCellVerticalAlignmentAvailable = false),
+        (copy) => (copy.content.createdTables[0].cells[0].verticalAlignment = null),
+        (copy) => delete copy.content.createdTables[0].cells[0].verticalAlignment,
+      ]) {
+        const copy = structuredClone(state);
+        alter(copy);
+        assert.throws(
+          () => createdCellPropertiesMessage(patch, copy),
+          /CreatedCellVerticalAlignmentUnavailable/,
+        );
+        assert.equal(createdCellPropertiesMessage(request(), copy).size.width, 110);
+      }
+      assert.throws(
+        () => createdCellPropertiesMessage({ ...patch, column: 0 }, state),
+        /StaleCreatedCellProperties/,
+      );
+    },
+  );
+
+  test(format + ' generated alignment runtime forwarding requires explicit support', () => {
+    const { size: _size, appearance: _appearance, ...owner } = request();
+    const patch = { ...owner, kind: 'created-cell-properties', verticalAlignment: 2 };
+    const calls = [];
+    let supported = false;
+    const editor = {
+      historyStats: () => ({ protocolVersion: 2 }),
+      supportsCreatedCellProperties: () => true,
+      supportsCreatedCellVerticalAlignment: () => supported,
+      editCreatedCellProperties: (request) => (
+        calls.push(request),
+        { application: 'applied', changed: true }
+      ),
+    };
+    const apply = (message) =>
+      applyCreatedCellPropertiesCommand(editor, format, true, false, null, message);
+    assert.throws(() => apply(patch), /CreatedCellVerticalAlignmentUnavailable/);
+    assert.equal(calls.length, 0);
+    supported = true;
+    assert.equal(apply(patch).changed, true);
+    assert.deepEqual(calls, [
+      {
+        ...owner,
+        expected: Object.assign(Object.create(null), owner.expected),
+        verticalAlignment: 2,
+      },
+    ]);
+    assert.throws(
+      () => apply({ ...patch, verticalAlignment: null }),
+      /InvalidCreatedCellProperties/,
+    );
+    assert.equal(calls.length, 1);
+  });
+}

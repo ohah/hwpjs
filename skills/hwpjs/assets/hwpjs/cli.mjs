@@ -1983,6 +1983,13 @@ var init_abi_schema = __esmMin((() => {
 			results: ["i32"]
 		}]
 	])));
+	Object.freeze(Object.fromEntries(["hwp5_edit", "hwpx_edit"].flatMap((prefix) => [[`${prefix}_created_cell_vertical_alignment_write_version`, {
+		params: [],
+		results: ["i32"]
+	}], [`${prefix}_created_cell_vertical_alignment_projection`, {
+		params: [],
+		results: ["i32"]
+	}]])));
 	Object.freeze({
 		hwpx_edit_object_body_flow_version: {
 			params: [],
@@ -4543,7 +4550,7 @@ function validateCreatedCellAppearance(value) {
 	}
 	return value;
 }
-function decodeCreatedCellDocumentProjection(bytes, format) {
+function decodeCreatedCellDocumentProjection(bytes, format, alignmentBytes) {
 	const value = JSON.parse(decoder$6.decode(bytes));
 	exact$1(value, [
 		"schemaVersion",
@@ -4596,6 +4603,39 @@ function decodeCreatedCellDocumentProjection(bytes, format) {
 			rawSHA256: entry.raw_sha256,
 			rawOrigin: entry.raw_origin
 		};
+	}
+	if (alignmentBytes !== void 0) {
+		const alignment = JSON.parse(decoder$6.decode(alignmentBytes));
+		exact$1(alignment, [
+			"schemaVersion",
+			"format",
+			"alignments"
+		]);
+		if (alignment.schemaVersion !== 1 || alignment.format !== format || !Array.isArray(alignment.alignments) || alignment.alignments.length !== owners.size) throw Error("InvalidCreatedCellProjection");
+		const aligned = /* @__PURE__ */ new Set();
+		for (const entry of alignment.alignments) {
+			exact$1(entry, [
+				"section",
+				"identity",
+				"row",
+				"column",
+				"value"
+			]);
+			if (typeof entry.identity !== "string" || ![
+				entry.section,
+				entry.row,
+				entry.column
+			].every((n) => uint$52(n, 4294967295) && !Object.is(n, -0)) || ![
+				0,
+				1,
+				2,
+				null
+			].includes(entry.value) || Object.is(entry.value, -0)) throw Error("InvalidCreatedCellProjection");
+			const key = `${entry.section}:${entry.identity}:${entry.row}:${entry.column}`, cell = owners.get(key);
+			if (!cell || aligned.has(key)) throw Error("InvalidCreatedCellProjection");
+			aligned.add(key);
+			cell.verticalAlignment = entry.value;
+		}
 	}
 	return sections;
 }
@@ -4652,7 +4692,8 @@ function captureCreatedCellPropertiesRequest(input) {
 		"column",
 		"expected",
 		"size",
-		"appearance"
+		"appearance",
+		"verticalAlignment"
 	], [
 		"section",
 		"identity",
@@ -4669,7 +4710,8 @@ function captureCreatedCellPropertiesRequest(input) {
 	shape$1(value.expected, ["width", "height"], ["width", "height"]);
 	uint$51(value.expected.width, true);
 	uint$51(value.expected.height, true);
-	let changed = false;
+	let changed = Object.hasOwn(value, "verticalAlignment");
+	if (changed) uint$51(value.verticalAlignment, false, 2);
 	if (Object.hasOwn(value, "size")) {
 		if (!shape$1(value.size, ["width", "height"]).length) return invalid$6();
 		for (const key of Reflect.ownKeys(value.size)) uint$51(value.size[key], true);
@@ -4778,12 +4820,21 @@ function createCreatedCellPropertiesApi({ wasm, memory, check, prefix }) {
 		ticket,
 		write
 	].every((name) => typeof wasm[name] === "function") && wasm[version]() === 1;
-	const projection = `${prefix}_created_cell_properties_projection`;
+	const projection = `${prefix}_created_cell_properties_projection`, alignmentProjection = `${prefix}_created_cell_vertical_alignment_projection`, alignmentWriteVersion = `${prefix}_created_cell_vertical_alignment_write_version`;
+	const alignmentWritable = () => supported() && typeof wasm[alignmentWriteVersion] === "function" && wasm[alignmentWriteVersion]() === 1;
 	let cached;
 	function readWitness() {
 		if (!wasm[ticket]()) throw memory.error();
 		try {
 			return witness(JSON.parse(new TextDecoder().decode(memory.copy(wasm[`${prefix}_output_ptr`](), wasm[`${prefix}_output_len`]()))));
+		} finally {
+			wasm[`${prefix}_output_free`]();
+		}
+	}
+	function readProjection(exportName) {
+		try {
+			if (wasm[exportName]() !== 1) throw memory.error();
+			return memory.copy(wasm[`${prefix}_output_ptr`](), wasm[`${prefix}_output_len`]());
 		} finally {
 			wasm[`${prefix}_output_free`]();
 		}
@@ -4800,13 +4851,9 @@ function createCreatedCellPropertiesApi({ wasm, memory, check, prefix }) {
 			const key = JSON.stringify(readWitness());
 			if (cached?.key !== key) {
 				cached = void 0;
-				let sections;
-				try {
-					if (!wasm[projection]()) throw memory.error();
-					sections = decodeCreatedCellDocumentProjection(memory.copy(wasm[`${prefix}_output_ptr`](), wasm[`${prefix}_output_len`]()), prefix === "hwp5_edit" ? "hwp5" : "hwpx");
-				} finally {
-					wasm[`${prefix}_output_free`]();
-				}
+				const projectionBytes = readProjection(projection);
+				const alignmentBytes = typeof wasm[alignmentProjection] === "function" ? readProjection(alignmentProjection) : void 0;
+				const sections = decodeCreatedCellDocumentProjection(projectionBytes, prefix === "hwp5_edit" ? "hwp5" : "hwpx", alignmentBytes);
 				if (JSON.stringify(readWitness()) !== key) throw Error("StaleCreatedCellProjection");
 				cached = {
 					key,
@@ -4820,10 +4867,16 @@ function createCreatedCellPropertiesApi({ wasm, memory, check, prefix }) {
 			check();
 			return supported();
 		},
+		supportsCreatedCellVerticalAlignment() {
+			check();
+			return alignmentWritable();
+		},
 		editCreatedCellProperties(input) {
 			check();
 			const request = captureCreatedCellPropertiesRequest(input);
 			if (!supported()) throw Error("CreatedCellPropertiesUnavailable");
+			const { verticalAlignment, ...cellRequest } = request;
+			if (verticalAlignment !== void 0 && !alignmentWritable()) throw Error("CreatedCellVerticalAlignmentUnavailable");
 			if (!wasm[ticket]()) throw memory.error();
 			let binding;
 			try {
@@ -4832,7 +4885,8 @@ function createCreatedCellPropertiesApi({ wasm, memory, check, prefix }) {
 				wasm[`${prefix}_output_free`]();
 			}
 			const bytes = encoder$17.encode(JSON.stringify({
-				...request,
+				...cellRequest,
+				...verticalAlignment === void 0 ? {} : { vertical_alignment: verticalAlignment },
 				appearance: appearance(request.appearance),
 				witness: binding
 			}));

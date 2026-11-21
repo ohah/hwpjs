@@ -121,6 +121,12 @@ pub const live_image_insert_signatures = [_]OptionalFunctionSignature{
     .{ .name = "hwpx_edit_image_insert_version", .params = &.{}, .results = &.{"i32"} },
     .{ .name = "hwpx_edit_insert_image", .params = &.{ "i32", "i32", "i32", "i32" }, .results = &.{"i32"} },
 };
+pub const created_cell_vertical_alignment_signatures = [_]OptionalFunctionSignature{
+    .{ .name = "hwp5_edit_created_cell_vertical_alignment_write_version", .params = &.{}, .results = &.{"i32"} },
+    .{ .name = "hwp5_edit_created_cell_vertical_alignment_projection", .params = &.{}, .results = &.{"i32"} },
+    .{ .name = "hwpx_edit_created_cell_vertical_alignment_write_version", .params = &.{}, .results = &.{"i32"} },
+    .{ .name = "hwpx_edit_created_cell_vertical_alignment_projection", .params = &.{}, .results = &.{"i32"} },
+};
 pub const created_cell_properties_signatures = [_]OptionalFunctionSignature{
     .{ .name = "hwp5_edit_created_cell_properties_version", .params = &.{}, .results = &.{"i32"} },
     .{ .name = "hwp5_edit_created_cell_properties_ticket", .params = &.{}, .results = &.{"i32"} },

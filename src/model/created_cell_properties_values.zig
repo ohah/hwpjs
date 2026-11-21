@@ -11,10 +11,11 @@ pub const Request = struct {
     address: Address,
     expected_ticket: Ticket,
     expected: Frame,
+    vertical_alignment: ?@import("cell_vertical_alignment.zig").Alignment = null,
     size: Size = .{},
     appearance: style.Patch = .{},
 };
-pub const Entry = struct { address: Address, frame: Frame, appearance: style.Patch };
+pub const Entry = struct { address: Address, frame: Frame, appearance: style.Patch, vertical_alignment: ?@import("cell_vertical_alignment.zig").Alignment = null };
 pub const Values = struct {
     entries: []Entry = &.{},
     pub fn deinit(self: *Values, a: std.mem.Allocator) void {
@@ -52,17 +53,29 @@ pub const Prepared = struct {
 /// Pure native preparation. Does not edit source tables or publish resources.
 /// Full document-wide unique identity/protected-host admission remains the adapter's duty.
 pub fn prepare(a: std.mem.Allocator, before: Values, table: *const Table, section: usize, current: Ticket, request: Request, max_bytes: usize) !Prepared {
+    return prepareWithAlignmentBase(a, before, table, section, current, request, max_bytes, null);
+}
+
+/// Base is supplied by the format owner, not inferred from an absent override.
+pub fn prepareWithAlignmentBase(a: std.mem.Allocator, before: Values, table: *const Table, section: usize, current: Ticket, request: Request, max_bytes: usize, alignment_base: ?@import("cell_vertical_alignment.zig").Alignment) !Prepared {
     if (!std.meta.eql(current.binding, request.expected_ticket.binding)) return error.SourceBindingMismatch;
     if (current.epoch != request.expected_ticket.epoch) return error.StaleMutationEpoch;
     if (section != request.address.section) return error.InvalidSection;
     const old = try before.observe(table, request.address);
     if (!std.meta.eql(old.frame, request.expected)) return error.StaleCreatedCellProperties;
-    if (request.size.width == null and request.size.height == null and !style.has(request.appearance)) return error.EmptyCreatedCellProperties;
+    if (request.vertical_alignment == null and request.size.width == null and request.size.height == null and !style.has(request.appearance)) return error.EmptyCreatedCellProperties;
     const frame: Frame = .{ .width = request.size.width orelse old.frame.width, .height = request.size.height orelse old.frame.height };
     if (frame.width == 0 or frame.height == 0) return error.InvalidCreatedCellPropertiesSize;
     try style.validate(request.appearance);
     const appearance = style.merge(old.appearance, request.appearance);
-    const edited: Entry = .{ .address = request.address, .frame = frame, .appearance = appearance };
+    var alignment = old.vertical_alignment;
+    if (request.vertical_alignment) |desired| {
+        const effective = old.vertical_alignment orelse alignment_base orelse return error.UnsupportedCreatedCellVerticalAlignment;
+        if (effective != desired) {
+            alignment = if (alignment_base != null and alignment_base.? == desired) null else desired;
+        }
+    }
+    const edited: Entry = .{ .address = request.address, .frame = frame, .appearance = appearance, .vertical_alignment = alignment };
     var index: ?usize = null;
     for (before.entries, 0..) |entry, i| if (std.meta.eql(entry.address, request.address)) {
         index = i;

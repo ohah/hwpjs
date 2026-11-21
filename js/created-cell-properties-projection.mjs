@@ -72,7 +72,7 @@ export function validateCreatedCellAppearance(value) {
   }
   return value;
 }
-export function decodeCreatedCellDocumentProjection(bytes, format) {
+export function decodeCreatedCellDocumentProjection(bytes, format, alignmentBytes) {
   const value = JSON.parse(decoder.decode(bytes));
   exact(value, ['schemaVersion', 'format', 'sections', 'styles']);
   if (
@@ -153,6 +153,35 @@ export function decodeCreatedCellDocumentProjection(bytes, format) {
       rawSHA256: entry.raw_sha256,
       rawOrigin: entry.raw_origin,
     };
+  }
+  if (alignmentBytes !== undefined) {
+    const alignment = JSON.parse(decoder.decode(alignmentBytes));
+    exact(alignment, ['schemaVersion', 'format', 'alignments']);
+    if (
+      alignment.schemaVersion !== 1 ||
+      alignment.format !== format ||
+      !Array.isArray(alignment.alignments) ||
+      alignment.alignments.length !== owners.size
+    )
+      throw Error('InvalidCreatedCellProjection');
+    const aligned = new Set();
+    for (const entry of alignment.alignments) {
+      exact(entry, ['section', 'identity', 'row', 'column', 'value']);
+      if (
+        typeof entry.identity !== 'string' ||
+        ![entry.section, entry.row, entry.column].every(
+          (n) => uint(n, 0xffffffff) && !Object.is(n, -0),
+        ) ||
+        ![0, 1, 2, null].includes(entry.value) ||
+        Object.is(entry.value, -0)
+      )
+        throw Error('InvalidCreatedCellProjection');
+      const key = `${entry.section}:${entry.identity}:${entry.row}:${entry.column}`,
+        cell = owners.get(key);
+      if (!cell || aligned.has(key)) throw Error('InvalidCreatedCellProjection');
+      aligned.add(key);
+      cell.verticalAlignment = entry.value;
+    }
   }
   return sections;
 }

@@ -81,7 +81,10 @@ pub fn append(a: std.mem.Allocator, out: *std.ArrayList(u8), table: *const Table
     const list_len: usize = if (options.layout == .observed8) 8 else 6;
     const attributes_at: usize = if (options.layout == .observed8) 4 else 2;
     if (options.unknown) |unknown| std.mem.writeInt(u16, cell_list[2..4], unknown, .little);
-    std.mem.writeInt(u32, cell_list[attributes_at..][0..4], options.attributes, .little);
+    var attributes = options.attributes;
+    const alignment = try table.cellVerticalAlignment(row, column, null);
+    if (alignment) |value| attributes = (attributes & ~@as(u32, 0x60)) | (@as(u32, @backingInt(value)) << 5);
+    std.mem.writeInt(u32, cell_list[attributes_at..][0..4], attributes, .little);
     @memcpy(cell_list[list_len..][0..26], &geometry);
     var draft: std.ArrayList(u8) = .empty;
     defer draft.deinit(a);

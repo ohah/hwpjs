@@ -2,14 +2,16 @@ import './table-cell-properties.css';
 import { createDialogLayer } from './dialog-layer.ts';
 import { createCellSizeUnitDraft, type CellSizeUnit } from './table-cell-size-units.ts';
 import { tableCellDimensions } from './table-cell-properties-port.ts';
+import type { CreatedCellPropertiesPatch } from './created-cell-properties-port.ts';
 export function createCreatedCellPropertiesView(
   root: HTMLElement,
   expected: { width: number; height: number },
   callbacks: {
-    apply(patch: { size?: { width?: number; height?: number }; appearance?: unknown }): void;
+    apply(patch: CreatedCellPropertiesPatch): void;
     dismiss(): void;
   },
   writeReason: string | null,
+  alignment?: { value: 0 | 1 | 2 | null; writable: boolean },
 ) {
   const layer = createDialogLayer(root, {
     role: 'created-cell-properties-dialog',
@@ -45,6 +47,14 @@ export function createCreatedCellPropertiesView(
     height = add('height', '셀 높이');
   width.value = sizes.read().width;
   height.value = sizes.read().height;
+  const vertical = add('vertical-alignment', '세로 정렬', ['', '0', '1', '2']);
+  const labels = ['확인할 수 없음', '위쪽', '가운데', '아래쪽'];
+  Array.from(vertical.children).forEach((option, index) => {
+    option.textContent = labels[index];
+    if (index === 0) (option as HTMLOptionElement).disabled = true;
+  });
+  vertical.value = alignment?.value == null ? '' : String(alignment.value);
+  const alignmentAvailable = alignment?.value != null && alignment.writable;
   const fillMode = add('fill-mode', '채우기', ['', 'none', 'solid']);
   for (const option of Array.from(fillMode.children)) {
     if ((option as HTMLOptionElement).value === 'none') option.textContent = '채우기 없음';
@@ -120,10 +130,22 @@ export function createCreatedCellPropertiesView(
           }
         : {}),
     };
-    if (!Object.keys(size).length && !Object.keys(appearance).length)
+    let verticalAlignment: 0 | 1 | 2 | undefined;
+    if (alignmentAvailable) {
+      if (!['0', '1', '2'].includes(vertical.value))
+        throw Error('지원하지 않는 세로 정렬 값입니다.');
+      const current = Number(vertical.value) as 0 | 1 | 2;
+      if (current !== alignment.value) verticalAlignment = current;
+    }
+    if (
+      !Object.keys(size).length &&
+      !Object.keys(appearance).length &&
+      verticalAlignment === undefined
+    )
       throw Error('변경한 값이 없습니다.');
     return {
       ...(Object.keys(size).length ? { size } : {}),
+      ...(verticalAlignment === undefined ? {} : { verticalAlignment }),
       ...(Object.keys(appearance).length ? { appearance } : {}),
     };
   };
@@ -137,6 +159,7 @@ export function createCreatedCellPropertiesView(
     const blocked = disposed || busy || stale || !!writeReason;
     for (const input of Object.values(fields)) input.disabled = blocked;
     fill.disabled = blocked || fillMode.value === 'none';
+    vertical.disabled = blocked || !alignmentAvailable;
     apply.disabled = blocked || composing || !!error;
     status.textContent = stale ? '선택이나 문서가 바뀌었습니다. 창을 다시 여세요.' : (error ?? '');
   }
@@ -152,7 +175,7 @@ export function createCreatedCellPropertiesView(
     if (!busy && !stale && !writeReason && fillMode.value !== 'none' && fill.value)
       fillMode.value = 'solid';
   });
-  for (const input of [fillMode, fill, style, borderWidth, borderColor]) {
+  for (const input of [vertical, fillMode, fill, style, borderWidth, borderColor]) {
     input.addEventListener('input', refresh);
     input.addEventListener('change', refresh);
   }

@@ -98,6 +98,13 @@ export function createCreatedCellPropertiesTool(options: {
         available
           ? null
           : '현재 엔진에는 생성 셀 크기·테두리·채우기 쓰기가 아직 연결되지 않았습니다.',
+        {
+          value: captured.verticalAlignment,
+          writable:
+            available &&
+            (captured.state.capabilities as any)?.createdCellVerticalAlignmentAvailable === true &&
+            (captured.state.content as any)?.createdCellVerticalAlignmentAvailable === true,
+        },
       );
       if (!port.bindDialog(captured, view.element)) {
         close();

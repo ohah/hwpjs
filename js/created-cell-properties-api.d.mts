@@ -12,6 +12,7 @@ export function createCreatedCellPropertiesApi(input: {
   prefix: 'hwp5_edit' | 'hwpx_edit';
 }): {
   supportsCreatedCellProperties(): boolean;
+  supportsCreatedCellVerticalAlignment(): boolean;
   supportsCreatedCellPropertiesProjection(): boolean;
   createdCellPropertiesProjection(section: number): unknown[];
   editCreatedCellProperties(request: CreatedCellPropertiesRequest): CreatedCellPropertiesOutcome;

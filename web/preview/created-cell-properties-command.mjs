@@ -29,6 +29,14 @@ export function applyCreatedCellPropertiesCommand(
     expected: message.expected,
     ...(message.size === undefined ? {} : { size: message.size }),
     ...(message.appearance === undefined ? {} : { appearance: message.appearance }),
+    ...(Object.hasOwn(message, 'verticalAlignment')
+      ? { verticalAlignment: message.verticalAlignment }
+      : {}),
   });
+  if (
+    request.verticalAlignment !== undefined &&
+    editor.supportsCreatedCellVerticalAlignment?.() !== true
+  )
+    throw Error('CreatedCellVerticalAlignmentUnavailable');
   return editor.editCreatedCellProperties(request);
 }

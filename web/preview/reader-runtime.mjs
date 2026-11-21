@@ -1258,6 +1258,13 @@ export function createReaderRuntime({
           textReadSource()?.supportsDocumentTextReadBinding?.() === true
             ? textReadSource().documentTextReadBinding()
             : undefined;
+        const createdCellPropertiesAvailable =
+          historyEnabled &&
+          historyStats?.protocolVersion === 2 &&
+          !historyPoisoned &&
+          !documentWindow &&
+          editor?.supportsCreatedCellPropertiesProjection?.() === true &&
+          editor?.supportsCreatedCellProperties?.() === true;
         response = {
           origin: message.origin,
           ...value,
@@ -1279,13 +1286,10 @@ export function createReaderRuntime({
             !historyPoisoned &&
             !documentWindow &&
             editor?.supportsOriginalCellVerticalAlignment?.() === true,
-          createdCellPropertiesAvailable:
-            historyEnabled &&
-            historyStats?.protocolVersion === 2 &&
-            !historyPoisoned &&
-            !documentWindow &&
-            editor?.supportsCreatedCellPropertiesProjection?.() === true &&
-            editor?.supportsCreatedCellProperties?.() === true,
+          createdCellPropertiesAvailable,
+          createdCellVerticalAlignmentAvailable:
+            createdCellPropertiesAvailable &&
+            editor?.supportsCreatedCellVerticalAlignment?.() === true,
           ...(historyPoisoned ? { historyPoisoned: true } : {}),
           ...(historyStats === undefined ? {} : { historyStats }),
           ...(historyRevision === undefined ? {} : { historyRevision }),

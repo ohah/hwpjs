@@ -23,6 +23,22 @@ pub fn build(b: *std.Build) void {
     const core_test_step = b.step("test", "Run core, controlled text and required pinned package corpus tests");
     core_test_step.dependOn(&run_tests.step);
 
+    // The regular root imports this probe once; the focused step is independent
+    // so `zig build test` does not execute this cohort twice.
+    const created_valign_tests = b.addTest(.{
+        .use_llvm = true,
+        .filters = &.{"created cell valign"},
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/created_cell_vertical_alignment_probe.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    const run_created_valign_tests = b.addRunArtifact(created_valign_tests);
+    run_created_valign_tests.step.dependOn(&abi_check.step);
+    const created_valign_step = b.step("test-created-cell-vertical-alignment", "Run generated single-cell alignment model, raw, History and optional wire contracts");
+    created_valign_step.dependOn(&run_created_valign_tests.step);
+
     // Corpus is required by the regular full test target, not an optional skip.
     const package_corpus_options = b.addOptions();
     package_corpus_options.addOption([]const u8, "root", b.option([]const u8, "hwpx-package-corpus-root", "Absolute isolated historical raw484 dataset path; required by test") orelse "");

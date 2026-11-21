@@ -41,3 +41,53 @@ test('created table local flow refuses row truncation', () => {
     /InvalidCreatedTableLayout/,
   );
 });
+
+for (const displayFormat of ['hwp5', 'hwpx']) {
+  test(`${displayFormat} final generated cell box aligns text and caret rows without moving the grid`, () => {
+    const nativeTable = {
+      ...table,
+      displayFormat,
+      displayInsets: { left: 3, right: 3, top: 6, bottom: 9 },
+      createdCellPropertiesVersion: 1,
+      width: 14400,
+      height: 7200,
+      cells: table.cells.map((cell, index) => ({
+        ...cell,
+        x: index * 7200,
+        y: 0,
+        height: 7200,
+      })),
+    };
+    const view = (verticalAlignment) =>
+      layoutCreatedTable(
+        {
+          ...nativeTable,
+          cells: [{ ...nativeTable.cells[0], verticalAlignment }, nativeTable.cells[1]],
+        },
+        measure,
+      );
+    const inherited = layoutCreatedTable(nativeTable, measure);
+    const top = view(0);
+    const center = view(1);
+    const bottom = view(2);
+    assert.deepEqual(top, inherited);
+    assert.deepEqual(view(null), inherited);
+    assert.deepEqual(bottom.boxes, top.boxes);
+    assert.deepEqual(center.boxes, top.boxes);
+    assert.equal(bottom.height, top.height);
+    assert.equal(center.height, top.height);
+    const first = (layout) => layout.rows.find((row) => row.createdCell.column === 0);
+    const topRow = first(top);
+    const centerRow = first(center);
+    const bottomRow = first(bottom);
+    assert(bottomRow.y > centerRow.y && centerRow.y > topRow.y);
+    assert(Math.abs(bottomRow.y - topRow.y - 2 * (centerRow.y - topRow.y)) < 1e-8);
+    assert.deepEqual(bottomRow.boundaries, topRow.boundaries);
+    assert.deepEqual(bottomRow.pageClip, topRow.pageClip);
+    assert.deepEqual(
+      bottom.rows.filter((row) => row.createdCell.column === 1),
+      top.rows.filter((row) => row.createdCell.column === 1),
+    );
+    assert.throws(() => view(3), /UnsupportedCellVerticalAlignment/);
+  });
+}

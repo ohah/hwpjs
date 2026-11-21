@@ -176,3 +176,59 @@ test('explicit none projection suppresses fill while keeping current borders; un
     'unavailable',
   );
 });
+
+test('generated alignment picker shows current value and combines dirty properties once', () => {
+  const dom = documentFixture(),
+    calls = [];
+  const view = createCreatedCellPropertiesView(
+    dom.root,
+    { width: 10000, height: 2000 },
+    { apply: (patch) => calls.push(patch), dismiss() {} },
+    null,
+    { value: 1, writable: true },
+  );
+  const vertical = dom.role('created-cell-vertical-alignment');
+  assert.equal(vertical.value, '1');
+  assert.equal(vertical.disabled, false);
+  assert.equal(dom.role('created-cell-apply').disabled, true);
+  vertical.value = '0';
+  fire(vertical, 'change');
+  dom.role('created-cell-fill').value = '112233';
+  fire(dom.role('created-cell-fill'), 'input');
+  fire(dom.role('created-cell-apply'), 'click');
+  assert.deepEqual(calls, [
+    { verticalAlignment: 0, appearance: { fill: { kind: 'solid', color: 0x112233 } } },
+  ]);
+  view.setStale();
+  fire(dom.role('created-cell-apply'), 'click');
+  assert.equal(calls.length, 1);
+  view.destroy();
+});
+
+test('generated alignment is independently disabled for old/unknown observations', () => {
+  for (const observation of [
+    undefined,
+    { value: 2, writable: false },
+    { value: null, writable: true },
+  ]) {
+    const dom = documentFixture(),
+      calls = [];
+    const view = createCreatedCellPropertiesView(
+      dom.root,
+      { width: 10000, height: 2000 },
+      { apply: (patch) => calls.push(patch), dismiss() {} },
+      null,
+      observation,
+    );
+    const vertical = dom.role('created-cell-vertical-alignment');
+    assert.equal(vertical.disabled, true);
+    assert.equal(vertical.value, observation?.value === 2 ? '2' : '');
+    vertical.value = '0';
+    fire(vertical, 'change');
+    dom.role('created-cell-fill-mode').value = 'none';
+    fire(dom.role('created-cell-fill-mode'), 'change');
+    fire(dom.role('created-cell-apply'), 'click');
+    assert.deepEqual(calls, [{ appearance: { fill: { kind: 'none' } } }]);
+    view.destroy();
+  }
+});

@@ -1,4 +1,8 @@
-import { EDIT_CREATED_CELL_PROPERTIES_COMMAND, type HeadlessEditor } from '@hwpjs/core';
+import {
+  EDIT_CREATED_CELL_PROPERTIES_COMMAND,
+  type CreatedCellPropertiesPayload,
+  type HeadlessEditor,
+} from '@hwpjs/core';
 // @ts-ignore Canonical shared request admission; no Native authority is minted here.
 import {
   createdCellPropertiesMessage,
@@ -8,6 +12,10 @@ import type {
   GeneratedTableGridHost,
   GeneratedTableGridSelection,
 } from './generated-table-grid-port.ts';
+export type CreatedCellPropertiesPatch = Pick<
+  CreatedCellPropertiesPayload,
+  'size' | 'appearance' | 'verticalAlignment'
+>;
 export interface CreatedCellPropertiesHost extends GeneratedTableGridHost {
   captureCreatedCellPropertiesSelection?():
     | (GeneratedTableGridSelection & { bindDialog(element: HTMLDialogElement): boolean })
@@ -60,6 +68,7 @@ export function createCreatedCellPropertiesPort(
       )
     )
       throw Error('InvalidCreatedCellPropertiesTarget');
+    const alignment = cells[0].verticalAlignment;
     const value = Object.freeze({
       state,
       section: selected.section,
@@ -67,6 +76,7 @@ export function createCreatedCellPropertiesPort(
       row: address.row,
       column: address.column,
       expected: Object.freeze({ width: cells[0].width, height: cells[0].height }),
+      verticalAlignment: alignment === 0 || alignment === 1 || alignment === 2 ? alignment : null,
     });
     if (editor.getEditorState() !== state || selected.current() !== true)
       throw Error('StaleCreatedCellProperties');
@@ -109,10 +119,7 @@ export function createCreatedCellPropertiesPort(
       const lease = issued.get(value);
       return !!lease?.bindDialog && lease.bindDialog(element) === true;
     },
-    async apply(
-      value: ReturnType<typeof capture>,
-      patch: { size?: { width?: number; height?: number }; appearance?: unknown },
-    ) {
+    async apply(value: ReturnType<typeof capture>, patch: CreatedCellPropertiesPatch) {
       if (pending) throw Error('CreatedCellPropertiesPending');
       const safePatch = captureCreatedCellPropertiesPatch(patch);
       current(value);

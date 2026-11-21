@@ -3,6 +3,7 @@ import { createdCellCharacterRanges } from '../../js/created-cell-character-runs
 import { layoutContent } from './layout.mjs';
 import { tableGrid, hwpUnitsToPixels } from './table-grid.mjs';
 import { tableInsets } from './table-insets.mjs';
+import { alignTableCellFlow } from './table-cell-vertical-alignment.mjs';
 
 // Local display flow; identity addresses never become source node indices.
 export function layoutCreatedTable(
@@ -90,22 +91,21 @@ export function layoutCreatedTable(
     section: table.section,
     createdCell: paragraphs[index].createdCell,
   }));
-  const rows = flows.flatMap((flow, index) =>
-    flow.rows.map((row) => ({
+  const rows = flows.flatMap((flow, index) => {
+    const box = boxes[index];
+    const alignment = cells[index].verticalAlignment;
+    const aligned =
+      alignment == null ? flow : alignTableCellFlow(flow, box.height, insets, alignment);
+    return aligned.rows.map((row) => ({
       ...row,
       section: table.section,
       createdCell: paragraphs[index].createdCell,
-      x: boxes[index].x + insets.left,
-      y: boxes[index].y + insets.top + row.y,
-      width: native ? row.width : Math.max(1, boxes[index].width - insets.left - insets.right),
-      pageClip: {
-        x: boxes[index].x,
-        y: boxes[index].y,
-        width: boxes[index].width,
-        height: boxes[index].height,
-      },
-    })),
-  );
+      x: box.x + insets.left,
+      y: box.y + insets.top + row.y,
+      width: native ? row.width : Math.max(1, box.width - insets.left - insets.right),
+      pageClip: { x: box.x, y: box.y, width: box.width, height: box.height },
+    }));
+  });
   return {
     rows,
     boxes,

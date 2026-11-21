@@ -2150,6 +2150,19 @@ export fn hwp5_edit_chart_literal_edit_commit(ptr: [*]const u8, size: usize, ima
 }
 
 // Optional generated-cell properties v1; existing exports are unchanged.
+// Optional generated-cell alignment; ordinary property version stays at 1.
+export fn hwp5_edit_created_cell_vertical_alignment_write_version() u32 {
+    return 1;
+}
+export fn hwp5_edit_created_cell_vertical_alignment_projection() u32 {
+    hwp5_edit_output_free();
+    const current = session() catch |err| return fail(err);
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    if (h.owned == null) return fail(error.HistoryV2Required);
+    if (h.stats().poisoned) return fail(error.HistoryMutationUncertain);
+    output = current.createdCellVerticalAlignmentProjection(a) catch |err| return fail(err);
+    return 1;
+}
 export fn hwp5_edit_created_cell_properties_version() u32 {
     const h = if (history) |*value| value else return 0;
     return if (h.owned != null and !h.stats().poisoned) 1 else 0;

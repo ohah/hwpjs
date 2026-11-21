@@ -42,7 +42,8 @@ function uint(value, positive = false, max = 0xffffffff) {
 /** Patch-only boundary prevents callers from replacing the captured identity/address. */
 export function captureCreatedCellPropertiesPatch(input) {
   const value = own(input);
-  if (!shape(value, ['size', 'appearance']).length) return invalid();
+  if (!shape(value, ['size', 'appearance', 'verticalAlignment']).length) return invalid();
+  if (Object.hasOwn(value, 'verticalAlignment')) uint(value.verticalAlignment, false, 2);
   return value;
 }
 /** Distinct generated identity address. No source tableNode/listNode is accepted. */
@@ -50,7 +51,7 @@ export function captureCreatedCellPropertiesRequest(input) {
   const value = own(input);
   shape(
     value,
-    ['section', 'identity', 'row', 'column', 'expected', 'size', 'appearance'],
+    ['section', 'identity', 'row', 'column', 'expected', 'size', 'appearance', 'verticalAlignment'],
     ['section', 'identity', 'row', 'column', 'expected'],
   );
   for (const key of ['section', 'row', 'column']) uint(value[key]);
@@ -62,7 +63,8 @@ export function captureCreatedCellPropertiesRequest(input) {
   shape(value.expected, ['width', 'height'], ['width', 'height']);
   uint(value.expected.width, true);
   uint(value.expected.height, true);
-  let changed = false;
+  let changed = Object.hasOwn(value, 'verticalAlignment');
+  if (changed) uint(value.verticalAlignment, false, 2);
   if (Object.hasOwn(value, 'size')) {
     if (!shape(value.size, ['width', 'height']).length) return invalid();
     for (const key of Reflect.ownKeys(value.size)) uint(value.size[key], true);
@@ -132,5 +134,12 @@ export function createdCellPropertiesMessage(input, state) {
     cells[0].height !== request.expected.height
   )
     throw Error('StaleCreatedCellProperties');
+  if (
+    request.verticalAlignment !== undefined &&
+    (state.capabilities?.createdCellVerticalAlignmentAvailable !== true ||
+      content.createdCellVerticalAlignmentAvailable !== true ||
+      ![0, 1, 2].includes(cells[0].verticalAlignment))
+  )
+    throw Error('CreatedCellVerticalAlignmentUnavailable');
   return Object.freeze({ kind: 'created-cell-properties', ...request });
 }

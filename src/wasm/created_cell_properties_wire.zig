@@ -11,6 +11,7 @@ const Wire = struct {
     column: u32,
     expected: values.Frame,
     witness: Witness,
+    vertical_alignment: ?u8 = null,
     size: values.Size = .{},
     appearance: @import("../model/border_fill_patch.zig").Patch = .{},
 };
@@ -24,9 +25,17 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8) !values.Request {
     var parsed = try std.json.parseFromSlice(Wire, a, bytes, .{});
     defer parsed.deinit();
     const w = parsed.value;
+    // Optional means absent, never an explicit JSON null. Keep strict numeric0..2.
+    var raw = try std.json.parseFromSlice(std.json.Value, a, bytes, .{});
+    defer raw.deinit();
+    var alignment: ?@import("../model/cell_vertical_alignment.zig").Alignment = null;
+    if (raw.value.object.get("vertical_alignment")) |value| {
+        if (value != .integer or value.integer < 0 or value.integer > 2) return error.InvalidCreatedCellVerticalAlignment;
+        alignment = @import("../model/cell_vertical_alignment.zig").fromRaw(@intCast(value.integer)).?;
+    }
     const identity = try decimal(w.identity);
     if (identity == 0) return error.InvalidCreatedTableIdentity;
-    return .{ .address = .{ .section = w.section, .identity = identity, .row = w.row, .column = w.column }, .expected_ticket = .{ .binding = .{ .document = try decimal(w.witness.document), .generation = try decimal(w.witness.generation), .owner = try decimal(w.witness.owner) }, .epoch = try decimal(w.witness.epoch) }, .expected = w.expected, .size = w.size, .appearance = w.appearance };
+    return .{ .address = .{ .section = w.section, .identity = identity, .row = w.row, .column = w.column }, .expected_ticket = .{ .binding = .{ .document = try decimal(w.witness.document), .generation = try decimal(w.witness.generation), .owner = try decimal(w.witness.owner) }, .epoch = try decimal(w.witness.epoch) }, .expected = w.expected, .vertical_alignment = alignment, .size = w.size, .appearance = w.appearance };
 }
 pub fn ticketJSON(a: std.mem.Allocator, ticket: Ticket) ![]u8 {
     const document = try std.fmt.allocPrint(a, "{d}", .{ticket.binding.document});

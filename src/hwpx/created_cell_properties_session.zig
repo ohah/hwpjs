@@ -17,7 +17,7 @@ pub fn apply(session: *editor.Session, request: Request) !bool {
     const entry = live.entries.items[index];
     // Re-resolve the current native host using the same source boundary authority.
     _ = try @import("created_table_anchor.zig").resolve(a, session, entry.anchor);
-    var replacement = (try @import("../model/created_cell_properties_table.zig").prepare(a, &entry.table, section, try session.createdCellPropertiesTicket(), request, session.options.max_xml_bytes)) orelse return false;
+    var replacement = (try @import("../model/created_cell_properties_table.zig").prepareWithAlignmentBase(a, &entry.table, section, try session.createdCellPropertiesTicket(), request, session.options.max_xml_bytes, .top)) orelse return false;
     defer replacement.deinit(a);
     const property = &replacement.cell_properties[@as(usize, request.address.row) * replacement.plan.columns + request.address.column];
     if (p.has(property.appearance)) {
