@@ -142,6 +142,10 @@ pub const History = struct {
             const target = if (command == .edit_object_vertical_margins) command.edit_object_vertical_margins.target else command.edit_object_outer_margins.target;
             if (!std.meta.eql(target.ticket, try s.historyTicket())) return error.StaleMutationEpoch;
         };
+        for (commands) |command| if (command == .set_cell_vertical_alignment) {
+            if (commands.len != 1 or !self.managed) return error.HistoryProtocol2Required;
+            if (!std.meta.eql(command.set_cell_vertical_alignment.before.ticket, try s.historyTicket())) return error.StaleMutationEpoch;
+        };
         for (commands) |command| if (command == .edit_object_geometry) {
             if (commands.len != 1) return error.InvalidObjectGeometryBatch;
             if (command.edit_object_geometry.historyRevision != self.stack.current.revision) return error.StaleObjectGeometryBinding;

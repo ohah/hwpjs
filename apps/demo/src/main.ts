@@ -93,6 +93,8 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
         ref.current?.surface?.captureSourceTableGridSelection?.() ?? null,
       captureGeneratedTableGridSelection: () =>
         ref.current?.surface?.captureGeneratedTableGridSelection?.() ?? null,
+      captureOriginalCellPropertiesSelection: () =>
+        ref.current?.surface?.captureOriginalCellPropertiesSelection?.() ?? null,
       captureCreatedCellPropertiesSelection: () =>
         ref.current?.surface?.captureCreatedCellPropertiesSelection() ?? null,
       captureCaretFormatting: () => ref.current?.surface?.captureCaretFormatting?.() ?? null,
@@ -198,6 +200,8 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       captureSourceTableGridSelection: () => surface?.captureSourceTableGridSelection?.() ?? null,
       captureGeneratedTableGridSelection: () =>
         surface?.captureGeneratedTableGridSelection?.() ?? null,
+      captureOriginalCellPropertiesSelection: () =>
+        surface?.captureOriginalCellPropertiesSelection?.() ?? null,
       captureCreatedCellPropertiesSelection: () =>
         surface?.captureCreatedCellPropertiesSelection() ?? null,
       captureCaretFormatting: () => surface?.captureCaretFormatting?.() ?? null,

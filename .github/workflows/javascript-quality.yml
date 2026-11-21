@@ -989,6 +989,7 @@ jobs:
             ./apps/demo/tests/table-cell-properties-view.test.mjs \
             ./apps/demo/tests/table-cell-properties-tool.test.mjs \
             ./apps/demo/tests/table-cell-properties-appearance-handoff.test.mjs \
+            ./apps/demo/tests/table-cell-properties-vertical-alignment.test.mjs \
             ./apps/demo/tests/object-properties-port.test.mjs \
             ./apps/demo/tests/object-properties-controller.test.mjs \
             ./apps/demo/tests/object-properties-view.test.mjs \
@@ -1004,6 +1005,15 @@ jobs:
             --import ./tools/object-properties-test-css.mjs \
             --import ./apps/demo/tests/table-cell-properties-style-preload.mjs \
             --test --test-isolation=none --test-concurrency=1 "$@"
+      - name: Test original cell vertical alignment source contracts
+        timeout-minutes: 2
+        run: |
+          bun test --no-install \
+            ./tests/original-cell-vertical-alignment-source.test.mjs \
+            ./tests/original-cell-vertical-alignment-core-source.test.ts \
+            ./tests/original-cell-vertical-alignment-admission-source.test.ts \
+            ./apps/demo/tests/original-cell-vertical-alignment-properties-source.test.ts \
+            ./packages/core/tests/commands/original-cell-vertical-alignment-generic-gate.test.ts
       - name: Test original font and size observation display
         timeout-minutes: 2
         run: |

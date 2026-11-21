@@ -308,6 +308,8 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
       (![
         'picture-replacement-query',
         'picture-replace',
+        'original-cell-vertical-alignment-query',
+        'original-cell-vertical-alignment-set',
         'object-outer-margins-query',
         'object-body-flow-query',
         'object-outer-margins-set',

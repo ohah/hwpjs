@@ -76,6 +76,7 @@ export fn hwpx_edit_table_creation_resources() u32 {
     return 1;
 }
 export fn hwpx_edit_close() void {
+    clearOriginalCellLease();
     document_text_generation.invalidate();
     closeReadScope();
     formatting_lifetime.close();
@@ -1163,7 +1164,7 @@ fn apply(command: histories.Command) !void {
         _ = try @import("../hwpx/display_resource_generation.zig").applyOwned(value, session, &.{command});
     } else switch (command.kind) {
         // Independent source-axis batches require the existing owned History.
-        .created_cell_properties, .page_settings, .object_geometry, .object_outer_margins, .object_body_flow, .bullet_definition, .paragraph_bullet, .independent_text, .document_text, .insert_document, .equation_insert, .chart_create, .image_insert, .picture_replace, .note_delete, .note_create, .named_field_rename, .named_field_create, .named_field_parameters, .source_table_cell_merge, .source_table_cell_split, .splice_created_cell => return error.HistoryNotEnabled,
+        .cell_vertical_alignment, .created_cell_properties, .page_settings, .object_geometry, .object_outer_margins, .object_body_flow, .bullet_definition, .paragraph_bullet, .independent_text, .document_text, .insert_document, .equation_insert, .chart_create, .image_insert, .picture_replace, .note_delete, .note_create, .named_field_rename, .named_field_create, .named_field_parameters, .source_table_cell_merge, .source_table_cell_split, .splice_created_cell => return error.HistoryNotEnabled,
         .source_table_grid => {
             _ = try @import("../hwpx/source_table_grid_session.zig").apply(session, .{ .section = command.section, .node = command.source_grid_node, .expected_rows = command.source_grid_expected_rows, .expected_columns = command.source_grid_expected_columns, .action = command.source_grid_action });
         },
@@ -3088,4 +3089,56 @@ export fn hwpx_edit_replace_picture(ptr: [*]const u8, size: usize, image_ptr: [*
         return if (h.stats().poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) 3 else 0;
     };
     return if (changed) 1 else 2;
+}
+
+// Optional original physical-cell alignment. This lease never accepts a caller witness.
+const original_cell_wire = @import("original_cell_vertical_alignment_wire.zig");
+var original_cell_lease_serial: u64 = 0;
+var original_cell_lease: ?struct { id: u64, request: @import("../hwpx/cell_vertical_alignment_history.zig").Request } = null;
+fn clearOriginalCellLease() void {
+    if (original_cell_lease) |*lease| lease.request.before.deinit(a);
+    original_cell_lease = null;
+}
+export fn hwpx_edit_original_cell_vertical_alignment_version() u32 {
+    const h = if (history) |*value| value else return 0;
+    return if (h.owned != null and !h.stats().poisoned) 1 else 0;
+}
+export fn hwpx_edit_original_cell_vertical_alignment(section: u32, paragraph: u32) u32 {
+    hwpx_edit_output_free();
+    clearOriginalCellLease();
+    const current = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    if (h.owned == null) return fail(error.HistoryProtocol2Required);
+    if (h.stats().poisoned) return fail(error.HistoryMutationUncertain);
+    var before = h.cellVerticalAlignment(current, a, section, paragraph) catch |err| return fail(err);
+    const token = std.math.add(u64, original_cell_lease_serial, 1) catch {
+        before.deinit(a);
+        return fail(error.CellVerticalAlignmentScopeExhausted);
+    };
+    const bytes = original_cell_wire.observation(a, "hwpx", section, paragraph, @intCast(before.table_node), @intCast(before.list_node), token, h.revision(), before.value, before.read_only or (before.raw != null and before.value == null)) catch |err| {
+        before.deinit(a);
+        return fail(err);
+    };
+    original_cell_lease_serial = token;
+    original_cell_lease = .{ .id = token, .request = .{ .section = section, .paragraph = paragraph, .revision = h.revision(), .before = before, .value = .top } };
+    output = bytes;
+    return 1;
+}
+export fn hwpx_edit_set_original_cell_vertical_alignment(ptr: [*]const u8, size: usize) u32 {
+    hwpx_edit_output_free();
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    if (h.owned == null) return fail(error.HistoryProtocol2Required);
+    if (h.stats().poisoned) return fail(error.HistoryMutationUncertain);
+    const request = original_cell_wire.decode(a, ptr[0..size]) catch |err| return fail(err);
+    const lease = original_cell_lease orelse return fail(error.StaleOriginalCellLease);
+    if (lease.id != request.lease) return fail(error.StaleOriginalCellLease);
+    defer clearOriginalCellLease();
+    var changed = lease.request;
+    changed.value = request.value;
+    const revision = h.revision();
+    apply(.{ .kind = .cell_vertical_alignment, .section = changed.section, .paragraph = changed.paragraph, .start = 0, .deleted = 0, .inserted = "", .cell_vertical_alignment = &changed }) catch |err| {
+        _ = fail(err);
+        return if (h.stats().poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    return if (h.revision() != revision) 1 else 2;
 }

@@ -401,3 +401,13 @@ export type {
   Hwp5VerticalMarginsValues,
   SetHwp5VerticalMarginsPayload,
 } from './commands/hwp5-vertical-margins-dto.ts';
+
+export { SET_ORIGINAL_CELL_VERTICAL_ALIGNMENT_COMMAND } from './commands/original-cell-vertical-alignment.ts';
+export type {
+  OriginalCellSelectionTarget,
+  OriginalCellVerticalAlignmentTarget,
+  OriginalCellVerticalAlignmentRead,
+  OriginalCellSelector,
+  OriginalCellAlignment,
+  SetOriginalCellVerticalAlignmentPayload,
+} from './commands/original-cell-vertical-alignment.ts';

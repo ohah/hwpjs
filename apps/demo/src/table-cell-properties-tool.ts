@@ -1,4 +1,4 @@
-import type { HeadlessEditor } from '@hwpjs/core';
+import type { HeadlessEditor, OriginalCellAlignment } from '@hwpjs/core';
 import {
   createTableCellPropertiesPort,
   tableCellReason,
@@ -23,9 +23,16 @@ export function createTableCellPropertiesController(options: {
   createView?: typeof createTableCellPropertiesView;
 }) {
   let disposed = false,
+    opening = false,
     pending = false,
     epoch = 0;
-  let view: TableCellPropertiesView | undefined, captured: TableCellCapture | undefined;
+  type VerticalCapture = Extract<
+    Awaited<ReturnType<TableCellPropertiesPort['captureVerticalAlignment']>>,
+    { state: 'available' }
+  >['capture'];
+  let view: TableCellPropertiesView | undefined,
+    captured: TableCellCapture | undefined,
+    verticalCaptured: VerticalCapture | undefined;
   const sameDocument = (a: TableCellCapture, b: TableCellCapture) =>
     a.state.editorId === b.state.editorId &&
     a.state.documentId === b.state.documentId &&
@@ -36,6 +43,8 @@ export function createTableCellPropertiesController(options: {
       closing = ++epoch;
     view = undefined;
     captured = undefined;
+    verticalCaptured = undefined;
+    opening = false;
     try {
       old?.destroy();
     } finally {
@@ -51,8 +60,11 @@ export function createTableCellPropertiesController(options: {
         options.onClose();
     }
   }
-  async function submit(draft: TableCellDraft) {
+  async function submit(draft: TableCellDraft | { verticalAlignment: OriginalCellAlignment }) {
     if (disposed || pending || !view || !captured) return;
+    const alignment = 'verticalAlignment' in draft;
+    const verticalLease = verticalCaptured;
+    if (alignment && !verticalLease) return;
     const lease = captured,
       ticket = epoch,
       currentView = view;
@@ -60,7 +72,9 @@ export function createTableCellPropertiesController(options: {
     currentView.setBusy(true);
     options.onPresentationChange?.();
     try {
-      const result = await options.port.apply(lease, draft);
+      const result = alignment
+        ? await options.port.applyVerticalAlignment(verticalLease!, draft.verticalAlignment)
+        : await options.port.apply(lease, draft);
       if (disposed || ticket !== epoch || !sameDocument(lease, options.port.capture())) return;
       const status = 'status' in result && typeof result.status === 'string' ? result.status : '';
       if (status.startsWith('committed')) {
@@ -70,8 +84,10 @@ export function createTableCellPropertiesController(options: {
         const completed = epoch;
         options.onStatus(
           status === 'committed-with-snapshot'
-            ? '셀 크기를 적용했습니다.' + (restored ? '' : ' 커서 위치를 다시 선택해주세요.')
-            : '크기는 반영됐지만 표시 확인이 필요합니다. 다시 적용하지 마세요.',
+            ? (alignment ? '셀 세로 정렬을 적용했습니다.' : '셀 크기를 적용했습니다.') +
+                (restored ? '' : ' 커서 위치를 다시 선택해주세요.')
+            : (alignment ? '정렬은' : '크기는') +
+                ' 반영됐지만 표시 확인이 필요합니다. 다시 적용하지 마세요.',
         );
         if (
           restored &&
@@ -83,7 +99,11 @@ export function createTableCellPropertiesController(options: {
         )
           options.onClose();
       } else if (status === 'known-no-op') close(true);
-      else
+      else if (alignment) {
+        // The retained Native alignment lease is single-use even on refusal.
+        close(false);
+        options.onStatus('세로 정렬을 적용하지 못했습니다. 셀을 확인하고 속성을 다시 열어주세요.');
+      } else
         currentView.setStatus(
           'error' in result && typeof result.error === 'string'
             ? tableCellReason(result.error)
@@ -115,7 +135,7 @@ export function createTableCellPropertiesController(options: {
   return {
     presentation: () => options.port.presentation(),
     open() {
-      if (disposed || pending) return;
+      if (disposed || pending || opening) return;
       if (view) {
         view.focus();
         return;
@@ -130,23 +150,80 @@ export function createTableCellPropertiesController(options: {
         return;
       }
       captured = lease;
-      ++epoch;
-      view = (options.createView ?? createTableCellPropertiesView)(options.root, lease, {
-        apply: (draft) => {
-          void submit(draft);
-        },
-        dismiss: () => close(true),
-        appearanceEnabled: options.appearanceAvailable?.() ?? false,
-        appearance: options.onAppearance
-          ? () => {
-              if (disposed || pending || captured !== lease || !options.port.isCurrent(lease))
-                return;
-              // Close this modal before the existing appearance tool recaptures its own owner.
+      const ticket = ++epoch;
+      const mount = (vertical?: VerticalCapture) => {
+        if (disposed || ticket !== epoch || !options.port.isCurrent(lease)) {
+          if (ticket === epoch) close(false);
+          return;
+        }
+        const selector = vertical?.selector;
+        verticalCaptured =
+          vertical &&
+          vertical.state === lease.state &&
+          selector?.section === lease.cell?.section &&
+          selector?.tableNode === lease.cell?.tableNode &&
+          selector?.listNode === lease.cell?.listNode &&
+          selector?.paragraph === lease.target?.paragraph &&
+          (vertical.value === null || ['TOP', 'CENTER', 'BOTTOM'].includes(vertical.value))
+            ? vertical
+            : undefined;
+        let bound = false;
+        view = (options.createView ?? createTableCellPropertiesView)(options.root, lease, {
+          verticalAlignment: verticalCaptured
+            ? {
+                value: verticalCaptured.value,
+                bindDialog: (element) => {
+                  bound = options.port.bindVerticalAlignmentDialog(verticalCaptured!, element);
+                  return bound;
+                },
+                apply: (value) => {
+                  if (bound && ['TOP', 'CENTER', 'BOTTOM'].includes(value))
+                    void submit({ verticalAlignment: value });
+                },
+              }
+            : undefined,
+          apply: (draft) => {
+            void submit(draft);
+          },
+          dismiss: () => close(true),
+          appearanceEnabled: options.appearanceAvailable?.() ?? false,
+          appearance: options.onAppearance
+            ? () => {
+                if (disposed || pending || captured !== lease || !options.port.isCurrent(lease))
+                  return;
+                // Close this modal before the existing appearance tool recaptures its own owner.
+                close(false);
+                options.onAppearance?.();
+              }
+            : undefined,
+        });
+        opening = false;
+      };
+      // Capability is discovery only; the independent Native capture and bound
+      // modal supply authority. Keep unsupported existing size dialogs synchronous.
+      const capabilities = lease.state.capabilities;
+      if (
+        capabilities !== null &&
+        typeof capabilities === 'object' &&
+        'originalCellVerticalAlignmentAvailable' in capabilities &&
+        capabilities.originalCellVerticalAlignmentAvailable === true
+      ) {
+        opening = true;
+        void options.port
+          .captureVerticalAlignment()
+          .then(
+            (read) => {
+              mount(read.state === 'available' ? read.capture : undefined);
+            },
+            () => mount(),
+          )
+          .catch(() => {
+            if (!disposed && ticket === epoch) {
               close(false);
-              options.onAppearance?.();
+              options.onStatus('셀 속성 창을 열지 못했습니다. 현재 셀을 다시 선택해주세요.');
             }
-          : undefined,
-      });
+          });
+      } else mount();
     },
     close: () => close(true),
     dispose() {

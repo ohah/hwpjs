@@ -1273,6 +1273,12 @@ export function createReaderRuntime({
           sourceTableGridAvailable: historyEnabled && editor?.supportsSourceTableGrid?.() === true,
           createdTableGridAvailable:
             historyEnabled && editor?.supportsCreatedTableGrid?.() === true,
+          originalCellVerticalAlignmentAvailable:
+            historyEnabled &&
+            historyStats?.protocolVersion === 2 &&
+            !historyPoisoned &&
+            !documentWindow &&
+            editor?.supportsOriginalCellVerticalAlignment?.() === true,
           createdCellPropertiesAvailable:
             historyEnabled &&
             historyStats?.protocolVersion === 2 &&
@@ -1401,6 +1407,55 @@ export function createReaderRuntime({
         await refreshHwp5PreviewFallback();
         displayResources.invalidate();
         reply({ kind: message.kind, content: hwp5Display() });
+        return;
+      }
+      if (message.kind === 'original-cell-vertical-alignment-query') {
+        if (
+          !['hwp5', 'hwpx'].includes(format) ||
+          !historyEnabled ||
+          historyPoisoned ||
+          documentWindow ||
+          editor?.supportsOriginalCellVerticalAlignment?.() !== true
+        ) {
+          reply({
+            kind: message.kind,
+            originalCell: null,
+            reason: 'OriginalCellVerticalAlignmentUnavailable',
+          });
+          return;
+        }
+        reply({
+          kind: message.kind,
+          originalCell: editor.originalCellVerticalAlignment(message.selector),
+        });
+        return;
+      }
+      if (message.kind === 'original-cell-vertical-alignment-set') {
+        if (
+          !['hwp5', 'hwpx'].includes(format) ||
+          !historyEnabled ||
+          historyPoisoned ||
+          documentWindow ||
+          editor?.supportsOriginalCellVerticalAlignment?.() !== true
+        )
+          throw Error('OriginalCellVerticalAlignmentUnavailable');
+        atomicOutcome = editor.setOriginalCellVerticalAlignment(message.request);
+        applied = atomicOutcome.application === 'applied';
+        mutationUncertain = atomicOutcome.application === 'unknown';
+        if (mutationUncertain) historyPoisoned = true;
+        if (atomicOutcome.error || atomicOutcome.cleanupError)
+          throw Error(atomicOutcome.error || atomicOutcome.cleanupError);
+        if (atomicOutcome.nativeCode === 2) {
+          reply({ kind: message.kind, changed: false, applied: false });
+          return;
+        }
+        documentWindow = null;
+        if (format === 'hwpx') {
+          reader = await createHwpxReader(module);
+          preview = reader.readTextEvents(editor.saveForDisplay());
+        } else await refreshHwp5PreviewFallback();
+        displayResources.invalidate();
+        reply({ kind: message.kind, content: format === 'hwpx' ? hwpxDisplay() : hwp5Display() });
         return;
       }
       if (message.kind === 'object-outer-margins-query') {

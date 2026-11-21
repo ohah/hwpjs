@@ -278,3 +278,17 @@ export const HWP5_VERTICAL_OUTER_MARGINS_ABI = Object.freeze({
   }),
   hwp5_edit_set_vertical_outer_margins: Object.freeze({ params: ['i32', 'i32'], results: ['i32'] }),
 });
+
+// Optional original physical-cell alignment; required ABI6 remains unchanged.
+export const ORIGINAL_CELL_VERTICAL_ALIGNMENT_ABI = Object.freeze(
+  Object.fromEntries(
+    ['hwp5_edit', 'hwpx_edit'].flatMap((prefix) => [
+      [`${prefix}_original_cell_vertical_alignment_version`, { params: [], results: ['i32'] }],
+      [`${prefix}_original_cell_vertical_alignment`, { params: ['i32', 'i32'], results: ['i32'] }],
+      [
+        `${prefix}_set_original_cell_vertical_alignment`,
+        { params: ['i32', 'i32'], results: ['i32'] },
+      ],
+    ]),
+  ),
+);

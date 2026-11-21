@@ -3,9 +3,12 @@ export const HWP5_CHART_LITERAL_BAR_PROFILE = 'spec24_clustered_column_literals_
 export const HWP5_CHART_LITERAL_LINE_PROFILE = 'spec24_standard_line_literals_v1';
 export function hwp5ChartLiteralKind(profile) {
   switch (profile) {
-    case HWP5_CHART_LITERAL_BAR_PROFILE: return 'barChart';
-    case HWP5_CHART_LITERAL_LINE_PROFILE: return 'lineChart';
-    default: throw Error('UnsupportedChartLiteralEditProfile');
+    case HWP5_CHART_LITERAL_BAR_PROFILE:
+      return 'barChart';
+    case HWP5_CHART_LITERAL_LINE_PROFILE:
+      return 'lineChart';
+    default:
+      throw Error('UnsupportedChartLiteralEditProfile');
   }
 }
 export function supportsHwp5ChartLiteralProfile(version, profile) {

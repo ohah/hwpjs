@@ -39,6 +39,7 @@ export class EditorWritePolicy {
           historyAvailable: false,
           createdTableGridAvailable: false,
           createdCellPropertiesAvailable: false,
+          originalCellVerticalAlignmentAvailable: false,
           sourceTableGridAvailable: false,
         };
   }

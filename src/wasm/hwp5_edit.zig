@@ -54,6 +54,7 @@ export fn hwp5_edit_reflow() u32 {
     return @intFromBool(reflow);
 }
 export fn hwp5_edit_close() void {
+    clearOriginalCellLease();
     document_text_generation.invalidate();
     hwp5_edit_strict_layout_cancel();
     formatting_lifetime.close();
@@ -2325,4 +2326,54 @@ export fn hwp5_edit_set_vertical_outer_margins(ptr: [*]const u8, len: usize) u32
         return if (h.stats().poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) 3 else 0;
     };
     return if (before == h.revision()) 2 else 1;
+}
+
+// Optional original physical-cell alignment. This lease never accepts a caller witness.
+const original_cell_wire = @import("original_cell_vertical_alignment_wire.zig");
+var original_cell_lease_serial: u64 = 0;
+var original_cell_lease: ?struct { id: u64, before: @import("../hwp5/edit/cell_vertical_alignment_plan.zig").Observation } = null;
+fn clearOriginalCellLease() void {
+    original_cell_lease = null;
+}
+export fn hwp5_edit_original_cell_vertical_alignment_version() u32 {
+    const h = if (history) |*value| value else return 0;
+    return if (h.owned != null and !h.stats().poisoned) 1 else 0;
+}
+export fn hwp5_edit_original_cell_vertical_alignment(section: u32, paragraph: u32) u32 {
+    hwp5_edit_output_free();
+    clearOriginalCellLease();
+    const current = session() catch |err| return fail(err);
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    if (h.owned == null) return fail(error.HistoryProtocol2Required);
+    if (h.stats().poisoned) return fail(error.HistoryMutationUncertain);
+    const bindings = current.tableBindings(a, section) catch |err| return fail(err);
+    defer a.free(bindings);
+    var selector: ?@import("../hwp5/edit/cell_vertical_alignment_plan.zig").Selector = null;
+    for (bindings) |binding| if (binding.paragraph == paragraph) {
+        if (selector != null) return fail(error.InvalidCellDisplayOwner);
+        selector = .{ .section = section, .paragraph = paragraph, .table_node = @intCast(binding.table_node), .list_node = @intCast(binding.list_node) };
+    };
+    const before = current.cellVerticalAlignment(a, selector orelse return fail(error.InvalidCellDisplayOwner)) catch |err| return fail(err);
+    const token = std.math.add(u64, original_cell_lease_serial, 1) catch return fail(error.CellVerticalAlignmentScopeExhausted);
+    const bytes = original_cell_wire.observation(a, "hwp5", section, paragraph, before.selector.table_node, before.selector.list_node, token, h.revision(), before.value, before.read_only or before.value == null) catch |err| return fail(err);
+    original_cell_lease_serial = token;
+    original_cell_lease = .{ .id = token, .before = before };
+    output = bytes;
+    return 1;
+}
+export fn hwp5_edit_set_original_cell_vertical_alignment(ptr: [*]const u8, size: usize) u32 {
+    hwp5_edit_output_free();
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    if (h.owned == null) return fail(error.HistoryProtocol2Required);
+    if (h.stats().poisoned) return fail(error.HistoryMutationUncertain);
+    const request = original_cell_wire.decode(a, ptr[0..size]) catch |err| return fail(err);
+    const lease = original_cell_lease orelse return fail(error.StaleOriginalCellLease);
+    if (lease.id != request.lease) return fail(error.StaleOriginalCellLease);
+    defer clearOriginalCellLease();
+    const revision = h.revision();
+    apply(.{ .set_cell_vertical_alignment = .{ .before = lease.before, .value = request.value } }) catch |err| {
+        _ = fail(err);
+        return if (h.stats().poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    return if (h.revision() != revision) 1 else 2;
 }

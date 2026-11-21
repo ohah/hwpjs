@@ -1,3 +1,4 @@
+import { createOriginalCellVerticalAlignmentApi } from './original-cell-vertical-alignment.mjs';
 import { createObjectBodyFlowApi } from './object-body-flow.mjs';
 import { createObjectOuterMarginsApi } from './object-outer-margins.mjs';
 import { createLivePictureReplacementApi } from './live-picture-replacement.mjs';
@@ -239,6 +240,7 @@ export async function createHwpxEditor(source) {
   });
   const documentInsert = createHwpxDocumentInsertApi({ wasm, memory, check: ready });
   return {
+    ...createOriginalCellVerticalAlignmentApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
     ...createCreatedCellPropertiesApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
     ...createObjectGeometryApi({ wasm, memory, check: ready, format: 'hwpx' }),
     ...createObjectOuterMarginsApi({ wasm, memory, check: ready }),

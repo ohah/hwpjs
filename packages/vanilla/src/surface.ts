@@ -2525,6 +2525,68 @@ export function createCanvasSurface({
       });
     },
     /** Separate modal owner for generated properties; the existing grid capture is unchanged. */
+    captureOriginalCellPropertiesSelection() {
+      const state = editor.getEditorState();
+      const selected = getSelectionFormatting(state).target;
+      if (!selected || selected.startUnit !== selected.endUnit || modalOpen()) return null;
+      const rows = (state.content as any)?.paragraphs?.filter(
+        (r: any) => r.section === selected.section && r.paragraph === selected.paragraph,
+      );
+      if (rows?.length !== 1 || !rows[0].tableCell || rows[0].createdCell) return null;
+      const selector = Object.freeze({
+        section: selected.section,
+        paragraph: selected.paragraph,
+        tableNode: rows[0].tableCell.tableNode,
+        listNode: rows[0].tableCell.listNode,
+      });
+      const points = direct.currentFormattingSelection();
+      if (!points || points.anchor.createdCell || points.focus.createdCell) return null;
+      const modal = formattingModalOwner();
+      let invalid = false;
+      const current = () => {
+        if (invalid) return false;
+        const now = direct.currentFormattingSelection();
+        if (
+          !closed &&
+          !nonTextHistoryPending &&
+          lease?.isActive() === true &&
+          !bridge?.busy() &&
+          editor.getEditorState() === state &&
+          state.status === 'ready' &&
+          state.stateVersion === observedStateVersion &&
+          displayed ===
+            `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}` &&
+          viewAllowsCurrentSelection() &&
+          direct.settled() &&
+          renderer.historyModelMatches(state) &&
+          modal.current() &&
+          now &&
+          !now.anchor.createdCell &&
+          !now.focus.createdCell &&
+          now.anchor.section === points.anchor.section &&
+          now.anchor.paragraph === points.anchor.paragraph &&
+          now.anchor.unit === points.anchor.unit &&
+          now.focus.section === points.focus.section &&
+          now.focus.paragraph === points.focus.paragraph &&
+          now.focus.unit === points.focus.unit
+        )
+          return true;
+        invalid = true;
+        return false;
+      };
+      if (!current()) return null;
+      const target = lease?.captureOriginalCellVerticalAlignment?.(selector, current);
+      if (!target || !current()) return null;
+      return Object.freeze({
+        state,
+        selector,
+        target,
+        current,
+        bindDialog(element: HTMLDialogElement) {
+          return modal.bind(element, current);
+        },
+      });
+    },
     captureCreatedCellPropertiesSelection() {
       const state = editor.getEditorState();
       const canonical = () =>

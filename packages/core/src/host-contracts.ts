@@ -1,3 +1,7 @@
+import type {
+  OriginalCellSelectionTarget,
+  OriginalCellSelector,
+} from './commands/original-cell-vertical-alignment.ts';
 import type { SourceTableCellSplitCapture } from './commands/source-table-cell-split.ts';
 import type {
   SourceTableCellHeightTarget,
@@ -32,6 +36,10 @@ export interface InputSurfaceLease {
     message: RuntimeMessage,
     options: SurfaceRequestOptions,
   ): Promise<CommandResult | RuntimeReply>;
+  captureOriginalCellVerticalAlignment?(
+    selector: OriginalCellSelector,
+    current: () => boolean,
+  ): OriginalCellSelectionTarget | null;
   captureSourceTableCellSplit?(
     witness: SourceTableCellBlockWitness,
     current: () => boolean,

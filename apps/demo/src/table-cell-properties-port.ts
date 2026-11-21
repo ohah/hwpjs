@@ -1,3 +1,9 @@
+import {
+  SET_ORIGINAL_CELL_VERTICAL_ALIGNMENT_COMMAND,
+  type OriginalCellSelectionTarget,
+  type OriginalCellVerticalAlignmentTarget,
+  type OriginalCellAlignment,
+} from '@hwpjs/core';
 // @ts-ignore Canonical structured cell-style mutation validation.
 import { validateCellStylesMessage } from '../../../js/cell-style-command.mjs';
 // @ts-ignore Structured cell payload admission shares the SDK wire validators.
@@ -15,7 +21,15 @@ const invokeRequest = Reflect.apply;
 export type TableCellCore = Pick<
   typeof import('@hwpjs/core'),
   'getSelectionFormatting' | 'createParagraphSelection'
-> & { canEditCellProperties?: (section: number, listNode: number) => boolean };
+> & {
+  canEditCellProperties?: (section: number, listNode: number) => boolean;
+  captureOriginalCellPropertiesSelection?: () => {
+    state: EditorState;
+    target: OriginalCellSelectionTarget;
+    current(): boolean;
+    bindDialog(element: HTMLDialogElement): boolean;
+  } | null;
+};
 export type TableCellDraft = {
   widthPoints: string;
   heightPoints: string;
@@ -86,6 +100,15 @@ export function createTableCellPropertiesPort(
 ) {
   let disposed = false,
     pending = false;
+  const alignmentLeases = new WeakMap<
+    object,
+    {
+      state: EditorState;
+      target: OriginalCellVerticalAlignmentTarget;
+      current(): boolean;
+      bindDialog(element: HTMLDialogElement): boolean;
+    }
+  >();
   const issued = new WeakSet<TableCellCapture>();
   const consumed = new WeakSet<TableCellCapture>();
   const tablesByCapture = new WeakMap<TableCellCapture, unknown>();
@@ -395,6 +418,66 @@ export function createTableCellPropertiesPort(
     }
   }
   return {
+    /** Separate single-cell Native transaction; never silently combines size/style changes. */
+    async captureVerticalAlignment() {
+      const selected = core.captureOriginalCellPropertiesSelection?.();
+      if (
+        disposed ||
+        pending ||
+        !selected ||
+        selected.state !== editor.getEditorState() ||
+        !selected.current()
+      )
+        throw Error('StaleOriginalCellSelection');
+      const read = await editor.getOriginalCellVerticalAlignment(selected.target);
+      if (disposed || selected.state !== editor.getEditorState() || !selected.current())
+        throw Error('StaleOriginalCellSelection');
+      if (read.state !== 'available') return read;
+      const capture = Object.freeze({
+        state: selected.state,
+        selector: read.selector,
+        value: read.value,
+      });
+      alignmentLeases.set(capture, {
+        state: selected.state,
+        target: read.target,
+        current: selected.current,
+        bindDialog: selected.bindDialog,
+      });
+      return Object.freeze({ state: 'available' as const, capture });
+    },
+    bindVerticalAlignmentDialog(capture: object, element: HTMLDialogElement) {
+      const lease = alignmentLeases.get(capture);
+      return (
+        !disposed &&
+        !pending &&
+        !!lease &&
+        lease.state === editor.getEditorState() &&
+        lease.bindDialog(element) &&
+        lease.current()
+      );
+    },
+    async applyVerticalAlignment(capture: object, value: OriginalCellAlignment) {
+      const lease = alignmentLeases.get(capture);
+      if (
+        disposed ||
+        pending ||
+        !lease ||
+        lease.state !== editor.getEditorState() ||
+        !lease.current()
+      )
+        throw Error('StaleOriginalCellSelection');
+      alignmentLeases.delete(capture);
+      pending = true;
+      try {
+        return await editor.dispatchCommand(SET_ORIGINAL_CELL_VERTICAL_ALIGNMENT_COMMAND, {
+          target: lease.target,
+          value,
+        });
+      } finally {
+        pending = false;
+      }
+    },
     capture,
     isCurrent(captured: TableCellCapture) {
       if (!issued.has(captured) || consumed.has(captured)) return false;

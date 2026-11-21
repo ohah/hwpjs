@@ -1,3 +1,4 @@
+import type { OriginalCellAlignment } from '@hwpjs/core';
 import './table-cell-properties.css';
 import { createDialogLayer } from './dialog-layer.ts';
 import { createCellSizeUnitDraft, type CellSizeUnit } from './table-cell-size-units.ts';
@@ -16,6 +17,11 @@ export function createTableCellPropertiesView(
     dismiss: () => void;
     appearance?: () => void;
     appearanceEnabled?: boolean;
+    verticalAlignment?: {
+      value: OriginalCellAlignment | null;
+      bindDialog(element: HTMLDialogElement): boolean;
+      apply(value: OriginalCellAlignment): void;
+    };
   },
 ) {
   const layer = createDialogLayer(root, {
@@ -38,6 +44,44 @@ export function createTableCellPropertiesView(
     unitNote = doc.createElement('p'),
     appearance = callbacks.appearance ? doc.createElement('button') : undefined;
   const sizes = createCellSizeUnitDraft(capture.cell!);
+  const vertical = doc.createElement('select'),
+    verticalGroup = doc.createElement('fieldset'),
+    verticalLegend = doc.createElement('legend'),
+    verticalLabel = doc.createElement('label'),
+    verticalHint = doc.createElement('p');
+  vertical.dataset.role = 'cell-vertical-alignment';
+  vertical.setAttribute('aria-label', '셀 세로 정렬');
+  verticalLegend.textContent = '셀 세로 정렬';
+  verticalLabel.textContent = '세로 정렬';
+  verticalLabel.classList.add('hwp-table-cell-properties-field');
+  const observedAlignment = callbacks.verticalAlignment?.value;
+  const knownAlignment = (value: unknown): value is OriginalCellAlignment =>
+    value === 'TOP' || value === 'CENTER' || value === 'BOTTOM';
+  const originalAlignment = knownAlignment(observedAlignment) ? observedAlignment : '';
+  const placeholder = doc.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = observedAlignment === null ? '미지정' : '확인할 수 없음';
+  placeholder.disabled = true;
+  vertical.append(placeholder);
+  for (const [value, text] of [
+    ['TOP', '위쪽'],
+    ['CENTER', '가운데'],
+    ['BOTTOM', '아래쪽'],
+  ] as const) {
+    const option = doc.createElement('option');
+    option.value = value;
+    option.textContent = text;
+    vertical.append(option);
+  }
+  vertical.value = originalAlignment;
+  vertical.disabled = true;
+  let verticalAvailable = false;
+  verticalHint.classList.add('hwp-table-cell-properties-hint');
+  verticalHint.dataset.role = 'cell-vertical-alignment-hint';
+  verticalLabel.append(vertical);
+  verticalGroup.className = 'hwp-table-cell-properties-group';
+  verticalGroup.append(verticalLegend, verticalLabel, verticalHint);
+  const verticalChanged = () => verticalAvailable && vertical.value !== originalAlignment;
   let unitBlocked = false;
   let busy = false,
     composing = false,
@@ -135,21 +179,36 @@ export function createTableCellPropertiesView(
     }
     unitNote.hidden = selectedUnit !== 'mm';
     let invalid = '';
+    let dimensionsChanged = false;
     try {
       const size = tableCellDimensions(draft(), capture.cell!);
-      if (size.width === capture.cell!.width && size.height === capture.cell!.height)
-        invalid = '변경한 값이 없습니다.';
+      dimensionsChanged =
+        size.width !== capture.cell!.width || size.height !== capture.cell!.height;
+      if (!dimensionsChanged) invalid = '변경한 값이 없습니다.';
     } catch {
+      dimensionsChanged = true;
       invalid = unitBlocked
         ? '단위를 바꾸기 전에 올바른 크기를 입력하세요.'
         : `0 이상 ${selectedUnit} 값으로 입력하세요. 0.01${selectedUnit} 단위만 허용하며 공유 열 너비는 양수여야 합니다.`;
     }
-    const reason =
+    let reason =
       stale ??
       capture.writeReason ??
       (mode.value === 'column' && !capture.columnAvailable
         ? (capture.columnReason ?? 'CellSizeBatchApiUnavailable')
         : null);
+    if (verticalChanged()) {
+      reason = stale;
+      invalid = dimensionsChanged
+        ? '크기와 세로 정렬은 함께 적용할 수 없습니다. 한쪽 값을 되돌린 뒤 적용하세요.'
+        : !knownAlignment(vertical.value)
+          ? '지원하는 세로 정렬을 선택하세요.'
+          : '';
+    }
+    vertical.disabled = disposed || busy || composing || !!stale || !verticalAvailable;
+    verticalHint.textContent = verticalAvailable
+      ? '현재 원본 셀 하나에 적용합니다. 크기와 세로 정렬은 따로 적용하세요.'
+      : '현재 셀의 세로 정렬을 변경할 수 없습니다.';
     apply.disabled = disposed || busy || composing || !!reason || !!invalid;
     for (const field of [width, height, mode]) field.disabled = blocked();
     unit.disabled = blocked() || composing;
@@ -162,7 +221,8 @@ export function createTableCellPropertiesView(
         !!stale ||
         draft().dirty?.width === true ||
         draft().dirty?.height === true ||
-        callbacks.appearanceEnabled === false;
+        callbacks.appearanceEnabled === false ||
+        verticalChanged();
     cancel.textContent = busy ? '닫기 (접수된 작업은 계속)' : '취소';
   }
   for (const [axis, input] of [
@@ -179,6 +239,7 @@ export function createTableCellPropertiesView(
     input.addEventListener('change', edit);
   }
   for (const event of ['input', 'change']) mode.addEventListener(event, refresh);
+  vertical.addEventListener('change', refresh);
   unit.addEventListener('change', (event) => {
     if (blocked() || composing || (event as any).isComposing) {
       unit.value = sizes.read().unit;
@@ -214,14 +275,31 @@ export function createTableCellPropertiesView(
     refresh();
   });
   apply.addEventListener('click', (event) => {
-    if (!disposed && !apply.disabled && !(event as any).isComposing) callbacks.apply(draft());
+    if (disposed || apply.disabled || (event as any).isComposing) return;
+    if (verticalChanged()) {
+      if (knownAlignment(vertical.value)) callbacks.verticalAlignment?.apply(vertical.value);
+    } else callbacks.apply(draft());
   });
   cancel.addEventListener('click', callbacks.dismiss);
-  layer.body.append(note, status);
+  layer.body.append(verticalGroup, note, status);
   if (appearance) layer.footer.append(appearance);
   layer.footer.append(apply, cancel);
   refresh();
   layer.show(width);
+  // The Surface accepts only this connected, open modal.
+  if (
+    capture.writeReason !== 'ReadOnlyDocument' &&
+    capture.writeReason !== 'HistoryRecoveryRequired' &&
+    callbacks.verticalAlignment &&
+    (observedAlignment === null || knownAlignment(observedAlignment))
+  ) {
+    try {
+      verticalAvailable = callbacks.verticalAlignment.bindDialog(layer.element);
+    } catch {
+      verticalAvailable = false;
+    }
+  }
+  refresh();
   return {
     focus: () => width.focus(),
     setBusy(value: boolean) {

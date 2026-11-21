@@ -81,7 +81,10 @@ export function createHwp5ChartLiteralEditApi({ wasm, memory, check, output, u32
       lease.schemaVersion !== 1 ||
       lease.scope !== 'hwp5-chart-literal-edit-lease' ||
       lease.executionAuthority !== false ||
-      !supportsHwp5ChartLiteralProfile(wasm.hwp5_edit_chart_literal_edit_profile_version(), lease.witness?.profile) ||
+      !supportsHwp5ChartLiteralProfile(
+        wasm.hwp5_edit_chart_literal_edit_profile_version(),
+        lease.witness?.profile,
+      ) ||
       !lease.literals ||
       !lease.limits
     )
@@ -138,10 +141,14 @@ export function createHwp5ChartLiteralEditApi({ wasm, memory, check, output, u32
       if (preview.changed) {
         if (typeof globalThis.OffscreenCanvas !== 'function')
           throw Error('ChartLiteralRendererUnavailable');
-        painted = await renderHwp5ChartLiteralEditPreview(wire, {
-          current: () => current(capture),
-          createCanvas: (width, height) => new globalThis.OffscreenCanvas(width, height),
-        }, own.witness.profile);
+        painted = await renderHwp5ChartLiteralEditPreview(
+          wire,
+          {
+            current: () => current(capture),
+            createCanvas: (width, height) => new globalThis.OffscreenCanvas(width, height),
+          },
+          own.witness.profile,
+        );
       }
       if (!current(capture)) throw Error('StaleChartLiteralCapture');
       const rendered = painted

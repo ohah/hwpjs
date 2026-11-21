@@ -134,6 +134,9 @@ export interface DemoHost
   registerObjectActivation?(listener: (event: CanvasObjectActivation) => void): () => void;
   canRequestHistory?(kind: 'undo' | 'redo'): boolean;
   canEditCellProperties?(section: number, listNode: number): boolean;
+  captureOriginalCellPropertiesSelection?: NonNullable<
+    import('./table-cell-properties-port.ts').TableCellCore['captureOriginalCellPropertiesSelection']
+  >;
   requestHistory?(kind: 'undo' | 'redo'): boolean;
   focus?(): boolean;
   canPasteInput?(): boolean;
@@ -341,6 +344,8 @@ export async function mountDemo(
   });
   const cellCore = {
     ...paragraphShapeCore,
+    captureOriginalCellPropertiesSelection: () =>
+      host?.captureOriginalCellPropertiesSelection?.() ?? null,
     canEditCellProperties: (section: number, listNode: number) =>
       host?.canEditCellProperties?.(section, listNode) === true,
   };

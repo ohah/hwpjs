@@ -55,6 +55,7 @@ pub const Command = union(enum) {
     edit_object_geometry: *const @import("../../model/object_geometry.zig").Request,
     edit_object_outer_margins: @import("object_outer_margins.zig").Request,
     edit_object_vertical_margins: @import("object_outer_margins.zig").Request,
+    set_cell_vertical_alignment: @import("cell_vertical_alignment_plan.zig").Request,
     edit_page_settings: *const @import("page_settings_types.zig").Request,
     edit_bullet_definition: @import("../../model/paragraph_bullet_definition.zig").Request,
     set_paragraph_alignment: struct { section: usize, paragraph: usize, alignment: u32 },
@@ -912,6 +913,13 @@ pub const Session = opaque {
         try self.materializeLiveText();
         if (paragraph_index >= try self.paragraphCount(section)) return error.InvalidParagraph;
         return self.stateConst().document.sections[section].paragraphs[paragraph_index].para_shape_id;
+    }
+    pub fn cellVerticalAlignment(self: *const Session, a: std.mem.Allocator, selector: @import("cell_vertical_alignment_plan.zig").Selector) !@import("cell_vertical_alignment_plan.zig").Observation {
+        try self.materializeLiveText();
+        const state = self.stateConst();
+        if (selector.section >= state.document.sections.len) return error.InvalidSection;
+        const read_only = state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview);
+        return @import("cell_vertical_alignment_plan.zig").observe(a, state.decoded[selector.section], state.source.header.version(), state.document.sections[selector.section], selector.section, selector, try self.historyTicket(), read_only);
     }
     pub fn tableBindings(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("table_display_bindings.zig").Binding {
         try self.materializeLiveText();
@@ -2183,6 +2191,24 @@ pub const Session = opaque {
                 if (bytes.len != state.decoded[index].len) return error.SourceBindingMismatch;
                 // Prepare every fallible allocation before publishing. Existing checkpoints own
                 // the previous basis; all current paragraphs and pending resource intents stay live.
+                const offsets = try state.allocator.dupe(usize, state.style_offsets[index]);
+                var old = section.rebased_source;
+                section.rebased_source = .{ .bytes = bytes, .style_offsets = offsets, .original_record_count = if (old) |basis| basis.original_record_count else section.source_record_count };
+                state.refreshSourceViews();
+                if (old) |*basis| basis.deinit(state.allocator);
+            },
+            .set_cell_vertical_alignment => |request| {
+                const state = self.getState();
+                const index = request.before.selector.section;
+                if (index >= state.document.sections.len) return error.InvalidSection;
+                if (!self.historyTransactionActive()) return error.HistoryProtocol2Required;
+                if (state.formatting_batch != null) return error.MutationInProgress;
+                const ticket = try self.historyTicket();
+                const read_only = state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview);
+                const section = &state.document.sections[index];
+                const bytes = (try @import("cell_vertical_alignment_plan.zig").write(state.allocator, state.decoded[index], state.source.header.version(), section.*, index, request, ticket, read_only, max_stream)) orelse return;
+                errdefer state.allocator.free(bytes);
+                if (bytes.len != state.decoded[index].len) return error.SourceBindingMismatch;
                 const offsets = try state.allocator.dupe(usize, state.style_offsets[index]);
                 var old = section.rebased_source;
                 section.rebased_source = .{ .bytes = bytes, .style_offsets = offsets, .original_record_count = if (old) |basis| basis.original_record_count else section.source_record_count };

@@ -5,10 +5,23 @@ import {
   checkedHwp5LiteralEdits,
 } from '../../js/hwp5-chart-literal-edit.mjs';
 import { createHwp5ChartDataCommands } from '../../web/preview/hwp5-chart-data-command.mjs';
-import { HWP5_CHART_LITERAL_BAR_PROFILE as BAR, HWP5_CHART_LITERAL_LINE_PROFILE as LINE } from '../../js/hwp5-chart-literal-profiles.mjs';
+import {
+  HWP5_CHART_LITERAL_BAR_PROFILE as BAR,
+  HWP5_CHART_LITERAL_LINE_PROFILE as LINE,
+} from '../../js/hwp5-chart-literal-profiles.mjs';
 import { model, context } from '../hwpx/chart-family-model.mjs';
 const edits = [{ value: { series: 0, category: 0, expected: '10', value: '73' } }];
-function fixture({ changed = true, staleAt = '', code = 1, cleanup = false, profile = BAR, version = 1, previewProfile = profile, kind = profile === LINE ? 'lineChart' : 'barChart', mutateData = () => {} } = {}) {
+function fixture({
+  changed = true,
+  staleAt = '',
+  code = 1,
+  cleanup = false,
+  profile = BAR,
+  version = 1,
+  previewProfile = profile,
+  kind = profile === LINE ? 'lineChart' : 'barChart',
+  mutateData = () => {},
+} = {}) {
   let epoch = 1,
     next,
     ptr = 0,
@@ -53,7 +66,10 @@ function fixture({ changed = true, staleAt = '', code = 1, cleanup = false, prof
   delete data.pair;
   delete data.host;
   if (kind === 'barChart') data.plot_settings[0].direction = { node: 4, value: 'col' };
-  data.plot_settings[0].grouping = { node: 5, value: kind === 'barChart' ? 'clustered' : 'standard' };
+  data.plot_settings[0].grouping = {
+    node: 5,
+    value: kind === 'barChart' ? 'clustered' : 'standard',
+  };
   mutateData(data);
   const memory = {
     withBytes(bytes, fn) {
@@ -292,42 +308,71 @@ test('capability v1 bar and v2 bar retain old signatures and missing old bar pre
       assert.equal(f.stats().commits, 1);
     });
   }
-  assert.throws(() => fixture({ version: 1, profile: LINE }).api.captureHwp5ChartData(0, 9), /InvalidChartLiteralLease/);
-  assert.throws(() => fixture({ version: 2, profile: 'arbitrary' }).api.captureHwp5ChartData(0, 9), /UnsupportedChartLiteralEditProfile/);
+  assert.throws(
+    () => fixture({ version: 1, profile: LINE }).api.captureHwp5ChartData(0, 9),
+    /InvalidChartLiteralLease/,
+  );
+  assert.throws(
+    () => fixture({ version: 2, profile: 'arbitrary' }).api.captureHwp5ChartData(0, 9),
+    /UnsupportedChartLiteralEditProfile/,
+  );
   assert.equal(fixture({ version: 3 }).api.supportsHwp5ChartLiteralEditAbi(), false);
 });
 for (const previewProfile of [BAR, null, 'arbitrary'])
-  test('line lease refuses mismatched or absent profile before raster '+previewProfile, async () => {
-    const f = fixture({ profile: LINE, version: 2, previewProfile });
-    await withCanvas(f, async () => {
-      await assert.rejects(f.api.editHwp5ChartData(f.api.captureHwp5ChartData(0, 9), edits), /InvalidChartLiteralPreview/);
-      assert.equal(f.stats().commits, 0);
-      assert.equal(f.stats().painted, 0);
-    });
-  });
+  test(
+    'line lease refuses mismatched or absent profile before raster ' + previewProfile,
+    async () => {
+      const f = fixture({ profile: LINE, version: 2, previewProfile });
+      await withCanvas(f, async () => {
+        await assert.rejects(
+          f.api.editHwp5ChartData(f.api.captureHwp5ChartData(0, 9), edits),
+          /InvalidChartLiteralPreview/,
+        );
+        assert.equal(f.stats().commits, 0);
+        assert.equal(f.stats().painted, 0);
+      });
+    },
+  );
 for (const mutateData of [
-  (d) => { d.plots[0].kind = 'barChart'; },
-  (d) => { d.plots.push(structuredClone(d.plots[0])); },
-  (d) => { d.plot_settings[0].grouping.value = 'stacked'; },
-  (d) => { d.series_settings[0].smooth = { node: 333, value: true }; },
+  (d) => {
+    d.plots[0].kind = 'barChart';
+  },
+  (d) => {
+    d.plots.push(structuredClone(d.plots[0]));
+  },
+  (d) => {
+    d.plot_settings[0].grouping.value = 'stacked';
+  },
+  (d) => {
+    d.series_settings[0].smooth = { node: 333, value: true };
+  },
 ])
-  test('line profile rejects a different plot mixed plots or arbitrary style '+mutateData.toString(), async () => {
-    const f = fixture({ profile: LINE, version: 2, mutateData });
-    await withCanvas(f, async () => {
-      await assert.rejects(f.api.editHwp5ChartData(f.api.captureHwp5ChartData(0, 9), edits));
-      assert.equal(f.stats().commits, 0);
-      assert.equal(f.stats().painted, 0);
-    });
-  });
+  test(
+    'line profile rejects a different plot mixed plots or arbitrary style ' + mutateData.toString(),
+    async () => {
+      const f = fixture({ profile: LINE, version: 2, mutateData });
+      await withCanvas(f, async () => {
+        await assert.rejects(f.api.editHwp5ChartData(f.api.captureHwp5ChartData(0, 9), edits));
+        assert.equal(f.stats().commits, 0);
+        assert.equal(f.stats().painted, 0);
+      });
+    },
+  );
 for (const staleAt of ['blob', 'array'])
-  test('line late '+staleAt+' rejects stale lease and releases surface without commit', async () => {
-    const f = fixture({ profile: LINE, version: 2, staleAt });
-    await withCanvas(f, async () => {
-      await assert.rejects(f.api.editHwp5ChartData(f.api.captureHwp5ChartData(0, 9), edits), /Stale/);
-      assert.equal(f.stats().commits, 0);
-      assert.equal(f.canvases[0].width, 0);
-    });
-  });
+  test(
+    'line late ' + staleAt + ' rejects stale lease and releases surface without commit',
+    async () => {
+      const f = fixture({ profile: LINE, version: 2, staleAt });
+      await withCanvas(f, async () => {
+        await assert.rejects(
+          f.api.editHwp5ChartData(f.api.captureHwp5ChartData(0, 9), edits),
+          /Stale/,
+        );
+        assert.equal(f.stats().commits, 0);
+        assert.equal(f.canvases[0].width, 0);
+      });
+    },
+  );
 test('line no-op preserves typed witness and uses no raster', async () => {
   const f = fixture({ profile: LINE, version: 2, changed: false, code: 2 });
   const result = await f.api.editHwp5ChartData(f.api.captureHwp5ChartData(0, 9), edits);

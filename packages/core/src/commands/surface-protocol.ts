@@ -1,5 +1,6 @@
 /** Internal compatibility inventory from reader-runtime and canvas-editor, not a general JSON API. */
 export const SURFACE_READ_KINDS = Object.freeze([
+  'original-cell-vertical-alignment-query',
   'object-outer-margins-query',
   'hwp5-vertical-object-margins-query',
   'object-body-flow-query',
@@ -35,6 +36,7 @@ export const SURFACE_READ_KINDS = Object.freeze([
   'dutmal-text-query',
 ] as const);
 export const SURFACE_MUTATION_KINDS = Object.freeze([
+  'original-cell-vertical-alignment-set',
   'object-outer-margins-set',
   'hwp5-vertical-object-margins-set',
   'object-body-flow-set',

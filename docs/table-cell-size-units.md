@@ -35,3 +35,28 @@ HWPUNIT는 1/7200인치입니다. mm는 소수 둘째 자리까지 표시하고,
 최종 브라우저는36.171초, wrapper 종료0이며 세션 `active=false`, `pid=null`, 소유 잔여 프로세스0을 확인했습니다. 앞선 실패 실행의 일시적 helper 잔여와 그 후 종료 확인도 별도로 보존했습니다. 증거는 `browser/FINAL-HANDOFF.json`, `browser/private-unit-browser-48077/results.json`, `browser/private-unit-bounded-1794048981-48070.json`입니다. 실제 OS IME·모든 viewport·공유 열 UI·모든 표의 조판 동치는 이번 검증 범위가 아닙니다.
 
 증거는 ignored `zig-out/verification/cell-size-units-r1/`의 `HANDOFF.json`, `SOURCE5-FROZEN.json`, `ADVERSARIAL-REVIEWS.md`, strict 타입 로그 및 `baseline/rounding-risk-candidates.json`입니다. 최종83개 실행은 `MAIN-FINAL83.tap`과 `MAIN-FINAL-COHORT.md`가 소유합니다. 새 빌드·타입·정적 검사는 `build/FINAL-BUILD-HANDOFF.json`, `build/TYPES-BASELINE-DELTA.json`, `build/STATIC-PAIR-VERIFICATION.json`을 따릅니다. 기존 Native 지문은 `82031994…155ccc`이며 새 Native 빌드는 필요하지 않습니다. 운영 전환과 공개 배포 후 검증은 `delivery/`의 별도 영수증으로 확인하며 내부 후보 성공만으로 공개 사이트가 갱신됐다고 판단하지 않습니다.
+
+## 원본 셀 세로 정렬
+
+격리 소스 후속은 기존 표/셀 속성 창에 세로 정렬 선택을 연결한다. 원본 단일 셀의 현재 Native 관측이 제공한 TOP, CENTER, BOTTOM만 위쪽, 가운데, 아래쪽으로 표시한다. 미지원 엔진이나 원본 셀이 아닌 선택에는 비활성 항목을 유지한다. 미지정 null은 미지정 그대로 표시하고 기본 TOP을 만들어 쓰지 않는다. HWPX에서 Native가 미지정 값을 명시적으로 설정할 수 있다고 허용한 경우에만 사용자가 새 값을 선택할 수 있다.
+
+capability는 조회를 준비할지 결정하는 표시 조건이다. 선택된 원본 셀의 실제 권한은 기존 captureVerticalAlignment 조회와 Core의 불투명 target에서 얻는다. 조회는 창을 열기 전에 마치고 같은 state와 section/paragraph/table/list의 관측만 받는다. 창을 연 직후 `bindVerticalAlignmentDialog`가 현재 연결되어 열린 단일 모달과 선택의 소유권을 확인하면 정렬을 활성화한다. 조회 중 문서나 선택이 바뀌거나 창을 닫으면 늦은 결과로 창을 열지 않는다. 바인딩 실패, 알 수 없는 값, readonly, 미지원 owner는 정렬을 활성화하지 않는다.
+
+확인은 새 정렬 값만 기존 applyVerticalAlignment에 전달한다. 크기와 정렬을 함께 바꾼 초안은 명시적으로 막는다. 내부에서 여러 명령으로 나누지 않으며, 한쪽 값을 되돌린 뒤 원하는 동작 하나를 적용해야 한다. 정렬 초안이 있으면 기존 테두리/배경 도구로 이동해 버리지 않는다. 미변경 축과 기존 단위 변환 및 채우기 명령은 그대로 유지한다. 크기 쓰기가 지원되지 않는다는 이유만으로 별도로 허용된 정렬까지 비활성화하지 않는다.
+
+정렬 target은 단일 사용이다. 거부되거나 결과 확인이 필요한 적용 뒤에는 같은 target을 재접수하지 않는다. 불확실한 완료는 재적용 안내로 바꾸지 않고 문서 확인을 요청한다. 기존 크기 포트의 자동 선택 복원은 크기 거래 전용이므로 정렬 거래의 복원 성공을 추정하지 않는다. 현재 구현은 복원하지 못한 경우 커서를 다시 선택하도록 안내한다. multi-cell, 생성 셀, 중첩 또는 불완전한 원본과 복합 원자 거래 지원을 이 UI 연결로 확대하지 않는다.
+
+이 후속의 집중 시험은 실제 view/tool/port 소스와 합성 Core 및 DOM을 사용한다. 기존 크기/단위/포트/채우기 진입96개와 정렬 UI33개를 같은 최종 실행에서 확인한다. 이 수치는 별도 소유자의 Core/Native 시험 수와 합산하지 않는다. 엄격 noEmit 소스 검사와 정규 formatter도 별도 기록한다. 새 WASM, 공식 SDK 및 실제 속성 창의 trusted 선택, IME, 세로 배치 표시, 단일 이력과 저장/fresh reopen은 이 소스 후보에서 실행하지 않았다.
+
+최종 WASM과 공개 SDK에서 누리 HWP5·HWPX 셀의 가운데→아래쪽 변경을 확인했다. 실제 Chrome에서도 첫 표의 날짜 셀을 클릭하고 속성 창에서 같은 변경을 적용했다. 양 형식 모두 도구 모음의 실행 취소와 다시 실행, 파일 저장과 새로 열기를 확인했다. 실행 취소 후 저장본은 원본과 바이트가 같았고, 편집 저장본은 공개 SDK로 만든 파일과 바이트가 같았다. 독립 검사에서 HWP5는 대상 셀 목록 헤더의 정렬 비트만, HWPX는 대상 셀 정렬 속성과 해당 셀의 줄 배치 캐시만 바뀌었다. HWP5 저장에는 사용자가 줄 배치 변경 가능성을 확인하고 동의했다.
+
+속성 적용 후 커서를 복원하지 못하는 경우에는 도구 모음으로 실행 취소와 다시 실행을 할 수 있다. 이 경우 문서를 다시 클릭해 포커스를 되돌린 뒤 키보드 단축키를 사용할 수 있다.
+
+재현할 때는 Node의 기존 table-cell-properties-style-preload와 정확한 Core source alias를 명시하고 다음 여섯 시험 파일을 선택한다. source alias 결과를 설치된 공개 SDK 결과로 읽지 않는다.
+
+- apps/demo/tests/table-cell-properties-tool.test.mjs
+- apps/demo/tests/table-cell-properties-view.test.mjs
+- apps/demo/tests/table-cell-properties-appearance-handoff.test.mjs
+- apps/demo/tests/table-cell-properties-port.test.mjs
+- apps/demo/tests/table-cell-size-units.test.mjs
+- apps/demo/tests/table-cell-properties-vertical-alignment.test.mjs

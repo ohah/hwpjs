@@ -1,4 +1,19 @@
 import {
+  SET_ORIGINAL_CELL_VERTICAL_ALIGNMENT_COMMAND,
+  captureOriginalCellAlignmentPayload,
+  originalCellVerticalAlignmentSelector,
+  type OriginalCellSelectionTarget,
+  type OriginalCellVerticalAlignmentTarget,
+  type OriginalCellVerticalAlignmentRead,
+  type SetOriginalCellVerticalAlignmentPayload,
+  type OriginalCellSelector,
+} from '../commands/original-cell-vertical-alignment.ts';
+import {
+  checkedOriginalCellObservation,
+  checkedOriginalCellRequest,
+} from '../../../../js/original-cell-vertical-alignment.mjs';
+import type { OriginalCellObservation } from '../../../../js/original-cell-vertical-alignment.mjs';
+import {
   SET_HWP5_VERTICAL_MARGINS_COMMAND,
   captureHwp5VerticalMarginsPayload,
   hwp5VerticalMarginsMessage,
@@ -1464,6 +1479,19 @@ export function createEditor(options: CreateEditorOptions) {
       return reject(ctx, error);
     }
   }
+  const originalCellSelections = new WeakMap<
+    OriginalCellSelectionTarget,
+    { state: EditorState; selector: Readonly<OriginalCellSelector>; current: () => boolean }
+  >();
+  const originalCellTargets = new WeakMap<
+    OriginalCellVerticalAlignmentTarget,
+    {
+      state: EditorState;
+      runtime: EditorRuntime;
+      native: Readonly<OriginalCellObservation>;
+      current: () => boolean;
+    }
+  >();
   const mergeTargets = new WeakMap<
     object,
     {
@@ -1523,6 +1551,7 @@ export function createEditor(options: CreateEditorOptions) {
     snapshot: EditorState = state,
   ): PendingCommand {
     if (!command || typeof command.id !== 'symbol') throw Error('InvalidCommand');
+    const originalCellAlignment = command.id === SET_ORIGINAL_CELL_VERTICAL_ALIGNMENT_COMMAND.id;
     const split = command.id === SPLIT_SOURCE_TABLE_CELLS_COMMAND.id;
     const merge = command.id === MERGE_SOURCE_TABLE_CELLS_COMMAND.id;
     const width = command.id === EQUALIZE_SOURCE_TABLE_CELL_WIDTH_COMMAND.id;
@@ -1534,6 +1563,7 @@ export function createEditor(options: CreateEditorOptions) {
     const bodyFlow = command.id === SET_OBJECT_BODY_FLOW_COMMAND.id;
     const pictureReplacement = command.id === REPLACE_PICTURE_COMMAND.id;
     const tableCell =
+      originalCellAlignment ||
       merge ||
       split ||
       width ||
@@ -1562,40 +1592,42 @@ export function createEditor(options: CreateEditorOptions) {
         : command.id === INSERT_ENDNOTE_COMMAND.id
           ? 'end'
           : undefined;
-    const owned = verticalMargins
-      ? captureHwp5VerticalMarginsPayload(payload)
-      : bodyFlow
-        ? captureObjectBodyFlowPayload(payload)
-        : outerMargins
-          ? captureObjectOuterMarginsPayload(payload)
-          : pictureReplacement
-            ? captureReplacePicturePayload(payload)
-            : command.id === INSERT_IMAGE_COMMAND.id
-              ? captureImageInsertPayload(payload)
-              : command.id === DELETE_NOTE_COMMAND.id
-                ? captureNoteDeletePayload(payload)
-                : noteKind
-                  ? captureNoteInsertPayload(payload)
-                  : logicalSplice
-                    ? captureCreatedCellSplicePayload(payload)
-                    : objectGeometry
-                      ? captureObjectGeometryPayload(payload)
-                      : inlineKind
-                        ? captureInlineObjectInsertPayload(payload, inlineKind)
-                        : pageSettings
-                          ? capturePageSettingsPayload(payload)
-                          : split
-                            ? captureSourceTableCellSplitPayload(payload)
-                            : merge || width || height
-                              ? payload
-                              : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
-                                ? captureSourceTableGridRequest(
-                                    payload,
-                                    (snapshot.content as any)?.format,
-                                  )
-                                : command.id === INSERT_DOCUMENT_COMMAND.id
-                                  ? captureDocumentInsertPayload(payload)
-                                  : copyOwned(payload);
+    const owned = originalCellAlignment
+      ? captureOriginalCellAlignmentPayload(payload)
+      : verticalMargins
+        ? captureHwp5VerticalMarginsPayload(payload)
+        : bodyFlow
+          ? captureObjectBodyFlowPayload(payload)
+          : outerMargins
+            ? captureObjectOuterMarginsPayload(payload)
+            : pictureReplacement
+              ? captureReplacePicturePayload(payload)
+              : command.id === INSERT_IMAGE_COMMAND.id
+                ? captureImageInsertPayload(payload)
+                : command.id === DELETE_NOTE_COMMAND.id
+                  ? captureNoteDeletePayload(payload)
+                  : noteKind
+                    ? captureNoteInsertPayload(payload)
+                    : logicalSplice
+                      ? captureCreatedCellSplicePayload(payload)
+                      : objectGeometry
+                        ? captureObjectGeometryPayload(payload)
+                        : inlineKind
+                          ? captureInlineObjectInsertPayload(payload, inlineKind)
+                          : pageSettings
+                            ? capturePageSettingsPayload(payload)
+                            : split
+                              ? captureSourceTableCellSplitPayload(payload)
+                              : merge || width || height
+                                ? payload
+                                : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
+                                  ? captureSourceTableGridRequest(
+                                      payload,
+                                      (snapshot.content as any)?.format,
+                                    )
+                                  : command.id === INSERT_DOCUMENT_COMMAND.id
+                                    ? captureDocumentInsertPayload(payload)
+                                    : copyOwned(payload);
     return {
       command: command as EditorCommand<unknown>,
       payload: owned,
@@ -1670,6 +1702,35 @@ export function createEditor(options: CreateEditorOptions) {
         };
         guard();
         return await mutate(noteInsertMessage(payload, state, kind), payload.target, false, guard);
+      }
+      if (pending.command.id === SET_ORIGINAL_CELL_VERTICAL_ALIGNMENT_COMMAND.id) {
+        const payload = pending.payload as SetOriginalCellVerticalAlignmentPayload;
+        const owned = originalCellTargets.get(payload.target);
+        if (!owned) throw Error('ForeignOriginalCellTarget');
+        const guard = () => {
+          requireReady(pending.token, true);
+          if (state !== owned.state || active !== owned.runtime || !owned.current())
+            throw Error('StaleOriginalCellTarget');
+          originalCellVerticalAlignmentSelector(state, {
+            section: owned.native.section,
+            paragraph: owned.native.paragraph,
+            tableNode: owned.native.tableNode,
+            listNode: owned.native.listNode,
+          });
+          if (state.nativeHistoryRevision !== owned.native.historyRevision)
+            throw Error('StaleOriginalCellBinding');
+          if (!hasRuntimeAdmission(active, 'original-cell-vertical-alignment-set'))
+            throw Error('UnsupportedOriginalCellRuntime');
+        };
+        guard();
+        const request = checkedOriginalCellRequest({ before: owned.native, value: payload.value });
+        originalCellTargets.delete(payload.target);
+        return await mutate(
+          { kind: 'original-cell-vertical-alignment-set', request },
+          pending.token,
+          false,
+          guard,
+        );
       }
       if (pending.command.id === SET_OBJECT_OUTER_MARGINS_COMMAND.id) {
         const payload = pending.payload as SetObjectOuterMarginsPayload;
@@ -2858,6 +2919,8 @@ export function createEditor(options: CreateEditorOptions) {
     const kind = Object.getOwnPropertyDescriptor(message ?? {}, 'kind')?.value;
     if (
       [
+        'original-cell-vertical-alignment-query',
+        'original-cell-vertical-alignment-set',
         'strict-layout-prepare',
         'strict-layout-commit',
         'strict-layout-cancel',
@@ -3183,6 +3246,66 @@ export function createEditor(options: CreateEditorOptions) {
           top: w.margins.top,
           bottom: w.margins.bottom,
         }),
+      });
+    });
+  }
+  function getOriginalCellVerticalAlignment(
+    selection: OriginalCellSelectionTarget,
+  ): Promise<OriginalCellVerticalAlignmentRead> {
+    assertPublicMutation();
+    const captured = originalCellSelections.get(selection);
+    if (!captured || captured.state !== state || !captured.current())
+      throw Error('ForeignOrStaleOriginalCellSelection');
+    const snapshot = state,
+      token = snapshot.token;
+    return enqueue(async () => {
+      const runtime = active;
+      const guard = () => {
+        requireReady(token, true);
+        if (state !== snapshot || !captured.current() || active !== runtime)
+          throw Error('StaleOriginalCellSelection');
+        originalCellVerticalAlignmentSelector(state, captured.selector);
+      };
+      guard();
+      if (!runtime || !hasRuntimeAdmission(runtime, 'original-cell-vertical-alignment-query'))
+        throw Error('UnsupportedOriginalCellRuntime');
+      const reply = await readRequest(
+        { kind: 'original-cell-vertical-alignment-query', selector: captured.selector },
+        token,
+        guard,
+        true,
+      );
+      guard();
+      if (reply.originalCell === null)
+        return {
+          state: 'unavailable' as const,
+          reason: String(reply.reason ?? 'OriginalCellVerticalAlignmentUnavailable'),
+        };
+      const native = checkedOriginalCellObservation(reply.originalCell);
+      if (
+        native.format !== (snapshot.content as any)?.format ||
+        !Object.entries(captured.selector).every(
+          ([key, value]) => (native as any)[key] === value,
+        ) ||
+        native.historyRevision !== snapshot.nativeHistoryRevision ||
+        !native.scope
+      )
+        throw Error('OriginalCellOwnerMismatch');
+      if (!native.editable)
+        return { state: 'unavailable' as const, reason: 'OriginalCellVerticalAlignmentReadOnly' };
+      guard();
+      const target = Object.freeze({}) as OriginalCellVerticalAlignmentTarget;
+      originalCellTargets.set(target, {
+        state: snapshot,
+        runtime,
+        native,
+        current: captured.current,
+      });
+      return Object.freeze({
+        state: 'available' as const,
+        target,
+        value: native.value,
+        selector: captured.selector,
       });
     });
   }
@@ -4178,6 +4301,12 @@ export function createEditor(options: CreateEditorOptions) {
             ? requestOptions.token
             : requestOptions,
       );
+    if (
+      ['original-cell-vertical-alignment-query', 'original-cell-vertical-alignment-set'].includes(
+        owned.kind,
+      )
+    )
+      return Promise.reject(Error('UseTypedEditorOperation'));
     if (surfaceOperation(owned.kind) !== 'read')
       return Promise.reject(Error('UnsupportedReadOperation'));
     return enqueue(() => readRequest(owned, expected));
@@ -4259,6 +4388,13 @@ export function createEditor(options: CreateEditorOptions) {
         try {
           assertSurface(record);
           owned = copyOwned(message);
+          if (
+            [
+              'original-cell-vertical-alignment-query',
+              'original-cell-vertical-alignment-set',
+            ].includes(owned.kind)
+          )
+            throw Error('UseTypedEditorOperation');
           expected = copyOwned(requestOptions);
           if (expected.coordinates !== 'legacy-native') throw Error('InvalidSurfaceCoordinates');
           operation = surfaceOperation(owned.kind);
@@ -4298,6 +4434,32 @@ export function createEditor(options: CreateEditorOptions) {
           assertSurface(record);
           return answer;
         });
+      },
+      captureOriginalCellVerticalAlignment(selector: OriginalCellSelector, current: () => boolean) {
+        const snapshot = state;
+        let invalid = false;
+        const live = () => {
+          if (invalid) return false;
+          try {
+            assertSurface(record);
+            if (snapshot === state && current() === true && snapshot === state) return true;
+          } catch {
+            /* Lost input lease never revives. */
+          }
+          invalid = true;
+          return false;
+        };
+        if (!hasRuntimeAdmission(active, 'original-cell-vertical-alignment-query') || !live())
+          return null;
+        try {
+          const owner = originalCellVerticalAlignmentSelector(snapshot, copyOwned(selector));
+          if (!live()) return null;
+          const selected = Object.freeze({}) as OriginalCellSelectionTarget;
+          originalCellSelections.set(selected, { state: snapshot, selector: owner, current: live });
+          return selected;
+        } catch {
+          return null;
+        }
       },
       captureSourceTableCellMerge(witness: SourceTableCellBlockWitness, current: () => boolean) {
         return issueTableCellTarget(
@@ -4536,6 +4698,7 @@ export function createEditor(options: CreateEditorOptions) {
     getDocumentInsertionCapabilities: geometryGuard(getDocumentInsertionCapabilities),
     getInlineObjectInsertTarget: geometryGuard(getInlineObjectInsertTarget),
     getCreatedCellTextTarget: geometryGuard(getCreatedCellTextTarget),
+    getOriginalCellVerticalAlignment: geometryGuard(getOriginalCellVerticalAlignment),
     getObjectOuterMargins: geometryGuard(getObjectOuterMargins),
     getHwp5VerticalMargins: geometryGuard(getHwp5VerticalMargins),
     getObjectBodyFlow: geometryGuard(getObjectBodyFlow),

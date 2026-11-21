@@ -85,6 +85,7 @@ pub const History = struct {
     poisoned: bool = false,
     managed: bool,
     observed_serial: u64,
+    cell_vertical_alignment_scope: u64 = 0,
     source: [*]const u8,
     lane: ?text.Lane = null,
     total_text_bytes: usize,
@@ -190,12 +191,21 @@ pub const History = struct {
         self.changedSerial();
         return failure;
     }
+    fn cellVerticalAlignmentTicket(self: *Self) !@import("../model/history_mutation_epoch.zig").Ticket {
+        if (!self.managed) return error.HistoryProtocol2Required;
+        if (self.cell_vertical_alignment_scope == 0) self.cell_vertical_alignment_scope = try @import("../model/cell_vertical_alignment_scope.zig").issue();
+        return .{ .binding = .{ .document = self.cell_vertical_alignment_scope, .generation = 1, .owner = self.cell_vertical_alignment_scope }, .epoch = self.owner.mutation_serial };
+    }
+    pub fn cellVerticalAlignment(self: *Self, session: *editor.Session, a: std.mem.Allocator, section: usize, paragraph: usize) !@import("cell_vertical_alignment_plan.zig").Observation {
+        try self.bind(session);
+        return @import("cell_vertical_alignment_history.zig").observe(a, session, section, paragraph, try self.cellVerticalAlignmentTicket());
+    }
     pub fn applyBatch(self: *Self, s: *editor.Session, commands: []const commands_mod.Command) !bool {
         try self.bind(s);
         s.history_transaction_active = true;
         defer s.history_transaction_active = false;
         try self.stack.prepare();
-        for (commands) |command| if (command.kind == .note_delete or command.kind == .note_create or command.kind == .insert_document or command.kind == .equation_insert or command.kind == .chart_create or command.kind == .image_insert or command.kind == .picture_replace or command.kind == .bullet_definition or command.kind == .page_settings or command.kind == .object_geometry or command.kind == .object_outer_margins or command.kind == .object_body_flow) {
+        for (commands) |command| if (command.kind == .note_delete or command.kind == .note_create or command.kind == .insert_document or command.kind == .equation_insert or command.kind == .chart_create or command.kind == .image_insert or command.kind == .picture_replace or command.kind == .bullet_definition or command.kind == .page_settings or command.kind == .object_geometry or command.kind == .object_outer_margins or command.kind == .object_body_flow or command.kind == .cell_vertical_alignment) {
             if (commands.len != 1 or command.break_before != null or command.deleted != 0)
                 return error.InvalidInsertDocumentBatch;
             if (!self.managed) return error.HistoryProtocol2Required;
@@ -210,7 +220,7 @@ pub const History = struct {
     fn insertDocument(self: *Self, command: commands_mod.Command) !bool {
         const s = self.owner;
         const inline_creation = command.kind == .equation_insert or command.kind == .chart_create or command.kind == .image_insert or command.kind == .note_create;
-        if (!inline_creation and command.kind != .note_delete and command.kind != .picture_replace and command.kind != .object_outer_margins and command.kind != .object_body_flow and command.section != 0) return error.UnsupportedInsertSections;
+        if (!inline_creation and command.kind != .note_delete and command.kind != .picture_replace and command.kind != .object_outer_margins and command.kind != .object_body_flow and command.kind != .cell_vertical_alignment and command.section != 0) return error.UnsupportedInsertSections;
         // Inline creation proves logical-to-physical owners using serializer
         // receipts. Geometry keeps its separately validated source-frame path.
         // Every other document transaction retains the pending-owner refusal.
@@ -246,6 +256,11 @@ pub const History = struct {
             const request = command.note_create orelse return error.InvalidNoteCreateRequest;
             if (command.inserted.len != 0 or command.deleted != 0 or request.target.section != command.section or request.target.paragraph != command.paragraph or request.target.unit != command.start) return error.SourceBindingMismatch;
             try @import("note_create_owner.zig").validate(s, request.lease, request.target, self.stack.current.revision);
+        }
+        if (command.kind == .cell_vertical_alignment) {
+            const request = command.cell_vertical_alignment orelse return error.InvalidCellVerticalAlignment;
+            if (command.section != request.section or command.paragraph != request.paragraph or command.inserted.len != 0 or command.start != 0) return error.InvalidCellVerticalAlignment;
+            if (!try @import("cell_vertical_alignment_history.zig").validate(s.allocator, s, request.*, try self.cellVerticalAlignmentTicket(), self.stack.current.revision)) return false;
         }
         if (command.kind == .object_geometry) {
             const request = command.object_geometry orelse return error.InvalidObjectGeometryRequest;
@@ -325,6 +340,8 @@ pub const History = struct {
             var prepared = try @import("image_insert.zig").prepare(s.allocator, before, request.*, placement.target);
             defer prepared.deinit(s.allocator);
             break :blk try editor.open(s.allocator, prepared.bytes, s.options);
+        } else if (command.kind == .cell_vertical_alignment) blk: {
+            break :blk (try @import("cell_vertical_alignment_history.zig").prepare(s.allocator, s, before, command.cell_vertical_alignment.?.*, try self.cellVerticalAlignmentTicket(), self.stack.current.revision)) orelse return false;
         } else if (command.kind == .object_outer_margins) blk: {
             break :blk (try @import("object_outer_margins_write.zig").prepare(s.allocator, before, command.object_outer_margins.?.*, s.options)) orelse return false;
         } else if (command.kind == .object_body_flow) blk: {

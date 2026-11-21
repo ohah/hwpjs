@@ -1,1 +1,1 @@
-export{isCurrentDocumentTextSelectionObservation2 as isCurrentDocumentTextSelectionObservation,readNativeReadSourceEvidence2 as readNativeReadSourceEvidence}from"../index-g0kav05t.js";
+export{isCurrentDocumentTextSelectionObservation2 as isCurrentDocumentTextSelectionObservation,readNativeReadSourceEvidence2 as readNativeReadSourceEvidence}from"../index-gr4v7827.js";
