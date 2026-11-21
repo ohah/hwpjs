@@ -87,7 +87,13 @@ export function createObjectOuterMarginsForm(
       !validValues ||
       !gate.allowed('margins');
     for (const field of outerMarginFields)
-      inputs[field].disabled = disposed || busy || !valid || gate.busy;
+      inputs[field].disabled =
+        disposed ||
+        busy ||
+        !valid ||
+        gate.busy ||
+        (capture?.read.observation.verticalOnly === true &&
+          (field === 'left' || field === 'right'));
   };
   for (const [field, title] of [
     ['left', '왼쪽'],
@@ -219,7 +225,9 @@ export function createObjectOuterMarginsForm(
       for (const field of outerMarginFields) inputs[field].value = labels[field];
       status.textContent = outerMarginFields.some((field) => values[field] < 0)
         ? '원본의 음수 여백을 표시합니다. 모든 여백을 0 이상으로 수정한 뒤 적용해주세요.'
-        : '크기와 배치를 유지하며 개체의 바깥 여백만 변경합니다.';
+        : capture.read.observation.verticalOnly === true
+          ? '위아래 배치에서는 위쪽과 아래쪽 여백만 변경합니다. 왼쪽과 오른쪽 원값은 유지합니다.'
+          : '크기와 배치를 유지하며 개체의 바깥 여백만 변경합니다.';
     } catch {
       if (!disposed)
         status.textContent = '바깥 여백을 확인하지 못했습니다. 개체 속성을 다시 열어주세요.';

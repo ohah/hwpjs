@@ -36,7 +36,13 @@ function fixture(options = {}) {
   const read = {
     state: 'available',
     target,
-    observation: { format: 'hwpx', section: 0, drawingNode: 12, margins },
+    observation: {
+      format: 'hwpx',
+      section: 0,
+      drawingNode: 12,
+      margins,
+      ...(options.verticalOnly ? { verticalOnly: true } : {}),
+    },
   };
   const editor = {
     getEditorState: () => state,
@@ -356,6 +362,46 @@ test('reverting geometry draft releases conflict for a single explicit margin co
     assert.deepEqual(writes[0].payload.margins, { ...h.margins, left: 283 });
   } finally {
     geometry.dispose();
+    h.form.dispose();
+  }
+});
+
+test('TOP form locks left/right, preserves raw values and submits one vertical edit', async () => {
+  const h = fixture({ verticalOnly: true });
+  try {
+    await tick();
+    const fields = Object.fromEntries(
+      ['left', 'right', 'top', 'bottom'].map((k) => [
+        k,
+        all(h.root, (n) => n.dataset.role === 'object-outer-margins-' + k)[0],
+      ]),
+    );
+    assert.equal(fields.left.disabled, true);
+    assert.equal(fields.right.disabled, true);
+    assert.equal(fields.top.disabled, false);
+    assert.equal(fields.bottom.disabled, false);
+    h.set('top', '1');
+    h.apply.dispatchEvent(new Event('click'));
+    await tick();
+    const writes = h.calls.filter((x) => x.kind === 'write');
+    assert.equal(writes.length, 1);
+    assert.deepEqual(writes[0].payload.margins, { ...h.margins, top: 283 });
+  } finally {
+    h.form.dispose();
+  }
+});
+test('TOP form cannot apply after its document state is replaced', async () => {
+  const h = fixture({ verticalOnly: true });
+  try {
+    await tick();
+    h.set('top', '1');
+    h.detach();
+    h.form.refresh();
+    assert.equal(h.apply.disabled, true);
+    h.apply.dispatchEvent(new Event('click'));
+    await tick();
+    assert.equal(h.calls.filter((x) => x.kind === 'write').length, 0);
+  } finally {
     h.form.dispose();
   }
 });

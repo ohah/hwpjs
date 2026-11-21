@@ -126,6 +126,11 @@ export function createObjectOuterMarginsPort(
         };
       if (!ownerMatches(state, selector, read))
         throw Error('선택한 개체의 바깥 여백을 확인할 수 없습니다.');
+      if (
+        Object.hasOwn(read.observation, 'verticalOnly') &&
+        (read.observation.verticalOnly !== true || read.observation.format !== 'hwpx')
+      )
+        throw Error('선택한 개체의 바깥 여백을 확인할 수 없습니다.');
       outerMarginDraft(read.observation.margins, read.observation.format);
       const margins = Object.freeze({ ...read.observation.margins });
       const ownedRead = Object.freeze({
@@ -152,6 +157,12 @@ export function createObjectOuterMarginsPort(
         if (!Number.isSafeInteger(value) || value < 0 || value > 32767 || Object.is(value, -0))
           throw Error('바깥 여백을 0 이상으로 수정해주세요.');
       }
+      if (
+        capture.read.observation.verticalOnly === true &&
+        (values.left !== capture.read.observation.margins.left ||
+          values.right !== capture.read.observation.margins.right)
+      )
+        throw Error('위아래 배치에서는 위쪽과 아래쪽 여백만 변경할 수 있습니다.');
       if (!current(capture)) throw Error('개체 속성을 다시 열어주세요.');
       const issued = captures.get(capture);
       if (!issued) throw Error('개체 속성을 다시 열어주세요.');

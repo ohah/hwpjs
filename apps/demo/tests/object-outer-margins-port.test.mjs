@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createObjectOuterMarginsPort } from '../src/object-outer-margins-port.ts';
 import { SET_OBJECT_OUTER_MARGINS_COMMAND } from '@hwpjs/core';
-function fixture() {
+function fixture(verticalOnly = false) {
   const target = Object.freeze({}),
     calls = [],
     margins = { left: 0, right: 1, top: 720, bottom: 32767 };
@@ -26,7 +26,13 @@ function fixture() {
   const read = {
     state: 'available',
     target,
-    observation: { format: 'hwpx', section: 0, drawingNode: 12, margins },
+    observation: {
+      format: 'hwpx',
+      section: 0,
+      drawingNode: 12,
+      margins,
+      ...(verticalOnly ? { verticalOnly: true } : {}),
+    },
   };
   const editor = {
     getEditorState: () => state,
@@ -141,5 +147,27 @@ test('dispatch getter state change is fenced before the only command call', asyn
     },
   });
   await assert.rejects(h.port.apply(r.capture, h.margins));
+  assert.equal(h.calls.filter((x) => x.kind === 'write').length, 0);
+});
+
+test('TOP port preserves latent left/right and rejects altered axes before consuming target', async () => {
+  const h = fixture(true),
+    r = await h.port.read(selector);
+  await assert.rejects(h.port.apply(r.capture, { ...h.margins, left: 7 }), /위아래/);
+  assert.equal(h.calls.filter((x) => x.kind === 'write').length, 0);
+  assert.equal(h.port.current(r.capture), true);
+  await h.port.apply(r.capture, { ...h.margins, bottom: 720 });
+  assert.deepEqual(h.calls.find((x) => x.kind === 'write').payload.margins, {
+    ...h.margins,
+    bottom: 720,
+  });
+});
+test('TOP port retains state and cross-port fences', async () => {
+  const h = fixture(true),
+    r = await h.port.read(selector);
+  const other = createObjectOuterMarginsPort(h.editor, () => true);
+  await assert.rejects(other.apply(r.capture, { ...h.margins, top: 1 }));
+  h.replace();
+  await assert.rejects(h.port.apply(r.capture, { ...h.margins, top: 1 }));
   assert.equal(h.calls.filter((x) => x.kind === 'write').length, 0);
 });

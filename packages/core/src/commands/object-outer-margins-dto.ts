@@ -1,4 +1,8 @@
-import type { Hwp5OuterMarginsSelector, Hwp5OuterMarginsObservation, Hwp5OuterMarginsRequest } from './hwp5-object-outer-margins-dto.ts';
+import type {
+  Hwp5OuterMarginsSelector,
+  Hwp5OuterMarginsObservation,
+  Hwp5OuterMarginsRequest,
+} from './hwp5-object-outer-margins-dto.ts';
 import type {
   ObjectGeometryFrame,
   ObjectGeometryOwner,
@@ -12,24 +16,29 @@ export type ObjectOuterMargins = Readonly<{
   top: number;
   bottom: number;
 }>;
-export type ObjectOuterMarginsSelector = Hwp5OuterMarginsSelector | Readonly<{
-  kind: 'drawing';
-  section: number;
-  node: number;
-}>;
+export type ObjectOuterMarginsSelector =
+  | Hwp5OuterMarginsSelector
+  | Readonly<{
+      kind: 'drawing';
+      section: number;
+      node: number;
+    }>;
 /** Internal Native wire data; public callers cannot turn it into command authority. */
-export type NativeObjectOuterMarginsObservation = Hwp5OuterMarginsObservation | HwpxObjectOuterMarginsObservation;
+export type NativeObjectOuterMarginsObservation =
+  | Hwp5OuterMarginsObservation
+  | HwpxObjectOuterMarginsObservation;
 export type HwpxObjectOuterMarginsObservation = Readonly<{
   geometry: ObjectGeometryObservation &
     Readonly<{
       format: 'hwpx';
-      selector: Extract<ObjectOuterMarginsSelector, {kind: 'drawing'}>;
+      selector: Extract<ObjectOuterMarginsSelector, { kind: 'drawing' }>;
     }>;
   margins: ObjectOuterMargins;
+  verticalOnly?: true;
 }>;
 export type NativeObjectOuterMarginsRequest = Readonly<{
   geometry: Readonly<{
-    selector: Extract<ObjectOuterMarginsSelector, {kind: 'drawing'}>;
+    selector: Extract<ObjectOuterMarginsSelector, { kind: 'drawing' }>;
     owner: ObjectGeometryOwner;
     expected: ObjectGeometryFrame;
     historyRevision: number;
@@ -56,6 +65,8 @@ export type ObjectOuterMarginsRead =
         section: number;
         drawingNode: number;
         margins: ObjectOuterMargins;
+        /** Present only for qualified HWPX TOP_AND_BOTTOM. Not command authority. */
+        verticalOnly?: true;
       }>;
     }>;
 export type SetObjectOuterMarginsPayload = Readonly<{

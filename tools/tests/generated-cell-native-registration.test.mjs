@@ -55,7 +55,7 @@ test('geometry keeps its existing filter and also registers HWP5 outer margins',
     [
       {
         path: 'src/object_geometry_probe.zig',
-        filters: ['object geometry', 'H5 outer margins', 'H5 margins top bottom'],
+        filters: ['object geometry', 'HWPX TOP margins', 'H5 outer margins', 'H5 margins top bottom'],
         step: 'test-object-geometry',
       },
     ],

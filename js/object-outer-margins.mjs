@@ -38,7 +38,12 @@ function binding(value) {
   return Object.freeze(b);
 }
 export function checkedObjectOuterMarginsObservation(value) {
-  const p = ownObjectGeometryRecord(value, ['geometry', 'margins']);
+  const p = ownObjectGeometryRecord(
+    value,
+    ['geometry', 'margins', 'verticalOnly'],
+    ['geometry', 'margins'],
+  );
+  if (Object.hasOwn(p, 'verticalOnly') && p.verticalOnly !== true) invalid();
   const g = ownObjectGeometryRecord(p.geometry, [
     'format',
     'selector',
@@ -64,6 +69,7 @@ export function checkedObjectOuterMarginsObservation(value) {
   return Object.freeze({
     geometry: Object.freeze({ ...raw, binding: b }),
     margins: checkedObjectOuterMargins(p.margins),
+    ...(p.verticalOnly === true ? { verticalOnly: true } : {}),
   });
 }
 export function checkedObjectOuterMarginsRequest(value) {

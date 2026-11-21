@@ -6,6 +6,7 @@ import type { EditorRuntime, RuntimeReply } from '../../src/contracts.ts';
 const selector = { kind: 'drawing', section: 0, node: 17 } as const;
 const margins = { left: 0, right: 1, top: 2, bottom: 3 };
 type Options = {
+  verticalOnly?: boolean;
   format?: 'hwp5' | 'hwpx';
   readOnly?: boolean;
   limited?: boolean;
@@ -62,6 +63,7 @@ async function setup(o: Options = {}) {
       binding: { session: 'native-session', serial: String(revision) },
     },
     margins,
+    ...(o.verticalOnly ? { verticalOnly: true as const } : {}),
   });
   const runtime: EditorRuntime = {
     async request(message, context): Promise<RuntimeReply> {
@@ -336,5 +338,78 @@ test('margin experimental wire cannot bypass typed owner admission', async () =>
       );
   } finally {
     await h.editor.dispose();
+  }
+});
+
+test('TOP public read carries vertical-only restriction and permits a single vertical request', async () => {
+  const h = await setup({ verticalOnly: true });
+  try {
+    const read = await h.editor.getObjectOuterMargins(selector);
+    assert.equal(read.state, 'available');
+    if (read.state !== 'available') throw Error('ExpectedMargins');
+    assert.equal(read.observation.verticalOnly, true);
+    const result = await h.editor.dispatchCommand(SET_OBJECT_OUTER_MARGINS_COMMAND, {
+      target: read.target,
+      margins: { ...margins, top: 700 },
+    });
+    assert.equal(result.status, 'committed-with-snapshot');
+    assert.equal(h.writes().length, 1);
+    assert.deepEqual(h.writes()[0].request.margins, { ...margins, top: 700 });
+  } finally {
+    await h.editor.dispose();
+  }
+});
+test('TOP public target refuses latent-axis edits and clone without Native write', async () => {
+  const h = await setup({ verticalOnly: true });
+  try {
+    const read = await h.editor.getObjectOuterMargins(selector);
+    if (read.state !== 'available') throw Error('ExpectedMargins');
+    const t = read.target;
+    const refusal = await h.editor.dispatchCommand(SET_OBJECT_OUTER_MARGINS_COMMAND, {
+      target: t,
+      margins: { ...margins, left: 9 },
+    });
+    assert.equal(refusal.status, 'rejected-unapplied');
+    assert.equal(refusal.error, 'UnsupportedObjectOuterMargins');
+    const clone = await h.editor.dispatchCommand(SET_OBJECT_OUTER_MARGINS_COMMAND, {
+      target: { ...t },
+      margins,
+    });
+    assert.equal(clone.status, 'rejected-unapplied');
+    assert.equal(clone.error, 'ForeignObjectOuterMarginsTarget');
+    assert.equal(h.writes().length, 0);
+  } finally {
+    await h.editor.dispose();
+  }
+});
+
+test('TOP queued selection, second edit and runtime revocation preserve target fences', async () => {
+  for (const mode of ['selection', 'second', 'admission']) {
+    let allowed = true;
+    const h = await setup({ verticalOnly: true, admitted: () => allowed });
+    try {
+      const read = await h.editor.getObjectOuterMargins(selector);
+      if (read.state !== 'available') throw Error('ExpectedMargins');
+      if (mode === 'selection') await h.editor.setSelection(null);
+      if (mode === 'admission') allowed = false;
+      if (mode === 'second')
+        assert.equal(
+          (
+            await h.editor.dispatchCommand(SET_OBJECT_OUTER_MARGINS_COMMAND, {
+              target: read.target,
+              margins,
+            })
+          ).status,
+          'committed-with-snapshot',
+        );
+      const refusal = await h.editor.dispatchCommand(SET_OBJECT_OUTER_MARGINS_COMMAND, {
+        target: read.target,
+        margins: { ...margins, top: 700 },
+      });
+      assert.equal(refusal.status, 'rejected-unapplied');
+      assert.equal(h.writes().length, mode === 'second' ? 1 : 0);
+    } finally {
+      await h.editor.dispose();
+    }
   }
 });

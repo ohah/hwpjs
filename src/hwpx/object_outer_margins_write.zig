@@ -13,7 +13,9 @@ fn serialize(a: std.mem.Allocator, quote: u8, value: u32) ![]u8 {
 pub fn writeTree(a: std.mem.Allocator, tree: *const Tree, node: usize, expected: t.Margins, after: t.Margins, limit: usize) ![]u8 {
     try t.validateMargins(expected);
     try t.validateMargins(after);
-    if (!std.meta.eql(try owners.readExisting(a, tree, node), expected)) return error.StaleObjectOuterMargins;
+    const current = try owners.readVerified(a, tree, node);
+    if (!std.meta.eql(current.margins, expected)) return error.StaleObjectOuterMargins;
+    try owners.validateChange(current.verticalOnly, current.margins, after);
     const child = try owners.marginNode(a, tree, node);
     const tag = try @import("xml_bound_attributes_write.zig").write(a, tree, child, &.{ "left", "right", "top", "bottom" }, u32, .{ after.left, after.right, after.top, after.bottom }, equal, serialize, limit);
     defer a.free(tag);

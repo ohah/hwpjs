@@ -1,4 +1,4 @@
-//! Narrow observed contract: an existing four-attribute margin child on a direct-body SQUARE textbox.
+//! Existing margins on direct-body SQUARE or qualified TOP_AND_BOTTOM textboxes.
 const std = @import("std");
 const t = @import("../model/object_outer_margins.zig");
 const geometry = @import("../model/object_geometry.zig");
@@ -22,24 +22,38 @@ pub fn marginNode(a: std.mem.Allocator, tree: *const Tree, node: usize) !usize {
     if (duplicate != 0) return error.DuplicateObjectOuterMargins;
     return child orelse error.MissingObjectOuterMargins;
 }
+pub const Existing = struct { margins: t.Margins, verticalOnly: bool };
+/// Legacy reader API; the verified axis policy stays attached for internal writers.
 pub fn readExisting(a: std.mem.Allocator, tree: *const Tree, node: usize) !t.Margins {
+    return (try readVerified(a, tree, node)).margins;
+}
+pub fn readVerified(a: std.mem.Allocator, tree: *const Tree, node: usize) !Existing {
     _ = try marginNode(a, tree, node);
     const flow = try @import("picture_flow_values.zig").readRectangle(a, tree, node);
-    if (flow.text_wrap != 0) return error.UnsupportedObjectOuterMargins;
+    if (flow.text_wrap == 1) {
+        // Reuse the direct-body, captionless, plain-text and position policy.
+        // body_flow.readExisting calls marginNode, not this function.
+        _ = @import("object_body_flow.zig").readExisting(a, tree, node) catch |err| switch (err) {
+            error.OutOfMemory => return err,
+            else => return error.UnsupportedObjectOuterMargins,
+        };
+    } else if (flow.text_wrap != 0) return error.UnsupportedObjectOuterMargins;
     var result: t.Margins = undefined;
     inline for (.{ "left", "right", "top", "bottom" }, 0..) |name, index| {
         const value = flow.outside_margins[index] orelse return error.MissingObjectOuterMargins;
         if (value < 0 or value > 32767) return error.InvalidObjectOuterMargins;
         @field(result, name) = @intCast(value);
     }
-    return result;
+    return .{ .margins = result, .verticalOnly = flow.text_wrap == 1 };
 }
 pub fn observe(a: std.mem.Allocator, session: *const editor.Session, selector: geometry.Selector, revision: u64, binding: geometry.Binding) !t.Observation {
     if (selector.kind != .drawing) return error.UnsupportedObjectOuterMargins;
     var current = try @import("object_geometry_owner.zig").observe(a, session, selector, revision, binding);
     errdefer current.deinit(a);
     if (!current.editable.position) return error.ObjectGeometryReadOnly;
-    return .{ .geometry = current, .margins = try readExisting(a, &session.sections[selector.section].tree, selector.node) };
+    const tree = &session.sections[selector.section].tree;
+    const existing = try readVerified(a, tree, selector.node);
+    return .{ .geometry = current, .margins = existing.margins, .verticalOnly = existing.verticalOnly };
 }
 pub fn validate(a: std.mem.Allocator, session: *const editor.Session, request: t.Request) !void {
     try t.validateRequest(request);
@@ -47,4 +61,11 @@ pub fn validate(a: std.mem.Allocator, session: *const editor.Session, request: t
     var current = try observe(a, session, request.geometry.selector, request.geometry.historyRevision, request.geometry.binding);
     defer current.deinit(a);
     if (!std.meta.eql(current.margins, request.expectedMargins)) return error.StaleObjectOuterMargins;
+    try validateChange(current.verticalOnly, current.margins, request.margins);
+}
+
+/// Also used by the direct writer, so a caller cannot bypass TOP axis restrictions.
+pub fn validateChange(vertical_only: bool, before: t.Margins, after: t.Margins) !void {
+    if (vertical_only and
+        (before.left != after.left or before.right != after.right)) return error.UnsupportedObjectOuterMargins;
 }

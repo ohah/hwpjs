@@ -8,7 +8,7 @@ const History = @import("editor_history.zig").History;
 const a = std.testing.allocator;
 const square: t.Flow = .{ .textWrap = .SQUARE, .textFlow = .BOTH_SIDES };
 fn input(allocator: std.mem.Allocator) ![]u8 {
-    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "apps/docs/docs/public/editor/fixtures/textbox-body-flow-approved.hwpx", allocator, .limited(8_000_000));
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "tests/fixtures/hwpx/textbox-body-flow-approved.hwpx", allocator, .limited(8_000_000));
     errdefer allocator.free(bytes);
     var digest: [32]u8 = undefined;
     std.crypto.hash.sha2.Sha256.hash(bytes, &digest, .{});

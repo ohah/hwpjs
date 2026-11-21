@@ -442,7 +442,7 @@ mise exec -- bun run dev 8082
 - `build:web`는 core→vanilla→react→svelte 순서로 private dist를 생성합니다. 기본 `build`는 RN까지 포함하며 실제 `packages/react-native/native-artifacts.json`과 일치하는 Native 파일이 없으면 `NativeArtifactsRequired`입니다. 가짜 manifest로 대체하지 않습니다. 이 JS 재현 경로는 새 Zig/Native 빌드 성공을 요구하거나 증명하지 않습니다.
 - `test:core`는 core 범위만 실행하는 별도 root script입니다. `test:packages`는 core·vanilla·react·svelte 및 RN src unit 범위이며 RN fake-transport unit 성공을 실제 JSI/기기 성공으로 세지 않습니다. `HWPJS_TEST_WASM` 미지정 시 일부 테스트가 참조하는 로컬 verification WASM은 source-only clone에 자동 생성되지 않습니다.
 - 옛 parity 이름은 `hwp5: pre-extraction wire exact session-scope delta and frozen remainder`, `hwpx: pre-extraction full/window/edit/save/history wire baseline`입니다. `artifact !== baseline.artifact` 경로 문자열 비교로 skip되며 pass가 아닙니다. 독립 CFB oracle는 module import 외에도 HEAD의 `legacy/cfb.js` 파일을 읽습니다.
-- demo/dev는 private 4개 dist와 `apps/demo/dist`를 선행 입력으로 사용합니다. 공개 umbrella dist는 이 demo 경로의 필수 입력이 아니며 public producer는 private dist를 소비하지 않고 source에서 별도 출력합니다.
+- demo/dev는 private 4개 dist와 `apps/demo/dist`를 선행 입력으로 사용합니다. 로컬에서 문서를 열 때에는 `bun run dev`를 사용하세요. 이 서버가 Core dist를 `/hwpjs/`에 제공합니다. Vite preview만 사용하면 런타임이 요청한 WASM에 HTML이 반환되어 `InvalidWasmArtifact`가 발생할 수 있습니다. 공개 데모 producer는 지정한 후보의 private dist와 데모 소스로 정적 bundle을 만듭니다.
 - root `docs:build`는 문서 빌드만 실행합니다. `docs:typecheck`는 source에 연결된 예제를 검사하며, `docs:check`는 예제 타입→빌드→링크→설치 license metadata→공개 출력 검사를 수행합니다. `apps/docs/`의 추적 파일 전체와 기존 `docs/public/editor` 정적 자산이 입력입니다. 새 umbrella producer가 그 정적 자산을 갱신하는 것은 아닙니다. CI의 정적 자산 확인은 `mise exec -- bun tools/build-pages-demo.mjs --verify`입니다.
 - Native shared-snapshot은 별도 ABI/archive/빌드 flag 계약입니다. 기능이 없는 binding은 `NativeSnapshotUnavailable`로 거부하며, plain-body snapshot 검증을 전체 Canvas·실기기·IME 완료로 표시하지 않습니다.
 

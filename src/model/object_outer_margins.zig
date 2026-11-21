@@ -5,6 +5,8 @@ pub const Margins = struct { left: u32, right: u32, top: u32, bottom: u32 };
 pub const Observation = struct {
     geometry: geometry.Observation,
     margins: Margins,
+    /// UI restriction only; write authority is checked again from the current tree.
+    verticalOnly: bool = false,
     pub fn deinit(self: *Observation, a: std.mem.Allocator) void {
         self.geometry.deinit(a);
         self.* = undefined;

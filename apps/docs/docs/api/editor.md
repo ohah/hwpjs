@@ -340,7 +340,7 @@ export async function resizeObject(editor: HeadlessEditor, selector: ObjectGeome
 
 ## HWPX 글상자의 바깥 여백
 
-`getObjectOuterMargins(selector)`는 사각형 어울림이 지정된 본문 글상자의 네 방향 여백과 편집 대상을 조회합니다. 문서에 네 방향 값이 저장돼 있어야 합니다.
+`getObjectOuterMargins(selector)`는 지원되는 본문 글상자의 네 방향 여백과 편집 대상을 조회합니다. 사각형 어울림에서는 네 방향을 변경할 수 있습니다. 위아래 배치에서는 `observation.verticalOnly`가 `true`이며, 위쪽과 아래쪽 여백만 바꿀 수 있습니다. 문서에 네 방향 값이 저장돼 있어야 합니다.
 
 ```ts
 import {
@@ -355,14 +355,16 @@ export async function editTextBoxMargins(
 ) {
   const read = await editor.getObjectOuterMargins(selector);
   if (read.state !== 'available') return read;
+  const { margins, verticalOnly } = read.observation;
+  const patch = verticalOnly ? { top: 720, bottom: 2160 } : { left: 720, right: 2160 };
   return editor.dispatchCommand(SET_OBJECT_OUTER_MARGINS_COMMAND, {
     target: read.target,
-    margins: { ...read.observation.margins, left: 720, right: 2160 },
+    margins: { ...margins, ...patch },
   });
 }
 ```
 
-각 방향은 0~32767 범위의 정수 HWPUNIT입니다. 예제의 왼쪽과 오른쪽 여백은 각각 2.54mm와 7.62mm입니다. 한 번 적용하면 실행 취소 한 단계가 생깁니다. 문서 상태나 이력이 바뀌면 다시 조회하세요. 구형 엔진이나 지원 범위를 벗어난 개체의 조회 결과는 `unavailable`입니다.
+각 방향은 0~32767 범위의 정수 HWPUNIT입니다. 예제는 사각형 어울림의 좌우 여백 또는 위아래 배치의 상하 여백을 각각 2.54mm와 7.62mm로 설정합니다. 한 번 적용하면 실행 취소 한 단계가 생깁니다. 문서 상태나 이력이 바뀌면 다시 조회하세요. 구형 엔진이나 지원 범위를 벗어난 개체의 조회 결과는 `unavailable`입니다.
 
 ## HWP5 그림과 글상자의 바깥 여백
 

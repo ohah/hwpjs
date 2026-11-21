@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "role": "test-only approved authored derivative; not a public example",
+  "runtimePath": "tests/fixtures/hwpx/textbox-body-flow-approved.hwpx",
+  "bytes": 13144,
+  "sha256": "b98fa95d5aa0dd6ef114040e753f3d223787bea1839840124e2114e870d0bcd3",
+  "originalTrackedPath": "apps/docs/docs/public/editor/fixtures/textbox.hwpx",
+  "originalBytes": 13859,
+  "originalSHA256": "4072a0356a79ebcbe98dcd9a50d984e3b6e59d64400d154fcf2fbc342b17f5a5",
+  "approval": "Existing approved b98 input preserved exactly; Main requested portable dedicated fixture after Native FileNotFound.",
+  "derivativeSource": "Existing own raw from outer-margins/body-flow approved fixture, no third-party implementation or expected JSON",
+  "derivationPolicy": "Original public source Front/caption; approved derivative Square, caption removed, horizontal offset26504, existing margins zero, ordinary body text authored, known line caches removed. Exact bytes pinned above; this followup performs no regeneration.",
+  "zipPayloadLedger": [
+    {
+      "path": "Contents/content.hpf",
+      "originalSHA256": "6a4d57ebc920ab6567882bc5c5296e61057a76ddd38ccaed2ea88f7ef61ecd33",
+      "approvedSHA256": "6a4d57ebc920ab6567882bc5c5296e61057a76ddd38ccaed2ea88f7ef61ecd33",
+      "samePayload": true
+    },
+    {
+      "path": "Contents/header.xml",
+      "originalSHA256": "05f13b8746c0373def2282873525ac9801a8c86c920bb79a33bf8bfcb2a96a5a",
+      "approvedSHA256": "05f13b8746c0373def2282873525ac9801a8c86c920bb79a33bf8bfcb2a96a5a",
+      "samePayload": true
+    },
+    {
+      "path": "Contents/section0.xml",
+      "originalSHA256": "728f449a9f027072cd4887a5cdc470e18bb1ac2a895c227f3cc51fd2729e899b",
+      "approvedSHA256": "e47359fd261db298b62a3f5b94dcfc552a9c395cccdf7a304db13561bd620599",
+      "samePayload": false
+    },
+    {
+      "path": "META-INF/container.rdf",
+      "originalSHA256": "0cfd814c20595c841e48e62fbf7591829f13c177fa92af634c8199f85ecf3a89",
+      "approvedSHA256": "0cfd814c20595c841e48e62fbf7591829f13c177fa92af634c8199f85ecf3a89",
+      "samePayload": true
+    },
+    {
+      "path": "META-INF/container.xml",
+      "originalSHA256": "5109d3a9249ec1058177fedab574c5d9616058aa92ebefcd33249ebb36a20f61",
+      "approvedSHA256": "5109d3a9249ec1058177fedab574c5d9616058aa92ebefcd33249ebb36a20f61",
+      "samePayload": true
+    },
+    {
+      "path": "META-INF/manifest.xml",
+      "originalSHA256": "2b4b155c1bb6a9ccc212fef113c4831d2f558e67cf1260eb314ce54f26fd32ea",
+      "approvedSHA256": "2b4b155c1bb6a9ccc212fef113c4831d2f558e67cf1260eb314ce54f26fd32ea",
+      "samePayload": true
+    },
+    {
+      "path": "Preview/PrvImage.png",
+      "originalSHA256": "3d0b916dbc85e6aa80f4c963db6857ac8c33f2a0fe0708a8aab99ddb3eeff4dd",
+      "approvedSHA256": "3d0b916dbc85e6aa80f4c963db6857ac8c33f2a0fe0708a8aab99ddb3eeff4dd",
+      "samePayload": true
+    },
+    {
+      "path": "Preview/PrvText.txt",
+      "originalSHA256": "7a4aae16871b3a01e44b9b4b14033c4a961c6a7b201fbd88484802f09c218fc0",
+      "approvedSHA256": "7a4aae16871b3a01e44b9b4b14033c4a961c6a7b201fbd88484802f09c218fc0",
+      "samePayload": true
+    },
+    {
+      "path": "mimetype",
+      "originalSHA256": "5ab5230b5af04f78947736bf8dd1a269aa684e234f7f4a392efb85289d1655c2",
+      "approvedSHA256": "5ab5230b5af04f78947736bf8dd1a269aa684e234f7f4a392efb85289d1655c2",
+      "samePayload": true
+    },
+    {
+      "path": "settings.xml",
+      "originalSHA256": "e9e9549c94899c22f50d5078096cd09ffcdcbceb274670733cf2512a15500f53",
+      "approvedSHA256": "e9e9549c94899c22f50d5078096cd09ffcdcbceb274670733cf2512a15500f53",
+      "samePayload": true
+    },
+    {
+      "path": "version.xml",
+      "originalSHA256": "b3d98708eb0368d226939b359f56fa4046a4c29ec8a28769e12919bba57157e4",
+      "approvedSHA256": "b3d98708eb0368d226939b359f56fa4046a4c29ec8a28769e12919bba57157e4",
+      "samePayload": true
+    }
+  ],
+  "publicCatalogRegistration": false
+}

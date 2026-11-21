@@ -72,3 +72,24 @@ test('unknown profiles and metadata never register a caller-compiled module', as
   const module = await WebAssembly.compile(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]));
   assert.equal(readKnownNativeModule(module), undefined);
 });
+
+test('controlled HWPX TOP candidate keeps exact old profile and denies unknown hash variants', () => {
+  for (const sha of [
+    '031f96d83972292860db24bd0bcdd9cdbd79af130f43ecd1ef43e50b98affbc7',
+    'f39c05287fd2d75192f1e6855590fb51de2f1d60471946a6b0790606435e4eaa',
+  ]) {
+    assert.deepEqual(verifiedNativeContract(sha), {
+      contract: 'hwp5-exclusive-text-delta-v1',
+      sha256: sha,
+    });
+    assert.equal(verifiedOwnerWindowProfile(sha), true);
+  }
+  for (const sha of [
+    'f39c05287fd2d75192f1e6855590fb51de2f1d60471946a6b0790606435e4eaa'.toUpperCase(),
+    'f39c05287fd2d75192f1e6855590fb51de2f1d60471946a6b0790606435e4eaa' + '\n',
+    '0'.repeat(64),
+  ]) {
+    assert.equal(verifiedNativeContract(sha), undefined);
+    assert.equal(verifiedOwnerWindowProfile(sha), false);
+  }
+});
