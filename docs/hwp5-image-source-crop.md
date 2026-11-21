@@ -1,6 +1,6 @@
 # HWP5 신규 그림의 원본 crop과 표시 크기
 
-이 문서는 exact616f3e3ae629bb6389036416611643c47d490a40의 r4 브라우저 실패에 대한 격리 소스 후보 계약이다. Native 컴파일·저장 실행·새 WASM·브라우저 통과를 주장하지 않는다. 빈 예제 생산·catalog 작업은 별도 동결 패킷이며 이 수정에 포함하지 않는다.
+이 문서는 HWP5 신규 그림 삽입의 표시 크기와 원본 crop 계약을 설명한다. 처음 문제를 관측한 소스는 `616f3e3a`다.
 
 ## 원인과 두 좌표
 
@@ -14,7 +14,7 @@
 
 PNG는 기존 IHDR 검사 결과, JPEG는 기존 frame/DNL 구조 검사 결과의 width/effective_height를 사용한다. 새 헤더 parser나 픽셀 decoder는 만들지 않는다. `inspectImage`의 media 반환 계약과8MiB/기존 구조 검사 한도는 유지하고, 신규 작성용 `inspectRaster`가 pixel dimensions를 별도로 제공한다. source pixels×75가 signed INT32에 들어가지 않거나0이면 거부하며 clamp하지 않는다. 표시 폭·높이는 별도로 기존 정수/i32 한도를 따른다.
 
-이 좌표 선택은 임베드된 DPI·EXIF를 화면 기하의 권위로 바꾸는 기능이 아니다. 회전 EXIF로 encoded frame과 브라우저 bitmap 크기가 바뀌는 경우와 모든 JPEG 변형의 시각 동치는 아직 검증 범위 밖이다. 실제 controlled PNG/JPEG의 후속 SDK/브라우저·원본 픽셀 비교가 필요하다.
+이 좌표 선택은 임베드된 DPI·EXIF를 화면 기하의 권위로 바꾸는 기능이 아니다. 회전 EXIF로 encoded frame과 브라우저 bitmap 크기가 바뀌는 경우와 모든 JPEG 변형의 시각 동치는 아직 검증 범위 밖이다.
 
 ## 버전과 저장
 
@@ -36,4 +36,8 @@ PNG는 기존 IHDR 검사 결과, JPEG는 기존 frame/DNL 구조 검사 결과�
 
 실제 JS renderer 계약8개는 기존 r4 source 초과와 제안 full-source 범위, 기존5개 version profile, 다른 명시 reference의 보존을 확인한다. 실제 `paintInlinePicture`의 drawImage 인자를 검사한 Node 시험이며 실제 브라우저 래스터·새 Native 산출물의 증거가 아니다.
 
-`hwp5_image_source_crop_tests.zig`의6개는 구조 검사 PNG/JPEG dimensions,5개 tail raw layout, source 한도/미지 버전 거부, PNG/JPEG Session·History 실제 저장 raw/재열기/undo-redo·기본 가드, 독립 파일 변환 저장을 준비한다. 기존 writer4·live image8·chart5를 같은 probe에 포함해 named23를 등록한다. Native는 아직 실행하지 않았다. CLI replacement media API와 원본 raw 읽기·렌더링은 이 수정으로 바꾸지 않는다.
+`hwp5_image_source_crop_tests.zig`의6개는 구조 검사 PNG/JPEG dimensions,5개 tail raw layout, source 한도/미지 버전 거부, PNG/JPEG Session·History 실제 저장 raw/재열기/undo-redo·기본 가드, 독립 파일 변환 저장을 준비한다. 기존 writer4·live image8·chart5를 같은 probe에 포함해 named23를 등록한다. CLI replacement media API와 원본 raw 읽기·렌더링은 이 수정으로 바꾸지 않는다.
+
+격리 공식 갤러리의 009e24b5 WASM에서 실제 브라우저로 HWP5 PNG·JPEG를 삽입했다. 64×32 원본 전체가 96×48 CSS 픽셀에 표시됐고, 색상과 경계, 한 번의 이력, 저장·실행 취소·다시 실행·재열기를 확인했다. 독립 CFB 검사에서 등록 이미지 바이트와 비대상 스트림이 그대로 보존됐다.
+
+`a5d3a15f`에 포함된 결합 엔진 e8c4676c와 정상 공개 SDK 빌드에서 같은 두 삽입·저장·이력·재열기를 검증했다. 두 파일은 격리 브라우저의 저장 파일과 전체 바이트가 일치했고, 각 파일을 독립 CFB 검사에 다시 통과시켰다. 이 결과의 실제 화면 관측은 009e24b5 코호트에 속한다.
