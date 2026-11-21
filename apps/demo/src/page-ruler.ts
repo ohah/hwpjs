@@ -45,8 +45,9 @@ export function mountPageRuler(
     clip.style.width = `${model.viewportWidth}px`;
     track.style.left = `${model.paperLeft - model.viewportLeft}px`;
     track.style.width = `${model.width}px`;
-    label.textContent = model.label;
-    root.dataset.page = String(model.current);
+    if (label.textContent !== model.label) label.textContent = model.label;
+    const page = String(model.current);
+    if (root.dataset.page !== page) root.dataset.page = page;
     const key = JSON.stringify([model.width, model.leftMargin, model.rightMargin, model.ticks]);
     if (key === previous) return;
     previous = key;

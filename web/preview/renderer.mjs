@@ -1622,6 +1622,7 @@ export function createRenderer(
           y,
         ),
       layout,
+      layoutGeneration,
       content: display,
       resourceDocument,
       resourceEpoch,
@@ -2799,6 +2800,15 @@ export function createRenderer(
     },
     layout: () => flushProjection(),
     paintedFrame: () => paintedFrame,
+    pageGeometryFrame: () =>
+      !closed &&
+      !projectionDeferred &&
+      !holdingFrame &&
+      paintedFrame?.layoutGeneration === layoutGeneration &&
+      paintedFrame.resourceDocument === resourceDocument &&
+      paintedFrame.resourceEpoch === resourceEpoch
+        ? paintedFrame
+        : null,
     isPaintedFrameCurrent,
     isSelectionPainted(selection) {
       return (

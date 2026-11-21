@@ -328,9 +328,17 @@ test('real reflow/layout, scroll axes, viewport, view and backing changes cannot
     (f) => f.renderer.preview(null),
     (f) => {
       f.viewport.scrollTop = 9;
+      assert.equal(f.renderer.isPaintedFrameCurrent(), false);
+      const painted = f.renderer.paintedFrame();
+      assert.ok(painted);
+      assert.equal(f.renderer.pageGeometryFrame(), painted);
     },
     (f) => {
       f.viewport.scrollLeft = 7;
+      assert.equal(f.renderer.isPaintedFrameCurrent(), false);
+      const painted = f.renderer.paintedFrame();
+      assert.ok(painted);
+      assert.equal(f.renderer.pageGeometryFrame(), painted);
     },
     (f) => {
       f.viewport.clientWidth = 850;

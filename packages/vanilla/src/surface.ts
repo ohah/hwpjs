@@ -377,14 +377,9 @@ export function createCanvasSurface({
     if (closed) return null;
     const state = editor.getEditorState();
     const key = `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}`;
-    if (
-      !lease?.isActive() ||
-      state.status !== 'ready' ||
-      key !== displayed ||
-      !renderer?.isPaintedFrameCurrent?.()
-    )
-      return null;
-    const frame = renderer.paintedFrame();
+    if (!lease?.isActive() || state.status !== 'ready' || key !== displayed) return null;
+    // Page geometry belongs to the layout, so a scroll-only repaint does not invalidate it.
+    const frame = renderer?.pageGeometryFrame();
     if (
       frame?.resourceDocument !== `${state.documentId}:${state.generation}` ||
       frame?.resourceEpoch !== `${state.documentId}:${state.generation}:${state.operationRevision}`
@@ -483,7 +478,7 @@ export function createCanvasSurface({
       !viewport.getBoundingClientRect
     )
       return null;
-    const page = renderer.paintedFrame()?.layout?.pages?.[status.current - 1];
+    const page = renderer.pageGeometryFrame()?.layout?.pages?.[status.current - 1];
     const stageBox = stage.getBoundingClientRect(),
       viewportBox = viewport.getBoundingClientRect();
     if (stageBox.width <= 0 || viewportBox.width <= 0 || viewportBox.height <= 0) return null;
@@ -513,8 +508,7 @@ export function createCanvasSurface({
     void Promise.resolve().then(() => {
       pageStatusPending = false;
       if (closed) return;
-      // Repaint completion must wake the ruler even within the same page. A scroll
-      // observer may have hidden stale geometry before this painted frame was ready.
+      // Layout repaint completion can restore geometry after a document or layout change.
       const next = JSON.stringify([
         getPageStatus(),
         getPageGeometry(),

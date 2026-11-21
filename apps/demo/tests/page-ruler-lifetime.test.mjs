@@ -61,6 +61,7 @@ function setup() {
   };
   f.renderer.isPaintedFrameCurrent = () => current;
   f.renderer.paintedFrame = () => frame;
+  f.renderer.pageGeometryFrame = () => frame;
   f.renderer.viewScale = () => scale;
   const surface = createCanvasSurface({ root: f.root, editor: f.editor });
   const w = globalThis.__nonTextFixture;
@@ -401,6 +402,38 @@ test('malformed horizontal paper bounds and hidden viewport cannot produce a pla
     assert.equal(s.surface.getPageStatus(), null);
     assert.equal(s.surface.getPageGeometry(), null);
   } finally {
+    await s.surface.dispose();
+  }
+});
+
+test('vertical scrolling keeps a valid ruler while the viewport paint is pending', async () => {
+  const s = setup(),
+    a = await attach(s);
+  try {
+    const track = a.d.ruler.children[1].children[0];
+    const firstTick = track.children[2];
+    s.current(false);
+    s.w.viewport.scrollTop = 120;
+    a.ruler.refresh();
+    a.d.flush();
+    assert.equal(a.d.ruler.hidden, false);
+    assert.equal(a.d.ruler.dataset.page, '1');
+    assert.equal(track.children[2], firstTick);
+
+    s.w.viewport.scrollTop = 1150;
+    a.ruler.refresh();
+    a.d.flush();
+    assert.equal(a.d.ruler.hidden, false);
+    assert.equal(a.d.ruler.dataset.page, '2');
+    assert.notEqual(track.children[2], firstTick);
+
+    s.f.renderer.pageGeometryFrame = () => null;
+    a.ruler.refresh();
+    a.d.flush();
+    assert.equal(a.d.ruler.hidden, true);
+  } finally {
+    a.ruler.dispose();
+    a.relay.dispose();
     await s.surface.dispose();
   }
 });

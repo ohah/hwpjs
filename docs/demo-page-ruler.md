@@ -4,11 +4,11 @@
 
 ## 지오메트리 단일 출처
 
-Vanilla Surface의 `getPageGeometry()`는 실제 viewport와 가로·세로 모두 양의 면적으로 교차하는 첫 용지를 `getPageStatus()`로 선택한 현재 painted frame의 `paper`와 `page` 사각형을 복사·동결해 반환한다. 현재 문서·세대·revision, lease와 painted frame의 유효성 검사를 그대로 사용한다. 새 문서 파싱, 조판 flush, A4 기본값 또는 뷰포트 너비로 용지 크기를 추정하지 않는다.
+Vanilla Surface의 `getPageGeometry()`는 실제 viewport와 가로·세로 모두 양의 면적으로 교차하는 첫 용지를 `getPageStatus()`로 선택한 현재 painted frame의 `paper`와 `page` 사각형을 복사·동결해 반환한다. 현재 문서·세대·revision과 활성 lease를 검증한다. Renderer는 이미 그린 프레임의 조판 세대와 문서 소유권이 유지되는 동안 페이지 지오메트리를 제공한다. 새 문서 파싱, 조판 flush, A4 기본값 또는 뷰포트 너비로 용지 크기를 추정하지 않는다.
 
 `paperLeft`는 실제 stage의 화면 좌표에 기존 용지 x와 확대율을 적용한 값이다. 가로 스크롤, stage 중앙 정렬, 고전식 스크롤바와 오른쪽 패널을 포함한 실제 host 크기를 그대로 따른다. 클립 폭은 스크롤바를 제외한 viewport의 `clientWidth`다. 용지별 폭·방향과 좌우 본문 여백은 해당 페이지의 사각형에서 파생한다. mm/cm는 기존 HWP 단위의 CSS 픽셀 변환을 사용한다. 제본·맞쪽·가로 구역은 이미 계산된 compositor 사각형을 재사용한다.
 
-0 너비·높이의 숨김 host, 쪽 사이 공백이나 가로로 용지가 완전히 사라진 구간, 오래된 painted frame, loading/disposed 상태에서는 지오메트리를 반환하지 않는다. 자는 유효하지 않은 눈금을 숨기면서 자신의 행 높이를 유지한다. 행을 접어 스크롤 앵커를 이동시키지 않는다. 실제 재표시 뒤 ResizeObserver/paint 알림으로 새 값을 읽는다.
+0 너비·높이의 숨김 host, 쪽 사이 공백이나 가로로 용지가 완전히 사라진 구간, 이전 조판 세대의 프레임, loading/disposed 상태에서는 지오메트리를 반환하지 않는다. 자는 유효하지 않은 눈금을 숨기면서 자신의 행 높이를 유지한다. 행을 접어 스크롤 앵커를 이동시키지 않는다. 실제 재표시 뒤 ResizeObserver/paint 알림으로 새 값을 읽는다.
 
 ## 책임과 수명
 
@@ -21,7 +21,7 @@ Vanilla Surface의 `getPageGeometry()`는 실제 viewport와 가로·세로 모�
 
 Core의 loading/empty/refresh-required/disposed, 새 revision의 아직 게시되지 않은 frame, lease 취소는 repaint 없이도 무효화 알림을 전달한다. Surface dispose는 getter가 null을 반환하도록 닫은 뒤 구독 정리 전에 최종 알림을 보낸다. 유지된 ruler/relay는 교체 Surface가 오지 않아도 이전 용지를 숨기고 쪽 dataset과 설명도 비운다. relay dispose 역시 최종 무효화를 알리며, 이전 Surface의 늦은 알림은 새 연결로 전달하지 않는다. observer 오류가 다른 observer나 lease 정리를 막지 않으며 재진입 dispose는 같은 Promise를 돌려준다.
 
-Vanilla의 공개 `CanvasPageGeometry`와 `CanvasPageStatus`는 읽기 전용 관측 타입이다. React/Svelte Surface 타입에도 getter와 nullable 계약을 그대로 전달한다. 가로 스크롤·resize는 자 컨트롤러도 관측하며 repaint 뒤의 알림에서 최종 지오메트리를 다시 읽는다. 같은 쪽 안의 세로 스크롤도 repaint 완료를 알려야 하므로 알림 비교에는 표시 revision, scrollTop과 viewport 높이를 포함한다. 페이지 번호·가로 사각형만 비교하면 stale 프레임을 기다리며 숨긴 자가 복귀하지 않는 경우가 있다. dispose는 예약 프레임, 구독, scroll/resize 이벤트와 ResizeObserver를 해제한다.
+Vanilla의 공개 `CanvasPageGeometry`와 `CanvasPageStatus`는 읽기 전용 관측 타입이다. React/Svelte Surface 타입에도 getter와 nullable 계약을 그대로 전달한다. 가로 스크롤·resize는 자 컨트롤러도 관측하며 repaint 뒤의 알림에서 최종 지오메트리를 다시 읽는다. 스크롤만 바뀌면 다음 Canvas repaint 전에 현재 viewport로 보이는 쪽을 계산한다. 같은 쪽에서는 눈금 노드를 유지하며, 다른 크기의 쪽에 도달하면 새 눈금을 표시한다. 개체를 클릭하는 경로는 현재 스크롤까지 일치하는 Canvas 프레임을 계속 요구한다. dispose는 예약 프레임, 구독, scroll/resize 이벤트와 ResizeObserver를 해제한다.
 
 ## 복구 원인과 검증
 

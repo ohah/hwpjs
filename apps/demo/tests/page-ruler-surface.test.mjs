@@ -46,6 +46,7 @@ test('Surface geometry uses current painted page and stage; rejects stale, loadi
   };
   f.renderer.isPaintedFrameCurrent = () => current;
   f.renderer.paintedFrame = () => frame;
+  f.renderer.pageGeometryFrame = () => (current ? frame : null);
   f.renderer.viewScale = () => scale;
   const surface = createCanvasSurface({ root: f.root, editor: f.editor });
   const w = globalThis.__nonTextFixture;
@@ -74,7 +75,7 @@ test('Surface geometry uses current painted page and stage; rejects stale, loadi
     w.viewport.scrollTop += 1;
     w.onLayout(frame.layout);
     await tick();
-    assert.equal(events, 3, 'same page vertical repaint wakes a stale-hidden ruler');
+    assert.equal(events, 3, 'same page viewport change still notifies');
     w.onLayout(frame.layout);
     await tick();
     assert.equal(events, 3, 'unchanged repaint remains deduplicated');

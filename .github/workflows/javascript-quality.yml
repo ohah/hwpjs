@@ -160,7 +160,7 @@ jobs:
         run: |
           set -euo pipefail
           node --experimental-transform-types --test --test-concurrency=1 --test-reporter=tap apps/demo/tests/page-ruler.test.mjs apps/demo/tests/page-ruler-surface.test.mjs apps/demo/tests/page-ruler-lifetime.test.mjs apps/demo/tests/page-status.test.mjs packages/vanilla/tests/page-frame.test.ts 2>&1 | tee "$RUNNER_TEMP/page-ruler.tap"
-          grep -Eq '^# tests 35$' "$RUNNER_TEMP/page-ruler.tap"
+          grep -Eq '^# tests 36$' "$RUNNER_TEMP/page-ruler.tap"
           grep -Eq '^# fail 0$' "$RUNNER_TEMP/page-ruler.tap"
           grep -Eq '^# skipped 0$' "$RUNNER_TEMP/page-ruler.tap"
           bunx --no-install tsc --noEmit -p tools/tsconfig.page-ruler.json
