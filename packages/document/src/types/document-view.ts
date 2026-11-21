@@ -140,6 +140,7 @@ export interface UnknownBlock {
   source?: SourceLocation;
   editability?: 'unknown';
   detailUnavailable?: boolean;
+  hwp5ChartText?: string;
   nativeKind?: number;
   subtype?: string;
 }
@@ -337,6 +338,7 @@ export interface ObjectObservation {
   siteKnown?: boolean;
   parentParagraph?: number | null;
   parentObjectNode?: number | null;
+  hwp5ChartText?: string;
   nativeKind?: number;
   paragraph?: number;
   anchorUnit?: number;

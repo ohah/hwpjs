@@ -222,6 +222,16 @@ function validate(model: unknown, limits: RenderLimits): Map<object, RenderRefer
       } else if (v.type === 'unknown') {
         string(v.kind);
         diagnostic(v.diagnostic);
+        if (v.hwp5ChartText !== undefined) {
+          if (
+            model.format !== 'hwp5' ||
+            v.kind !== 'drawing' ||
+            v.nativeKind !== 0x246f6c65 ||
+            !references.has(v)
+          )
+            throw new TypeError('InvalidHwp5ChartContent');
+          string(v.hwp5ChartText);
+        }
       } else throw new TypeError('UnsupportedRenderBlockType');
     }
   }

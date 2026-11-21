@@ -8,7 +8,10 @@ import type { DocumentBlock, ObjectReference } from './types/document-view.ts';
 type Result =
   | { state: 'available'; detail: Hwp5ChartDisplay }
   | { state: 'unavailable'; reason: string };
-const unavailable = (reason: string): Result => ({ state: 'unavailable', reason });
+const unavailable = (reason: string): Extract<Result, { state: 'unavailable' }> => ({
+  state: 'unavailable',
+  reason,
+});
 const record = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === 'object' && !Array.isArray(value);
 const invalid = (): never => {
@@ -38,60 +41,22 @@ function decoded<T>(decode: (bytes: Uint8Array) => T, value: unknown): T {
 function message(error: unknown): string {
   return record(error) && typeof error.message === 'string' ? error.message : 'NativeReadFailed';
 }
-/** Read detail for an already inventory-verified drawing reference. No reclassification or edit authority. */
-export function readHwp5ChartObjectDetail(
-  sdk: object,
+type Packet = ReturnType<typeof decodeHwp5ChartCandidates>;
+type Candidate = Packet['candidates'][number];
+type Ready = {
+  state: 'ready';
+  packet: Packet;
+  byComponent: Map<string, Candidate | null>;
+  display: (...args: number[]) => unknown;
+};
+const key = (section: number, component: number): string => `${section}:${component}`;
+
+function validateDisplayWitness(
+  detail: Hwp5ChartDisplay,
+  packet: Packet,
+  row: Candidate,
   target: ObjectReference,
-  block: DocumentBlock,
-): Result {
-  if (
-    target.format !== 'hwp5' ||
-    target.kind !== 'drawing' ||
-    block.type !== 'unknown' ||
-    block.kind !== 'drawing' ||
-    block.nativeKind !== 0x246f6c65 ||
-    block.source?.section !== target.section ||
-    block.source?.node !== target.node
-  )
-    return invalid();
-  if (block.detailUnavailable || block.diagnostic?.code !== 'ObjectDetailsDeferred')
-    return unavailable('Hwp5ChartInventoryOwnerUnverified');
-  let capabilities: unknown, candidates: unknown, display: unknown;
-  try {
-    capabilities = Reflect.get(sdk, 'supportsHwp5ChartDisplayAbi');
-    candidates = Reflect.get(sdk, 'hwp5ChartCandidates');
-    display = Reflect.get(sdk, 'hwp5ChartDisplay');
-    if (
-      typeof capabilities !== 'function' ||
-      typeof candidates !== 'function' ||
-      typeof display !== 'function' ||
-      Reflect.apply(capabilities, sdk, []) !== true
-    )
-      return unavailable('Hwp5ChartDisplayAbiUnavailable');
-  } catch (error) {
-    return unavailable(`Hwp5ChartDisplayAbi: ${message(error)}`);
-  }
-  let raw: unknown;
-  try {
-    raw = Reflect.apply(candidates, sdk, []);
-  } catch (error) {
-    return unavailable(`hwp5ChartCandidates: ${message(error)}`);
-  }
-  const packet = decoded(decodeHwp5ChartCandidates, raw);
-  const selected = packet.candidates.filter(
-    (row) => row.section === target.section && row.owner.component_node === target.node,
-  );
-  if (selected.length === 0) return unavailable('Hwp5ChartCandidateNotFound');
-  if (selected.length !== 1) return invalid();
-  const row = selected[0];
-  if (row.resource.state !== 'modern_chart') return unavailable(row.resource.error_name);
-  // drawing/N names a component. The public display API names its proven control.
-  try {
-    raw = Reflect.apply(display, sdk, [target.section, row.owner.control_node]);
-  } catch (error) {
-    return unavailable(`hwp5ChartDisplay: ${message(error)}`);
-  }
-  const detail = decoded(decodeHwp5ChartDisplay, raw);
+): void {
   if (
     detail.section !== target.section ||
     detail.source_epoch !== packet.source_epoch ||
@@ -115,5 +80,94 @@ export function readHwp5ChartObjectDetail(
     )
   )
     return invalid();
-  return { state: 'available', detail };
+}
+
+/** Internal per-read resolver. No public SDK methods or reference grammar added. */
+export function createHwp5ChartDetailReader(sdk: object) {
+  let initialized: Ready | Extract<Result, { state: 'unavailable' }> | undefined;
+  let failed = false,
+    failure: unknown;
+  const initialize = (): NonNullable<typeof initialized> => {
+    if (failed) throw failure;
+    if (initialized) return initialized;
+    try {
+      let capabilities: unknown, candidates: unknown, display: unknown;
+      try {
+        capabilities = Reflect.get(sdk, 'supportsHwp5ChartDisplayAbi');
+        candidates = Reflect.get(sdk, 'hwp5ChartCandidates');
+        display = Reflect.get(sdk, 'hwp5ChartDisplay');
+        if (
+          typeof capabilities !== 'function' ||
+          typeof candidates !== 'function' ||
+          typeof display !== 'function' ||
+          Reflect.apply(capabilities, sdk, []) !== true
+        )
+          return (initialized = unavailable('Hwp5ChartDisplayAbiUnavailable'));
+      } catch (error) {
+        return (initialized = unavailable(`Hwp5ChartDisplayAbi: ${message(error)}`));
+      }
+      let raw: unknown;
+      try {
+        raw = Reflect.apply(candidates, sdk, []);
+      } catch (error) {
+        return (initialized = unavailable(`hwp5ChartCandidates: ${message(error)}`));
+      }
+      const packet = decoded(decodeHwp5ChartCandidates, raw);
+      const byComponent = new Map<string, Candidate | null>();
+      for (const row of packet.candidates) {
+        const id = key(row.section, row.owner.component_node);
+        // Distinct controls can still collide on a component. Never choose first/last.
+        byComponent.set(id, byComponent.has(id) ? null : row);
+      }
+      const invoke = display;
+      return (initialized = {
+        state: 'ready',
+        packet,
+        byComponent,
+        display: (...args: number[]) => Reflect.apply(invoke, sdk, args),
+      });
+    } catch (error) {
+      failed = true;
+      failure = error;
+      throw error;
+    }
+  };
+  return (target: ObjectReference, block: DocumentBlock): Result => {
+    if (
+      target.format !== 'hwp5' ||
+      target.kind !== 'drawing' ||
+      block.type !== 'unknown' ||
+      block.kind !== 'drawing' ||
+      block.nativeKind !== 0x246f6c65 ||
+      block.source?.section !== target.section ||
+      block.source?.node !== target.node
+    )
+      return invalid();
+    if (block.detailUnavailable || block.diagnostic?.code !== 'ObjectDetailsDeferred')
+      return unavailable('Hwp5ChartInventoryOwnerUnverified');
+    const state = initialize();
+    if (state.state !== 'ready') return state;
+    const row = state.byComponent.get(key(target.section, target.node));
+    if (row === undefined) return unavailable('Hwp5ChartCandidateNotFound');
+    if (row === null) return invalid();
+    if (row.resource.state !== 'modern_chart') return unavailable(row.resource.error_name);
+    let raw: unknown;
+    try {
+      raw = state.display(target.section, row.owner.control_node);
+    } catch (error) {
+      return unavailable(`hwp5ChartDisplay: ${message(error)}`);
+    }
+    const detail = decoded(decodeHwp5ChartDisplay, raw);
+    validateDisplayWitness(detail, state.packet, row, target);
+    return { state: 'available', detail };
+  };
+}
+
+/** Single-object inspector uses exactly the same witness checks as read projection. */
+export function readHwp5ChartObjectDetail(
+  sdk: object,
+  target: ObjectReference,
+  block: DocumentBlock,
+): Result {
+  return createHwp5ChartDetailReader(sdk)(target, block);
 }

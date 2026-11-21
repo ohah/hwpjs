@@ -75,7 +75,15 @@ export function renderContent(
   const caption = (block: DocumentBlock): string | null => {
     const reference = references.get(block);
     if (!reference) return null;
-    if (!captions.has(block)) captions.set(block, names.get(reference.kind) + ' ' + ++ordinal);
+    if (!captions.has(block))
+      captions.set(
+        block,
+        (block.type === 'unknown' && block.hwp5ChartText !== undefined
+          ? '차트'
+          : names.get(reference.kind)) +
+          ' ' +
+          ++ordinal,
+      );
     const label = captions.get(block);
     return markdown
       ? (reference.kind === 'image' ? '!' : '') + '[' + label + '](' + reference.text + ')'
@@ -203,9 +211,20 @@ export function renderContent(
         shown.add(block);
         const label = caption(block);
         const name = names.get(block.kind);
+        if (label && block.hwp5ChartText !== undefined) {
+          emit(label, 'paragraph', context);
+          // Pass each logical line through the common escaper; embedded LF is
+          // otherwise intentionally rendered as a visible control marker.
+          for (const row of block.hwp5ChartText.matchAll(/[^\n]+/gu))
+            emit(escape(row[0]), 'paragraph', context);
+          continue;
+        }
         emit(
           label
-            ? label + ' [내용 확인 불가]'
+            ? label +
+                (block.hwp5ChartText === undefined
+                  ? ' [내용 확인 불가]'
+                  : '\n' + escape(block.hwp5ChartText))
             : name
               ? '[' + name + ': 내용·참조 확인 불가]'
               : '[알 수 없는 내용]',

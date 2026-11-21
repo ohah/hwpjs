@@ -1,3 +1,4 @@
+import { observeHwp5ChartContent } from '../../document/src/hwp5-chart-content.ts';
 import { readFormInventory, type FormInventory } from './document-forms.ts';
 import { detectDocumentFormat } from '../../../js/document-format.mjs';
 import { createExperimentalHwp5Editor } from '../../../js/hwp5-editor.mjs';
@@ -180,6 +181,7 @@ export async function read(
       sectionCount: document.sectionCount,
       sdk: document.sdk,
     });
+    observeHwp5ChartContent(model, document.sdk);
     return {
       format: document.format,
       model,
