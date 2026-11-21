@@ -206,7 +206,6 @@ for (const format of ['hwp5', 'hwpx'])
     () => {
       const prefix = format + '_edit';
       let current,
-        kind,
         reads = 0;
       let binding = { document: '1', generation: '1', owner: '2', epoch: '0' };
       const first = fixture(format),
@@ -223,13 +222,11 @@ for (const format of ['hwp5', 'hwpx'])
       const wasm = {
         [prefix + '_created_cell_properties_version']: () => 1,
         [prefix + '_created_cell_properties_ticket']: () => {
-          kind = 'ticket';
           current = binding;
           return 1;
         },
         [prefix + '_created_cell_properties_projection']: () => {
           reads++;
-          kind = 'projection';
           current = first;
           return 1;
         },
