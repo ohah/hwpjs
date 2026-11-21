@@ -354,7 +354,9 @@ test('TOP public read carries vertical-only restriction and permits a single ver
     });
     assert.equal(result.status, 'committed-with-snapshot');
     assert.equal(h.writes().length, 1);
-    assert.deepEqual(h.writes()[0].request.margins, { ...margins, top: 700 });
+    const { request } = h.writes()[0];
+    assert.ok(request && typeof request === 'object' && 'margins' in request);
+    assert.deepEqual(request.margins, { ...margins, top: 700 });
   } finally {
     await h.editor.dispose();
   }
