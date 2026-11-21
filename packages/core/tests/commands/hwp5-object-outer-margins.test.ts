@@ -39,13 +39,31 @@ async function setup(o: Options = {}) {
     ],
   });
   const native = () => ({
-    schemaVersion: 1 as const, format: 'hwp5' as const,
+    schemaVersion: 1 as const,
+    format: 'hwp5' as const,
     selector: { ...selector, node: o.wrongNode ? 18 : 17 },
-    owner: { control_node: 8, component_node: 17, paragraph_node: 0, paragraph: 0, anchor_unit: 0, instance_id: 7, source_sha256: Array(32).fill(1) },
-    ticket: {document: {lo: 1, hi: 1}, generation: {lo: 2, hi: 1}, owner: {lo: 3, hi: 1}, epoch: {lo: revision, hi: 1}},
-    viewEpoch: {lo: revision, hi: 1}, historyRevision: revision, margins,
-    editable: !o.policy || o.policy === 'square', reason: o.policy && o.policy !== 'square' ? 'UnverifiedMarginEffect' : null,
-    wrapOrdinal: o.policy === 'raw3' ? 3 : 0, inline: o.policy === 'inline',
+    owner: {
+      control_node: 8,
+      component_node: 17,
+      paragraph_node: 0,
+      paragraph: 0,
+      anchor_unit: 0,
+      instance_id: 7,
+      source_sha256: Array(32).fill(1),
+    },
+    ticket: {
+      document: { lo: 1, hi: 1 },
+      generation: { lo: 2, hi: 1 },
+      owner: { lo: 3, hi: 1 },
+      epoch: { lo: revision, hi: 1 },
+    },
+    viewEpoch: { lo: revision, hi: 1 },
+    historyRevision: revision,
+    margins,
+    editable: !o.policy || o.policy === 'square',
+    reason: o.policy && o.policy !== 'square' ? 'UnverifiedMarginEffect' : null,
+    wrapOrdinal: o.policy === 'raw3' ? 3 : 0,
+    inline: o.policy === 'inline',
     ownerScope: 'h5-margins:12345678-1234-4123-8123-123456789abc',
   });
   const runtime: EditorRuntime = {
@@ -113,37 +131,70 @@ async function setup(o: Options = {}) {
 async function target(editor: ReturnType<typeof createEditor>) {
   const r = await editor.getObjectOuterMargins(selector);
   if (r.state !== 'available') throw Error(r.reason);
-  assert.equal(r.observation.format, 'hwp5'); assert.equal(r.observation.kind, 'textbox');
+  assert.equal(r.observation.format, 'hwp5');
+  assert.equal(r.observation.kind, 'textbox');
   return r.target;
 }
 test('H5 current typed textbox target reuses public command and whole witness', async () => {
   const h = await setup();
   try {
     const t = await target(h.editor);
-    const result = await h.editor.dispatchCommand(SET_OBJECT_OUTER_MARGINS_COMMAND, {target: t, margins: {...margins, left: 10}});
-    assert.equal(result.status, 'committed-with-snapshot'); assert.equal(h.writes().length, 1);
+    const result = await h.editor.dispatchCommand(SET_OBJECT_OUTER_MARGINS_COMMAND, {
+      target: t,
+      margins: { ...margins, left: 10 },
+    });
+    assert.equal(result.status, 'committed-with-snapshot');
+    assert.equal(h.writes().length, 1);
     const r = h.writes()[0].request as any;
-    assert.equal(r.witness.selector.kind, 'textbox'); assert.equal(r.witness.ticket.owner.hi, 1); assert.equal(r.geometry, undefined);
-    const stale = await h.editor.dispatchCommand(SET_OBJECT_OUTER_MARGINS_COMMAND, {target: t, margins});
-    assert.equal(stale.status, 'rejected-unapplied'); assert.equal(h.writes().length, 1);
-  } finally { await h.editor.dispose(); }
+    assert.equal(r.witness.selector.kind, 'textbox');
+    assert.equal(r.witness.ticket.owner.hi, 1);
+    assert.equal(r.geometry, undefined);
+    const stale = await h.editor.dispatchCommand(SET_OBJECT_OUTER_MARGINS_COMMAND, {
+      target: t,
+      margins,
+    });
+    assert.equal(stale.status, 'rejected-unapplied');
+    assert.equal(h.writes().length, 1);
+  } finally {
+    await h.editor.dispose();
+  }
 });
 test('H5 exact no-op keeps revision and uses Native validation once', async () => {
-  const h = await setup({noOp: true});
+  const h = await setup({ noOp: true });
   try {
-    const r = await h.editor.dispatchCommand(SET_OBJECT_OUTER_MARGINS_COMMAND, {target: await target(h.editor), margins});
-    assert.equal(r.state.nativeHistoryRevision, 0); assert.equal(h.writes().length, 1);
-  } finally { await h.editor.dispose(); }
+    const r = await h.editor.dispatchCommand(SET_OBJECT_OUTER_MARGINS_COMMAND, {
+      target: await target(h.editor),
+      margins,
+    });
+    assert.equal(r.state.nativeHistoryRevision, 0);
+    assert.equal(h.writes().length, 1);
+  } finally {
+    await h.editor.dispose();
+  }
 });
-for (const policy of ['raw3', 'inline'] as const) test(`H5 ${policy} cannot issue public write target`, async () => {
-  const h = await setup({policy});
-  try {const r = await h.editor.getObjectOuterMargins(selector); assert.equal(r.state, 'unavailable'); assert.equal(h.writes().length, 0);}
-  finally { await h.editor.dispose(); }
-});
+for (const policy of ['raw3', 'inline'] as const)
+  test(`H5 ${policy} cannot issue public write target`, async () => {
+    const h = await setup({ policy });
+    try {
+      const r = await h.editor.getObjectOuterMargins(selector);
+      assert.equal(r.state, 'unavailable');
+      assert.equal(h.writes().length, 0);
+    } finally {
+      await h.editor.dispose();
+    }
+  });
 test('H5 foreign editor target is rejected before runtime mutation', async () => {
-  const a = await setup(), b = await setup();
+  const a = await setup(),
+    b = await setup();
   try {
-    const result = await b.editor.dispatchCommand(SET_OBJECT_OUTER_MARGINS_COMMAND, {target: await target(a.editor), margins});
-    assert.equal(result.status, 'rejected-unapplied'); assert.equal(b.writes().length, 0);
-  } finally {await a.editor.dispose(); await b.editor.dispose();}
+    const result = await b.editor.dispatchCommand(SET_OBJECT_OUTER_MARGINS_COMMAND, {
+      target: await target(a.editor),
+      margins,
+    });
+    assert.equal(result.status, 'rejected-unapplied');
+    assert.equal(b.writes().length, 0);
+  } finally {
+    await a.editor.dispose();
+    await b.editor.dispose();
+  }
 });

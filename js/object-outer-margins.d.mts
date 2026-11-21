@@ -12,7 +12,9 @@ export function checkedObjectOuterMarginsObservation(
 export function checkedObjectOuterMarginsRequest(value: unknown): NativeObjectOuterMarginsRequest;
 export interface ObjectOuterMarginsApi {
   supportsObjectOuterMargins(): boolean;
-  objectOuterMargins(selector: Extract<ObjectOuterMarginsSelector, {kind: 'drawing'}>): NativeObjectOuterMarginsObservation;
+  objectOuterMargins(
+    selector: Extract<ObjectOuterMarginsSelector, { kind: 'drawing' }>,
+  ): NativeObjectOuterMarginsObservation;
   setObjectOuterMargins(request: NativeObjectOuterMarginsRequest): NativeEditOutcome;
 }
 export function createObjectOuterMarginsApi(options: {

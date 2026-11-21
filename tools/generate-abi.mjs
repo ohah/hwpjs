@@ -154,9 +154,12 @@ const generated =
     .join('') +
   '};\n' +
   'pub const hwp5_object_outer_margins_signatures = [_]OptionalFunctionSignature{\n' +
-  Object.entries(HWP5_OBJECT_OUTER_MARGINS_ABI).map(([name, signature]) =>
-    `    .{ .name = ${JSON.stringify(name)}, .params = ${signatureTypes(signature.params)}, .results = ${signatureTypes(signature.results)} },\n`
-  ).join('') +
+  Object.entries(HWP5_OBJECT_OUTER_MARGINS_ABI)
+    .map(
+      ([name, signature]) =>
+        `    .{ .name = ${JSON.stringify(name)}, .params = ${signatureTypes(signature.params)}, .results = ${signatureTypes(signature.results)} },\n`,
+    )
+    .join('') +
   '};\n' +
   'pub const document = struct {\n' +
   Object.entries(DOCUMENT)
