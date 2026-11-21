@@ -50,7 +50,7 @@ test('restricted affine text moves atomically while physical page references rem
       [20, 10],
       [0, 10],
     ],
-    position: { relations: [2], flags: [false, true] },
+    position: { relations: [2], flags: [false, true, false] },
   };
   const drawing = { section: 0, drawingNode: 7, source },
     rectangle = { x: 10, y: 0, width: 20, height: 10 };
