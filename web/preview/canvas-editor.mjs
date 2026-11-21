@@ -739,7 +739,8 @@ export function createCanvasEditor({
       (!sameParagraph(anchor, a) ||
         anchor.unit !== a.unit ||
         !sameParagraph(focus, f) ||
-        focus.unit !== f.unit)
+        focus.unit !== f.unit ||
+        (richTyping && richTyping.owner !== currentTypingOwner(f)))
     ) {
       changedTypingIntent();
       typingFont = null;
@@ -1021,10 +1022,10 @@ export function createCanvasEditor({
       ? richTyping
       : null;
   const currentRichCharacter = () => currentRichTyping()?.character ?? null;
-  const currentTypingOwner = () =>
-    target?.createdCell
-      ? (renderer.createdCellTypingOwner?.(target)?.owner ?? null)
-      : paragraphSelectionOwner(renderer.paragraph(target));
+  const currentTypingOwner = (point = target) =>
+    point?.createdCell
+      ? (renderer.createdCellTypingOwner?.(point)?.owner ?? null)
+      : paragraphSelectionOwner(renderer.paragraph(point));
   const setRichTyping = (owned, onCommit = null) => {
     if (!richTypingAvailable()) return false;
     const patch = caretRichCharacter(owned);
@@ -1063,6 +1064,16 @@ export function createCanvasEditor({
   const pump = (requestedChange = null) => {
     if (!target || composing || pending || historyPending || !controls.ready() || controls.busy())
       return;
+    if (
+      richTyping &&
+      sameParagraph(richTyping, target) &&
+      richTyping.owner !== currentTypingOwner()
+    ) {
+      richTyping = null;
+      changedTypingIntent();
+      rejectRichDraft('입력 대기 서식의 문단 소유자가 바뀌어 적용하지 않았습니다.');
+      return;
+    }
     const sourceRange =
       requestedChange &&
       sourceTextChange(requestedChange, renderer.paragraph(target)?.sourceOffsets);

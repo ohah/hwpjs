@@ -148,19 +148,112 @@ test('composition commits one styled input after compositionend', () =>
     ack(f);
     await tick();
   }));
-test('same paragraph switching to a different native list retires the pending style', () =>
-  run('hwpx', 'cell', async (f, s) => {
-    pending(f, s);
-    const row = f.renderer.paragraph({ section: 0, paragraph: 0 });
-    // Same document/coordinates/scope; renderer ownership is deliberately changed.
-    const read = f.renderer.paragraph;
-    f.renderer.paragraph = (p) =>
-      p.paragraph === 0 ? { ...row, tableCell: { tableNode: 99, listNode: 100 } } : read(p);
-    input(f, 'x');
-    await tick();
-    assert.equal(f.messages.length, 0);
-    assert.equal(f.input().value, 'ABCD');
-  }));
+test('same paragraph switching to a different native list retires the pending style', async () => {
+  for (const format of ['hwp5', 'hwpx'])
+    for (const owner of ['cell', 'drawing'])
+      for (const phase of ['direct', 'composition', 'queued', 'reselect'])
+        await run(format, owner, async (f, s) => {
+          const label = `${format}/${owner}/${phase}`;
+          pending(f, s);
+          const read = f.renderer.paragraph;
+          const newOwner = (row) => ({
+            ...row,
+            ...(owner === 'cell'
+              ? { tableCell: { tableNode: 99, listNode: 100 } }
+              : { drawingText: { drawingNode: 99, listNode: 100 } }),
+          });
+          const transfer = () => {
+            f.renderer.paragraph = (p) => (p.paragraph === 0 ? newOwner(read(p)) : read(p));
+          };
+          let applied = 0;
+          if (phase === 'reselect') {
+            transfer();
+            const content = f.state().content;
+            f.install({
+              content: {
+                ...content,
+                paragraphs: content.paragraphs.map((p) => (p.paragraph === 0 ? newOwner(p) : p)),
+              },
+            });
+            await tick();
+            f.pointer('pointerdown', 0, 1);
+            f.pointer('pointerup', 0, 1);
+            await tick();
+            const fresh = s.captureCaretFormatting();
+            assert(fresh, label);
+            assert.equal(fresh.observation.underline, false, label);
+            assert.equal(fresh.observation.strike, false, label);
+            input(f, 'x');
+            await tick();
+            assert.equal(f.messages.length, 1, label);
+            assert.equal(f.messages[0].kind, 'splice', label);
+            ack(f);
+            await tick();
+            const freshStyle = s.captureCaretFormatting();
+            assert(freshStyle, label);
+            assert.equal(freshStyle.request({ kind: 'text-color', color: '#ffffff' }), true, label);
+            input(f, 'y');
+            await tick();
+            assert.equal(f.messages.length, 2, label);
+            assert.equal(f.messages[1].kind, 'splice-rich-character', label);
+            assert.deepEqual(f.messages[1].insertion.character, { textColor: 0xffffff }, label);
+            ack(f);
+            await tick();
+            return;
+          }
+          if (phase === 'queued') {
+            input(f, 'x');
+            await tick();
+            assert.equal(f.messages.length, 1, label);
+            assert.equal(f.messages[0].kind, 'splice-rich-character', label);
+            transfer();
+            input(f, 'y');
+            await tick();
+            assert.equal(f.messages.length, 1, label);
+            ack(f);
+            applied = 1;
+          } else if (phase === 'composition') {
+            f.input().dispatchEvent(new Event('compositionstart'));
+            input(f, '한', true);
+            await tick();
+            assert.equal(f.messages.length, 0, label);
+            transfer();
+            const event = new Event('compositionend');
+            Object.assign(event, { data: '한' });
+            f.input().dispatchEvent(event);
+          } else {
+            transfer();
+            input(f, 'x');
+          }
+          await tick();
+          assert.equal(f.messages.length, applied, label);
+          assert.equal(f.input().value, applied ? 'AxBCD' : 'ABCD', label);
+          // Returning to the prior owner cannot resurrect the retired style.
+          f.renderer.paragraph = read;
+          const restoredUnit = applied ? 2 : 1;
+          f.pointer('pointerdown', 0, restoredUnit);
+          f.pointer('pointerup', 0, restoredUnit);
+          await tick();
+          const restored = s.captureCaretFormatting();
+          assert(restored, label);
+          assert.equal(restored.observation.underline, false, label);
+          assert.equal(restored.observation.strike, false, label);
+          assert.equal(restored.observation.textColor, '#123456', label);
+          for (const language of FONT_LANGUAGES)
+            assert.equal(
+              restored.observation.fontNames[language].name,
+              `검증 글꼴 ${language}`,
+              label,
+            );
+          input(f, 'z');
+          await tick();
+          assert.equal(f.messages.length, applied + 1, label);
+          assert.equal(f.messages.at(-1).kind, 'splice', label);
+          assert.equal(f.messages.at(-1).text, 'z', label);
+          ack(f);
+          await tick();
+        });
+});
 
 test('revoking the input lease invalidates pending captures without a native request', () =>
   run('hwpx', 'cell', async (f, s) => {
