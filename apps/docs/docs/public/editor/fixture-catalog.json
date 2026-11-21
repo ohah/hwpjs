@@ -796,5 +796,11 @@
     "name": "anchored-picture.hwpx",
     "label": "[기능 예제] HWPX 그림 고정점 크기 조절",
     "available": true
+  },
+  {
+    "id": "hwp5-chart-create-horizontal-bar.hwp",
+    "name": "hwp5-chart-create-horizontal-bar.hwp",
+    "label": "[기능 예제] HWP5 가로 묶은 막대 차트",
+    "available": true
   }
 ]

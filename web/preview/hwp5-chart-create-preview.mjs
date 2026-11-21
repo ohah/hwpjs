@@ -4,6 +4,7 @@ import { paintChartPreview } from './chart-preview-paint.mjs';
 import {
   HWP5_CHART_CREATE_PROFILE,
   hwp5ChartCreateKind,
+  HWP5_HORIZONTAL_BAR_CHART_CREATE_PROFILE,
 } from '../../js/hwp5-chart-create-profiles.mjs';
 
 import {
@@ -31,6 +32,7 @@ async function renderPreview(
   scope,
   payloadScope,
   expectedKind,
+  horizontalBar = false,
 ) {
   if (!(wire instanceof Uint8Array) || wire.byteLength === 0 || wire.byteLength > 16 * 1024 * 1024)
     fail('InvalidChartCreatePreview');
@@ -52,6 +54,11 @@ async function renderPreview(
   const data = validateChartDisplayData(preview.data);
   if (data.plots.length !== 1 || data.plots[0].kind !== expectedKind)
     fail('UnsupportedChartCreatePreviewKind');
+  if (horizontalBar) {
+    const settings = data.plot_settings[0];
+    if (settings?.direction?.value !== 'bar' || settings.grouping?.value !== 'clustered')
+      fail('UnsupportedChartCreatePreviewDirection');
+  }
   // Literal editing admits only own markerless standard line output. Never
   // reinterpret arbitrary source style settings as the safe line painter.
   if (scope === 'hwp5-chart-literal-edit-preview' && expectedKind === 'lineChart') {
@@ -142,6 +149,7 @@ export function renderHwp5ChartCreatePreview(
     'hwp5-chart-create-preview',
     'hwp5-chart-create-preview-payload',
     hwp5ChartCreateKind(profile),
+    profile === HWP5_HORIZONTAL_BAR_CHART_CREATE_PROFILE,
   );
 }
 export function renderHwp5ChartLiteralEditPreview(

@@ -1,3 +1,4 @@
+import { isHwp5ChartCreateProfileVersion } from '../../js/hwp5-chart-create-profiles.mjs';
 import {
   queryPictureAnchoredResize,
   commitPictureAnchoredResize,
@@ -335,8 +336,9 @@ export function createReaderRuntime({
       editor?.historyStats?.()?.protocolVersion === 2 &&
       editor?.supportsEquationInsertionAbi?.() === true;
     const chartProfileVersion = editor?.chartCreateProfileVersion?.();
-    content.hwp5ChartCreateProfileVersion =
-      chartProfileVersion === 1 || chartProfileVersion === 2 ? chartProfileVersion : 0;
+    content.hwp5ChartCreateProfileVersion = isHwp5ChartCreateProfileVersion(chartProfileVersion)
+      ? chartProfileVersion
+      : 0;
     content.chartCreationAvailable =
       historyEnabled &&
       !historyPoisoned &&

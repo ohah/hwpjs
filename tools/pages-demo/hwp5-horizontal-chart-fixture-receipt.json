@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "feature": "hwp5-horizontal-chart",
+  "baseCount": 133,
+  "targetCount": 134,
+  "baseManifestSHA256": "c412a8e06729568ab6f3cc21aa8ad9eba2d809ea11d7eeb496bee73bdcf524b2",
+  "basePolicySHA256": "47ad45ae1432b9bf695c9a8e0464ce5cadece91846bcde50c9c7c5822a869435",
+  "baseCatalogSHA256": "212a0e461fa372c70097bd026c3a472021984850b03c433c4a126c494a76c088",
+  "targetPolicyPath": "tools/pages-demo/hwp5-horizontal-chart-fixture-policy.json",
+  "targetPolicySHA256": "c142775c47a05ef5dd9290f0a58e3188a12bb697a5853d5640e94c91fd6437f6",
+  "targetCatalogSHA256": "6f1425ccf09b87cb9b7cf99c1394fd59a20e1fcfbceb77847260e568cf4dd19f",
+  "additions": [
+    {
+      "row": {
+        "id": "hwp5-chart-create-horizontal-bar.hwp",
+        "name": "hwp5-chart-create-horizontal-bar.hwp",
+        "label": "[기능 예제] HWP5 가로 묶은 막대 차트",
+        "path": "fixtures/hwp5-chart-create-horizontal-bar.hwp",
+        "bytes": 13312,
+        "sha256": "3f3b2c8585f92eba10d94feae1fd0968b7615444e777a50f97b31c05c11571fb"
+      },
+      "sourcePath": "tools/pages-demo/fixtures/hwp5-chart-create-horizontal-bar.hwp",
+      "parentId": "image-insert-blank.hwp",
+      "parentBytes": 3584,
+      "parentSHA256": "3924fe5f437ffaa76f6696770cb4ae5fc19ffe485fb324bb21abc29b1f2cc689",
+      "provenanceSHA256": "2586805529331725aa2b2b591e9cfd7ed2e5c90deea4125a55b3f2a95aded446"
+    }
+  ],
+  "producer": {
+    "browserManifestSHA256": "27b33ffe4ffa9735307b97e4acc70ae7a1a311f85d6a84b7e657c9b037f9bb9c",
+    "independentRawGateSHA256": "78abf143dee0311759de3a319e51983ec1a32612587d2532144117b13743e8f6"
+  }
+}

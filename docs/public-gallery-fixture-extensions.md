@@ -93,3 +93,15 @@ These commands are a handoff recipe, not evidence of a build or publication.
 Activate policy, source metadata and the exact official 133-file output together.
 An ordinary producer still rejects a 131-file public baseline against the new
 133-file policy; that strict mismatch remains intentional.
+
+## HWP5 가로 묶은 막대 차트
+
+`hwp5-horizontal-chart-fixture-receipt.json`은 보존한 133개 정책에
+`hwp5-chart-create-horizontal-bar.hwp` 하나를 추가합니다. 기준 파일은
+`image-insert-blank.hwp`입니다. 제품 브라우저에서 가·나·다 범주와
+3, -2, 7을 입력해 만들고 저장한 파일을 사용합니다. 재열기 후 그리기 요소를
+비교했고, 저장본의 OOXML 차트 방향·그룹화·계열 값과 내장 PNG를 독립 검사했습니다.
+
+공식 생성기에는 이 영수증을 `--fixture-extension`으로 전달하고
+`hwp5-horizontal-chart-fixture-policy.json`에 대조해 134개를 검사합니다.
+목록, 원본 경로 메타데이터, 갤러리를 함께 갱신합니다.

@@ -14,7 +14,7 @@ raster planner는 문서 크기를 보존하며 SDK nearest-pixel half-up 규칙
 
 기존 차트 메뉴는 실제 chartCreationAvailable, 선택한 profile을 지원하는 hwp5ChartCreateProfileVersion, History2, 현재 body caret 및 Core availability를 확인한다. 모달을 여는 시점의 caret owner를 보존하고 미리보기와 비동기 생성 중 같은 owner를 확인한다. 문서나 세대 교체, 취소, 폐기 뒤의 늦은 결과는 기존 대화상자, 상태 메시지 또는 focus에 반영하지 않는다.
 
-HWP5 생성 방식은 빈 선택으로 시작하며 사용자가 기본 막대 또는 지원되는 2D 꺾은선을 명시 선택해야 한다. 미선택 시 생성과 미리보기를 거부한다. 기존 HWPX 대화상자와 차트 종류는 유지한다. 기존 readonly HWP5 차트 속성은 생성 권한과 별개다.
+HWP5 생성 방식은 빈 선택으로 시작하며 사용자가 기본 세로 막대, 기본 꺾은선, 또는 엔진이 지원하는 가로 묶은 막대 중 하나를 선택한다. 미선택 시 생성과 미리보기를 거부한다. 기존 HWPX 대화상자와 차트 종류는 유지한다. 기존 readonly HWP5 차트 속성은 생성 권한과 별개다.
 
 추가 hwp5-chart-create-wired.test.mjs는 실제 메뉴 port, 입력 도구, grid collector, SDK helper 및 converter 연결을 검사한다. 합성 응답과 mock Canvas 검사이므로 실제 Worker, Native, 브라우저 화면 또는 저장 성공을 대신하지 않는다. 일반 SDK dist를 사용하는 보존 검사와 실제 브라우저 결과는 격리 검증 패킷에 분리한다.
 

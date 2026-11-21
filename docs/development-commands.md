@@ -2174,6 +2174,15 @@ nice -n 10 zig test src/hwp5_chart_create_resources_probe.zig -O ReleaseSafe -fl
 
 공유 Root에서 실행하지 않고 Main이 검토한 정확 격리 후보·컴파일러 핀과 전용 캐시/새 증거 디렉터리를 사용한다. 처음 실패는 보존하고 자동 재시도하지 않는다.
 
+## HWP5 가로 묶은 막대 차트 생성
+
+```sh
+zig build test-hwp5-horizontal-chart-create -Doptimize=ReleaseSafe -j1
+node --test --test-concurrency=1 tests/own-chart-create/current-transport.test.mjs
+```
+
+Native 검사는 가로 방향과 값, 저장·재열기, 실행 취소·다시 실행, 이전 세로 막대·꺾은선 생성 경로를 다룹니다.
+
 ## HWPX 현재 주석 참조 삭제 후보
 
 [삭제 계약](hwpx-note-creation.md#현재-참조에서-주석-삭제-후보)을 따릅니다. 다음은 격리 소스의 가벼운 검사이며 실제 삭제 ABI 검증이 아닙니다.

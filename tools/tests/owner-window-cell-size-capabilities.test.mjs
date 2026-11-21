@@ -51,9 +51,9 @@ test('actual HWP5 cell-size capabilities retain plain-owner admission and reject
       for (const value of [undefined, null, 0, 1, '', 'true', {}, []])
         assert.equal(probe({ [key]: value }), false);
     }
-    for (const value of [0, 1, 2])
+    for (const value of [0, 1, 2, 3])
       assert.equal(probe({ hwp5ChartCreateProfileVersion: value }), true);
-    for (const value of [undefined, null, false, true, -0, -1, 3, 1.5, '0', '1', '2', {}, []])
+    for (const value of [undefined, null, false, true, -0, -1, 4, 1.5, '0', '1', '2', {}, []])
       assert.equal(probe({ hwp5ChartCreateProfileVersion: value }), false);
     // Recognized exact boolean observations do not grant Native image/chart authority.
     // Unsupported and unknown metadata remain rejected below.

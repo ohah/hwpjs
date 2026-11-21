@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "catalogSHA256": "212a0e461fa372c70097bd026c3a472021984850b03c433c4a126c494a76c088",
+  "catalogSHA256": "6f1425ccf09b87cb9b7cf99c1394fd59a20e1fcfbceb77847260e568cf4dd19f",
   "files": [
     {
       "id": "image-insert-blank.hwp",
@@ -1065,6 +1065,14 @@
       "path": "fixtures/anchored-picture.hwpx",
       "bytes": 8514,
       "sha256": "91a6ddb492823d450b1b10432224074d804ff6feca8a37b78fce86bf5282cbfd"
+    },
+    {
+      "id": "hwp5-chart-create-horizontal-bar.hwp",
+      "name": "hwp5-chart-create-horizontal-bar.hwp",
+      "label": "[기능 예제] HWP5 가로 묶은 막대 차트",
+      "path": "fixtures/hwp5-chart-create-horizontal-bar.hwp",
+      "bytes": 13312,
+      "sha256": "3f3b2c8585f92eba10d94feae1fd0968b7615444e777a50f97b31c05c11571fb"
     }
   ]
 }

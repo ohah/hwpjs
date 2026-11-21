@@ -7,7 +7,10 @@ import {
   checkedHwp5ChartCreateOptions,
 } from '../../js/hwp5-chart-create.mjs';
 import { model, context } from '../hwpx/chart-family-model.mjs';
-import { HWP5_LINE_CHART_CREATE_PROFILE as lineProfile } from '../../js/hwp5-chart-create-profiles.mjs';
+import {
+  HWP5_HORIZONTAL_BAR_CHART_CREATE_PROFILE as horizontalProfile,
+  HWP5_LINE_CHART_CREATE_PROFILE as lineProfile,
+} from '../../js/hwp5-chart-create-profiles.mjs';
 const encoder = new TextEncoder(),
   decoder = new TextDecoder();
 const png = new Uint8Array(
@@ -23,7 +26,12 @@ const options = () => ({
   series: [{ name: 'Own', values: [10, 20, 30] }],
   preview: { width: 64, height: 64 },
 });
-function harness({ version = 1, authoringProfile = profile, previewKind = 'barChart' } = {}) {
+function harness({
+  version = 1,
+  authoringProfile = profile,
+  previewKind = 'barChart',
+  direction = 'col',
+} = {}) {
   let next = 64,
     closed = false,
     epoch = '1',
@@ -59,7 +67,8 @@ function harness({ version = 1, authoringProfile = profile, previewKind = 'barCh
   const display = model(previewKind, [[10, 20, 30]]);
   delete display.host;
   delete display.pair;
-  if (previewKind === 'barChart') display.plot_settings[0].direction = { node: 4, value: 'col' };
+  if (previewKind === 'barChart')
+    display.plot_settings[0].direction = { node: 4, value: direction };
   display.plot_settings[0].grouping = {
     node: 5,
     value: previewKind === 'barChart' ? 'clustered' : 'standard',
@@ -195,7 +204,7 @@ test('older ABI, wrong arity and wrong profile never advertise or execute creati
       h.wasm.hwp5_edit_create_chart_current = () => 1;
     },
     (h) => {
-      h.wasm.hwp5_edit_chart_create_profile_version = () => 3;
+      h.wasm.hwp5_edit_chart_create_profile_version = () => 4;
     },
   ]) {
     const h = harness();
@@ -370,4 +379,25 @@ test('line input uses the typed cache budget without narrowing the legacy bar bu
     /ChartPointLimitExceeded/,
   );
   assert.equal(checkedHwp5ChartCreateOptions(input(2731)).categories.length, 2731);
+});
+
+test('new horizontal profile paints and commits only the matching native chart', async () => {
+  const good = harness({ version: 3, authoringProfile: horizontalProfile, direction: 'bar' });
+  assert.equal(good.api.chartCreateProfileVersion(), 3);
+  assert.equal((await good.api.createChart(good.request(), good.renderer)).application, 'applied');
+  assert.equal(good.calls(), 1);
+  assert.equal(good.canvases(), 1);
+  assert.equal(good.allocated.size, 0);
+  for (const [version, direction, reason] of [
+    [1, 'bar', /UnsupportedChartCreateProfile/],
+    [2, 'bar', /UnsupportedChartCreateProfile/],
+    [3, 'col', /UnsupportedChartCreatePreviewDirection/],
+    [4, 'bar', /InlineObjectInsertionUnavailable/],
+  ]) {
+    const wrong = harness({ version, authoringProfile: horizontalProfile, direction });
+    await assert.rejects(wrong.api.createChart(wrong.request(), wrong.renderer), reason);
+    assert.equal(wrong.calls(), 0);
+    assert.equal(wrong.canvases(), 0);
+    assert.equal(wrong.allocated.size, 0);
+  }
 });

@@ -6,6 +6,8 @@ import { renderHwp5ChartCreatePreview } from '../web/preview/hwp5-chart-create-p
 
 import {
   hwp5ChartCreateKind,
+  HWP5_HORIZONTAL_BAR_CHART_CREATE_PROFILE,
+  isHwp5ChartCreateProfileVersion,
   supportsHwp5ChartCreateProfile,
 } from './hwp5-chart-create-profiles.mjs';
 
@@ -32,6 +34,9 @@ export function checkedHwp5ChartCreateOptions(input) {
     categories: p.categories,
     series: p.series,
     ...(kind === 'lineChart' ? { chart: { kind, grouping: 'standard' } } : {}),
+    ...(p.profile === HWP5_HORIZONTAL_BAR_CHART_CREATE_PROFILE
+      ? { chart: { kind, bar_direction: 'bar', grouping: 'clustered' } }
+      : {}),
   });
   if (kind === 'lineChart' && values.categories.length < 2)
     throw Error('InvalidChartLineCategoryCount');
@@ -90,7 +95,7 @@ export function createHwp5ChartCreateApi({
       if (typeof wasm[name] !== 'function' || wasm[name].length !== signature.params.length)
         return 0;
     const version = wasm.hwp5_edit_chart_create_profile_version();
-    return version === 1 || version === 2 ? version : 0;
+    return isHwp5ChartCreateProfileVersion(version) ? version : 0;
   };
   const prepare = (input) => {
     ready();

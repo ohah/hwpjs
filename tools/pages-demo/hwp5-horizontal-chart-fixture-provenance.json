@@ -1,0 +1,19 @@
+{
+  "browserEvidenceSHA256": "3fab8a596672bef2d148c024938514af8cc68b23859ef408f10d3fc8ee32827b",
+  "independentRawGateSHA256": "78abf143dee0311759de3a319e51983ec1a32612587d2532144117b13743e8f6",
+  "browserManifestSHA256": "27b33ffe4ffa9735307b97e4acc70ae7a1a311f85d6a84b7e657c9b037f9bb9c",
+  "workerWasmSHA256": "858c1dac8c9fda5e28d9eb2a5b50ac07be731d5963937a153b9a89dc667d7dcc",
+  "parentSHA256": "3924fe5f437ffaa76f6696770cb4ae5fc19ffe485fb324bb21abc29b1f2cc689",
+  "fixtureSHA256": "3f3b2c8585f92eba10d94feae1fd0968b7615444e777a50f97b31c05c11571fb",
+  "workerPNGSHA256": "ca1df374cfe2cce016d1df8f41d31d44e7f3f235cbbd812cc7e71528eb320dd8",
+  "categories": [
+    "가",
+    "나",
+    "다"
+  ],
+  "values": [
+    3,
+    -2,
+    7
+  ]
+}

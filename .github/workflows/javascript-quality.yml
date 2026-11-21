@@ -1340,6 +1340,9 @@ jobs:
       - name: Test public SDK picture editing and HWP5 vertical margins
         timeout-minutes: 2
         run: node --test --test-concurrency=1 tests/image/public-image-insertion.test.mjs tests/image/public-hwp5-vertical-margins.test.mjs tests/image/public-picture-anchored-resize.test.mjs
+      - name: Test public SDK HWP5 horizontal chart creation
+        timeout-minutes: 2
+        run: node --test --test-concurrency=1 tests/own-chart-create/public-horizontal-create.test.mjs
       - name: Test portable fixture author and independent oracle
         run: |
           python3 -B tools/testing/portable_five/test_portable_five.py

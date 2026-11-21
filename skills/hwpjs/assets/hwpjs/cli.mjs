@@ -9632,21 +9632,29 @@ var init_chart_preview_paint = __esmMin((() => {
 	];
 }));
 // ../../js/hwp5-chart-create-profiles.mjs
+function isHwp5ChartCreateProfileVersion(version) {
+	return version === 1 || version === 2 || version === 3;
+}
 function hwp5ChartCreateKind(profile) {
 	switch (profile) {
-		case HWP5_CHART_CREATE_PROFILE: return "barChart";
+		case HWP5_CHART_CREATE_PROFILE:
+		case HWP5_HORIZONTAL_BAR_CHART_CREATE_PROFILE: return "barChart";
 		case HWP5_LINE_CHART_CREATE_PROFILE: return "lineChart";
 		default: throw Error("UnsupportedChartCreateProfile");
 	}
 }
 function supportsHwp5ChartCreateProfile(version, profile) {
-	const kind = hwp5ChartCreateKind(profile);
-	return version === 2 || version === 1 && kind === "barChart";
+	hwp5ChartCreateKind(profile);
+	if (!isHwp5ChartCreateProfileVersion(version)) return false;
+	if (profile === "spec24-registered-png-presentation-horizontal-bar-v1") return version === 3;
+	if (profile === "spec24-registered-png-presentation-line-v1") return version !== 1;
+	return true;
 }
-var HWP5_CHART_CREATE_PROFILE, HWP5_LINE_CHART_CREATE_PROFILE;
+var HWP5_CHART_CREATE_PROFILE, HWP5_LINE_CHART_CREATE_PROFILE, HWP5_HORIZONTAL_BAR_CHART_CREATE_PROFILE;
 var init_hwp5_chart_create_profiles = __esmMin((() => {
 	HWP5_CHART_CREATE_PROFILE = "spec24-registered-png-presentation-v1";
 	HWP5_LINE_CHART_CREATE_PROFILE = "spec24-registered-png-presentation-line-v1";
+	HWP5_HORIZONTAL_BAR_CHART_CREATE_PROFILE = "spec24-registered-png-presentation-horizontal-bar-v1";
 }));
 // ../../js/hwp5-chart-literal-profiles.mjs
 function hwp5ChartLiteralKind(profile) {
@@ -9670,7 +9678,7 @@ var init_hwp5_chart_literal_profiles = __esmMin((() => {
 * and test fixture images are never accepted as inputs or used as a fallback.
 * This remains an approximate own preview, not a promise of source-style fidelity.
 */
-async function renderPreview(wire, { width, height }, { createCanvas, current }, scope, payloadScope, expectedKind) {
+async function renderPreview(wire, { width, height }, { createCanvas, current }, scope, payloadScope, expectedKind, horizontalBar = false) {
 	if (!(wire instanceof Uint8Array) || wire.byteLength === 0 || wire.byteLength > 16777216) fail$2("InvalidChartCreatePreview");
 	if (!validSize(width) || !validSize(height) || width * height > 4194304) fail$2("ChartCreatePreviewPixelLimit");
 	if (typeof createCanvas !== "function" || typeof current !== "function") fail$2("ChartCreatePreviewRendererUnavailable");
@@ -9679,6 +9687,10 @@ async function renderPreview(wire, { width, height }, { createCanvas, current },
 	if (preview.schemaVersion !== 1 || preview.scope !== scope || preview.executionAuthority !== false || !Array.isArray(preview.xml_sha256) || preview.xml_sha256.length !== 32 || !preview.xml_sha256.every((v) => Number.isInteger(v) && v >= 0 && v <= 255)) fail$2("InvalidChartCreatePreview");
 	const data = validateChartDisplayData(preview.data);
 	if (data.plots.length !== 1 || data.plots[0].kind !== expectedKind) fail$2("UnsupportedChartCreatePreviewKind");
+	if (horizontalBar) {
+		const settings = data.plot_settings[0];
+		if (settings?.direction?.value !== "bar" || settings.grouping?.value !== "clustered") fail$2("UnsupportedChartCreatePreviewDirection");
+	}
 	if (scope === "hwp5-chart-literal-edit-preview" && expectedKind === "lineChart") {
 		const settings = data.plot_settings[0];
 		if (settings?.grouping?.value !== "standard" || settings.direction !== null || settings.spatial !== null || data.view_3d !== null || data.point_settings.length !== 0 || data.rich_text.length !== 0 || data.series_settings.some((s) => s.marker !== null || s.smooth !== null)) fail$2("UnsupportedChartLiteralEditProfile");
@@ -9726,7 +9738,7 @@ async function renderPreview(wire, { width, height }, { createCanvas, current },
 	}
 }
 function renderHwp5ChartCreatePreview(wire, size, host, profile = HWP5_CHART_CREATE_PROFILE) {
-	return renderPreview(wire, size, host, "hwp5-chart-create-preview", "hwp5-chart-create-preview-payload", hwp5ChartCreateKind(profile));
+	return renderPreview(wire, size, host, "hwp5-chart-create-preview", "hwp5-chart-create-preview-payload", hwp5ChartCreateKind(profile), profile === HWP5_HORIZONTAL_BAR_CHART_CREATE_PROFILE);
 }
 function renderHwp5ChartLiteralEditPreview(wire, host, profile = HWP5_CHART_LITERAL_BAR_PROFILE) {
 	if (!(wire instanceof Uint8Array) || !wire.byteLength || wire.byteLength > 16777216) throw Error("InvalidChartLiteralPreview");
@@ -15213,6 +15225,11 @@ function checkedHwp5ChartCreateOptions(input) {
 		...kind === "lineChart" ? { chart: {
 			kind,
 			grouping: "standard"
+		} } : {},
+		...p.profile === "spec24-registered-png-presentation-horizontal-bar-v1" ? { chart: {
+			kind,
+			bar_direction: "bar",
+			grouping: "clustered"
 		} } : {}
 	});
 	if (kind === "lineChart" && values.categories.length < 2) throw Error("InvalidChartLineCategoryCount");
@@ -15249,7 +15266,7 @@ function createHwp5ChartCreateApi({ wasm, memory, ready, check, encode, copyCurr
 		}
 		for (const [name, signature] of Object.entries(HWP5_CHART_CREATE_ABI)) if (typeof wasm[name] !== "function" || wasm[name].length !== signature.params.length) return 0;
 		const version = wasm.hwp5_edit_chart_create_profile_version();
-		return version === 1 || version === 2 ? version : 0;
+		return isHwp5ChartCreateProfileVersion(version) ? version : 0;
 	};
 	const prepare = (input) => {
 		ready();

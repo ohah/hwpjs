@@ -14,6 +14,8 @@ js/abi-schema.mjs가 단일 출처다. tools/generate-abi.mjs로 src/wasm/abi_sc
 
 profile_version1은 기본값 없는 실험 profile `spec24-registered-png-presentation-v1`만 뜻한다. 2D clustered column authored data만 받으며 HWPX의 다른 chart-family profile을 HWP5로 전달하지 않는다. profile_version2는 기존 막대 profile과 `spec24-registered-png-presentation-line-v1` 표준 2D 꺾은선 profile을 함께 노출한다. 새 SDK는 version1 엔진에서 막대만 노출하고 version2 엔진에서 두 형식을 노출한다. version1만 인식하는 구형 SDK는 version2 WASM에서 HWP5 차트 생성을 활성화하지 않으므로 같은 번들의 SDK와 WASM을 함께 사용한다. PNG는 shared painter의 실제 Canvas encoder 결과이며 OLE 안의 등록 PNG presentation에 저장된다. 외부 HWP 앱 지원은 아직 미증명이다.
 
+가로 묶은 막대 생성은 `spec24-registered-png-presentation-horizontal-bar-v1`을 사용한다. 이 프로필을 인식하는 엔진은 앞선 세로 막대와 꺾은선도 계속 제공한다. Native는 OOXML literal의 `barDir=bar`와 `grouping=clustered`를 기록한다. 범주 축은 왼쪽, 값 축은 아래쪽에 두고 서로 교차하도록 작성한다. Worker 미리보기는 같은 방향과 그룹을 검증한 뒤 공통 Canvas 경로에서 PNG를 만들고, Native는 XML 지문을 확인해 한 이력으로 저장한다. 기존 가로 막대의 데이터 편집과 외부 한글 프로그램의 표시 호환성은 별도 범위다.
+
 preview 입력은 `{start,profile,data}`이고 결과는 기존 Native create_preview.zig의 JSON bytes다. schemaVersion1, scope hwp5-chart-create-preview, executionAuthority false, authored XML SHA256과 실제 chart display_values를 포함한다. owner/reference·열린 Session·HistoryV2가 필요하며 읽기만 한다. 결과가 삽입 권한을 부여하지는 않는다.
 
 create 입력은 `{start,profile,width,height,expected_text_utf16le,data,source_xml_sha256,pixel_width,pixel_height}`와 별도 PNG bytes다. unknown/duplicate JSON 필드는 거부한다. 현재 view epoch의 source reference를 해석하고, 실제 Session 명령에 현재 History ticket을 전달한다. body/field/lock·current source witness·XML hash·PNG·직렬화 보존·원자적 게시 검사는 be97 Native 명령에 그대로 남는다. code0은 거부,1은 적용,3은 불확실/poison이며 불확실 결과를 자동 재시도하지 않는다.

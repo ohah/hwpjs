@@ -202,7 +202,7 @@ test('version two admits the exact line profile in both readonly preview and mut
   const message = inlineObjectInsertMessage(f.payload, f.state, 'chart');
   assert.equal(message.request.profile, f.payload.options.profile);
   assert.deepEqual(hwp5ChartCreatePreviewMessage(f.payload, f.state).request, message.request);
-  f.state.content.hwp5ChartCreateProfileVersion = 3;
+  f.state.content.hwp5ChartCreateProfileVersion = 4;
   assert.throws(
     () => inlineObjectInsertMessage(f.payload, f.state, 'chart'),
     /ChartCreateProfileUnavailable/,

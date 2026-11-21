@@ -1,6 +1,7 @@
 import {
   HWP5_CHART_CREATE_PROFILE,
   supportsHwp5ChartCreateProfile,
+  isHwp5ChartCreateProfileVersion,
 } from '../../../js/hwp5-chart-create-profiles.mjs';
 import type { Hwp5ChartCreatePreviewCore } from './hwp5-chart-create-preview-port.ts';
 import type { Hwp5ChartCreateOptions } from '../../../js/hwp5-chart-create.mjs';
@@ -150,7 +151,7 @@ export function createInlineObjectInsertPort(
       const content = state.content as Record<string, unknown> | undefined;
       if (content?.format === 'hwp5') {
         const version = content.hwp5ChartCreateProfileVersion;
-        return version === 1 || version === 2 ? version : 0;
+        return isHwp5ChartCreateProfileVersion(version) ? version : 0;
       }
       return content?.chartCreateProfileVersion === 1 ? 1 : 0;
     },

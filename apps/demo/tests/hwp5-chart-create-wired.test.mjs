@@ -6,6 +6,7 @@ import * as core from '../../../packages/core/src/commands/inline-object-insert.
 import {
   HWP5_CHART_CREATE_PROFILE as profile,
   HWP5_LINE_CHART_CREATE_PROFILE as lineProfile,
+  HWP5_HORIZONTAL_BAR_CHART_CREATE_PROFILE as horizontalProfile,
 } from '../../../js/hwp5-chart-create-profiles.mjs';
 import { model, context } from '../../../tests/hwpx/chart-family-model.mjs';
 const hook = registerHooks({
@@ -474,4 +475,21 @@ test('v1 HWP5 dialog refuses a manually assigned line profile before preview or 
   assert.equal(f.reads.length, 0);
   assert.equal(f.writes.length, 0);
   f.tool.dispose();
+});
+
+test('horizontal chart is only offered for engines that support it', async () => {
+  for (const version of [1, 2, 3]) {
+    const f = fixture();
+    f.state().content.hwp5ChartCreateProfileVersion = version;
+    await open(f);
+    assert.equal(f.named('차트 종류'), undefined);
+    const select = f.named('HWP5 차트 생성 방식');
+    assert.equal(
+      select.children.some((option) => option.value === horizontalProfile),
+      version === 3,
+    );
+    f.choose(horizontalProfile);
+    assert.equal(f.button('차트 만들기').disabled, version !== 3);
+    f.tool.dispose();
+  }
 });

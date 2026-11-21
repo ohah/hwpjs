@@ -1,3 +1,4 @@
+import { isHwp5ChartCreateProfileVersion } from '../../../../js/hwp5-chart-create-profiles.mjs';
 import {
   HWP5_CHART_PLAIN_ROOT_KEYS,
   hasPlainHwp5ChartMetadata,
@@ -278,8 +279,7 @@ export function isPlainOwnerBaseline(content: any, section: number, paragraph: n
         content.sourceTableCellSplitProfile !== 'single-source-cell-with-spans') ||
       (Object.hasOwn(content, 'hwp5ChartCreateProfileVersion') &&
         ((content.hwp5ChartCreateProfileVersion !== 0 &&
-          content.hwp5ChartCreateProfileVersion !== 1 &&
-          content.hwp5ChartCreateProfileVersion !== 2) ||
+          !isHwp5ChartCreateProfileVersion(content.hwp5ChartCreateProfileVersion)) ||
           Object.is(content.hwp5ChartCreateProfileVersion, -0))) ||
       !hasCanonicalCreatedCellTypingScope(content) ||
       Object.keys(content).some((k) => !ROOT_KEYS.has(k))

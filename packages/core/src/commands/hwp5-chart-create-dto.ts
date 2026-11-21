@@ -1,7 +1,8 @@
 /** Portable Core-owned chart transport. The current reference remains opaque. */
 export type Hwp5ChartCreateProfile =
   | 'spec24-registered-png-presentation-v1'
-  | 'spec24-registered-png-presentation-line-v1';
+  | 'spec24-registered-png-presentation-line-v1'
+  | 'spec24-registered-png-presentation-horizontal-bar-v1';
 export interface Hwp5ChartCreateOptions {
   readonly profile: Hwp5ChartCreateProfile;
   readonly width: number;

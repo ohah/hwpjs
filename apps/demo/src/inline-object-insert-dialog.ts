@@ -5,6 +5,7 @@ import {
 import {
   HWP5_CHART_CREATE_PROFILE,
   HWP5_LINE_CHART_CREATE_PROFILE,
+  HWP5_HORIZONTAL_BAR_CHART_CREATE_PROFILE,
   supportsHwp5ChartCreateProfile,
 } from '../../../js/hwp5-chart-create-profiles.mjs';
 import { hwp5ChartRasterSize } from './hwp5-chart-raster-size.mjs';
@@ -44,6 +45,7 @@ export function createInlineObjectInsertDialog(
   const hwp5Profiles = [
     [HWP5_CHART_CREATE_PROFILE, '기본 막대 차트'],
     [HWP5_LINE_CHART_CREATE_PROFILE, '기본 선 차트'],
+    [HWP5_HORIZONTAL_BAR_CHART_CREATE_PROFILE, '가로 묶은 막대 차트'],
   ] as const;
   const availableHwp5Profiles = hwp5Profiles.filter(([profile]) =>
     supportsHwp5ChartCreateProfile(callbacks.chartCreateProfileVersion, profile),
@@ -113,14 +115,31 @@ export function createInlineObjectInsertDialog(
     return input;
   }
   const data = section(chart ? '차트 데이터' : '수식 내용');
+  let profileChoice: HTMLSelectElement | undefined;
+  if (hwp5Chart) {
+    const label = doc.createElement('label');
+    label.textContent = '차트 종류';
+    profileChoice = doc.createElement('select');
+    profileChoice.setAttribute('aria-label', 'HWP5 차트 생성 방식');
+    for (const [value, text] of [['', '생성 방식을 선택하세요'], ...availableHwp5Profiles]) {
+      const option = doc.createElement('option');
+      option.value = value;
+      option.textContent = text;
+      profileChoice.append(option);
+    }
+    label.append(profileChoice);
+    data.append(label);
+  }
   let grid: ReturnType<typeof createInlineObjectInsertDataGrid> | undefined;
   let chartTypes: ReturnType<typeof createChartTypeOptions> | undefined;
   if (chart) {
-    chartTypes = createChartTypeOptions(data, (profile) => {
-      grid?.setProfile(profile);
-      if (!busy && !unavailable) status.textContent = '';
-    });
-    chartTypes.setProfileVersion(hwp5Chart ? 0 : callbacks.chartCreateProfileVersion);
+    if (!hwp5Chart) {
+      chartTypes = createChartTypeOptions(data, (profile) => {
+        grid?.setProfile(profile);
+        if (!busy && !unavailable) status.textContent = '';
+      });
+      chartTypes.setProfileVersion(callbacks.chartCreateProfileVersion);
+    }
     grid = createInlineObjectInsertDataGrid(data, () => {
       if (!busy && !unavailable) status.textContent = '';
     });
@@ -133,22 +152,6 @@ export function createInlineObjectInsertDialog(
       true,
       '예: x over y. 빈 수식도 삽입할 수 있습니다. 수식의 크기를 자동 계산하지 않습니다.',
     );
-  }
-  let profileChoice: HTMLSelectElement | undefined;
-  if (hwp5Chart) {
-    const group = section('HWP5 차트 생성 방식'),
-      label = doc.createElement('label');
-    label.textContent = '생성 방식';
-    profileChoice = doc.createElement('select');
-    profileChoice.setAttribute('aria-label', 'HWP5 차트 생성 방식');
-    for (const [value, text] of [['', '생성 방식을 선택하세요'], ...availableHwp5Profiles]) {
-      const option = doc.createElement('option');
-      option.value = value;
-      option.textContent = text;
-      profileChoice.append(option);
-    }
-    label.append(profileChoice);
-    group.append(label);
   }
   const selectedHwp5Profile = () =>
     availableHwp5Profiles.find(([profile]) => profile === profileChoice?.value)?.[0];
@@ -252,7 +255,7 @@ export function createInlineObjectInsertDialog(
     const size = { width: dimension('width'), height: dimension('height') };
     let options: EquationInsertOptions | ChartCreateOptions | Hwp5ChartCreateOptions;
     if (chart) {
-      const profile = chartTypes!.read();
+      const profile = chartTypes?.read();
       const data = grid!.collect();
       try {
         options = checkedChartCreateOptions({
@@ -418,7 +421,7 @@ export function createInlineObjectInsertDialog(
       updateEnabled();
     },
     setChartProfileVersion(version: unknown) {
-      chartTypes?.setProfileVersion(hwp5Chart ? 0 : version);
+      chartTypes?.setProfileVersion(version);
     },
     destroy() {
       clearPreview();
