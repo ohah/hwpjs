@@ -303,3 +303,95 @@ test('상세 수집과 비동기 종료가 동시에 실패해도 양쪽 오류�
     (error) => error.message === 'DocumentObjectInspectionCloseFailed' && error.cause === closing,
   );
 });
+
+function h5Equation({ siteChange = {}, detailChange = {}, query } = {}) {
+  const site = {
+    equationNode: 10,
+    controlNode: 9,
+    paragraphNode: 7,
+    paragraph: 0,
+    sourceUnit: 0,
+    currentUnit: 16,
+    ...siteChange,
+  };
+  const calls = [];
+  const state = setup('equation', {
+    format: 'hwp5',
+    block: { source: { section: 0, node: 10, paragraph: 0, anchorUnit: 16 } },
+    sdk: {
+      equationSites: () => [site],
+      equationSource: (...args) => {
+        calls.push(args);
+        return query
+          ? query()
+          : {
+              schemaVersion: 1,
+              layout: 'version-only',
+              site: { ...site },
+              script: 'x over y',
+              decoding: { script: 'exact' },
+              ...detailChange,
+            };
+      },
+      equationScript: () => {
+        throw Error('WrongFormatQuery');
+      },
+      save: () => {
+        throw Error('MustNotSave');
+      },
+    },
+  });
+  return { state, calls };
+}
+test('H5 equation detail reads one physical target with explicit common-prefix layout', async () => {
+  const { state, calls } = h5Equation();
+  const result = await state.inspect();
+  assert.equal(result.status, 'available');
+  assert.ok(result.text.includes('x over y'));
+  assert.deepEqual(calls, [[0, 10, 'version-only']]);
+  assert.equal(state.closed(), 1);
+});
+for (const [name, options] of [
+  ['stale anchor', { siteChange: { currentUnit: 8 } }],
+  [
+    'wrong physical equation',
+    {
+      detailChange: {
+        site: {
+          equationNode: 11,
+          controlNode: 9,
+          paragraphNode: 7,
+          paragraph: 0,
+          sourceUnit: 0,
+          currentUnit: 16,
+        },
+      },
+    },
+  ],
+  ['different layout', { detailChange: { layout: 'with-font' } }],
+])
+  test('H5 detail rejects ' + name, async () => {
+    const { state } = h5Equation(options);
+    await assert.rejects(state.inspect(), /EquationObjectBindingMismatch/);
+    assert.equal(state.closed(), 1);
+  });
+test('H5 detail does not retry layout or silently repair invalid UTF16', async () => {
+  const failed = h5Equation({
+    query: () => {
+      throw Error('InvalidLayout');
+    },
+  });
+  assert.equal((await failed.state.inspect()).status, 'unavailable');
+  assert.equal(failed.calls.length, 1);
+  const invalid = h5Equation({
+    detailChange: { script: null, decoding: { script: 'invalid-utf16' } },
+  });
+  assert.equal((await invalid.state.inspect()).status, 'unavailable');
+  assert.equal(invalid.state.closed(), 1);
+});
+test('H5 old detail ABI remains unavailable without fallback script query', async () => {
+  const { state, calls } = h5Equation();
+  delete state.document.sdk.equationSource;
+  assert.equal((await state.inspect()).status, 'unavailable');
+  assert.equal(calls.length, 0);
+});

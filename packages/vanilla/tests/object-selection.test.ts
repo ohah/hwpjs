@@ -463,6 +463,7 @@ test('IME, repeat, modifiers, cancelled key and foreign input never grab P', asy
     { ctrlKey: true },
     { metaKey: true },
     { altKey: true },
+    { altGraph: true },
     { shiftKey: true },
     { isComposing: true },
     { keyCode: 229 },
@@ -898,6 +899,16 @@ test('actual Canvas key listener dispatches properties once; bare/foreign/modifi
   t.emit('pointerdown');
   t.emit('pointerup');
   await flush();
+  for (const modifiers of [{}, { ctrlKey: true, altKey: true }]) {
+    const event = t.emit('keydown', {
+      ...modifiers,
+      getModifierState: (name: string) => name === 'AltGraph',
+    });
+    assert.equal(event.defaultPrevented, false);
+    assert.equal(event.stopped, false);
+    assert.equal(t.f.requests.length, 0);
+    assert(t.f.actor.current());
+  }
   assert.equal(t.emit('keydown', { ctrlKey: true }).defaultPrevented, false);
   assert.equal(t.emit('keydown', {}, t.input).defaultPrevented, false);
   assert.equal(t.emit('keydown').defaultPrevented, true);

@@ -273,6 +273,72 @@ export function collectHwp5({
       const key = `${token.paragraph}:${token.anchorUnit}`;
       tokenCounts.set(key, (tokenCounts.get(key) ?? 0) + 1);
     }
+    // Only the typed Native equation inventory can classify a code11 signal.
+    // Its current anchor must agree with this same paragraph observation.
+    interface EquationSite {
+      equationNode: number;
+      controlNode: number;
+      paragraphNode: number;
+      paragraph: number;
+      sourceUnit: number;
+      currentUnit: number;
+    }
+    const equationResult = get<EquationSite[]>('equationSites');
+    const equationRows = array<EquationSite>(equationResult, warnings, 'equationSites', source);
+    const equationNodes = new Set<number>(),
+      equationControls = new Set<number>(),
+      equationAnchors = new Set<string>();
+    const paragraphByOrdinal = new Map(paragraphs.map((row) => [row.paragraph, row]));
+    let equationsValid = equationResult.ok && anchorsKnown;
+    for (const row of equationRows) {
+      const key = `${row?.paragraph}:${row?.currentUnit}`;
+      const paragraph = paragraphByOrdinal.get(row?.paragraph);
+      if (
+        !row ||
+        [
+          row.equationNode,
+          row.controlNode,
+          row.paragraphNode,
+          row.paragraph,
+          row.sourceUnit,
+          row.currentUnit,
+        ].some((value) => !uint(value) || Object.is(value, -0)) ||
+        row.controlNode <= row.paragraphNode ||
+        row.equationNode <= row.controlNode ||
+        equationNodes.has(row.equationNode) ||
+        equationControls.has(row.controlNode) ||
+        equationAnchors.has(key) ||
+        knownAnchors.has(key) ||
+        paragraph?.identityKnown !== true ||
+        paragraph.node !== row.paragraphNode ||
+        tokenCounts.get(key) !== 1
+      )
+        equationsValid = false;
+      equationNodes.add(row?.equationNode);
+      equationControls.add(row?.controlNode);
+      equationAnchors.add(key);
+    }
+    if (equationResult.ok && !equationsValid)
+      warnings.push(
+        diagnostic(
+          'EquationSourceMismatch',
+          'Native equation inventory disagrees with current anchors',
+          source,
+        ),
+      );
+    if (equationsValid)
+      for (const row of equationRows) {
+        objects.push({
+          kind: 'equation',
+          node: row.equationNode,
+          siteKnown: true,
+          parentParagraph: row.paragraph,
+          paragraph: row.paragraph,
+          anchorUnit: row.currentUnit,
+          reason: 'ObjectDetailsDeferred',
+        });
+        knownAnchors.add(`${row.paragraph}:${row.currentUnit}`);
+      }
     const seenTokens = new Set();
     for (const token of objectTokens) {
       const key = `${token.paragraph}:${token.anchorUnit}`;

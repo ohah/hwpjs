@@ -18,6 +18,12 @@
     "available": true
   },
   {
+    "id": "hwp5-equation-create.hwp",
+    "name": "hwp5-equation-create.hwp",
+    "label": "[기능 예제] HWP5 수식 생성과 표시",
+    "available": true
+  },
+  {
     "id": "noori.hwp",
     "name": "noori.hwp",
     "label": "noori.hwp",

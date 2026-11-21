@@ -1,3 +1,4 @@
+import { readHwp5EquationObjectDetail } from '../../document/src/hwp5-equation-object-detail.ts';
 import { readHwp5ChartObjectDetail } from '../../document/src/hwp5-chart-object-detail.ts';
 import { readFormInventory, resolveFormReference } from './document-forms.ts';
 import type {
@@ -328,6 +329,14 @@ export async function inspectDocumentObject(
           chartFields(result.detail.data as unknown as Record<string, unknown>);
           line('차트 메타데이터 조회이며 외부 자원 다운로드나 바이너리 추출은 하지 않았습니다.');
         }
+      } else if (target.kind === 'equation' && document.format === 'hwp5') {
+        const result = readHwp5EquationObjectDetail(
+          document.sdk,
+          target,
+          block.type === 'unknown' ? block.source : undefined,
+        );
+        if (result.status === 'available') line(`수식 원문: ${result.script}`);
+        else unavailable(result.reason);
       } else if (target.kind === 'equation' && document.format === 'hwpx') {
         const result = query('equationScript', target.section, target.node);
         if (result.ok) {

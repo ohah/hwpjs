@@ -52,6 +52,7 @@ export interface ObjectPropertiesKey {
   readonly metaKey?: boolean;
   readonly altKey?: boolean;
   readonly shiftKey?: boolean;
+  readonly altGraph?: boolean;
 }
 const keys = ['editorId', 'documentId', 'generation', 'operationRevision', 'viewRevision'] as const;
 const uint = (n: unknown): n is number =>
@@ -621,6 +622,7 @@ export function createObjectSelection<State extends ObjectSelectionState>(option
         event.ctrlKey ||
         event.metaKey ||
         event.altKey ||
+        event.altGraph === true ||
         event.shiftKey ||
         dispatching ||
         !owner
@@ -753,6 +755,7 @@ export function bindObjectSelectionEvents<State extends ObjectSelectionState>(op
         ctrlKey: event.ctrlKey,
         metaKey: event.metaKey,
         altKey: event.altKey,
+        altGraph: event.getModifierState?.('AltGraph') === true,
         shiftKey: event.shiftKey,
       })
     ) {

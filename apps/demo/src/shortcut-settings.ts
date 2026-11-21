@@ -4,6 +4,12 @@ import {
   SHORTCUT_STORAGE_KEY,
 } from './shortcut-presentation.ts';
 import { demoCommandAction } from './demo-command-action.ts';
+import {
+  OBJECT_PROPERTIES_COMMAND,
+  OBJECT_PROPERTIES_KEYMAP,
+  objectPropertiesShortcutConfig,
+  mountContextualObjectPropertiesShortcut,
+} from './contextual-object-properties-shortcut.ts';
 import { mountFormattingMarksShortcut } from './formatting-marks-shortcut.ts';
 import {
   TABLE_ROW_COMMAND,
@@ -35,6 +41,7 @@ export function mountShortcutSettings(options: {
   config?: unknown;
   locale?: string;
   tableRowContext?: () => TableRowShortcutContext;
+  hasSelectedObject?: () => boolean;
 }) {
   const doc = options.root.ownerDocument,
     nav = doc.defaultView?.navigator;
@@ -70,11 +77,38 @@ export function mountShortcutSettings(options: {
         throw Error('UnknownShortcutCommand:' + b.command);
     return config;
   };
-  const defaults = mergeKeymap(DEFAULT_KEYMAP, TABLE_ROW_KEYMAP);
+  const defaults = mergeKeymap(
+    mergeKeymap(DEFAULT_KEYMAP, TABLE_ROW_KEYMAP),
+    OBJECT_PROPERTIES_KEYMAP,
+  );
+  const mergeConfig = (input: KeymapConfig) => {
+    // Preserve valid older user settings that already assigned bare P elsewhere.
+    const ownsDefault = input.bindings.some((b) => b.id === OBJECT_PROPERTIES_COMMAND);
+    const claimsP = input.bindings.some(
+      (b) =>
+        b.enabled !== false &&
+        b.code === 'KeyP' &&
+        b.modifiers.length === 0 &&
+        b.command !== OBJECT_PROPERTIES_COMMAND,
+    );
+    const base =
+      !ownsDefault && claimsP
+        ? mergeKeymap(defaults, {
+            version: 1,
+            bindings: OBJECT_PROPERTIES_KEYMAP.bindings.map((b) => ({ ...b, enabled: false })),
+          })
+        : defaults;
+    return mergeKeymap(base, input);
+  };
+  const partitionConfig = (value: KeymapConfig) => {
+    const table = tableRowShortcutConfig(value);
+    const objects = objectPropertiesShortcutConfig(table.global);
+    return { global: objects.global, contextual: table.contextual, objects: objects.contextual };
+  };
   let saved: unknown;
   try {
     const value = doc.defaultView?.localStorage?.getItem(SHORTCUT_STORAGE_KEY);
-    if (value) saved = known(mergeKeymap(defaults, parseKeymapConfig(JSON.parse(value))));
+    if (value) saved = known(mergeConfig(parseKeymapConfig(JSON.parse(value))));
   } catch {
     options.onStatus('저장된 단축키 설정을 읽지 못해 기본값을 사용합니다.');
   }
@@ -82,12 +116,12 @@ export function mountShortcutSettings(options: {
   let config = known(
       options.config === undefined
         ? ((saved as KeymapConfig | undefined) ?? defaults)
-        : mergeKeymap(defaults, parseKeymapConfig(options.config)),
+        : mergeConfig(parseKeymapConfig(options.config)),
     ),
     closed = false,
     generation = 0;
   let compiled = compileKeymap(config, platform);
-  const initialShortcuts = tableRowShortcutConfig(config);
+  const initialShortcuts = partitionConfig(config);
   let globalCompiled = compileKeymap(initialShortcuts.global, platform);
   options.surface.addEventListener('compositionstart', compositionStart, true);
   options.surface.addEventListener('compositionend', compositionEnd, true);
@@ -137,10 +171,32 @@ export function mountShortcutSettings(options: {
     onUnavailable: () => options.onStatus('현재 선택에서는 아래에 행을 삽입할 수 없습니다.'),
     onError: (error) => options.onStatus(error instanceof Error ? error.message : String(error)),
   });
+  const objectKeyboard = mountContextualObjectPropertiesShortcut({
+    root: options.surface,
+    platform,
+    bindings: initialShortcuts.objects,
+    hasSelectedObject: options.hasSelectedObject ?? (() => false),
+    blocked: () => composing || Boolean(shell?.querySelector('dialog[open][aria-modal=true]')),
+    claimed: (event) =>
+      Boolean(
+        resolveKeyboardShortcut(globalCompiled, {
+          code: event.code,
+          ctrlKey: event.ctrlKey,
+          metaKey: event.metaKey,
+          altKey: event.altKey,
+          shiftKey: event.shiftKey,
+          repeat: false,
+        }),
+      ),
+    available: () => available(OBJECT_PROPERTIES_COMMAND),
+    execute: () => options.execute({ command: OBJECT_PROPERTIES_COMMAND }),
+    onUnavailable: () => options.onStatus('현재 선택에서는 개체 속성을 열 수 없습니다.'),
+    onError: (error) => options.onStatus(error instanceof Error ? error.message : String(error)),
+  });
   const keyboard = createKeyboardShortcuts({
     root: shell ?? options.surface,
     shouldHandle: (event) => {
-      if (composing) return false;
+      if (composing || objectKeyboard.claims(event)) return false;
       const target = event.target as Element | null;
       if (target?.closest?.('dialog,[role=dialog],iframe')) return false;
       if (shell?.querySelector('dialog[open][aria-modal=true]')) return false;
@@ -214,12 +270,13 @@ export function mountShortcutSettings(options: {
   };
   const commit = (input: unknown) => {
     if (closed) throw Error('ShortcutSettingsDisposed');
-    const next = known(mergeKeymap(defaults, parseKeymapConfig(input)));
+    const next = known(mergeConfig(parseKeymapConfig(input)));
     const nextCompiled = compileKeymap(next, platform);
-    const partition = tableRowShortcutConfig(next);
+    const partition = partitionConfig(next);
     const nextGlobalCompiled = compileKeymap(partition.global, platform);
     keyboard.setConfig(partition.global);
     tableKeyboard.setBinding(partition.contextual);
+    objectKeyboard.setBindings(partition.objects);
     config = next;
     compiled = nextCompiled;
     globalCompiled = nextGlobalCompiled;
@@ -328,6 +385,7 @@ export function mountShortcutSettings(options: {
       marksKeyboard.dispose();
       keyboard.dispose();
       tableKeyboard.dispose();
+      objectKeyboard.dispose();
       reset.onclick = null;
       download.onclick = null;
       file.removeEventListener('change', changed);

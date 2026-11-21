@@ -149,8 +149,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          NO_COLOR=1 FORCE_COLOR=0 bun test --no-install ./apps/demo/tests/shortcut-settings-persistence.test.ts ./apps/demo/tests/formatting-marks-shortcut.test.ts ./apps/demo/tests/shortcut-presentation.test.ts ./apps/demo/tests/new-document-shortcut.test.ts ./apps/demo/tests/contextual-table-row-shortcut.test.ts ./packages/core/tests/keymap/defaults.test.ts ./packages/core/tests/keymap/resolve.test.ts ./packages/core/tests/keymap/config.test.ts ./packages/vanilla/tests/shortcuts.test.ts 2>&1 | tee "$RUNNER_TEMP/shortcuts.log"
-          grep -Eq '^[[:space:]]*65 pass$' "$RUNNER_TEMP/shortcuts.log"
+          NO_COLOR=1 FORCE_COLOR=0 bun test --no-install ./apps/demo/tests/shortcut-settings-persistence.test.ts ./apps/demo/tests/formatting-marks-shortcut.test.ts ./apps/demo/tests/shortcut-presentation.test.ts ./apps/demo/tests/new-document-shortcut.test.ts ./apps/demo/tests/contextual-table-row-shortcut.test.ts ./apps/demo/tests/contextual-object-properties-shortcut.test.ts ./packages/core/tests/keymap/defaults.test.ts ./packages/core/tests/keymap/resolve.test.ts ./packages/core/tests/keymap/config.test.ts ./packages/vanilla/tests/shortcuts.test.ts 2>&1 | tee "$RUNNER_TEMP/shortcuts.log"
+          grep -Eq '^[[:space:]]*79 pass$' "$RUNNER_TEMP/shortcuts.log"
           grep -Eq '^[[:space:]]*0 fail$' "$RUNNER_TEMP/shortcuts.log"
           ! grep -Eq '[1-9][0-9]* skip' "$RUNNER_TEMP/shortcuts.log"
           bunx --no-install tsc --noEmit -p tools/tsconfig.editor-shortcuts.json

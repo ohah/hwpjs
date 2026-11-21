@@ -1111,6 +1111,7 @@ export async function mountDemo(
       shortcuts = mountShortcutSettings({
         root: shell.saveOptionsMount,
         surface: shell.surfaceMount,
+        hasSelectedObject: () => !closed && host?.getSelectedObject?.() != null,
         tableRowContext: () => {
           if (closed || busy || host?.hasCellBlock?.()) return 'blocked';
           const table = generatedTableGrid.contextTarget();
