@@ -101,7 +101,12 @@ export function createNativeReadSourceLifecycle(
   };
   return {
     begin(kind: string, context?: RuntimeRequestContext): object {
-      if (surfaceOperation(kind) !== 'read' && kind !== 'save') {
+      // Geometry is a typed query and stays outside the generic surface protocol.
+      if (
+        surfaceOperation(kind) !== 'read' &&
+        kind !== 'save' &&
+        kind !== 'object-geometry-query'
+      ) {
         const previous = scope && last?.authority() ? last : undefined;
         revoke();
         if (surfaceOperation(kind) === 'mutation') {

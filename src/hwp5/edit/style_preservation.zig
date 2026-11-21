@@ -1180,7 +1180,7 @@ pub const Session = opaque {
         const expected = current.data.data.series[0].values[0];
         const noop: @import("../chart/literal_edit_request.zig").Edit = .{ .value = .{ .series = 0, .category = 0, .expected = expected, .value = expected } };
         const binding = try self.historyTicket();
-        const context = try self.prepareChartLiteralEdit(a, .{ .profile = .spec24_clustered_column_literals_v1, .binding = binding, .owners = &.{target}, .source_xml_sha256 = hash, .edits = &.{noop} });
+        const context = try self.prepareChartLiteralEdit(a, .{ .profile = current.profile, .binding = binding, .owners = &.{target}, .source_xml_sha256 = hash, .edits = &.{noop} });
         return .{ .binding = binding, .target = target, .source_xml_sha256 = hash, .context = context };
     }
     /// ABI v1 uses an explicit output cap, independently of source XML/read retention.
@@ -1249,6 +1249,7 @@ pub const Session = opaque {
         errdefer input.deinit();
         var patch = try @import("../chart/literal_edit_xml.zig").prepare(a, input.xml(), plan.source_xml_sha256, plan.edits, max_stream);
         errdefer patch.deinit(a);
+        if (patch.profile != plan.profile) return error.UnsupportedChartLiteralEditProfile;
         return .{ .input = input, .patch = patch };
     }
     pub fn hwp5ChartDisplayWithLayout(self: *const Session, a: std.mem.Allocator, section: usize, control: usize, layout: @import("../body/ole.zig").Layout) !@import("../chart/display_snapshot.zig").Snapshot {

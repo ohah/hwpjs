@@ -2,6 +2,7 @@ import { HWP5_CHART_LITERAL_EDIT_ABI } from './abi-schema.mjs';
 import { inlineInsertRecord } from './hwpx-inline-object-record.mjs';
 import { applyNativeEdit } from './native-edit-outcome.mjs';
 import { renderHwp5ChartLiteralEditPreview } from '../web/preview/hwp5-chart-create-preview.mjs';
+import { supportsHwp5ChartLiteralProfile } from './hwp5-chart-literal-profiles.mjs';
 const encoder = new TextEncoder();
 const maxWire = 16 * 1024 * 1024;
 const jsonBytes = (value) => {
@@ -63,7 +64,7 @@ export function createHwp5ChartLiteralEditApi({ wasm, memory, check, output, u32
       Object.entries(HWP5_CHART_LITERAL_EDIT_ABI).every(
         ([name, sig]) =>
           typeof wasm[name] === 'function' && wasm[name].length === sig.params.length,
-      ) && wasm.hwp5_edit_chart_literal_edit_profile_version() === 1
+      ) && [1, 2].includes(wasm.hwp5_edit_chart_literal_edit_profile_version())
     );
   };
   const query = (section, controlNode) => {
@@ -80,7 +81,7 @@ export function createHwp5ChartLiteralEditApi({ wasm, memory, check, output, u32
       lease.schemaVersion !== 1 ||
       lease.scope !== 'hwp5-chart-literal-edit-lease' ||
       lease.executionAuthority !== false ||
-      lease.witness?.profile !== 'spec24_clustered_column_literals_v1' ||
+      !supportsHwp5ChartLiteralProfile(wasm.hwp5_edit_chart_literal_edit_profile_version(), lease.witness?.profile) ||
       !lease.literals ||
       !lease.limits
     )
@@ -129,7 +130,8 @@ export function createHwp5ChartLiteralEditApi({ wasm, memory, check, output, u32
         preview.schemaVersion !== 1 ||
         preview.scope !== 'hwp5-chart-literal-edit-preview' ||
         preview.executionAuthority !== false ||
-        typeof preview.changed !== 'boolean'
+        typeof preview.changed !== 'boolean' ||
+        (preview.profile ?? 'spec24_clustered_column_literals_v1') !== own.witness.profile
       )
         throw Error('InvalidChartLiteralPreview');
       let painted = null;
@@ -139,7 +141,7 @@ export function createHwp5ChartLiteralEditApi({ wasm, memory, check, output, u32
         painted = await renderHwp5ChartLiteralEditPreview(wire, {
           current: () => current(capture),
           createCanvas: (width, height) => new globalThis.OffscreenCanvas(width, height),
-        });
+        }, own.witness.profile);
       }
       if (!current(capture)) throw Error('StaleChartLiteralCapture');
       const rendered = painted

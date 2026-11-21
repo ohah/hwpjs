@@ -6,6 +6,8 @@ import {
   hwp5ChartCreateKind,
 } from '../../js/hwp5-chart-create-profiles.mjs';
 
+import { HWP5_CHART_LITERAL_BAR_PROFILE, hwp5ChartLiteralKind } from '../../js/hwp5-chart-literal-profiles.mjs';
+
 const fail = (name) => {
   throw Error(name);
 };
@@ -47,6 +49,16 @@ async function renderPreview(
   const data = validateChartDisplayData(preview.data);
   if (data.plots.length !== 1 || data.plots[0].kind !== expectedKind)
     fail('UnsupportedChartCreatePreviewKind');
+  // Literal editing admits only own markerless standard line output. Never
+  // reinterpret arbitrary source style settings as the safe line painter.
+  if (scope === 'hwp5-chart-literal-edit-preview' && expectedKind === 'lineChart') {
+    const settings = data.plot_settings[0];
+    if (settings?.grouping?.value !== 'standard' || settings.direction !== null ||
+        settings.spatial !== null || data.view_3d !== null ||
+        data.point_settings.length !== 0 || data.rich_text.length !== 0 ||
+        data.series_settings.some((s) => s.marker !== null || s.smooth !== null))
+      fail('UnsupportedChartLiteralEditProfile');
+  }
   const primitives = chartPreviewPrimitives(data);
   if (primitives.state !== 'ready') fail(primitives.reason ?? 'ChartCreatePreviewUnavailable');
   const canvas = createCanvas(width, height);
@@ -124,17 +136,18 @@ export function renderHwp5ChartCreatePreview(
     hwp5ChartCreateKind(profile),
   );
 }
-export function renderHwp5ChartLiteralEditPreview(wire, host) {
+export function renderHwp5ChartLiteralEditPreview(wire, host, profile = HWP5_CHART_LITERAL_BAR_PROFILE) {
   if (!(wire instanceof Uint8Array) || !wire.byteLength || wire.byteLength > 16 * 1024 * 1024)
     throw Error('InvalidChartLiteralPreview');
   const p = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(wire));
-  if (p.changed !== true) throw Error('InvalidChartLiteralPreview');
+  if (p.changed !== true || (p.profile ?? HWP5_CHART_LITERAL_BAR_PROFILE) !== profile)
+    throw Error('InvalidChartLiteralPreview');
   return renderPreview(
     wire,
     { width: p.pixel_width, height: p.pixel_height },
     host,
     'hwp5-chart-literal-edit-preview',
     'hwp5-chart-literal-edit-preview-payload',
-    'barChart',
+    hwp5ChartLiteralKind(profile),
   );
 }

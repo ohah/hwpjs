@@ -74,6 +74,8 @@ test('unknown module and untrusted transport cannot mint authority from valid wi
 });
 test('read and save preserve current scope; transition revokes before awaiting its reply', () => {
   const { life, origin } = setup();
+  life.begin('object-geometry-query', { ...context, requestId: 2 });
+  assert(origin.authority(), 'reading object geometry must preserve document read authority');
   life.begin('hwp5-chart-data-capture');
   assert(origin.authority());
   life.begin('save');

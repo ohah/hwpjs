@@ -4,7 +4,7 @@
 
 ## 현재 제품 연결
 
-대상은 Native가 현재 문서에서 소유권과 원문을 다시 검증한 own canonical spec24 표준 2D 세로 묶은 막대 차트다. 읽어서 표시할 수 있는 모든 HWP5 차트가 편집 가능한 것은 아니다. 현재 일반 본문 root의 소유자, 원본 XML, 자원과 보호 조건을 모두 통과해야 한다. 값과 기존 범주 이름을 수정하며 계열 이름, 계열 수와 범주 수는 변경하지 않는다. 임의 스타일, 다른 차트 종류, 혼합 차트, 크기나 위치 변경과 완전 재조판은 이 기능에 포함되지 않는다.
+대상은 Native가 현재 문서에서 소유권과 원문을 다시 검증한 자체 생성기 템플릿과 일치하는 spec24 표준 2D 세로 묶은 막대 또는 표준 꺾은선 차트다. 읽어서 표시할 수 있는 모든 HWP5 차트가 편집 가능한 것은 아니다. 현재 일반 본문 root의 소유자, 원본 XML, 자원과 보호 조건을 모두 통과해야 한다. 값과 기존 범주 이름을 수정하며 계열 이름, 계열 수와 범주 수는 변경하지 않는다. 임의 스타일, 다른 차트 종류, 혼합 차트, 크기나 위치 변경과 완전 재조판은 이 기능에 포함되지 않는다.
 
 Core의 `createHwp5ChartDataEditor(editor)`는 현재 상태에서 `presentation()`, `targets()`, `capture(target)`, `current(capture)`, `apply(capture, edits)`를 제공한다. 실제 OffscreenCanvas painter가 있는 내장 Worker의 검증된 모듈과 private transport 관측, History protocol2, 현재 전체 HWP5 view와 실제 원본 소유자를 요구한다. capability boolean이나 직렬화한 State/lease만으로 승인하지 않는다. 모듈을 직접 compile하거나 위조한 상태는 거부한다. `presentation()`은 사용할 수 없으면 false와 사유를 반환하고, `targets()`와 `capture()`는 거부 오류를 낸다.
 
@@ -16,7 +16,7 @@ Worker는 capture에 묶인 Native preview를 받아 실제 OffscreenCanvas와 �
 
 ## Native 요청과 소유권
 
-`src/hwp5/chart/literal_edit_request.zig`의 `Plan`은 명시 `spec24_clustered_column_literals_v1` profile, 현재 `HistoryTicket`, 선택 소유자들의 전체 `ole_sites.Site`, physical ID, 자원 SHA256, 원본 XML SHA256과 리터럴 편집 목록을 받는다. `Session.hwp5ChartLiteralEditPreview`는 새 XML hash, 기존 PNG pixel 치수, 공통 chart display data와 `executionAuthority:false`를 반환한다. `Command.edit_chart_literals`는 같은 Plan과 명시 rendered PNG를 받는다. 요청 데이터는 호출 동안 빌리며 Session에 보관하지 않는다.
+`src/hwp5/chart/literal_edit_request.zig`의 `Plan`은 Native가 검증한 `spec24_clustered_column_literals_v1` 또는 `spec24_standard_line_literals_v1` profile, 현재 `HistoryTicket`, 선택 소유자들의 전체 `ole_sites.Site`, physical ID, 자원 SHA256, 원본 XML SHA256과 리터럴 편집 목록을 받는다. `Session.hwp5ChartLiteralEditPreview`는 새 XML hash, 기존 PNG pixel 치수, 공통 chart display data와 `executionAuthority:false`를 반환한다. `Command.edit_chart_literals`는 같은 Plan과 명시 rendered PNG를 받는다. 요청 데이터는 호출 동안 빌리며 Session에 보관하지 않는다.
 
 숫자 값은 `{series,category,expected,value}`, 범주 이름은 `{category,expected,value}`이다. series/category 수와 series 이름은 바꾸지 않는다. 범주 이름 하나는 모든 series의 대응 category leaf span으로 확장한다. 현재 literal 값과 expected가 다르면 거부한다. 논리 키 중복, 잘못된 인덱스와 숫자, 오래된 epoch·owner·자원·XML은 거부한다.
 

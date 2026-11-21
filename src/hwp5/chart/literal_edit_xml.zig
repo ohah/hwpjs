@@ -14,6 +14,7 @@ pub const OwnedData = struct {
     }
 };
 pub const Prepared = struct {
+    profile: @import("literal_edit_profile.zig").Profile,
     xml: []u8,
     values: common.Values,
     data: OwnedData,
@@ -30,15 +31,21 @@ const Index = struct {
     points: std.AutoHashMapUnmanaged(Key, usize) = .empty,
     series_nodes: []const usize,
     categories: usize,
+    profile: @import("literal_edit_profile.zig").Profile,
     fn deinit(self: *Index, a: std.mem.Allocator) void {
         self.points.deinit(a);
     }
 };
 fn index(a: std.mem.Allocator, values: *const common.Values) !Index {
-    if (values.plots.plots.len != 1 or values.plots.plots[0].kind != .barChart or values.bindings.len != values.points.points.len or values.rich_text.items.len != 0) return error.UnsupportedChartLiteralEditProfile;
+    if (values.plots.plots.len != 1 or values.bindings.len != values.points.points.len or values.rich_text.items.len != 0) return error.UnsupportedChartLiteralEditProfile;
     const series = values.plots.plots[0].series_nodes;
     if (series.len == 0 or series.len > chart.max_series or values.series_text.items.len != series.len) return error.UnsupportedChartLiteralEditProfile;
-    var out: Index = .{ .series_nodes = series, .categories = 0 };
+    const profile: @import("literal_edit_profile.zig").Profile = switch (values.plots.plots[0].kind) {
+        .barChart => .spec24_clustered_column_literals_v1,
+        .lineChart => .spec24_standard_line_literals_v1,
+        else => return error.UnsupportedChartLiteralEditProfile,
+    };
+    var out: Index = .{ .series_nodes = series, .categories = 0, .profile = profile };
     errdefer out.deinit(a);
     for (values.bindings) |binding| {
         if (binding.point >= values.points.points.len or binding.plot_node != values.plots.plots[0].node) return error.UnsupportedChartLiteralEditProfile;
@@ -92,7 +99,7 @@ fn ownedData(a: std.mem.Allocator, tree: *const Tree, values: *const common.Valu
     }
     const data: chart.Data = .{ .categories = cats, .series = series };
     try chart.validate(data);
-    const canonical = try @import("../../hwpx/chart_create_xml.zig").create(a, data);
+    const canonical = try @import("create_profile.zig").create(a, data, @import("literal_edit_profile.zig").createProfile(lookup.profile));
     defer a.free(canonical);
     // This rejects unknown styles/schema/streams rather than regenerating them.
     if (!std.mem.eql(u8, canonical, tree.source)) return error.UnsupportedChartLiteralEditProfile;
@@ -137,8 +144,9 @@ pub fn prepare(a: std.mem.Allocator, source: []const u8, expected_sha256: [32]u8
     errdefer after.deinit(a);
     var after_lookup = try index(a, &after);
     defer after_lookup.deinit(a);
+    if (after_lookup.profile != lookup.profile) return error.UnsupportedChartLiteralEditProfile;
     var data = try ownedData(a, &after_tree, &after, after_lookup);
     errdefer data.deinit(a);
     std.crypto.hash.sha2.Sha256.hash(xml, &digest, .{});
-    return .{ .xml = xml, .values = after, .data = data, .changed = !std.mem.eql(u8, source, xml), .sha256 = digest };
+    return .{ .profile = lookup.profile, .xml = xml, .values = after, .data = data, .changed = !std.mem.eql(u8, source, xml), .sha256 = digest };
 }

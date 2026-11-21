@@ -8,10 +8,12 @@ ABI 버전6과 기존 required/HWPX/차트 read/create export 및 signature는 �
 
 | export                                       | WASM params                                             | result                                 |
 | -------------------------------------------- | ------------------------------------------------------- | -------------------------------------- |
-| hwp5_edit_chart_literal_edit_profile_version | 없음                                                    | i32, profile version1                  |
+| hwp5_edit_chart_literal_edit_profile_version | 없음                                                    | i32, profile version2                  |
 | hwp5_edit_chart_literal_edit_lease           | i32 section, i32 control                                | i32 성공1/거부0                        |
 | hwp5_edit_chart_literal_edit_preview         | i32 JSON pointer, i32 bytes                             | i32 성공1/거부0                        |
 | hwp5_edit_chart_literal_edit_commit          | i32 JSON pointer, i32 bytes, i32 PNG pointer, i32 bytes | i32 applied1/no-op2/rejected0/unknown3 |
+
+새 SDK는 profile version1에서 막대 편집을, version2에서 막대와 꺾은선 편집을 지원한다. version1만 인식하는 이전 SDK는 version2 엔진에서 데이터 편집을 활성화하지 않으므로 같은 번들의 SDK와 WASM을 함께 사용한다.
 
 읽기 결과와 오류는 기존 hwp5_edit_output_ptr/len/free와 오류 수명을 사용한다. 새 export는 full V2 History와 일치하는 현재 Session을 요구하고 poisoned/active transaction을 거부한다. query는 현재 Native 후보 목록에서 정확한 section/control 하나를 찾고 canonical XML·소유권·보호·field·자원 profile을 기존 편집 admission으로 재검증한다. display target에서 ticket이나 지원 profile을 만들어 내지 않는다.
 
@@ -21,7 +23,7 @@ lease 응답은 schemaVersion1, scope `hwp5-chart-literal-edit-lease`, execution
 
 witness는 다음 필드를 모두 포함한다.
 
-- profile enum 문자열 `spec24_clustered_column_literals_v1`.
+- profile enum 문자열 `spec24_clustered_column_literals_v1` 또는 `spec24_standard_line_literals_v1`.
 - ticket의 document/generation/owner/epoch 네 u64. 각 값은 `{lo:u32,hi:u32}`로 전송한다. JS Number나 단순 History revision으로 합성하지 않는다.
 - viewEpoch도 같은 두 word이고 historyRevision은u32다.
 - owners는 기존 Native Target 전체: section, 전체 Site와 geometry·원본 section SHA, physical_id, resource_sha256.

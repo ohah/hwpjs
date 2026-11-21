@@ -75,7 +75,7 @@ pub fn lease(a: std.mem.Allocator, value: *const @import("../hwp5/chart/literal_
         .schemaVersion = version,
         .scope = "hwp5-chart-literal-edit-lease",
         .executionAuthority = false,
-        .witness = Witness{ .profile = .spec24_clustered_column_literals_v1, .ticket = Ticket.from(value.binding), .viewEpoch = Words.from(view), .historyRevision = revision, .owners = &.{value.target}, .source_xml_sha256 = value.source_xml_sha256, .pixel_width = value.context.input.width, .pixel_height = value.context.input.height },
+        .witness = Witness{ .profile = value.context.patch.profile, .ticket = Ticket.from(value.binding), .viewEpoch = Words.from(view), .historyRevision = revision, .owners = &.{value.target}, .source_xml_sha256 = value.source_xml_sha256, .pixel_width = value.context.input.width, .pixel_height = value.context.input.height },
         .literals = value.context.patch.data.data,
         .limits = .{ .owners = types.max_owners, .logicalEdits = types.max_edits, .inputValueBytes = types.max_input_bytes, .requestBytes = max_request_bytes, .replyBytes = max_reply_bytes, .pngBytes = max_png_bytes },
     }, max_reply_bytes);

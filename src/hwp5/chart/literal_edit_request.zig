@@ -10,7 +10,7 @@ pub const Edit = union(enum) {
     value: struct { series: u32, category: u32, expected: []const u8, value: []const u8 },
 };
 pub const Plan = struct {
-    profile: enum { spec24_clustered_column_literals_v1 },
+    profile: @import("literal_edit_profile.zig").Profile,
     binding: @import("../../model/history_mutation_epoch.zig").Ticket,
     owners: []const Target,
     source_xml_sha256: [32]u8,

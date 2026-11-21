@@ -5,9 +5,10 @@ import {
   checkedHwp5LiteralEdits,
 } from '../../js/hwp5-chart-literal-edit.mjs';
 import { createHwp5ChartDataCommands } from '../../web/preview/hwp5-chart-data-command.mjs';
+import { HWP5_CHART_LITERAL_BAR_PROFILE as BAR, HWP5_CHART_LITERAL_LINE_PROFILE as LINE } from '../../js/hwp5-chart-literal-profiles.mjs';
 import { model, context } from '../hwpx/chart-family-model.mjs';
 const edits = [{ value: { series: 0, category: 0, expected: '10', value: '73' } }];
-function fixture({ changed = true, staleAt = '', code = 1, cleanup = false } = {}) {
+function fixture({ changed = true, staleAt = '', code = 1, cleanup = false, profile = BAR, version = 1, previewProfile = profile, kind = profile === LINE ? 'lineChart' : 'barChart', mutateData = () => {} } = {}) {
   let epoch = 1,
     next,
     ptr = 0,
@@ -19,7 +20,7 @@ function fixture({ changed = true, staleAt = '', code = 1, cleanup = false } = {
   const buffers = new Map(),
     requests = [];
   const witness = () => ({
-    profile: 'spec24_clustered_column_literals_v1',
+    profile,
     ticket: {
       document: { lo: 1, hi: 2 },
       generation: { lo: 3, hi: 4 },
@@ -48,11 +49,12 @@ function fixture({ changed = true, staleAt = '', code = 1, cleanup = false } = {
     literals: { categories: ['a', 'b', 'c'], series: [{ name: 's', values: ['10', '20', '30'] }] },
     limits: {},
   });
-  const data = model('barChart', [[73, 20, 30]]);
+  const data = model(kind, [[73, 20, 30]]);
   delete data.pair;
   delete data.host;
-  data.plot_settings[0].direction = { node: 4, value: 'col' };
-  data.plot_settings[0].grouping = { node: 5, value: 'clustered' };
+  if (kind === 'barChart') data.plot_settings[0].direction = { node: 4, value: 'col' };
+  data.plot_settings[0].grouping = { node: 5, value: kind === 'barChart' ? 'clustered' : 'standard' };
+  mutateData(data);
   const memory = {
     withBytes(bytes, fn) {
       const id = ++ptr;
@@ -67,7 +69,7 @@ function fixture({ changed = true, staleAt = '', code = 1, cleanup = false } = {
   const decode = (id) => JSON.parse(new TextDecoder().decode(buffers.get(id)));
   const wasm = {
     hwp5_edit_chart_literal_edit_profile_version() {
-      return 1;
+      return version;
     },
     hwp5_edit_chart_literal_edit_lease(section, control) {
       assert.equal(section, 0);
@@ -83,6 +85,7 @@ function fixture({ changed = true, staleAt = '', code = 1, cleanup = false } = {
         scope: 'hwp5-chart-literal-edit-preview',
         executionAuthority: false,
         changed,
+        ...(previewProfile === null ? {} : { profile: previewProfile }),
         xml_sha256: Array(32).fill(7),
         pixel_width: 128,
         pixel_height: 96,
@@ -263,4 +266,83 @@ test('worker keys are scoped to issuing editor and reject caller PNG payloads', 
     commands.apply({ kind: 'hwp5-chart-data-apply', leaseKey: r.leaseKey, edits }),
     /Stale/,
   );
+});
+
+test('standard line v2 owns typed profile through lease preview safe painter and one commit', async () => {
+  const f = fixture({ profile: LINE, version: 2 });
+  await withCanvas(f, async () => {
+    const capture = f.api.captureHwp5ChartData(0, 9);
+    const result = await f.api.editHwp5ChartData(capture, edits);
+    assert.equal(result.application, 'applied');
+    assert.equal(f.requests[0].witness.profile, LINE);
+    assert.equal(f.stats().finalBody.witness.profile, LINE);
+    assert.equal(f.stats().commits, 1);
+    assert.equal(f.stats().painted, 1);
+    assert.equal(f.stats().encoded, 1);
+    assert.equal(f.canvases[0].width, 0);
+    await assert.rejects(f.api.editHwp5ChartData(capture, edits), /Stale/);
+    assert.equal(f.stats().commits, 1);
+  });
+});
+test('capability v1 bar and v2 bar retain old signatures and missing old bar preview field', async () => {
+  for (const version of [1, 2]) {
+    const f = fixture({ version, previewProfile: null });
+    await withCanvas(f, async () => {
+      await f.api.editHwp5ChartData(f.api.captureHwp5ChartData(0, 9), edits);
+      assert.equal(f.stats().commits, 1);
+    });
+  }
+  assert.throws(() => fixture({ version: 1, profile: LINE }).api.captureHwp5ChartData(0, 9), /InvalidChartLiteralLease/);
+  assert.throws(() => fixture({ version: 2, profile: 'arbitrary' }).api.captureHwp5ChartData(0, 9), /UnsupportedChartLiteralEditProfile/);
+  assert.equal(fixture({ version: 3 }).api.supportsHwp5ChartLiteralEditAbi(), false);
+});
+for (const previewProfile of [BAR, null, 'arbitrary'])
+  test('line lease refuses mismatched or absent profile before raster '+previewProfile, async () => {
+    const f = fixture({ profile: LINE, version: 2, previewProfile });
+    await withCanvas(f, async () => {
+      await assert.rejects(f.api.editHwp5ChartData(f.api.captureHwp5ChartData(0, 9), edits), /InvalidChartLiteralPreview/);
+      assert.equal(f.stats().commits, 0);
+      assert.equal(f.stats().painted, 0);
+    });
+  });
+for (const mutateData of [
+  (d) => { d.plots[0].kind = 'barChart'; },
+  (d) => { d.plots.push(structuredClone(d.plots[0])); },
+  (d) => { d.plot_settings[0].grouping.value = 'stacked'; },
+  (d) => { d.series_settings[0].smooth = { node: 333, value: true }; },
+])
+  test('line profile rejects a different plot mixed plots or arbitrary style '+mutateData.toString(), async () => {
+    const f = fixture({ profile: LINE, version: 2, mutateData });
+    await withCanvas(f, async () => {
+      await assert.rejects(f.api.editHwp5ChartData(f.api.captureHwp5ChartData(0, 9), edits));
+      assert.equal(f.stats().commits, 0);
+      assert.equal(f.stats().painted, 0);
+    });
+  });
+for (const staleAt of ['blob', 'array'])
+  test('line late '+staleAt+' rejects stale lease and releases surface without commit', async () => {
+    const f = fixture({ profile: LINE, version: 2, staleAt });
+    await withCanvas(f, async () => {
+      await assert.rejects(f.api.editHwp5ChartData(f.api.captureHwp5ChartData(0, 9), edits), /Stale/);
+      assert.equal(f.stats().commits, 0);
+      assert.equal(f.canvases[0].width, 0);
+    });
+  });
+test('line no-op preserves typed witness and uses no raster', async () => {
+  const f = fixture({ profile: LINE, version: 2, changed: false, code: 2 });
+  const result = await f.api.editHwp5ChartData(f.api.captureHwp5ChartData(0, 9), edits);
+  assert.equal(result.nativeCode, 2);
+  assert.equal(f.stats().painted, 0);
+  assert.equal(f.stats().finalBody.rendered, null);
+  assert.equal(f.stats().finalBody.witness.profile, LINE);
+});
+
+test('line stale capture before preview cannot allocate raster or reach commit', async () => {
+  const f = fixture({ profile: LINE, version: 2 });
+  const capture = f.api.captureHwp5ChartData(0, 9);
+  f.stale();
+  await assert.rejects(f.api.editHwp5ChartData(capture, edits), /Stale/);
+  assert.equal(f.requests.length, 0);
+  assert.equal(f.stats().commits, 0);
+  assert.equal(f.stats().painted, 0);
 });

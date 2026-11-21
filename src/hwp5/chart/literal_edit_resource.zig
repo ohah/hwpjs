@@ -51,7 +51,7 @@ pub fn prepare(a: std.mem.Allocator, file: *const cfb.File, previous: store.Valu
     if (!changed.changed or previous.entries.len >= 128) return error.LimitExceeded;
     if (previous.docinfo) |bytes| if (!std.mem.eql(u8, bytes, docinfo)) return error.SourceBindingMismatch;
     if (rendered.pixel_width != source.width or rendered.pixel_height != source.height) return error.InvalidChartCreatePreviewPNG;
-    try @import("create_rendered_resources.zig").validate(a, changed.data.data, rendered, .{});
+    try @import("create_rendered_resources.zig").validateFor(a, changed.data.data, @import("literal_edit_profile.zig").createProfile(changed.profile), rendered, .{});
     if (!std.mem.eql(u8, &rendered.source_xml_sha256, &changed.sha256)) return error.StaleChartCreatePreview;
     const presentation = try png.write(a, rendered.bytes, rendered.pixel_width, rendered.pixel_height, limit);
     defer a.free(presentation);

@@ -2099,7 +2099,7 @@ fn chartLiteralEditHistory() !*History {
     return h;
 }
 export fn hwp5_edit_chart_literal_edit_profile_version() u32 {
-    return @import("hwp5_chart_literal_edit_wire.zig").version;
+    return @import("../hwp5/chart/literal_edit_profile.zig").capability_version;
 }
 export fn hwp5_edit_chart_literal_edit_lease(section: u32, control: u32) u32 {
     hwp5_edit_output_free();

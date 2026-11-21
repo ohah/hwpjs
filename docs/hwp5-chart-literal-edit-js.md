@@ -24,6 +24,14 @@ single commit은 기존 applyNativeEdit completion 분류를 사용한다. obser
 
 새 H5 도구는 공통 dialog layer와 기존 series/category projection/grid를 사용한다. category 행/series 열의 실제 cellAddress를 통해 값 form을 채우며, Apply는 expected 원문과 논리 주소를 한 요청으로 전달한다. series 이름/개수와 category 개수 변경은 제공하지 않는다. IME 중 Apply/취소를 막고 입력 필드는 유지한다. close/dispose/문서 변경 후 늦은 응답은 버린다.
 
+## 속성 창의 크기 조회와 읽기 바인딩
+
+차트 속성 창은 크기를 조회한 뒤 데이터 편집 가능 여부를 확인합니다. 브라우저에서 선형·막대 차트의 문서 읽기 바인딩이 초기 로드 후 발급됐고, 크기 조회 직후 해제되어 편집 버튼이 빠지는 것을 확인했습니다. `object-geometry-query`는 문서를 변경하지 않는 타입 지정 조회이므로 이 조회가 진행되는 동안 현재 읽기 바인딩을 유지합니다. 일반 표면 요청의 허용 목록과 쓰기 입장 규칙은 기존 계약을 따릅니다.
+
+읽기 수명·증거·개체 크기 집중 검증 26개가 통과했습니다. 수정 전에는 크기 조회가 읽기 바인딩을 보존하는지 확인하는 동일 검사가 실패했습니다.
+
+실제 Chrome에서 공개 카탈로그의 선형 예제와 별도로 생성해 업로드한 막대 예제의 속성 창을 열었습니다. 각 예제에서 범주 이름과 값을 한 번에 변경하고 실행 취소·다시 실행·저장·파일 재열기를 확인했습니다. 실행 취소 저장본은 원본과 바이트가 같았고, 편집 저장본의 독립 CFB 검사에서 기존 리소스, 크기 및 대상 밖 스트림을 보존했습니다. 새 리소스에는 요청한 두 XML 값과 실제 Worker가 렌더링한 PNG가 들어 있습니다.
+
 ## 타입와 source mock 검증
 
 `tools/tests/tsconfig.hwp5-chart-data.json`은 새 Core/public factory와 raw facade 타입, UI 도구를 검사한다. 별도 public consumer type 시험은 PNG 및 renderer 인자를 거부한다. 기존 데모 전체의 타입 문제는 집중 타입 성공으로 대체하지 않으며 별도 baseline 진단에 기록한다.

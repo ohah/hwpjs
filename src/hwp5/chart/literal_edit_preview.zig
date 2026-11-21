@@ -7,6 +7,7 @@ pub fn write(a: std.mem.Allocator, prepared: *const @import("literal_edit_xml.zi
         .scope = "hwp5-chart-literal-edit-preview",
         .executionAuthority = false,
         .changed = prepared.changed,
+        .profile = prepared.profile,
         .xml_sha256 = prepared.sha256,
         .pixel_width = width,
         .pixel_height = height,
