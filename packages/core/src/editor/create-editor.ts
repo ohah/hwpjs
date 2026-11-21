@@ -1,4 +1,18 @@
 import {
+  SET_HWP5_VERTICAL_MARGINS_COMMAND,
+  captureHwp5VerticalMarginsPayload,
+  hwp5VerticalMarginsMessage,
+} from '../commands/hwp5-vertical-margins.ts';
+import type {
+  Hwp5VerticalMarginsTarget,
+  SetHwp5VerticalMarginsPayload,
+  Hwp5VerticalMarginsRead,
+  Hwp5VerticalMarginsSelector,
+  Hwp5VerticalMarginsObservation,
+} from '../commands/hwp5-vertical-margins-dto.ts';
+import { checkedHwp5VerticalMarginsObservation } from '../../../../js/hwp5-vertical-outer-margins.mjs';
+import { checkedHwp5OuterMarginsSelector } from '../../../../js/hwp5-object-outer-margins.mjs';
+import {
   checkedOuterMarginsSelector,
   checkedOuterMarginsObservation,
   outerMarginsIdentity,
@@ -1475,6 +1489,10 @@ export function createEditor(options: CreateEditorOptions) {
       current: () => boolean;
     }
   >();
+  const verticalMarginsTargets = new WeakMap<
+    Hwp5VerticalMarginsTarget,
+    { state: EditorState; runtime: EditorRuntime; native: Hwp5VerticalMarginsObservation }
+  >();
   const objectOuterMarginsTargets = new WeakMap<
     ObjectOuterMarginsTarget,
     { state: EditorState; runtime: EditorRuntime; native: NativeObjectOuterMarginsObservation }
@@ -1512,6 +1530,7 @@ export function createEditor(options: CreateEditorOptions) {
     const pageSettings = command.id === EDIT_PAGE_SETTINGS_COMMAND.id;
     const objectGeometry = command.id === SET_OBJECT_GEOMETRY_COMMAND.id;
     const outerMargins = command.id === SET_OBJECT_OUTER_MARGINS_COMMAND.id;
+    const verticalMargins = command.id === SET_HWP5_VERTICAL_MARGINS_COMMAND.id;
     const bodyFlow = command.id === SET_OBJECT_BODY_FLOW_COMMAND.id;
     const pictureReplacement = command.id === REPLACE_PICTURE_COMMAND.id;
     const tableCell =
@@ -1523,6 +1542,7 @@ export function createEditor(options: CreateEditorOptions) {
       objectGeometry ||
       pictureReplacement ||
       outerMargins ||
+      verticalMargins ||
       bodyFlow;
     const inlineKind =
       command.id === INSERT_EQUATION_COMMAND.id
@@ -1542,38 +1562,40 @@ export function createEditor(options: CreateEditorOptions) {
         : command.id === INSERT_ENDNOTE_COMMAND.id
           ? 'end'
           : undefined;
-    const owned = bodyFlow
-      ? captureObjectBodyFlowPayload(payload)
-      : outerMargins
-        ? captureObjectOuterMarginsPayload(payload)
-        : pictureReplacement
-          ? captureReplacePicturePayload(payload)
-          : command.id === INSERT_IMAGE_COMMAND.id
-            ? captureImageInsertPayload(payload)
-            : command.id === DELETE_NOTE_COMMAND.id
-              ? captureNoteDeletePayload(payload)
-              : noteKind
-                ? captureNoteInsertPayload(payload)
-                : logicalSplice
-                  ? captureCreatedCellSplicePayload(payload)
-                  : objectGeometry
-                    ? captureObjectGeometryPayload(payload)
-                    : inlineKind
-                      ? captureInlineObjectInsertPayload(payload, inlineKind)
-                      : pageSettings
-                        ? capturePageSettingsPayload(payload)
-                        : split
-                          ? captureSourceTableCellSplitPayload(payload)
-                          : merge || width || height
-                            ? payload
-                            : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
-                              ? captureSourceTableGridRequest(
-                                  payload,
-                                  (snapshot.content as any)?.format,
-                                )
-                              : command.id === INSERT_DOCUMENT_COMMAND.id
-                                ? captureDocumentInsertPayload(payload)
-                                : copyOwned(payload);
+    const owned = verticalMargins
+      ? captureHwp5VerticalMarginsPayload(payload)
+      : bodyFlow
+        ? captureObjectBodyFlowPayload(payload)
+        : outerMargins
+          ? captureObjectOuterMarginsPayload(payload)
+          : pictureReplacement
+            ? captureReplacePicturePayload(payload)
+            : command.id === INSERT_IMAGE_COMMAND.id
+              ? captureImageInsertPayload(payload)
+              : command.id === DELETE_NOTE_COMMAND.id
+                ? captureNoteDeletePayload(payload)
+                : noteKind
+                  ? captureNoteInsertPayload(payload)
+                  : logicalSplice
+                    ? captureCreatedCellSplicePayload(payload)
+                    : objectGeometry
+                      ? captureObjectGeometryPayload(payload)
+                      : inlineKind
+                        ? captureInlineObjectInsertPayload(payload, inlineKind)
+                        : pageSettings
+                          ? capturePageSettingsPayload(payload)
+                          : split
+                            ? captureSourceTableCellSplitPayload(payload)
+                            : merge || width || height
+                              ? payload
+                              : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
+                                ? captureSourceTableGridRequest(
+                                    payload,
+                                    (snapshot.content as any)?.format,
+                                  )
+                                : command.id === INSERT_DOCUMENT_COMMAND.id
+                                  ? captureDocumentInsertPayload(payload)
+                                  : copyOwned(payload);
     return {
       command: command as EditorCommand<unknown>,
       payload: owned,
@@ -1665,6 +1687,27 @@ export function createEditor(options: CreateEditorOptions) {
         guard();
         return await mutate(
           objectOuterMarginsMessage(owned.native, payload.margins),
+          pending.token,
+          false,
+          guard,
+        );
+      }
+      if (pending.command.id === SET_HWP5_VERTICAL_MARGINS_COMMAND.id) {
+        const payload = pending.payload as SetHwp5VerticalMarginsPayload;
+        const owned = verticalMarginsTargets.get(payload.target);
+        if (!owned) throw Error('ForeignHwp5VerticalMarginsTarget');
+        const guard = () => {
+          requireReady(pending.token, true);
+          if (state !== owned.state || active !== owned.runtime)
+            throw Error('StaleHwp5VerticalMarginsTarget');
+          if (state.nativeHistoryRevision !== owned.native.witness.historyRevision)
+            throw Error('StaleHwp5VerticalMarginsBinding');
+          if (!hasRuntimeAdmission(active, 'hwp5-vertical-object-margins-set'))
+            throw Error('UnsupportedHwp5VerticalMarginsRuntime');
+        };
+        guard();
+        return await mutate(
+          hwp5VerticalMarginsMessage(owned.native, payload.top, payload.bottom),
           pending.token,
           false,
           guard,
@@ -2366,6 +2409,15 @@ export function createEditor(options: CreateEditorOptions) {
       if (state !== owned.state || active !== owned.runtime)
         return Promise.resolve(reject(context(pending.token), 'StaleObjectOuterMarginsTarget'));
     }
+    if (command.id === SET_HWP5_VERTICAL_MARGINS_COMMAND.id) {
+      const owned = verticalMarginsTargets.get(
+        (pending.payload as SetHwp5VerticalMarginsPayload).target,
+      );
+      if (!owned)
+        return Promise.resolve(reject(context(pending.token), 'ForeignHwp5VerticalMarginsTarget'));
+      if (state !== owned.state || active !== owned.runtime)
+        return Promise.resolve(reject(context(pending.token), 'StaleHwp5VerticalMarginsTarget'));
+    }
     if (command.id === SET_OBJECT_BODY_FLOW_COMMAND.id) {
       const owned = objectBodyFlowTargets.get((pending.payload as SetObjectBodyFlowPayload).target);
       if (!owned)
@@ -2821,6 +2873,8 @@ export function createEditor(options: CreateEditorOptions) {
         'created-cell-text-target',
         'object-outer-margins-query',
         'object-outer-margins-set',
+        'hwp5-vertical-object-margins-query',
+        'hwp5-vertical-object-margins-set',
         'object-body-flow-query',
         'object-body-flow-set',
         'picture-replacement-query',
@@ -3048,6 +3102,88 @@ export function createEditor(options: CreateEditorOptions) {
           }),
         }),
       );
+    });
+  }
+  function getHwp5VerticalMargins(
+    selector: Hwp5VerticalMarginsSelector,
+    options: { token?: StateToken } = {},
+  ): Promise<Hwp5VerticalMarginsRead> {
+    assertPublicMutation();
+    const snapshot = state;
+    const selected = checkedHwp5OuterMarginsSelector(selector);
+    const settings = copyOwned(options);
+    if (
+      !settings ||
+      typeof settings !== 'object' ||
+      Array.isArray(settings) ||
+      Object.keys(settings).some((key) => key !== 'token') ||
+      settings.token === null
+    )
+      throw Error('InvalidHwp5VerticalMarginsOptions');
+    const token = copyOwned(settings.token ?? snapshot.token);
+    if (state !== snapshot) throw Error('StaleHwp5VerticalMarginsTarget');
+    return enqueue(async () => {
+      requireReady(token, true);
+      const runtime = active;
+      const guard = () => {
+        requireReady(token, true);
+        if (state !== snapshot || active !== runtime) throw Error('StaleHwp5VerticalMarginsTarget');
+      };
+      guard();
+      const content = snapshot.content as Record<string, unknown> | undefined;
+      const caps = snapshot.capabilities as Record<string, unknown> | undefined;
+      if (content?.readOnly === true || caps?.readOnly === true)
+        return { state: 'unavailable', reason: 'ReadOnlyDocument' };
+      if (!content || content.format !== 'hwp5' || content.limited || content.window)
+        return { state: 'unavailable', reason: 'Hwp5VerticalMarginsRequiresFullDocument' };
+      if (
+        snapshot.nativeHistoryStats?.protocolVersion !== 2 ||
+        !Number.isSafeInteger(snapshot.nativeHistoryRevision) ||
+        snapshot.nativeHistoryRevision! < 0 ||
+        snapshot.nativeHistoryRevision! >= 0xffffffff
+      )
+        return { state: 'unavailable', reason: 'HistoryProtocol2Required' };
+      if (!runtime || !hasRuntimeAdmission(runtime, 'hwp5-vertical-object-margins-query'))
+        return { state: 'unavailable', reason: 'UnsupportedHwp5VerticalMarginsRuntime' };
+      const reply = await readRequest(
+        { kind: 'hwp5-vertical-object-margins-query', selector: selected },
+        token,
+        guard,
+        true,
+      );
+      guard();
+      if (reply.verticalMargins === null)
+        return {
+          state: 'unavailable',
+          reason:
+            typeof reply.reason === 'string' ? reply.reason : 'Hwp5VerticalMarginsUnavailable',
+        };
+      const native = checkedHwp5VerticalMarginsObservation(reply.verticalMargins);
+      const w = native.witness;
+      if (
+        w.selector.section !== selected.section ||
+        w.selector.node !== selected.node ||
+        w.selector.kind !== selected.kind ||
+        w.historyRevision !== snapshot.nativeHistoryRevision
+      )
+        throw Error('Hwp5VerticalMarginsBindingMismatch');
+      if (!w.editable)
+        return { state: 'unavailable', reason: w.reason ?? 'Hwp5VerticalMarginsUnavailable' };
+      guard();
+      const target = Object.freeze({}) as Hwp5VerticalMarginsTarget;
+      verticalMarginsTargets.set(target, { state: snapshot, runtime, native });
+      return Object.freeze({
+        state: 'available',
+        target,
+        observation: Object.freeze({
+          format: 'hwp5',
+          selector: w.selector,
+          left: w.margins.left,
+          right: w.margins.right,
+          top: w.margins.top,
+          bottom: w.margins.bottom,
+        }),
+      });
     });
   }
   function getObjectOuterMargins(
@@ -4401,6 +4537,7 @@ export function createEditor(options: CreateEditorOptions) {
     getInlineObjectInsertTarget: geometryGuard(getInlineObjectInsertTarget),
     getCreatedCellTextTarget: geometryGuard(getCreatedCellTextTarget),
     getObjectOuterMargins: geometryGuard(getObjectOuterMargins),
+    getHwp5VerticalMargins: geometryGuard(getHwp5VerticalMargins),
     getObjectBodyFlow: geometryGuard(getObjectBodyFlow),
     getPictureReplacement: geometryGuard(getPictureReplacement),
     getObjectGeometry: geometryGuard(getObjectGeometry),

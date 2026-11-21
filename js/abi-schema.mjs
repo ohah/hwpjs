@@ -268,3 +268,13 @@ export const HWP5_OBJECT_OUTER_MARGINS_ABI = Object.freeze({
   }),
   hwp5_edit_set_object_outer_margins: Object.freeze({ params: ['i32', 'i32'], results: ['i32'] }),
 });
+
+// Explicit observed-compact raw1 profile, not an extension of Square-v1.
+export const HWP5_VERTICAL_OUTER_MARGINS_ABI = Object.freeze({
+  hwp5_edit_vertical_outer_margins_version: Object.freeze({ params: [], results: ['i32'] }),
+  hwp5_edit_vertical_outer_margins: Object.freeze({
+    params: ['i32', 'i32', 'i32'],
+    results: ['i32'],
+  }),
+  hwp5_edit_set_vertical_outer_margins: Object.freeze({ params: ['i32', 'i32'], results: ['i32'] }),
+});

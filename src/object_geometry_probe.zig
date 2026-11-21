@@ -10,4 +10,6 @@ test {
     _ = @import("h5_object_outer_margins_probe.zig");
     _ = @import("h5_object_outer_margins_top_bottom_probe.zig");
     _ = @import("h5_object_outer_margins_wire_probe.zig");
+    _ = @import("h5_object_vertical_margins_probe.zig");
+    _ = @import("h5_vertical_margins_wire_probe.zig");
 }

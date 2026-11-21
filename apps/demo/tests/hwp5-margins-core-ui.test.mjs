@@ -13,7 +13,12 @@ async function fixture(kind, options = {}) {
   let revision = 0,
     closed = false;
   const calls = [],
-    margins = { left: options.negative ? -1 : 0, right: 1, top: 2, bottom: 3 };
+    margins = {
+      left: options.vertical ? -32768 : options.negative ? -1 : 0,
+      right: options.vertical ? -1 : 1,
+      top: 2,
+      bottom: 3,
+    };
   const node = kind === 'picture' ? 11 : 12;
   const format = options.format ?? 'hwp5';
   const content = () => ({
@@ -74,7 +79,7 @@ async function fixture(kind, options = {}) {
           selector: { kind, section: 0, node },
           owner: {
             control_node: 8,
-            component_node: 12,
+            component_node: options.vertical && kind === 'picture' ? 10 : 12,
             paragraph_node: 0,
             paragraph: 0,
             anchor_unit: 0,
@@ -118,10 +123,35 @@ async function fixture(kind, options = {}) {
       if (message.kind === 'object-outer-margins-query')
         return {
           ...base,
-          outerMargins: options.old ? null : native(),
+          outerMargins: options.old
+            ? null
+            : options.vertical
+              ? {
+                  ...native(),
+                  editable: false,
+                  reason: 'OuterMarginsTopBottomFollowUpRequired',
+                  wrapOrdinal: 1,
+                }
+              : native(),
           reason: 'ObjectOuterMarginsUnavailable',
         };
-      if (message.kind === 'object-outer-margins-set') {
+      if (message.kind === 'hwp5-vertical-object-margins-query')
+        return {
+          ...base,
+          verticalMargins: {
+            schemaVersion: 1,
+            profile: 'hwp5-observed-vertical-outer-margins-v1',
+            witness: {
+              ...native(),
+              wrapOrdinal: 1,
+              ownerScope: 'h5-vertical-margins:12345678-1234-4123-8123-123456789abc',
+            },
+          },
+        };
+      if (
+        message.kind === 'object-outer-margins-set' ||
+        message.kind === 'hwp5-vertical-object-margins-set'
+      ) {
         if (options.noOp) return { ...base, changed: false, applied: false };
         revision++;
         return {
@@ -364,6 +394,46 @@ for (const kind of ['picture', 'textbox'])
         assert.deepEqual(request.witness.selector, { kind, section: 0, node: f.node });
         assert.deepEqual(request.margins, { left: 750, right: 1500, top: 2, bottom: 3 });
         assert.equal(f.editor.getEditorState().nativeHistoryRevision, 1);
+      } finally {
+        await f.dispose();
+      }
+    },
+  );
+
+for (const kind of ['picture', 'textbox'])
+  test(
+    'raw1 ' +
+      kind +
+      ' form uses the real Core vertical target and preserves signed horizontal witness',
+    async () => {
+      const f = await fixture(kind, { vertical: true });
+      try {
+        assert.equal(f.role('object-outer-margins-left').disabled, true);
+        assert.equal(f.role('object-outer-margins-right').value, '-0.004');
+        assert.equal(f.role('object-outer-margins-top').disabled, false);
+        f.role('object-outer-margins-top').value = '2.646';
+        f.role('object-outer-margins-top').dispatchEvent(new Event('input'));
+        f.role('object-outer-margins-bottom').value = '5.292';
+        f.role('object-outer-margins-bottom').dispatchEvent(new Event('input'));
+        f.apply();
+        await tick();
+        const writes = f.calls.filter((x) => x.kind === 'hwp5-vertical-object-margins-set');
+        assert.equal(writes.length, 1);
+        assert.deepEqual(writes[0].request.witness.margins, {
+          left: -32768,
+          right: -1,
+          top: 2,
+          bottom: 3,
+        });
+        assert.deepEqual(writes[0].request.witness.selector, { kind, section: 0, node: f.node });
+        assert.equal(writes[0].request.witness.owner.component_node, kind === 'picture' ? 10 : 12);
+        assert.equal(writes[0].request.top, 750);
+        assert.equal(writes[0].request.bottom, 1500);
+        assert.equal('left' in writes[0].request, false);
+        assert.equal('right' in writes[0].request, false);
+        assert.equal(f.writes().length, 0);
+        assert.equal(f.editor.getEditorState().nativeHistoryRevision, 1);
+        assert.equal(f.done(), 1);
       } finally {
         await f.dispose();
       }

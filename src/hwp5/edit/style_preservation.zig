@@ -54,6 +54,7 @@ pub const Command = union(enum) {
     set_paragraph_bullet: struct { section: usize, paragraph: usize, value: @import("../../model/formatting_patch.zig").Bullet },
     edit_object_geometry: *const @import("../../model/object_geometry.zig").Request,
     edit_object_outer_margins: @import("object_outer_margins.zig").Request,
+    edit_object_vertical_margins: @import("object_outer_margins.zig").Request,
     edit_page_settings: *const @import("page_settings_types.zig").Request,
     edit_bullet_definition: @import("../../model/paragraph_bullet_definition.zig").Request,
     set_paragraph_alignment: struct { section: usize, paragraph: usize, alignment: u32 },
@@ -989,6 +990,14 @@ pub const Session = opaque {
         const ticket = try self.historyTicket();
         const read_only = state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview);
         return @import("object_outer_margins.zig").read(state.allocator, state.decoded[selector.section], state.source.header.version(), state.document.sections[selector.section], selector, ticket, read_only);
+    }
+    pub fn objectVerticalOuterMargins(self: *const Session, selector: @import("object_outer_margins.zig").Selector) !@import("object_outer_margins.zig").Observation {
+        try self.materializeLiveText();
+        const state = self.stateConst();
+        if (selector.section >= state.document.sections.len) return error.InvalidSection;
+        const ticket = try self.historyTicket();
+        const read_only = state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview);
+        return @import("object_outer_margins.zig").readObservedVertical(state.allocator, state.decoded[selector.section], state.source.header.version(), state.document.sections[selector.section], selector, ticket, read_only);
     }
     pub fn objectGeometry(self: *const Session, a: std.mem.Allocator, selector: @import("../../model/object_geometry.zig").Selector, revision: u64, binding: @import("../../model/object_geometry.zig").Binding) !@import("../../model/object_geometry.zig").Observation {
         try self.materializeLiveText();
@@ -2149,7 +2158,7 @@ pub const Session = opaque {
                 defer if (prepared.owned) state.allocator.free(prepared.bytes);
                 try @import("bullet_apply.zig").applyReference(state.allocator, &state.document, prepared.bytes, state.source.header.version(), state.para_count, state.char_count, value.section, value.paragraph, value.value, max_stream);
             },
-            .edit_object_outer_margins => |request| {
+            .edit_object_outer_margins, .edit_object_vertical_margins => |request| {
                 const state = self.getState();
                 if (state.formatting_batch != null) return error.MutationInProgress;
                 const ticket = try self.historyTicket();
@@ -2158,7 +2167,12 @@ pub const Session = opaque {
                 if (index >= state.document.sections.len) return error.InvalidSection;
                 const section = &state.document.sections[index];
                 const read_only = state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview);
-                const bytes = (try @import("object_outer_margins.zig").write(state.allocator, state.decoded[index], state.source.header.version(), section.*, request, ticket, read_only)) orelse return;
+                const margin_source = @import("object_outer_margins.zig");
+                const prepared = if (command == .edit_object_vertical_margins)
+                    try margin_source.writeObservedVertical(state.allocator, state.decoded[index], state.source.header.version(), section.*, request, ticket, read_only)
+                else
+                    try margin_source.write(state.allocator, state.decoded[index], state.source.header.version(), section.*, request, ticket, read_only);
+                const bytes = prepared orelse return;
                 errdefer state.allocator.free(bytes);
                 if (bytes.len != state.decoded[index].len) return error.SourceBindingMismatch;
                 // Prepare every fallible allocation before publishing. Existing checkpoints own

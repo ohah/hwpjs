@@ -1,3 +1,8 @@
+import {
+  queryHwp5VerticalMargins,
+  commitHwp5VerticalMargins,
+} from './hwp5-vertical-margins-command.mjs';
+import { hwp5VerticalMarginsBackendQualified } from '../../js/hwp5-vertical-margins-qualification.mjs';
 import { applyCreatedCellPropertiesCommand } from './created-cell-properties-command.mjs';
 import { createHwp5ChartDataCommands } from './hwp5-chart-data-command.mjs';
 import { createStrictLayoutWorker, strictLayoutKinds } from './strict-layout-worker.mjs';
@@ -1359,6 +1364,41 @@ export function createReaderRuntime({
           kind: message.kind,
           inlineObjectOwner: editor.inlineObjectOwner(message.selector),
         });
+        return;
+      }
+      if (message.kind === 'hwp5-vertical-object-margins-query') {
+        reply({
+          kind: message.kind,
+          ...queryHwp5VerticalMargins(editor, message.selector, {
+            format,
+            historyEnabled,
+            historyPoisoned,
+            qualified: hwp5VerticalMarginsBackendQualified(module),
+          }),
+        });
+        return;
+      }
+      if (message.kind === 'hwp5-vertical-object-margins-set') {
+        atomicOutcome = commitHwp5VerticalMargins(editor, message.request, {
+          format,
+          historyEnabled,
+          historyPoisoned,
+          qualified: hwp5VerticalMarginsBackendQualified(module),
+        });
+        applied = atomicOutcome.application === 'applied';
+        mutationUncertain = atomicOutcome.application === 'unknown';
+        if (mutationUncertain) historyPoisoned = true;
+        if (atomicOutcome.error || atomicOutcome.cleanupError)
+          throw Error(atomicOutcome.error || atomicOutcome.cleanupError);
+        if (mutationUncertain) throw Error('HistoryMutationUncertain');
+        if (atomicOutcome.application !== 'applied') {
+          reply({ kind: message.kind, changed: false });
+          return;
+        }
+        documentWindow = null;
+        await refreshHwp5PreviewFallback();
+        displayResources.invalidate();
+        reply({ kind: message.kind, content: hwp5Display() });
         return;
       }
       if (message.kind === 'object-outer-margins-query') {

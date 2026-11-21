@@ -15,8 +15,8 @@ export function isFixedNoOverlapTextboxWrap(source) {
     source.position.flags?.[0] === false &&
     source.position.flags?.[1] === false &&
     source.position.flags?.[2] === false &&
-    source.flow?.text_wrap === 0 &&
-    [0, 1, 2, 3].includes(source.flow.text_flow) &&
+    ((source.flow?.text_wrap === 0 && [0, 1, 2, 3].includes(source.flow.text_flow)) ||
+      (source.flow?.text_wrap === 1 && source.flow.text_flow === 0)) &&
     drawingAxisGeometry(source)
   );
 }

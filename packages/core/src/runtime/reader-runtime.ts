@@ -1,3 +1,4 @@
+import { hwp5VerticalMarginsBackendQualified } from '../../../../js/hwp5-vertical-margins-qualification.mjs';
 import {
   createNativeReadSourceLifecycle,
   bindNativeReadSourceRuntime,
@@ -48,6 +49,7 @@ export interface ReaderRuntimeOptions {
   loadWasmModule?: () => Promise<WebAssembly.Module>;
 }
 export function createReaderEditorRuntime(options: ReaderRuntimeOptions = {}): EditorRuntime {
+  let verticalModule = options.wasmModule;
   let contract = options.wasmModule ? readKnownNativeModule(options.wasmModule) : undefined,
     closed = false,
     sequence = 0,
@@ -59,6 +61,7 @@ export function createReaderEditorRuntime(options: ReaderRuntimeOptions = {}): E
       ? {
           loadWasmModule: async () => {
             const module = await options.loadWasmModule!();
+            verticalModule = module;
             contract = readKnownNativeModule(module);
             return module;
           },
@@ -67,10 +70,13 @@ export function createReaderEditorRuntime(options: ReaderRuntimeOptions = {}): E
   });
   const replies = new WeakMap<object, NativeRuntimeOrigin>();
   let runtime: EditorRuntime;
-  const valid = () => {
+  const trustedTransport = () => {
     if (!canonicalRuntimeDescriptors(runtime, request, dispose, Object.prototype)) tainted = true;
-    return !closed && !tainted && !poisoned && !!contract;
+    return !closed && !tainted && !poisoned;
   };
+  const valid = () => trustedTransport() && !!contract;
+  const verticalValid = () =>
+    trustedTransport() && hwp5VerticalMarginsBackendQualified(verticalModule);
   const readSources = createNativeReadSourceLifecycle(() => contract, valid);
   async function request(message: RuntimeMessage, context?: RuntimeRequestContext) {
     return requestInternal(message, context);
@@ -130,6 +136,10 @@ export function createReaderEditorRuntime(options: ReaderRuntimeOptions = {}): E
     (kind) =>
       !closed &&
       !poisoned &&
+      (!['hwp5-vertical-object-margins-query', 'hwp5-vertical-object-margins-set'].includes(
+        kind ?? '',
+      ) ||
+        verticalValid()) &&
       (![
         'picture-replacement-query',
         'picture-replace',

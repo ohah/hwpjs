@@ -941,8 +941,12 @@ jobs:
             ./apps/demo/tests/hwp5-picture-canonical-tool.test.mjs \
             ./apps/demo/tests/hwp5-picture-margins-selection.test.mjs \
             ./apps/demo/tests/hwp5-margins-core-ui.test.mjs \
+            ./apps/demo/tests/hwp5-vertical-margins-ui.test.mjs \
             ./apps/demo/tests/object-properties-edit-gate.test.mjs \
             ./tools/tests/object-outer-margins{,-abi}.test.mjs \
+            ./tests/js/object-outer-margins-top-bottom.test.mjs \
+            ./tests/hwp5/observed-vertical-margins-reflow.test.mjs \
+            ./tools/tests/hwp5-vertical-outer-margins.test.mjs \
             ./tools/tests/object-body-flow-abi.test.mjs \
             ./tests/hwpx/fixed-textbox-wrap.test.mjs \
             ./tests/canvas/behind-textbox-renderer.test.mjs \
@@ -959,6 +963,7 @@ jobs:
           grep -Eq '^# skipped 0$' "$RUNNER_TEMP/object-outer-margins.tap"
           bun test ./packages/core/tests/commands/object-outer-margins.test.ts ./packages/core/tests/transport/object-outer-margins-admission.test.ts
           bun test ./packages/core/tests/commands/hwp5-object-outer-margins.test.ts ./packages/core/tests/runtime/hwp5-outer-margins-profile.test.ts ./tools/tests/hwp5-object-outer-margins.test.mjs
+          bun test ./packages/core/tests/commands/hwp5-vertical-margins.test.ts ./packages/core/tests/commands/hwp5-vertical-margins-worker.test.mjs ./packages/core/tests/transport/hwp5-vertical-margins-admission.test.ts ./packages/core/tests/transport/hwp5-vertical-margins-activation.test.ts
           node node_modules/typescript/lib/tsc.js --noEmit -p ./tools/tests/tsconfig.object-outer-margins.json
       - name: Test textbox body flow command and property controls
         timeout-minutes: 2

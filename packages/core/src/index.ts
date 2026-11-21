@@ -392,3 +392,12 @@ export type {
   ObjectOuterMarginsRead,
   SetObjectOuterMarginsPayload,
 } from './commands/object-outer-margins.ts';
+
+export { SET_HWP5_VERTICAL_MARGINS_COMMAND } from './commands/hwp5-vertical-margins.ts';
+export type {
+  Hwp5VerticalMarginsSelector,
+  Hwp5VerticalMarginsTarget,
+  Hwp5VerticalMarginsRead,
+  Hwp5VerticalMarginsValues,
+  SetHwp5VerticalMarginsPayload,
+} from './commands/hwp5-vertical-margins-dto.ts';

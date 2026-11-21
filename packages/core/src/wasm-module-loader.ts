@@ -1,3 +1,7 @@
+import {
+  hwp5VerticalMarginsArtifactQualified,
+  compileHwp5VerticalMarginsModule,
+} from '../../../js/hwp5-vertical-margins-qualification.mjs';
 import { verifiedNativeContract } from './internal/native-module-profiles.ts';
 import type { NativeModuleContract } from './internal/native-runtime-origin.ts';
 const knownModules = new WeakMap<WebAssembly.Module, NativeModuleContract>();
@@ -25,7 +29,11 @@ export function createWasmModuleLoader(options: { url?: string | URL; fetch?: ty
     const key = Array.from(digest, (byte) => byte.toString(16).padStart(2, '0')).join('');
     const previous = modules.get(key);
     if (previous) return previous;
-    const compiled = WebAssembly.compile(bytes).then((module) => {
+    const compiled = (
+      hwp5VerticalMarginsArtifactQualified(key)
+        ? compileHwp5VerticalMarginsModule(bytes)
+        : WebAssembly.compile(bytes)
+    ).then((module) => {
       const contract = verifiedNativeContract(key);
       if (contract) knownModules.set(module, contract);
       return module;

@@ -45,7 +45,16 @@ pub const Observation = struct {
 };
 pub const Request = struct { target: Target, expected: [4]i16, margins: [4]i16 };
 
+const Policy = enum { square_v1, observed_vertical_v1 };
+/// Legacy Square-v1 admission stays independent of the new negotiated policy.
 pub fn read(a: std.mem.Allocator, raw: []const u8, version: Version, current: model.Section, selector: Selector, ticket: epoch.Ticket, read_only: bool) !Observation {
+    return readPolicy(a, raw, version, current, selector, ticket, read_only, .square_v1);
+}
+/// Observed compact raw1 whole-line exclusion. This is not official Tight support.
+pub fn readObservedVertical(a: std.mem.Allocator, raw: []const u8, version: Version, current: model.Section, selector: Selector, ticket: epoch.Ticket, read_only: bool) !Observation {
+    return readPolicy(a, raw, version, current, selector, ticket, read_only, .observed_vertical_v1);
+}
+fn readPolicy(a: std.mem.Allocator, raw: []const u8, version: Version, current: model.Section, selector: Selector, ticket: epoch.Ticket, read_only: bool, policy: Policy) !Observation {
     var tree = try @import("source_tree.zig").parse(a, raw, version, .{});
     defer tree.deinit(a);
     if (selector.node >= tree.nodes.len) return error.InvalidOuterMarginTarget;
@@ -97,10 +106,16 @@ pub fn read(a: std.mem.Allocator, raw: []const u8, version: Version, current: mo
     const properties = try common.parseControl(tree.nodes[source.control_node].record.value.control_header);
     const ordinal: u3 = @intCast((properties.flags >> 21) & 7);
     const inline_object = properties.flags & 1 != 0;
+    if (policy == .observed_vertical_v1 and selector.kind == .picture) {
+        // The new picture cohort does not admit unverified rotated/scaled wrap bounds.
+        // Existing Square picture admission is deliberately unchanged.
+        const matrix = try @import("../body/rendering_affine.zig").compose(shape.rendering);
+        simple = shape.rotation_angle == 0 and !shape.horizontalFlip() and !shape.verticalFlip() and shape.offset_x == 0 and shape.offset_y == 0 and matrix[0] == 1 and matrix[1] == 0 and matrix[2] == 0 and matrix[3] == 0 and matrix[4] == 1 and matrix[5] == 0;
+    }
     // This is the CURRENT compact renderer policy, not an encoding detector and
-    // not the Table70 name above. Only floating raw0 is admitted by this cohort.
+    // not the Table70 name above. Square-v1 admits raw0; the separate observed vertical policy admits raw1.
     const renderer_flags_supported = properties.flags & 0xc0000002 == 0 and ((properties.flags >> 3) & 3) <= 2 and ((properties.flags >> 5) & 7) <= 4 and ((properties.flags >> 10) & 7) <= 4 and ordinal <= 3;
-    const supported_wrap = renderer_flags_supported and !inline_object and ordinal == 0;
+    const supported_wrap = renderer_flags_supported and !inline_object and ordinal == @as(u3, if (policy == .square_v1) 0 else 1);
     const spans = try @import("local_field_spans.zig").collectReadableBound(a, raw, version, current);
     defer a.free(spans);
     const end = try std.math.add(u32, anchor.current_unit, 8);
@@ -112,7 +127,7 @@ pub fn read(a: std.mem.Allocator, raw: []const u8, version: Version, current: mo
     }
     var digest: [32]u8 = undefined;
     std.crypto.hash.sha2.Sha256.hash(raw, &digest, .{});
-    const reason: ?[]const u8 = if (read_only or protected) "OuterMarginsReadOnly" else if (!simple) "UnsupportedOuterMarginTransform" else if (!common.hasAbsoluteDimensions(properties.flags)) "UnsupportedOuterMarginRelativeSize" else if (!renderer_flags_supported) "UnsupportedOuterMarginRendererFlags" else if (inline_object) "OuterMarginsInlineEffectUnverified" else if (ordinal == 1) "OuterMarginsTopBottomFollowUpRequired" else if (!supported_wrap) "OuterMarginsNoCurrentExclusionEffect" else if (caption or properties.hasCaption()) "UnsupportedOuterMarginCaptionFlow" else null;
+    const reason: ?[]const u8 = if (read_only or protected) "OuterMarginsReadOnly" else if (!simple) "UnsupportedOuterMarginTransform" else if (!common.hasAbsoluteDimensions(properties.flags)) "UnsupportedOuterMarginRelativeSize" else if (!renderer_flags_supported) "UnsupportedOuterMarginRendererFlags" else if (inline_object) "OuterMarginsInlineEffectUnverified" else if (ordinal == 1 and policy == .square_v1) "OuterMarginsTopBottomFollowUpRequired" else if (!supported_wrap) (if (policy == .square_v1) "OuterMarginsNoCurrentExclusionEffect" else "VerticalMarginsRequiresObservedRaw1") else if (caption or properties.hasCaption()) "UnsupportedOuterMarginCaptionFlow" else null;
     return .{ .target = .{ .selector = selector, .control_node = @intCast(source.control_node), .component_node = @intCast(selected_component), .paragraph_node = @intCast(source.paragraph_node), .paragraph = @intCast(anchor.paragraph), .anchor_unit = anchor.current_unit, .instance_id = properties.instance_id, .source_sha256 = digest, .ticket = ticket }, .margins = properties.margins, .flags = properties.flags, .wrap_ordinal = ordinal, .table70_name = table70Name(ordinal), .current_renderer_margin_policy = if (!renderer_flags_supported) .unsupported else if (inline_object) .inline_unverified else switch (ordinal) {
         0 => .square_exclusion,
         1 => .compact_vertical_exclusion,
@@ -123,9 +138,19 @@ pub fn read(a: std.mem.Allocator, raw: []const u8, version: Version, current: mo
 
 /// Only eight bytes change. Topology, offsets, line-cache bytes and all opaque tails stay exact.
 pub fn write(a: std.mem.Allocator, raw: []const u8, version: Version, current: model.Section, request: Request, ticket: epoch.Ticket, read_only: bool) !?[]u8 {
-    const observed = try read(a, raw, version, current, request.target.selector, ticket, read_only);
+    return writePolicy(a, raw, version, current, request, ticket, read_only, .square_v1);
+}
+pub fn writeObservedVertical(a: std.mem.Allocator, raw: []const u8, version: Version, current: model.Section, request: Request, ticket: epoch.Ticket, read_only: bool) !?[]u8 {
+    return writePolicy(a, raw, version, current, request, ticket, read_only, .observed_vertical_v1);
+}
+fn writePolicy(a: std.mem.Allocator, raw: []const u8, version: Version, current: model.Section, request: Request, ticket: epoch.Ticket, read_only: bool, policy: Policy) !?[]u8 {
+    const observed = try readPolicy(a, raw, version, current, request.target.selector, ticket, read_only, policy);
     if (!std.meta.eql(observed.target, request.target) or !std.meta.eql(observed.margins, request.expected)) return error.StaleOuterMarginTarget;
     if (!observed.editable) return error.OuterMarginsReadOnly;
+    if (policy == .observed_vertical_v1) {
+        if (request.margins[0] != observed.margins[0] or request.margins[1] != observed.margins[1]) return error.VerticalMarginsHorizontalChangeForbidden;
+        for (2..4) |i| if (request.margins[i] < 0 and request.margins[i] != observed.margins[i]) return error.InvalidVerticalMargin;
+    }
     if (std.meta.eql(observed.margins, request.margins)) return null;
     var tree = try @import("source_tree.zig").parse(a, raw, version, .{});
     defer tree.deinit(a);
@@ -133,6 +158,9 @@ pub fn write(a: std.mem.Allocator, raw: []const u8, version: Version, current: m
     const offset = record.offset + record.raw.len - record.payload.len + 28;
     if (offset > raw.len or raw.len - offset < 8) return error.InvalidOuterMarginTarget;
     const output = try a.dupe(u8, raw);
-    for (request.margins, 0..) |value, i| std.mem.writeInt(i16, output[offset + i * 2 ..][0..2], value, .little);
+    for (request.margins, 0..) |value, i| {
+        if (policy == .observed_vertical_v1 and i < 2) continue;
+        std.mem.writeInt(i16, output[offset + i * 2 ..][0..2], value, .little);
+    }
     return output;
 }

@@ -68,9 +68,15 @@ export function outerMarginValues(
   dirty: Readonly<Record<OuterMarginField, boolean>>,
   original: ObjectOuterMargins,
   format: OuterMarginFormat = 'hwpx',
+  hwp5Vertical = false,
 ): ObjectOuterMargins {
   const labels = outerMarginDraft(original, format);
   const read = (field: OuterMarginField) => {
+    if (hwp5Vertical && format === 'hwp5') {
+      if (!dirty[field] || draft[field].trim() === labels[field])
+        return observed(original[field], format);
+      if (field === 'left' || field === 'right') throw Error('InvalidObjectOuterMargin');
+    }
     if (!dirty[field] || draft[field].trim() === labels[field]) return checked(original[field]);
     if (draft[field].trim().startsWith('-')) throw Error('InvalidObjectOuterMargin');
     return checked(outerMarginUnits(draft[field]));

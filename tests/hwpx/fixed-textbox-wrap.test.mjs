@@ -110,7 +110,8 @@ test('fixed no-overlap admission requires explicit square direct textbox geometr
     (s) => (s.position.relations[0] = 0),
     (s) => (s.position.relations[3] = 1),
     (s) => delete s.position.relations[0],
-    (s) => (s.flow.text_wrap = 1),
+    (s) => Object.assign(s.flow, { text_wrap: 1, text_flow: 1 }),
+    (s) => (s.flow.text_wrap = 2),
     (s) => (s.flow.text_flow = 4),
     (s) => (s.rendering.matrix[1] = 1),
     (s) => (s.rendering_corners[0][0] = 1),
@@ -246,6 +247,60 @@ test('fixed square reservation requires complete inventory and rejects object co
     'IncompleteTableCollisionInventory',
   );
   f.body.tableCollisionFootprints = [{ section: 0, tableNode: 99, pageOrdinal: 0, rectangle }];
+  assert.equal(
+    resolveDrawingWrapReservations([f.d], f.paragraphs, f.body, f.content).error,
+    'UnsupportedFixedDrawingCollision',
+  );
+});
+
+test('fixed top-and-bottom textbox reserves its persisted margins and retains its activation bounds', () => {
+  const c = content();
+  const { source } = c.hwp5Drawings[0];
+  source.flags = (source.flags | (1 << 21)) >>> 0;
+  source.offset_y = 1500;
+
+  source.outer_margins = [0, 0, 750, 1500];
+  const before = structuredClone(c);
+  const page = layout(c);
+  assert.equal(page.state, 'paginated', page.policyReason ?? page.error);
+  const [placed] = page.placedDrawings;
+  const [reservation] = page.drawingWrapReservations;
+  assert.deepEqual(reservation.rectangle, placed.rectangle);
+  assert.deepEqual(reservation.flow, {
+    textWrap: 1,
+    textFlow: 0,
+    outsideMargins: [0, 0, 750, 1500],
+  });
+  const outlines = previewDrawingOutlineLayers(c, page);
+  assert.deepEqual(outlines.unavailable, []);
+  assert.deepEqual(outlines.front[0].origin, placed.rectangle);
+  assert.deepEqual(
+    objectActivationTarget(
+      { content: c, layout: page, charts: [], outlines },
+      placed.rectangle.x + 1,
+      placed.rectangle.y + 1,
+    ),
+    { kind: 'drawing', section: 0, drawingNode: 12 },
+  );
+  assert.deepEqual(c, before);
+});
+
+test('fixed top-and-bottom reservation rejects a physical collision before wrapping', () => {
+  const f = reservationFixture();
+  f.d.source.flow.text_wrap = 1;
+  f.d.source.flow.text_flow = 0;
+  const ready = resolveDrawingWrapReservations([f.d], f.paragraphs, f.body, f.content);
+  assert.equal(ready.state, 'reserved', ready.error);
+  f.content.tables = [{ section: 0, tableNode: 99, parentTableNode: null }];
+  f.body.tableCollisionFootprints = [
+    {
+      kind: 'table',
+      section: 0,
+      tableNode: 99,
+      pageOrdinal: 0,
+      rectangle: ready.reservations[0].rectangle,
+    },
+  ];
   assert.equal(
     resolveDrawingWrapReservations([f.d], f.paragraphs, f.body, f.content).error,
     'UnsupportedFixedDrawingCollision',

@@ -1,15 +1,8 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "lib": [
-      "ES2023",
-      "ES2024.String",
-      "DOM",
-      "DOM.Iterable"
-    ],
-    "types": [
-      "bun"
-    ],
+    "lib": ["ES2023", "ES2024.String", "DOM", "DOM.Iterable"],
+    "types": ["bun"],
     "skipLibCheck": true
   },
   "include": [
@@ -17,7 +10,9 @@
     "../../packages/core/tests/commands/object-outer-margins.test.ts",
     "../../packages/core/tests/transport/object-outer-margins-admission.test.ts",
     "./types/object-outer-margins-consumer.ts",
-    "../../packages/core/tests/commands/hwp5-object-outer-margins.test.ts"
+    "../../packages/core/tests/commands/hwp5-object-outer-margins.test.ts",
+    "../../packages/core/tests/commands/hwp5-vertical-margins.test.ts",
+    "../../packages/core/tests/transport/hwp5-vertical-margins-admission.test.ts"
   ],
   "exclude": []
 }

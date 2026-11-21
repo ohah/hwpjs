@@ -74,6 +74,7 @@ export function createObjectOuterMarginsForm(
           dirty,
           original,
           capture.read.observation.format,
+          capture.hwp5Vertical === true,
         );
         validValues = true;
       }
@@ -148,6 +149,7 @@ export function createObjectOuterMarginsForm(
         dirty,
         original,
         capture.read.observation.format,
+        capture.hwp5Vertical === true,
       );
     } catch {
       status.textContent = '바깥 여백에 0 이상인 올바른 mm 값을 입력해주세요.';
@@ -223,11 +225,13 @@ export function createObjectOuterMarginsForm(
       capture = result.capture;
       original = values;
       for (const field of outerMarginFields) inputs[field].value = labels[field];
-      status.textContent = outerMarginFields.some((field) => values[field] < 0)
-        ? '원본의 음수 여백을 표시합니다. 모든 여백을 0 이상으로 수정한 뒤 적용해주세요.'
-        : capture.read.observation.verticalOnly === true
-          ? '위아래 배치에서는 위쪽과 아래쪽 여백만 변경합니다. 왼쪽과 오른쪽 원값은 유지합니다.'
-          : '크기와 배치를 유지하며 개체의 바깥 여백만 변경합니다.';
+      status.textContent = capture.hwp5Vertical
+        ? '위쪽과 아래쪽만 변경합니다. 가로 원값과 미편집 음수는 유지하며 새 여백은 0 이상이어야 합니다.'
+        : outerMarginFields.some((field) => values[field] < 0)
+          ? '원본의 음수 여백을 표시합니다. 모든 여백을 0 이상으로 수정한 뒤 적용해주세요.'
+          : capture.read.observation.verticalOnly === true
+            ? '위아래 배치에서는 위쪽과 아래쪽 여백만 변경합니다. 왼쪽과 오른쪽 원값은 유지합니다.'
+            : '크기와 배치를 유지하며 개체의 바깥 여백만 변경합니다.';
     } catch {
       if (!disposed)
         status.textContent = '바깥 여백을 확인하지 못했습니다. 개체 속성을 다시 열어주세요.';

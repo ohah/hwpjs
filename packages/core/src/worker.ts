@@ -1,3 +1,4 @@
+import { compileHwp5VerticalMarginsModule } from '../../../js/hwp5-vertical-margins-qualification.mjs';
 import type { RuntimeProjectionPreference } from './internal/runtime-admission.ts';
 import { createWorkerReaderDataRuntime } from './internal/worker-reader-data-runtime.ts';
 import { workerResourceReply } from './internal/worker-resource-reply.ts';
@@ -18,8 +19,12 @@ scope.onmessage = (event) => {
       if (message.kind === 'initialize-runtime') {
         if (runtime) throw Error('RuntimeAlreadyInitialized');
         if (!(message.wasmModule instanceof WebAssembly.Module)) throw Error('InvalidWasmModule');
+        const module =
+          message.hwp5VerticalMarginsModuleBytes === undefined
+            ? message.wasmModule
+            : await compileHwp5VerticalMarginsModule(message.hwp5VerticalMarginsModuleBytes);
         runtime = createWorkerReaderDataRuntime({
-          wasmModule: message.wasmModule,
+          wasmModule: module,
           referenceScope: message.referenceScope,
         });
         scope.postMessage({ id, reply: { kind: message.kind } });

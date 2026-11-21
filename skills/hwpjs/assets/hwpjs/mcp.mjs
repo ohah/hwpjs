@@ -24403,7 +24403,7 @@ function parseObjectReference(reference, expected = {}) {
 		kind: match[4],
 		node: Number(match[5])
 	};
-	if (!uint$60(result.section) || !uint$60(result.node)) throw new TypeError("InvalidObjectReference");
+	if (!uint$61(result.section) || !uint$61(result.node)) throw new TypeError("InvalidObjectReference");
 	if (expectedSha256 !== void 0 && expectedSha256 !== result.sourceSha256) throw new Error("StaleObjectReference");
 	if (expectedFormat !== void 0 && expectedFormat !== result.format) throw new Error("ObjectReferenceFormatMismatch");
 	return result;
@@ -24418,7 +24418,7 @@ function canonicalImageId(value) {
 	})) throw new TypeError("InvalidImageIdentity");
 	return `${documentFormat}:s${section}:i${node}`;
 }
-var KINDS, SHA, REFERENCE, object$12, uint$60, format$1, identity$1;
+var KINDS, SHA, REFERENCE, object$12, uint$61, format$1, identity$1;
 var init_object_reference$1 = __esmMin((() => {
 	KINDS = /* @__PURE__ */ new Set([
 		"image",
@@ -24433,9 +24433,9 @@ var init_object_reference$1 = __esmMin((() => {
 	SHA = /^[a-f0-9]{64}$/u;
 	REFERENCE = /^hwpjs-object:([a-f0-9]{64})\/(hwp5|hwpx)\/s(0|[1-9]\d*)\/(image|table|chart|equation|drawing|ole|form|unknown)\/(0|[1-9]\d*)$/u;
 	object$12 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	uint$60 = (value) => typeof value === "number" && Number.isSafeInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
+	uint$61 = (value) => typeof value === "number" && Number.isSafeInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
 	format$1 = (value) => value === "hwp5" || value === "hwpx";
-	identity$1 = (value) => object$12(value) && format$1(value.format) && uint$60(value.section) && uint$60(value.node);
+	identity$1 = (value) => object$12(value) && format$1(value.format) && uint$61(value.section) && uint$61(value.node);
 }));
 // src/object-reference.ts
 var init_object_reference = __esmMin((() => {
@@ -24795,7 +24795,7 @@ var ArgumentsError = class extends Error {
 		this.code = code;
 	}
 };
-const fail$6 = (code) => {
+const fail$7 = (code) => {
 	throw new ArgumentsError(code);
 };
 const string$2 = (value) => typeof value === "string" && value.isWellFormed();
@@ -24803,17 +24803,17 @@ const reference = (value) => {
 	try {
 		return parseObjectReference(value);
 	} catch {
-		return fail$6("InvalidObjectReference");
+		return fail$7("InvalidObjectReference");
 	}
 };
 function parseArguments(argv) {
-	if (!Array.isArray(argv)) return fail$6("InvalidArguments");
+	if (!Array.isArray(argv)) return fail$7("InvalidArguments");
 	const argc = Array.isArray(argv) ? argv.length : -1;
-	if (!Number.isInteger(argc) || argc < 0 || argc > 256) fail$6("InvalidArguments");
+	if (!Number.isInteger(argc) || argc < 0 || argc > 256) fail$7("InvalidArguments");
 	const captured = [];
 	for (let index = 0; index < argc; index++) {
 		const value = argv[index];
-		if (!string$2(value)) fail$6("InvalidArguments");
+		if (!string$2(value)) fail$7("InvalidArguments");
 		captured.push(value);
 	}
 	if (captured.length === 1 && captured[0] === "--help") return Object.freeze({ command: "help" });
@@ -24826,7 +24826,7 @@ function parseArguments(argv) {
 		"images",
 		"extract-images",
 		"object"
-	].includes(command) && !Object.hasOwn(EXTENDED_OPTIONS, command)) fail$6("UnknownCommand");
+	].includes(command) && !Object.hasOwn(EXTENDED_OPTIONS, command)) fail$7("UnknownCommand");
 	if (captured.length === 2 && captured[1] === "--help") return Object.freeze({ command: "help" });
 	const definitions = {
 		read: [
@@ -24877,39 +24877,39 @@ function parseArguments(argv) {
 		}
 		if (!literal && arg.startsWith("-")) {
 			const match = /^--([a-z][a-z0-9-]*)(?:=(.*))?$/s.exec(arg);
-			if (!match || !allowed.has(match[1])) return fail$6("UnknownOption");
+			if (!match || !allowed.has(match[1])) return fail$7("UnknownOption");
 			const name = match[1];
-			if (options.has(name)) fail$6("DuplicateOption");
+			if (options.has(name)) fail$7("DuplicateOption");
 			if (name === "allow-stale-layout") {
-				if (match[2] !== void 0) fail$6("UnexpectedOptionValue");
+				if (match[2] !== void 0) fail$7("UnexpectedOptionValue");
 				options.set(name, "true");
 				continue;
 			}
 			const value = match[2] ?? captured[++i];
-			if (value === void 0 || match[2] === void 0 && value.startsWith("--")) fail$6("MissingOptionValue");
+			if (value === void 0 || match[2] === void 0 && value.startsWith("--")) fail$7("MissingOptionValue");
 			options.set(name, value);
 		} else positional.push(arg);
 	}
 	const wasm = options.get("wasm");
-	if (wasm !== void 0 && !wasm) fail$6("InvalidWasmPath");
-	if (Object.hasOwn(EXTENDED_OPTIONS, command)) return interpretExtendedArguments(command, options, positional, fail$6);
+	if (wasm !== void 0 && !wasm) fail$7("InvalidWasmPath");
+	if (Object.hasOwn(EXTENDED_OPTIONS, command)) return interpretExtendedArguments(command, options, positional, fail$7);
 	if (command === "read-many") {
-		if (positional.length < 1 || positional.length > BATCH_READ_LIMITS.maxInputs) fail$6("InvalidInputPaths");
+		if (positional.length < 1 || positional.length > BATCH_READ_LIMITS.maxInputs) fail$7("InvalidInputPaths");
 		const paths = /* @__PURE__ */ new Map();
 		for (const path of positional) {
-			if (!path || path === "-" || path.length > BATCH_READ_LIMITS.maxInputPathUnits) fail$6("InvalidInputPath");
-			for (let at = 0; at < path.length; at++) if (path.charCodeAt(at) < 32 || path.charCodeAt(at) === 127) fail$6("InvalidInputPath");
-			if (paths.has(path)) fail$6("DuplicateInputPath");
+			if (!path || path === "-" || path.length > BATCH_READ_LIMITS.maxInputPathUnits) fail$7("InvalidInputPath");
+			for (let at = 0; at < path.length; at++) if (path.charCodeAt(at) < 32 || path.charCodeAt(at) === 127) fail$7("InvalidInputPath");
+			if (paths.has(path)) fail$7("DuplicateInputPath");
 			paths.set(path, true);
 		}
 		const view = options.get("view") ?? "content";
-		if (view !== "content" && view !== "structure") return fail$6("InvalidReadView");
+		if (view !== "content" && view !== "structure") return fail$7("InvalidReadView");
 		const format = options.get("format") ?? "text";
-		if (format !== "text" && format !== "markdown") return fail$6("InvalidReadFormat");
+		if (format !== "text" && format !== "markdown") return fail$7("InvalidReadFormat");
 		const concurrency = options.get("concurrency") ?? "1";
-		if (!/^[12]$/.test(concurrency)) fail$6("InvalidConcurrency");
+		if (!/^[12]$/.test(concurrency)) fail$7("InvalidConcurrency");
 		const budget = options.get("max-output-bytes") ?? String(BATCH_READ_LIMITS.defaultOutputBytes);
-		if (!/^[1-9]\d*$/.test(budget) || !Number.isSafeInteger(Number(budget)) || Number(budget) > BATCH_READ_LIMITS.maxOutputBytes) fail$6("InvalidOutputBudget");
+		if (!/^[1-9]\d*$/.test(budget) || !Number.isSafeInteger(Number(budget)) || Number(budget) > BATCH_READ_LIMITS.maxOutputBytes) fail$7("InvalidOutputBudget");
 		return Object.freeze({
 			command,
 			inputPaths: Object.freeze([...positional]),
@@ -24920,14 +24920,14 @@ function parseArguments(argv) {
 			...wasm === void 0 ? {} : { wasm }
 		});
 	}
-	if (positional.length !== 1 || !positional[0] || positional[0] === "-") fail$6("ExpectedInputFile");
+	if (positional.length !== 1 || !positional[0] || positional[0] === "-") fail$7("ExpectedInputFile");
 	const input = positional[0];
 	if (command === "object") {
 		const ref = options.get("ref");
-		if (ref === void 0) return fail$6("InvalidObjectReference");
+		if (ref === void 0) return fail$7("InvalidObjectReference");
 		const parsed = reference(ref);
 		const format = options.get("format") ?? "text";
-		if (format !== "text" && format !== "markdown") return fail$6("InvalidReadFormat");
+		if (format !== "text" && format !== "markdown") return fail$7("InvalidReadFormat");
 		return Object.freeze({
 			command,
 			input,
@@ -24939,15 +24939,15 @@ function parseArguments(argv) {
 	}
 	if (command === "info" || command === "images" || command === "extract-images") {
 		let expected = options.get("expect-sha256");
-		if (expected !== void 0 && !/^[0-9a-f]{64}$/i.test(expected)) fail$6("InvalidExpectedSHA256");
+		if (expected !== void 0 && !/^[0-9a-f]{64}$/i.test(expected)) fail$7("InvalidExpectedSHA256");
 		let id = options.get("id");
-		if (id !== void 0 && (!id || id.length > 128)) fail$6("InvalidImageID");
-		if (id !== void 0 && expected === void 0) fail$6("ImageIDRequiresSHA256");
+		if (id !== void 0 && (!id || id.length > 128)) fail$7("InvalidImageID");
+		if (id !== void 0 && expected === void 0) fail$7("ImageIDRequiresSHA256");
 		const ref = options.get("ref");
 		if (ref !== void 0) {
-			if (options.has("id") || options.has("expect-sha256")) fail$6("ConflictingImageReference");
+			if (options.has("id") || options.has("expect-sha256")) fail$7("ConflictingImageReference");
 			const parsed = reference(ref);
-			if (parsed.kind !== "image") fail$6("ExpectedImageReference");
+			if (parsed.kind !== "image") fail$7("ExpectedImageReference");
 			expected = parsed.sourceSha256;
 			id = canonicalImageId(parsed);
 		}
@@ -24961,7 +24961,7 @@ function parseArguments(argv) {
 			...ref === void 0 ? {} : { reference: ref }
 		};
 		if (command === "extract-images") {
-			if (!output || output === "-") return fail$6("ExpectedOutputDirectory");
+			if (!output || output === "-") return fail$7("ExpectedOutputDirectory");
 			return Object.freeze({
 				...base,
 				command,
@@ -24975,9 +24975,9 @@ function parseArguments(argv) {
 	}
 	if (command === "read") {
 		const view = options.get("view") ?? "content";
-		if (view !== "content" && view !== "structure") return fail$6("InvalidReadView");
+		if (view !== "content" && view !== "structure") return fail$7("InvalidReadView");
 		const format = options.get("format") ?? "text";
-		if (format !== "text" && format !== "markdown") return fail$6("InvalidReadFormat");
+		if (format !== "text" && format !== "markdown") return fail$7("InvalidReadFormat");
 		return Object.freeze({
 			command,
 			input,
@@ -24986,28 +24986,28 @@ function parseArguments(argv) {
 			...wasm === void 0 ? {} : { wasm }
 		});
 	}
-	if (command !== "edit") return fail$6("UnknownCommand");
+	if (command !== "edit") return fail$7("UnknownCommand");
 	for (const key of [
 		"target",
 		"replace",
 		"with",
 		"expect-sha256",
 		"output"
-	]) if (!options.has(key)) fail$6("MissingRequiredOption:" + key);
+	]) if (!options.has(key)) fail$7("MissingRequiredOption:" + key);
 	let target;
 	try {
 		target = parseNativeTarget(options.get("target"));
 	} catch {
-		return fail$6("InvalidTarget");
+		return fail$7("InvalidTarget");
 	}
 	const replacement = options.get("replace");
-	if (!replacement) return fail$6("EmptySearch");
+	if (!replacement) return fail$7("EmptySearch");
 	const withText = options.get("with");
-	if (withText === void 0) return fail$6("MissingRequiredOption:with");
+	if (withText === void 0) return fail$7("MissingRequiredOption:with");
 	const expected = options.get("expect-sha256");
-	if (expected === void 0 || !/^[0-9a-f]{64}$/i.test(expected)) return fail$6("InvalidExpectedSHA256");
+	if (expected === void 0 || !/^[0-9a-f]{64}$/i.test(expected)) return fail$7("InvalidExpectedSHA256");
 	const output = options.get("output");
-	if (!output || output === "-") return fail$6("ExpectedOutputFile");
+	if (!output || output === "-") return fail$7("ExpectedOutputFile");
 	return Object.freeze({
 		command,
 		input,
@@ -25834,13 +25834,13 @@ function checkedObjectGeometrySelector(value) {
 		"section",
 		"node"
 	]);
-	if (!["chart", "drawing"].includes(p.kind) || !uint$59(p.section) || !uint$59(p.node)) throw Error("InvalidObjectGeometryTarget");
+	if (!["chart", "drawing"].includes(p.kind) || !uint$60(p.section) || !uint$60(p.node)) throw Error("InvalidObjectGeometryTarget");
 	return Object.freeze(p);
 }
 function checkedObjectGeometryPatch(value) {
 	const p = ownObjectGeometryRecord(value, fields$9, []);
 	for (const key of Object.keys(p)) if (key === "width" || key === "height") {
-		if (!uint$59(p[key]) || p[key] === 0) throw Error("InvalidObjectGeometrySize");
+		if (!uint$60(p[key]) || p[key] === 0) throw Error("InvalidObjectGeometrySize");
 	} else if (key === "treatAsCharacter") {
 		if (typeof p[key] !== "boolean") throw Error("InvalidObjectGeometryPlacement");
 	} else if (!signed$1(p[key])) throw Error("InvalidObjectGeometryOffset");
@@ -25862,14 +25862,14 @@ function checkedObjectGeometryOwner(value) {
 		p.ownerNode,
 		p.paragraph,
 		p.anchorUnit
-	].every(uint$59) || p.componentNode !== null && !uint$59(p.componentNode) || typeof p.link !== "string" || p.link.length === 0 || p.link.length > 8192) throw Error("InvalidObjectGeometryOwner");
+	].every(uint$60) || p.componentNode !== null && !uint$60(p.componentNode) || typeof p.link !== "string" || p.link.length === 0 || p.link.length > 8192) throw Error("InvalidObjectGeometryOwner");
 	if (!Array.isArray(p.sourceSha256) || Object.getPrototypeOf(p.sourceSha256) !== Array.prototype || p.sourceSha256.length !== 32) throw Error("InvalidObjectGeometryOwner");
 	const bytes = [];
 	const descriptors = Object.getOwnPropertyDescriptors(p.sourceSha256);
 	if (Reflect.ownKeys(descriptors).length !== 33) throw Error("InvalidObjectGeometryOwner");
 	for (let index = 0; index < 32; index++) {
 		const d = descriptors[index];
-		if (!d || !("value" in d) || !uint$59(d.value) || d.value > 255) throw Error("InvalidObjectGeometryOwner");
+		if (!d || !("value" in d) || !uint$60(d.value) || d.value > 255) throw Error("InvalidObjectGeometryOwner");
 		bytes.push(d.value);
 	}
 	return Object.freeze({
@@ -25903,7 +25903,7 @@ function checkedObjectGeometryObservation(value) {
 		binding: Object.freeze(binding)
 	});
 }
-var fields$9, uint$59, signed$1;
+var fields$9, uint$60, signed$1;
 var init_object_geometry_edit = __esmMin((() => {
 	fields$9 = [
 		"width",
@@ -25912,7 +25912,7 @@ var init_object_geometry_edit = __esmMin((() => {
 		"verticalOffset",
 		"treatAsCharacter"
 	];
-	uint$59 = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 4294967295 && !Object.is(value, -0);
+	uint$60 = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 4294967295 && !Object.is(value, -0);
 	signed$1 = (value) => Number.isSafeInteger(value) && value >= -2147483648 && value <= 2147483647 && !Object.is(value, -0);
 }));
 // ../../js/native-edit-outcome.mjs
@@ -26131,7 +26131,7 @@ function checkedHwp5OuterMarginsSelector(value) {
 		"node",
 		"kind"
 	]);
-	if (!uint$58(v.section) || !uint$58(v.node) || !["picture", "textbox"].includes(v.kind)) fail$5();
+	if (!uint$59(v.section) || !uint$59(v.node) || !["picture", "textbox"].includes(v.kind)) fail$6();
 	return Object.freeze(v);
 }
 function checkedHwp5OuterMarginsObservation(value) {
@@ -26150,7 +26150,7 @@ function checkedHwp5OuterMarginsObservation(value) {
 		"inline",
 		"ownerScope"
 	]);
-	if (v.schemaVersion !== 1 || v.format !== "hwp5" || !uint$58(v.historyRevision) || typeof v.editable !== "boolean" || typeof v.inline !== "boolean" || !Number.isInteger(v.wrapOrdinal) || v.wrapOrdinal < 0 || v.wrapOrdinal > 7 || v.reason !== null && (typeof v.reason !== "string" || v.reason.length > 256) || typeof v.ownerScope !== "string" || !/^h5-margins:[0-9a-f-]{36}$/.test(v.ownerScope)) fail$5();
+	if (v.schemaVersion !== 1 || v.format !== "hwp5" || !uint$59(v.historyRevision) || typeof v.editable !== "boolean" || typeof v.inline !== "boolean" || !Number.isInteger(v.wrapOrdinal) || v.wrapOrdinal < 0 || v.wrapOrdinal > 7 || v.reason !== null && (typeof v.reason !== "string" || v.reason.length > 256) || typeof v.ownerScope !== "string" || !/^h5-margins:[0-9a-f-]{36}$/.test(v.ownerScope)) fail$6();
 	const owner = record$20(v.owner, [
 		"control_node",
 		"component_node",
@@ -26167,8 +26167,8 @@ function checkedHwp5OuterMarginsObservation(value) {
 		"paragraph",
 		"anchor_unit",
 		"instance_id"
-	]) if (!uint$58(owner[k])) fail$5();
-	if (!Array.isArray(owner.source_sha256) || owner.source_sha256.length !== 32 || owner.source_sha256.some((n) => !uint$58(n) || n > 255)) fail$5();
+	]) if (!uint$59(owner[k])) fail$6();
+	if (!Array.isArray(owner.source_sha256) || owner.source_sha256.length !== 32 || owner.source_sha256.some((n) => !uint$59(n) || n > 255)) fail$6();
 	const t = record$20(v.ticket, [
 		"document",
 		"generation",
@@ -26176,8 +26176,8 @@ function checkedHwp5OuterMarginsObservation(value) {
 		"epoch"
 	]);
 	const margins = record$20(v.margins, keys$7);
-	for (const n of Object.values(margins)) if (!Number.isInteger(n) || Object.is(n, -0) || n < -32768 || n > 32767) fail$5();
-	if (v.editable && (v.inline || v.wrapOrdinal !== 0 || v.reason !== null)) fail$5();
+	for (const n of Object.values(margins)) if (!Number.isInteger(n) || Object.is(n, -0) || n < -32768 || n > 32767) fail$6();
+	if (v.editable && (v.inline || v.wrapOrdinal !== 0 || v.reason !== null)) fail$6();
 	return Object.freeze({
 		...v,
 		selector: checkedHwp5OuterMarginsSelector(v.selector),
@@ -26185,8 +26185,8 @@ function checkedHwp5OuterMarginsObservation(value) {
 			...owner,
 			source_sha256: Object.freeze([...owner.source_sha256])
 		}),
-		ticket: Object.freeze(Object.fromEntries(Object.entries(t).map(([k, n]) => [k, words$1(n)]))),
-		viewEpoch: words$1(v.viewEpoch),
+		ticket: Object.freeze(Object.fromEntries(Object.entries(t).map(([k, n]) => [k, words$2(n)]))),
+		viewEpoch: words$2(v.viewEpoch),
 		margins: Object.freeze(margins)
 	});
 }
@@ -26197,7 +26197,7 @@ function checkedHwp5OuterMarginsRequest(value) {
 		"margins"
 	]);
 	const witness = checkedHwp5OuterMarginsObservation(v.witness);
-	if (v.schemaVersion !== 1 || !witness.editable || witness.inline || witness.wrapOrdinal !== 0 || witness.reason !== null) fail$5();
+	if (v.schemaVersion !== 1 || !witness.editable || witness.inline || witness.wrapOrdinal !== 0 || witness.reason !== null) fail$6();
 	return Object.freeze({
 		schemaVersion: 1,
 		witness,
@@ -26231,7 +26231,7 @@ function createHwp5OuterMarginsApi({ wasm, memory, check }) {
 			try {
 				if (wasm.hwp5_edit_object_outer_margins(selected.section, selected.node, selected.kind === "picture" ? 0 : 1) !== 1) throw memory.error();
 				const n = wasm.hwp5_edit_output_len();
-				if (!uint$58(n) || n === 0 || n > 16384) fail$5();
+				if (!uint$59(n) || n === 0 || n > 16384) fail$6();
 				raw = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm.hwp5_edit_output_ptr(), n)));
 			} finally {
 				wasm.hwp5_edit_output_free();
@@ -26266,20 +26266,20 @@ function createHwp5OuterMarginsApi({ wasm, memory, check }) {
 				...v,
 				witness
 			}));
-			if (bytes.length > 16384) fail$5();
+			if (bytes.length > 16384) fail$6();
 			return applyNativeEdit(memory, bytes, (ptr, n) => wasm.hwp5_edit_set_object_outer_margins(ptr, n), "InvalidHwp5OuterMarginsResult");
 		}
 	};
 }
-var fail$5, uint$58, record$20, keys$7, words$1;
+var fail$6, uint$59, record$20, keys$7, words$2;
 var init_hwp5_object_outer_margins = __esmMin((() => {
 	init_object_geometry_edit();
 	init_object_outer_margins();
 	init_native_edit_outcome();
-	fail$5 = () => {
+	fail$6 = () => {
 		throw Error("InvalidHwp5OuterMargins");
 	};
-	uint$58 = (n) => Number.isInteger(n) && !Object.is(n, -0) && n >= 0 && n <= 4294967295;
+	uint$59 = (n) => Number.isInteger(n) && !Object.is(n, -0) && n >= 0 && n <= 4294967295;
 	record$20 = ownObjectGeometryRecord;
 	keys$7 = [
 		"left",
@@ -26287,8 +26287,213 @@ var init_hwp5_object_outer_margins = __esmMin((() => {
 		"top",
 		"bottom"
 	];
-	words$1 = (value) => {
+	words$2 = (value) => {
 		const v = record$20(value, ["lo", "hi"]);
+		if (!uint$59(v.lo) || !uint$59(v.hi)) fail$6();
+		return Object.freeze(v);
+	};
+}));
+// ../../js/hwp5-vertical-outer-margins.mjs
+function digest$5(value) {
+	if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype || value.length !== 32 || Reflect.ownKeys(value).length !== 33) fail$5();
+	const result = [];
+	for (let i = 0; i < 32; i++) {
+		const d = Object.getOwnPropertyDescriptor(value, String(i));
+		if (!d || !("value" in d) || !uint$58(d.value) || d.value > 255) fail$5();
+		result.push(d.value);
+	}
+	return Object.freeze(result);
+}
+function witness$1(value) {
+	const w = ownObjectGeometryRecord(value, [
+		"schemaVersion",
+		"format",
+		"selector",
+		"owner",
+		"ticket",
+		"viewEpoch",
+		"historyRevision",
+		"margins",
+		"editable",
+		"reason",
+		"wrapOrdinal",
+		"inline",
+		"ownerScope"
+	]);
+	if (w.schemaVersion !== 1 || w.format !== "hwp5" || !uint$58(w.historyRevision) || typeof w.editable !== "boolean" || typeof w.inline !== "boolean" || !uint$58(w.wrapOrdinal) || w.wrapOrdinal > 7 || w.reason !== null && (typeof w.reason !== "string" || w.reason.length > 256) || typeof w.ownerScope !== "string" || !/^h5-vertical-margins:[0-9a-f-]{36}$/.test(w.ownerScope)) fail$5();
+	const owner = ownObjectGeometryRecord(w.owner, [
+		"control_node",
+		"component_node",
+		"paragraph_node",
+		"paragraph",
+		"anchor_unit",
+		"instance_id",
+		"source_sha256"
+	]);
+	for (const k of [
+		"control_node",
+		"component_node",
+		"paragraph_node",
+		"paragraph",
+		"anchor_unit",
+		"instance_id"
+	]) if (!uint$58(owner[k])) fail$5();
+	const margins = ownObjectGeometryRecord(w.margins, [
+		"left",
+		"right",
+		"top",
+		"bottom"
+	]);
+	if (Object.values(margins).some((n) => !word(n))) fail$5();
+	const t = ownObjectGeometryRecord(w.ticket, [
+		"document",
+		"generation",
+		"owner",
+		"epoch"
+	]);
+	if (w.editable && (w.inline || w.wrapOrdinal !== 1 || w.reason !== null)) fail$5();
+	return Object.freeze({
+		...w,
+		selector: checkedHwp5OuterMarginsSelector(w.selector),
+		owner: Object.freeze({
+			...owner,
+			source_sha256: digest$5(owner.source_sha256)
+		}),
+		ticket: Object.freeze({
+			document: words$1(t.document),
+			generation: words$1(t.generation),
+			owner: words$1(t.owner),
+			epoch: words$1(t.epoch)
+		}),
+		viewEpoch: words$1(w.viewEpoch),
+		margins: Object.freeze(margins)
+	});
+}
+function checkedHwp5VerticalMarginsObservation(value) {
+	const v = ownObjectGeometryRecord(value, [
+		"schemaVersion",
+		"profile",
+		"witness"
+	]);
+	if (v.schemaVersion !== 1 || v.profile !== "hwp5-observed-vertical-outer-margins-v1") fail$5();
+	return Object.freeze({
+		...v,
+		witness: witness$1(v.witness)
+	});
+}
+function checkedHwp5VerticalMarginsRequest(value) {
+	const v = ownObjectGeometryRecord(value, [
+		"schemaVersion",
+		"profile",
+		"witness",
+		"top",
+		"bottom"
+	]);
+	const observed = checkedHwp5VerticalMarginsObservation({
+		schemaVersion: v.schemaVersion,
+		profile: v.profile,
+		witness: v.witness
+	});
+	const w = observed.witness;
+	if (!w.editable || w.inline || w.wrapOrdinal !== 1 || w.reason !== null) fail$5();
+	if (!word(v.top) || !word(v.bottom) || v.top < 0 && v.top !== w.margins.top || v.bottom < 0 && v.bottom !== w.margins.bottom) fail$5();
+	return Object.freeze({
+		...observed,
+		top: v.top,
+		bottom: v.bottom
+	});
+}
+function createHwp5VerticalMarginsApi({ wasm, memory, check }) {
+	let ownerScope = null;
+	try {
+		const nonce = globalThis.crypto?.randomUUID?.();
+		if (typeof nonce === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(nonce)) ownerScope = `h5-vertical-margins:${nonce.toLowerCase()}`;
+	} catch {}
+	const version = "hwp5_edit_vertical_outer_margins_version";
+	const read = "hwp5_edit_vertical_outer_margins";
+	const write = "hwp5_edit_set_vertical_outer_margins";
+	const supported = () => !!ownerScope && [
+		version,
+		read,
+		write
+	].every((k) => typeof wasm[k] === "function") && wasm[version]() === 1;
+	const ready = () => {
+		check();
+		if (!supported()) throw Error("Hwp5VerticalMarginsUnavailable");
+	};
+	return {
+		supportsVerticalObjectOuterMargins() {
+			check();
+			return supported();
+		},
+		verticalObjectOuterMargins(value) {
+			ready();
+			const s = checkedHwp5OuterMarginsSelector(value);
+			let raw;
+			try {
+				if (wasm[read](s.section, s.node, s.kind === "picture" ? 0 : 1) !== 1) throw memory.error();
+				const n = wasm.hwp5_edit_output_len();
+				if (!uint$58(n) || n === 0 || n > 16384) fail$5();
+				raw = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm.hwp5_edit_output_ptr(), n)));
+			} finally {
+				wasm.hwp5_edit_output_free();
+			}
+			const r = ownObjectGeometryRecord(raw, [
+				"schemaVersion",
+				"profile",
+				"witness"
+			]);
+			const nativeWitness = ownObjectGeometryRecord(r.witness, [
+				"schemaVersion",
+				"format",
+				"selector",
+				"owner",
+				"ticket",
+				"viewEpoch",
+				"historyRevision",
+				"margins",
+				"editable",
+				"reason",
+				"wrapOrdinal",
+				"inline"
+			]);
+			const observed = checkedHwp5VerticalMarginsObservation({
+				...r,
+				witness: {
+					...nativeWitness,
+					ownerScope
+				}
+			});
+			const selected = observed.witness.selector;
+			if (selected.section !== s.section || selected.node !== s.node || selected.kind !== s.kind) throw Error("Hwp5VerticalMarginsBindingMismatch");
+			return observed;
+		},
+		setVerticalObjectOuterMargins(value) {
+			ready();
+			const r = checkedHwp5VerticalMarginsRequest(value);
+			if (r.witness.ownerScope !== ownerScope) throw Error("ForeignHwp5VerticalMarginsOwner");
+			const { ownerScope: _scope, ...nativeWitness } = r.witness;
+			const bytes = new TextEncoder().encode(JSON.stringify({
+				...r,
+				witness: nativeWitness
+			}));
+			if (bytes.length > 16384) fail$5();
+			return applyNativeEdit(memory, bytes, (ptr, n) => wasm[write](ptr, n), "InvalidHwp5VerticalMarginsResult");
+		}
+	};
+}
+var fail$5, uint$58, word, words$1;
+var init_hwp5_vertical_outer_margins = __esmMin((() => {
+	init_object_geometry_edit();
+	init_hwp5_object_outer_margins();
+	init_native_edit_outcome();
+	fail$5 = () => {
+		throw Error("InvalidHwp5VerticalMargins");
+	};
+	uint$58 = (n) => Number.isInteger(n) && !Object.is(n, -0) && n >= 0 && n <= 4294967295;
+	word = (n) => Number.isInteger(n) && !Object.is(n, -0) && n >= -32768 && n <= 32767;
+	words$1 = (value) => {
+		const v = ownObjectGeometryRecord(value, ["lo", "hi"]);
 		if (!uint$58(v.lo) || !uint$58(v.hi)) fail$5();
 		return Object.freeze(v);
 	};
@@ -27713,6 +27918,24 @@ var init_abi_schema = __esmMin((() => {
 			results: ["i32"]
 		}),
 		hwp5_edit_set_object_outer_margins: Object.freeze({
+			params: ["i32", "i32"],
+			results: ["i32"]
+		})
+	});
+	Object.freeze({
+		hwp5_edit_vertical_outer_margins_version: Object.freeze({
+			params: [],
+			results: ["i32"]
+		}),
+		hwp5_edit_vertical_outer_margins: Object.freeze({
+			params: [
+				"i32",
+				"i32",
+				"i32"
+			],
+			results: ["i32"]
+		}),
+		hwp5_edit_set_vertical_outer_margins: Object.freeze({
 			params: ["i32", "i32"],
 			results: ["i32"]
 		})
@@ -39060,6 +39283,11 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			memory,
 			check
 		}),
+		...createHwp5VerticalMarginsApi({
+			wasm,
+			memory,
+			check
+		}),
 		...createPageSettingsEditApi({
 			wasm,
 			memory,
@@ -40076,6 +40304,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 }
 var encoder$9, decoder, u32$2;
 var init_hwp5_editor = __esmMin((() => {
+	init_hwp5_vertical_outer_margins();
 	init_hwp5_object_outer_margins();
 	init_created_cell_properties_api();
 	init_hwp5_strict_layout_transport();

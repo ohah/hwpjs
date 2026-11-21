@@ -1,4 +1,8 @@
 import {
+  hwp5VerticalMarginsBackendQualified,
+  copyHwp5VerticalMarginsModuleBytes,
+} from '../../../js/hwp5-vertical-margins-qualification.mjs';
+import {
   createNativeReadSourceLifecycle,
   bindNativeReadSourceRuntime,
 } from './internal/native-read-source-origin.ts';
@@ -78,7 +82,8 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
     tainted = false,
     poisoned = false,
     blobURL: string | undefined,
-    contract: NativeModuleContract | undefined;
+    contract: NativeModuleContract | undefined,
+    verticalModule: WebAssembly.Module | undefined;
   const trustedReplies = new WeakSet<object>();
   const transportWitness = createNativeWorkerWitness();
   const pending = new Map<
@@ -87,7 +92,7 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
     >(),
     proofs = new WeakMap<object, NativeRuntimeOrigin>();
   let runtime: EditorRuntime;
-  const valid = () => {
+  const trustedTransport = () => {
     if (canonicalCode && !custom && !transportWitness.current(worker)) tainted = true;
     if (!canonicalRuntimeDescriptors(runtime, request, dispose, Object.prototype)) tainted = true;
     return (
@@ -96,10 +101,12 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
       !poisoned &&
       !custom &&
       canonicalCode &&
-      !!contract &&
       transportWitness.current(worker)
     );
   };
+  const valid = () => trustedTransport() && !!contract;
+  const verticalValid = () =>
+    trustedTransport() && hwp5VerticalMarginsBackendQualified(verticalModule);
   const readSources = createNativeReadSourceLifecycle(() => contract, valid);
   const rejectAll = (e: Error) => {
     for (const item of pending.values()) item.reject(e);
@@ -208,8 +215,22 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
     .then(load)
     .then(async (module) => {
       contract = readKnownNativeModule(module);
+      verticalModule = module;
       await canonicalWorker();
-      return send({ kind: 'initialize-runtime', wasmModule: module, referenceScope });
+      const verticalBytes = trustedTransport()
+        ? copyHwp5VerticalMarginsModuleBytes(module)
+        : undefined;
+      return send(
+        {
+          kind: 'initialize-runtime',
+          wasmModule: module,
+          referenceScope,
+          ...(verticalBytes ? { hwp5VerticalMarginsModuleBytes: verticalBytes } : {}),
+        },
+        undefined,
+        false,
+        verticalBytes ? [verticalBytes.buffer as ArrayBuffer] : undefined,
+      );
     });
   void ready.catch((e) => shutdown(e instanceof Error ? e : Error(String(e))));
   async function request(message: RuntimeMessage, context?: RuntimeRequestContext) {
@@ -279,6 +300,10 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
     (kind) =>
       !closed &&
       !poisoned &&
+      (!['hwp5-vertical-object-margins-query', 'hwp5-vertical-object-margins-set'].includes(
+        kind ?? '',
+      ) ||
+        verticalValid()) &&
       !custom &&
       (![
         'picture-replacement-query',

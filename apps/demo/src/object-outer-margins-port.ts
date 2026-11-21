@@ -1,5 +1,9 @@
 import { outerMarginDraft, outerMarginFields } from './object-outer-margins-input.ts';
 import {
+  createHwp5VerticalMarginsAdapter,
+  isHwp5VerticalMarginsRead,
+} from './hwp5-vertical-margins-adapter.ts';
+import {
   SET_OBJECT_OUTER_MARGINS_COMMAND,
   type HeadlessEditor,
   type EditorState,
@@ -13,6 +17,7 @@ export type ObjectOuterMarginsEditor = Pick<
   'getEditorState' | 'getObjectOuterMargins' | 'dispatchCommand'
 >;
 export interface ObjectOuterMarginsCapture {
+  readonly hwp5Vertical?: true;
   readonly state: EditorState;
   readonly token: StateToken;
   readonly stateVersion: number;
@@ -66,6 +71,7 @@ export function createObjectOuterMarginsPort(
   editor: ObjectOuterMarginsEditor,
   drawingCurrent: () => boolean,
 ) {
+  editor = createHwp5VerticalMarginsAdapter(editor);
   const captures = new WeakMap<ObjectOuterMarginsCapture, { used: boolean }>();
   const current = (capture: ObjectOuterMarginsCapture) => {
     try {
@@ -126,9 +132,11 @@ export function createObjectOuterMarginsPort(
         };
       if (!ownerMatches(state, selector, read))
         throw Error('선택한 개체의 바깥 여백을 확인할 수 없습니다.');
+      const hwp5Vertical = isHwp5VerticalMarginsRead(read);
       if (
         Object.hasOwn(read.observation, 'verticalOnly') &&
-        (read.observation.verticalOnly !== true || read.observation.format !== 'hwpx')
+        (read.observation.verticalOnly !== true ||
+          (read.observation.format !== 'hwpx' && !hwp5Vertical))
       )
         throw Error('선택한 개체의 바깥 여백을 확인할 수 없습니다.');
       outerMarginDraft(read.observation.margins, read.observation.format);
@@ -138,6 +146,7 @@ export function createObjectOuterMarginsPort(
         observation: Object.freeze({ ...read.observation, margins }),
       });
       const capture = Object.freeze({
+        ...(hwp5Vertical ? { hwp5Vertical: true as const } : {}),
         state,
         token,
         stateVersion,
@@ -154,6 +163,15 @@ export function createObjectOuterMarginsPort(
         dispatch = editor.dispatchCommand;
       for (const field of outerMarginFields) {
         const value = values[field];
+        if (
+          capture.hwp5Vertical &&
+          value === capture.read.observation.margins[field] &&
+          Number.isSafeInteger(value) &&
+          value >= -32768 &&
+          value <= 32767 &&
+          !Object.is(value, -0)
+        )
+          continue;
         if (!Number.isSafeInteger(value) || value < 0 || value > 32767 || Object.is(value, -0))
           throw Error('바깥 여백을 0 이상으로 수정해주세요.');
       }
