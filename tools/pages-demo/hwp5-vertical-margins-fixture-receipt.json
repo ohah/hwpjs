@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "feature": "hwp5-vertical-margins",
+  "baseCount": 129,
+  "targetCount": 131,
+  "baseManifestSHA256": "4c53de92a3c013501ec300bb786d355eea3af85519344ecfc14a30f43326c7c7",
+  "basePolicySHA256": "c77d4c59e1c9c96891f41ca44daff3f2c4109f5def820ad4e30fcbeb78fdcc6f",
+  "baseCatalogSHA256": "dbb041d9f363e77633f1112febc121fcec6f549a9bb61b4d35d19cddc3b805b8",
+  "targetPolicyPath": "tools/pages-demo/hwp5-vertical-margins-fixture-policy.json",
+  "targetPolicySHA256": "559be118c0cff5a12265077f2d3e4ba40cdaf992a6aecaab90fd9878eaef2bb1",
+  "targetCatalogSHA256": "65b4a52f58436e319a8a933fc2eaedc97ee8c213bbd22da7c0bcedb30265dd71",
+  "additions": [
+    {
+      "row": {
+        "id": "hwp5-picture-vertical-margins.hwp",
+        "name": "hwp5-picture-vertical-margins.hwp",
+        "label": "[기능 예제] HWP5 그림 위아래 여백",
+        "path": "fixtures/hwp5-picture-vertical-margins.hwp",
+        "bytes": 5120,
+        "sha256": "3052312cbf0d379b32af378a12cbc3b8b913d23770043744a2a1c56d214d308f"
+      },
+      "sourcePath": "tools/pages-demo/fixtures/hwp5-picture-vertical-margins.hwp",
+      "parentId": "picture-resize.hwp",
+      "parentBytes": 4096,
+      "parentSHA256": "6b2010227e9d6cd41c242e0a29281eddb58f8f618c5df137c4ca3d518665dda2",
+      "provenanceSHA256": "6766a8d2675145d8cbd1b7e0ffc38aaa80f6a2bef4ba2251b85197bfa836f44f"
+    },
+    {
+      "row": {
+        "id": "hwp5-textbox-vertical-margins.hwp",
+        "name": "hwp5-textbox-vertical-margins.hwp",
+        "label": "[기능 예제] HWP5 글상자 위아래 여백",
+        "path": "fixtures/hwp5-textbox-vertical-margins.hwp",
+        "bytes": 14336,
+        "sha256": "33cd713be59fb751dc9af6f6f9aeda2995015fcf64972c8763cf9721e77114cc"
+      },
+      "sourcePath": "tools/pages-demo/fixtures/hwp5-textbox-vertical-margins.hwp",
+      "parentId": "textbox.hwp",
+      "parentBytes": 14336,
+      "parentSHA256": "905eeea44ec0a0bb59f1fc47d514cbc6c55207f588ec80813056d3a09e3219e7",
+      "provenanceSHA256": "7e9e0855d9f2852369d3d6f89a90094b548851a53a33b6ecde05ee14d005de09"
+    }
+  ],
+  "producer": {
+    "authoringReceiptSHA256": "513aebd41443eabf1b2eb42a4bbe048ffb09a92f935904c44c40805640618646",
+    "sdkWasmSHA256": "d252ac5a853fdd185aa31ee5445f985d358a04be0c0dcee1be527ae49f8929a9"
+  }
+}

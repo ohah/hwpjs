@@ -14,7 +14,18 @@ const knownReceipt = {
   additions: 2,
 };
 export const HWP5_LINE_CHART_RECEIPT = 'tools/pages-demo/hwp5-line-chart-fixture-receipt.json';
+export const HWP5_VERTICAL_MARGINS_RECEIPT =
+  'tools/pages-demo/hwp5-vertical-margins-fixture-receipt.json';
 const approvedReceipts = new Map([
+  [
+    HWP5_VERTICAL_MARGINS_RECEIPT,
+    {
+      feature: 'hwp5-vertical-margins',
+      sha256: '1471bf7fc065e8c058ce09a2fe5818ed72590c686675e3c99740f66c14d92a6f',
+      baselinePolicy: 'tools/pages-demo/public-gallery-fixtures-129.json',
+      additions: 2,
+    },
+  ],
   [HWP5_MARGIN_RECEIPT, knownReceipt],
   [
     HWP5_LINE_CHART_RECEIPT,

@@ -772,5 +772,17 @@
     "name": "hwp5-chart-create-line.hwp",
     "label": "[기능 예제] HWP5 꺾은선 차트",
     "available": true
+  },
+  {
+    "id": "hwp5-picture-vertical-margins.hwp",
+    "name": "hwp5-picture-vertical-margins.hwp",
+    "label": "[기능 예제] HWP5 그림 위아래 여백",
+    "available": true
+  },
+  {
+    "id": "hwp5-textbox-vertical-margins.hwp",
+    "name": "hwp5-textbox-vertical-margins.hwp",
+    "label": "[기능 예제] HWP5 글상자 위아래 여백",
+    "available": true
   }
 ]

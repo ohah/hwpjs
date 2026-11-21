@@ -7,6 +7,7 @@ import { resolve } from 'node:path';
 import {
   CURRENT_PUBLIC_FIXTURE_POLICY,
   HWP5_LINE_CHART_RECEIPT,
+  HWP5_VERTICAL_MARGINS_RECEIPT,
   HWP5_MARGIN_BASE_POLICY,
   HWP5_MARGIN_RECEIPT,
   loadPublicFixtureBaselinePolicy,
@@ -37,10 +38,10 @@ test('archived128 is the exact approved margin target and archived126 remains th
     'ce88245934d54e71730dac64770ab71dced91a6b627ac920eae4ee58a7c7f243',
   );
 });
-test('active129 appends only the approved line file and preserves the archived basis', async () => {
+test('archived129 appends only the approved line file and preserves the archived basis', async () => {
   const receiptPath = resolve(root, HWP5_LINE_CHART_RECEIPT);
   const baseline = await loadPublicFixtureBaselinePolicy({ root, receiptPath, read: readFile });
-  const current = await bytes('public-gallery-fixtures.json');
+  const current = await bytes('public-gallery-fixtures-129.json');
   const receipt = JSON.parse(await readFile(receiptPath));
   assert.equal(sha(baseline), receipt.basePolicySHA256);
   assert.equal(sha(current), receipt.targetPolicySHA256);
@@ -53,7 +54,21 @@ test('active129 appends only the approved line file and preserves the archived b
     receipt.additions[0].row.sha256,
   );
 });
-test('actual producer policy reader defaults to129 and historical margin extension uses126 without touching the receipt', async () => {
+test('active131 appends the exact vertical-margin samples to the archived129', async () => {
+  const receiptPath = resolve(root, HWP5_VERTICAL_MARGINS_RECEIPT);
+  const baseline = await loadPublicFixtureBaselinePolicy({ root, receiptPath, read: readFile });
+  const current = await bytes('public-gallery-fixtures.json');
+  const receipt = JSON.parse(await readFile(receiptPath));
+  assert.equal(sha(baseline), receipt.basePolicySHA256);
+  assert.equal(sha(current), receipt.targetPolicySHA256);
+  assert.deepEqual(JSON.parse(current).files, [
+    ...JSON.parse(baseline).files,
+    ...receipt.additions.map((item) => item.row),
+  ]);
+  for (const item of receipt.additions)
+    assert.equal(sha(await readFile(resolve(root, item.sourcePath))), item.row.sha256);
+});
+test('actual producer policy reader defaults to131 and historical margin extension uses126 without touching the receipt', async () => {
   for (const extension of [undefined, resolve(root, HWP5_MARGIN_RECEIPT)]) {
     const reads = [];
     const data = await loadPublicFixtureBaselinePolicy({
@@ -70,7 +85,7 @@ test('actual producer policy reader defaults to129 and historical margin extensi
         extension === undefined ? CURRENT_PUBLIC_FIXTURE_POLICY : HWP5_MARGIN_BASE_POLICY,
       ),
     ]);
-    assert.equal(JSON.parse(data).files.length, extension === undefined ? 129 : 126);
+    assert.equal(JSON.parse(data).files.length, extension === undefined ? 131 : 126);
   }
   let extra = 0;
   assert.equal(
@@ -86,15 +101,22 @@ test('actual producer policy reader defaults to129 and historical margin extensi
   );
   assert.equal(extra, 0);
 });
-test('current129 source metadata covers every exact ID without rewriting historical sourceHEAD', async () => {
-  const [policyBytes, sourceBytes, historicalBytes, receiptBytes, lineReceiptBytes] =
-    await Promise.all([
-      bytes('public-gallery-fixtures.json'),
-      bytes('public-gallery-current-sources.json'),
-      bytes('public-gallery-sources.json'),
-      bytes('hwp5-outer-margins-fixture-receipt.json'),
-      bytes('hwp5-line-chart-fixture-receipt.json'),
-    ]);
+test('current131 source metadata covers every exact ID without rewriting historical sourceHEAD', async () => {
+  const [
+    policyBytes,
+    sourceBytes,
+    historicalBytes,
+    receiptBytes,
+    lineReceiptBytes,
+    verticalReceiptBytes,
+  ] = await Promise.all([
+    bytes('public-gallery-fixtures.json'),
+    bytes('public-gallery-current-sources.json'),
+    bytes('public-gallery-sources.json'),
+    bytes('hwp5-outer-margins-fixture-receipt.json'),
+    bytes('hwp5-line-chart-fixture-receipt.json'),
+    bytes('hwp5-vertical-margins-fixture-receipt.json'),
+  ]);
   const policy = JSON.parse(policyBytes),
     current = JSON.parse(sourceBytes),
     historic = JSON.parse(historicalBytes),
@@ -106,13 +128,15 @@ test('current129 source metadata covers every exact ID without rewriting histori
     Object.keys(current.sourcePaths),
     policy.files.map((r) => r.id),
   );
-  assert.equal(Object.keys(current.sourcePaths).length, 129);
+  assert.equal(Object.keys(current.sourcePaths).length, 131);
   assert.equal('sourceHEAD' in current, false);
   assert.equal(historic.sourceHEAD, '8376bd004580d2429a52be544a1706210a21b0fd');
   for (const row of policy.files) {
-    const addition = [...receipt.additions, ...JSON.parse(lineReceiptBytes).additions].find(
-      (a) => a.row.id === row.id,
-    );
+    const addition = [
+      ...receipt.additions,
+      ...JSON.parse(lineReceiptBytes).additions,
+      ...JSON.parse(verticalReceiptBytes).additions,
+    ].find((a) => a.row.id === row.id);
     assert.equal(
       current.sourcePaths[row.id],
       addition ? addition.sourcePath : 'apps/docs/docs/public/editor/' + row.path,

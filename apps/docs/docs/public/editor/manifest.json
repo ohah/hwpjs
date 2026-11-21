@@ -151,7 +151,9 @@
     "chart-create-surface3DChart.hwpx",
     "hwp5-picture-outer-margins.hwp",
     "hwp5-textbox-outer-margins.hwp",
-    "hwp5-chart-create-line.hwp"
+    "hwp5-chart-create-line.hwp",
+    "hwp5-picture-vertical-margins.hwp",
+    "hwp5-textbox-vertical-margins.hwp"
   ],
   "wasmSha256": "d252ac5a853fdd185aa31ee5445f985d358a04be0c0dcee1be527ae49f8929a9",
   "licenses": {
@@ -4074,6 +4076,11 @@
       "sha256": "2e53661470fb2906c94e97c713c5011ea60fb6104652034074dce4d91e5fc667"
     },
     {
+      "path": "assets/main-DTatuqPN.js",
+      "bytes": 967604,
+      "sha256": "cad48a06a62d0743d6739cb9d30d61972fad86f8e278b1f89ae8854b05322f4f"
+    },
+    {
       "path": "assets/main-DUnnQRW3.js",
       "bytes": 592208,
       "sha256": "62a2b1ad9125945f9952e4483a9f2c410d877469dcff2d8e2b4ff872f0242720"
@@ -5171,32 +5178,32 @@
     {
       "path": "demo/headless/index.html",
       "bytes": 1283,
-      "sha256": "b9c685e5e889c3ce9b85d59764967933ddd06d808accf653a58a390a35af2a14"
+      "sha256": "5c47f774876e0955c0f6bde5790bf03436504783e0856287f12cf3c93859d3f6"
     },
     {
       "path": "demo/react/index.html",
       "bytes": 1283,
-      "sha256": "b9c685e5e889c3ce9b85d59764967933ddd06d808accf653a58a390a35af2a14"
+      "sha256": "5c47f774876e0955c0f6bde5790bf03436504783e0856287f12cf3c93859d3f6"
     },
     {
       "path": "demo/svelte/index.html",
       "bytes": 1283,
-      "sha256": "b9c685e5e889c3ce9b85d59764967933ddd06d808accf653a58a390a35af2a14"
+      "sha256": "5c47f774876e0955c0f6bde5790bf03436504783e0856287f12cf3c93859d3f6"
     },
     {
       "path": "demo/vanilla/index.html",
       "bytes": 1283,
-      "sha256": "b9c685e5e889c3ce9b85d59764967933ddd06d808accf653a58a390a35af2a14"
+      "sha256": "5c47f774876e0955c0f6bde5790bf03436504783e0856287f12cf3c93859d3f6"
     },
     {
       "path": "fixture-catalog.json",
-      "bytes": 17631,
-      "sha256": "dbb041d9f363e77633f1112febc121fcec6f549a9bb61b4d35d19cddc3b805b8"
+      "bytes": 18010,
+      "sha256": "65b4a52f58436e319a8a933fc2eaedc97ee8c213bbd22da7c0bcedb30265dd71"
     },
     {
       "path": "fixture-policy.json",
-      "bytes": 35679,
-      "sha256": "c77d4c59e1c9c96891f41ca44daff3f2c4109f5def820ad4e30fcbeb78fdcc6f"
+      "bytes": 36363,
+      "sha256": "559be118c0cff5a12265077f2d3e4ba40cdaf992a6aecaab90fd9878eaef2bb1"
     },
     {
       "path": "fixtures/083de85813a1c050-noori.hwpx",
@@ -5469,9 +5476,19 @@
       "sha256": "f1d809c2f6ff56bf09ae3eb1578cf57261051308eb9e101d6ef51af08884ba76"
     },
     {
+      "path": "fixtures/hwp5-picture-vertical-margins.hwp",
+      "bytes": 5120,
+      "sha256": "3052312cbf0d379b32af378a12cbc3b8b913d23770043744a2a1c56d214d308f"
+    },
+    {
       "path": "fixtures/hwp5-textbox-outer-margins.hwp",
       "bytes": 14336,
       "sha256": "2b8f1c51eb2505e911f20331c7e0d113e33c663451562bec63cc53f19bdd74d6"
+    },
+    {
+      "path": "fixtures/hwp5-textbox-vertical-margins.hwp",
+      "bytes": 14336,
+      "sha256": "33cd713be59fb751dc9af6f6f9aeda2995015fcf64972c8763cf9721e77114cc"
     },
     {
       "path": "fixtures/hwpSummaryInformation.hwp",
@@ -5851,7 +5868,7 @@
     {
       "path": "index.html",
       "bytes": 1235,
-      "sha256": "aa12edbfe282385015714a9d6c23147d3d861be02be421d4bf8e45120c05f1f8"
+      "sha256": "32d4a3081c5266848b3ebbce9d91b0460b896dfb17dc618079064fec5828e0f4"
     },
     {
       "path": "LICENSE.txt",
@@ -8054,8 +8071,20 @@
       "bytes": 5661
     },
     {
+      "sha256": "1471bf7fc065e8c058ce09a2fe5818ed72590c686675e3c99740f66c14d92a6f",
+      "bytes": 2291
+    },
+    {
       "sha256": "2a4c2e9a315ae209d1b4af7b691d15d980b9cd0859e31c6bc48f285f57f11e56",
       "bytes": 1086
+    },
+    {
+      "sha256": "3052312cbf0d379b32af378a12cbc3b8b913d23770043744a2a1c56d214d308f",
+      "bytes": 5120
+    },
+    {
+      "sha256": "33cd713be59fb751dc9af6f6f9aeda2995015fcf64972c8763cf9721e77114cc",
+      "bytes": 14336
     },
     {
       "sha256": "38717a1a927ef798837cb3366d3ce37dd534377c6e06af93b3b3e9dfc4288e79",
@@ -8064,6 +8093,10 @@
     {
       "sha256": "48fe050d8fbda599c75c18ad670fcda7d8bf323053a1b093e391803bb879e6a4",
       "bytes": 186
+    },
+    {
+      "sha256": "559be118c0cff5a12265077f2d3e4ba40cdaf992a6aecaab90fd9878eaef2bb1",
+      "bytes": 36363
     },
     {
       "sha256": "61462c3026e68493bf37cbfeea891d62494a481dc586a8b43ab4c26191d7c0f1",
@@ -8076,10 +8109,6 @@
     {
       "sha256": "646a43e440a357ebf8c8d1632550f4443155d4474cbc34d319ec6b2e8ebda9b9",
       "bytes": 106961
-    },
-    {
-      "sha256": "6dc6c78f1a838eb92b0001c2d1c477edf86bf6dc59286b408a3ac76746fffa99",
-      "bytes": 1608
     },
     {
       "sha256": "7b179774d6cd4ce3a2fac04d05affce84289cbd6214db7622fb9fa5b4f37e67c",
@@ -8110,16 +8139,8 @@
       "bytes": 331
     },
     {
-      "sha256": "c4bcb277b5eca63878a984aef3592675dd132330ef8b9a05da779a9f357e2d63",
-      "bytes": 15360
-    },
-    {
       "sha256": "c66263e9af5d88834a8bef388b518a96af73acad88270b1eabf4febb6c4a08ea",
       "bytes": 27844
-    },
-    {
-      "sha256": "c77d4c59e1c9c96891f41ca44daff3f2c4109f5def820ad4e30fcbeb78fdcc6f",
-      "bytes": 35679
     },
     {
       "sha256": "d252ac5a853fdd185aa31ee5445f985d358a04be0c0dcee1be527ae49f8929a9",
@@ -8163,13 +8184,13 @@
     }
   ],
   "fixtureExtension": {
-    "feature": "hwp5-line-chart",
-    "receiptSHA256": "6dc6c78f1a838eb92b0001c2d1c477edf86bf6dc59286b408a3ac76746fffa99",
-    "baseManifestSHA256": "df02b5a0a53b8b363f3e859fc74f7583982b390122805134187b8d185ea4f378",
-    "basePolicySHA256": "6936857b2bcce1fbbf09621e56b127b970e68b398a109cc50f09e8528e3bd3be",
-    "targetPolicySHA256": "c77d4c59e1c9c96891f41ca44daff3f2c4109f5def820ad4e30fcbeb78fdcc6f",
-    "catalogSHA256": "dbb041d9f363e77633f1112febc121fcec6f549a9bb61b4d35d19cddc3b805b8",
-    "baseCount": 128,
-    "targetCount": 129
+    "feature": "hwp5-vertical-margins",
+    "receiptSHA256": "1471bf7fc065e8c058ce09a2fe5818ed72590c686675e3c99740f66c14d92a6f",
+    "baseManifestSHA256": "4c53de92a3c013501ec300bb786d355eea3af85519344ecfc14a30f43326c7c7",
+    "basePolicySHA256": "c77d4c59e1c9c96891f41ca44daff3f2c4109f5def820ad4e30fcbeb78fdcc6f",
+    "targetPolicySHA256": "559be118c0cff5a12265077f2d3e4ba40cdaf992a6aecaab90fd9878eaef2bb1",
+    "catalogSHA256": "65b4a52f58436e319a8a933fc2eaedc97ee8c213bbd22da7c0bcedb30265dd71",
+    "baseCount": 129,
+    "targetCount": 131
   }
 }

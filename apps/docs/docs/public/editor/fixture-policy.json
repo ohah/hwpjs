@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "catalogSHA256": "dbb041d9f363e77633f1112febc121fcec6f549a9bb61b4d35d19cddc3b805b8",
+  "catalogSHA256": "65b4a52f58436e319a8a933fc2eaedc97ee8c213bbd22da7c0bcedb30265dd71",
   "files": [
     {
       "id": "image-insert-blank.hwp",
@@ -1033,6 +1033,22 @@
       "path": "fixtures/hwp5-chart-create-line.hwp",
       "bytes": 15360,
       "sha256": "c4bcb277b5eca63878a984aef3592675dd132330ef8b9a05da779a9f357e2d63"
+    },
+    {
+      "id": "hwp5-picture-vertical-margins.hwp",
+      "name": "hwp5-picture-vertical-margins.hwp",
+      "label": "[기능 예제] HWP5 그림 위아래 여백",
+      "path": "fixtures/hwp5-picture-vertical-margins.hwp",
+      "bytes": 5120,
+      "sha256": "3052312cbf0d379b32af378a12cbc3b8b913d23770043744a2a1c56d214d308f"
+    },
+    {
+      "id": "hwp5-textbox-vertical-margins.hwp",
+      "name": "hwp5-textbox-vertical-margins.hwp",
+      "label": "[기능 예제] HWP5 글상자 위아래 여백",
+      "path": "fixtures/hwp5-textbox-vertical-margins.hwp",
+      "bytes": 14336,
+      "sha256": "33cd713be59fb751dc9af6f6f9aeda2995015fcf64972c8763cf9721e77114cc"
     }
   ]
 }

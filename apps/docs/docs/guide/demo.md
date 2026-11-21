@@ -175,3 +175,7 @@ HWPX 문서에서 지원되는 본문 글상자의 테두리를 더블클릭해 
 [SDK에서 여백 조회·적용하기](../api/editor.md#hwp5-그림과-글상자의-바깥-여백)
 
 예제의 출처와 정책 반영 범위는 [공개 갤러리 파생 예제 계약](https://github.com/ohah/hwpjs/blob/main/docs/public-gallery-fixture-extensions.md)을 따릅니다.
+
+위쪽·아래쪽을 바꾸려면 **[기능 예제] HWP5 그림 위아래 여백** 또는 **[기능 예제] HWP5 글상자 위아래 여백**을 엽니다. 이 두 예제의 속성 창에서는 위와 아래 값을 편집할 수 있으며 좌우 값은 유지됩니다.
+
+<a href="__HWPJS_DOCS_BASE__editor/fixtures/hwp5-picture-vertical-margins.hwp" download>그림 위아래 여백 예제 다운로드</a> · <a href="__HWPJS_DOCS_BASE__editor/fixtures/hwp5-textbox-vertical-margins.hwp" download>글상자 위아래 여백 예제 다운로드</a>
