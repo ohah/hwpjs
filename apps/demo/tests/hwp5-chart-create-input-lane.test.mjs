@@ -91,7 +91,7 @@ test('invalid chart DTO including hidden accessors is rejected before preview', 
     d = draft();
   Object.defineProperty(d, 'series', {
     get() {
-      assert.fail('getter read');
+      return assert.fail('getter read');
     },
     enumerable: true,
   });

@@ -40,7 +40,17 @@ function fixture() {
     hwp5ChartSourceEpoch: '2',
     hwp5ChartHistoryRevision: 0,
     hwp5ChartTargets: [row],
-    paragraphs: [{ section: 0, paragraph: 2, text: '\ufffc', sourceOffsets: [{at:0,source:0},{at:1,source:8}] }],
+    paragraphs: [
+      {
+        section: 0,
+        paragraph: 2,
+        text: '\ufffc',
+        sourceOffsets: [
+          { at: 0, source: 0 },
+          { at: 1, source: 8 },
+        ],
+      },
+    ],
   };
   const token = {
     editorId: 'editor',

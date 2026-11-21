@@ -175,8 +175,17 @@ export const HWPX_CHART_CREATE_PROFILE_FUNCTIONS = Object.freeze([
 
 // Optional explicit HWP5 authoring profile. ABI6 required exports are unchanged.
 export const HWP5_CHART_CREATE_ABI = Object.freeze({
-  hwp5_edit_chart_create_profile_version: Object.freeze({ params: Object.freeze([]), results: Object.freeze(['i32']) }),
-  hwp5_edit_chart_create_preview: Object.freeze({ params: Object.freeze(['i32', 'i32', 'i32', 'i32']), results: Object.freeze(['i32']) }),
-  hwp5_edit_create_chart_current: Object.freeze({ params: Object.freeze(['i32', 'i32', 'i32', 'i32', 'i32', 'i32']), results: Object.freeze(['i32']) }),
+  hwp5_edit_chart_create_profile_version: Object.freeze({
+    params: Object.freeze([]),
+    results: Object.freeze(['i32']),
+  }),
+  hwp5_edit_chart_create_preview: Object.freeze({
+    params: Object.freeze(['i32', 'i32', 'i32', 'i32']),
+    results: Object.freeze(['i32']),
+  }),
+  hwp5_edit_create_chart_current: Object.freeze({
+    params: Object.freeze(['i32', 'i32', 'i32', 'i32', 'i32', 'i32']),
+    results: Object.freeze(['i32']),
+  }),
 });
 export const HWP5_CHART_CREATE_FUNCTIONS = Object.freeze(Object.keys(HWP5_CHART_CREATE_ABI));

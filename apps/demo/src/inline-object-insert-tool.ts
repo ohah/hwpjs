@@ -158,7 +158,13 @@ export function createInlineObjectInsertTool(options: {
     capture = captured;
     ++epoch;
     const content = captured.state.content;
-    const format = content && typeof content === 'object' && 'format' in content && typeof content.format === 'string' ? content.format : undefined;
+    const format =
+      content &&
+      typeof content === 'object' &&
+      'format' in content &&
+      typeof content.format === 'string'
+        ? content.format
+        : undefined;
     if (kind === 'chart' && format === 'hwp5') {
       const helper = options.core.hwp5ChartCreatePreviewMessage,
         availability = options.core.getInlineObjectInsertAvailability;

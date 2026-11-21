@@ -48,8 +48,12 @@ const generated =
   HWP5_CHART_CREATE_FUNCTIONS.map((name) => `    ${JSON.stringify(name)},\n`).join('') +
   '};\n' +
   'pub const hwp5_chart_create_signatures = [_]OptionalFunctionSignature{\n' +
-  Object.entries(HWP5_CHART_CREATE_ABI).map(([name, signature]) =>
-    `    .{ .name = ${JSON.stringify(name)}, .params = ${signatureTypes(signature.params)}, .results = ${signatureTypes(signature.results)} },\n`).join('') +
+  Object.entries(HWP5_CHART_CREATE_ABI)
+    .map(
+      ([name, signature]) =>
+        `    .{ .name = ${JSON.stringify(name)}, .params = ${signatureTypes(signature.params)}, .results = ${signatureTypes(signature.results)} },\n`,
+    )
+    .join('') +
   '};\n' +
   'pub const hwp5_chart_read_exports = [_][]const u8{\n' +
   HWP5_CHART_READ_FUNCTIONS.map((name) => `    ${JSON.stringify(name)},\n`).join('') +

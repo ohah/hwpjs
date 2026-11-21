@@ -9,16 +9,25 @@ function wire(kind = 'barChart') {
   delete data.pair;
   delete data.host;
   if (kind === 'barChart') data.plot_settings[0].direction = { node: 4, value: 'col' };
-  data.plot_settings[0].grouping = { node: 5, value: kind === 'barChart' ? 'clustered' : 'standard' };
-  return new TextEncoder().encode(JSON.stringify({
-    schemaVersion: 1, scope: 'hwp5-chart-create-preview', executionAuthority: false,
-    xml_sha256: Array(32).fill(7), data,
-  }));
+  data.plot_settings[0].grouping = {
+    node: 5,
+    value: kind === 'barChart' ? 'clustered' : 'standard',
+  };
+  return new TextEncoder().encode(
+    JSON.stringify({
+      schemaVersion: 1,
+      scope: 'hwp5-chart-create-preview',
+      executionAuthority: false,
+      xml_sha256: Array(32).fill(7),
+      data,
+    }),
+  );
 }
 const size = { width: 128, height: 96 };
 function host({ stale = false, encoder = true, wrongSize = false, noContext = false } = {}) {
   const recording = context();
-  let current = true, encoded = 0;
+  let current = true,
+    encoded = 0;
   // Deliberately header-only: this test checks adapter routing, not Native PNG validity.
   const bytes = new Uint8Array(33);
   bytes.set([137, 80, 78, 71, 13, 10, 26, 10]);
@@ -27,15 +36,21 @@ function host({ stale = false, encoder = true, wrongSize = false, noContext = fa
   bytes.set(new TextEncoder().encode('IHDR'), 12);
   view.setUint32(16, wrongSize ? 127 : 128);
   view.setUint32(20, 96);
-  const canvas = { getContext: () => noContext ? null : recording.ctx };
-  if (encoder) canvas.convertToBlob = async ({ type }) => {
-    assert.equal(type, 'image/png');
-    encoded++;
-    if (stale) current = false;
-    return new Blob([bytes], { type });
+  const canvas = { getContext: () => (noContext ? null : recording.ctx) };
+  if (encoder)
+    canvas.convertToBlob = async ({ type }) => {
+      assert.equal(type, 'image/png');
+      encoded++;
+      if (stale) current = false;
+      return new Blob([bytes], { type });
+    };
+  return {
+    canvas,
+    recording,
+    encoded: () => encoded,
+    createCanvas: () => canvas,
+    current: () => current,
   };
-  return { canvas, recording, encoded: () => encoded,
-    createCanvas: () => canvas, current: () => current };
 }
 test('own painter uses actual bar geometry and encoder, preserving approximate warnings and XML hash', async () => {
   const h = host();
@@ -67,9 +82,15 @@ test('encoded PNG dimensions must match the painted surface', async () => {
 });
 test('unsupported family cannot invoke canvas or encoder', async () => {
   let created = 0;
-  await assert.rejects(render(wire('lineChart'), size, {
-    current: () => true, createCanvas: () => { created++; },
-  }), /UnsupportedChartCreatePreviewKind/);
+  await assert.rejects(
+    render(wire('lineChart'), size, {
+      current: () => true,
+      createCanvas: () => {
+        created++;
+      },
+    }),
+    /UnsupportedChartCreatePreviewKind/,
+  );
   assert.equal(created, 0);
 });
 test('missing graphics context rejects and releases the surface', async () => {
@@ -80,8 +101,19 @@ test('missing graphics context rejects and releases the surface', async () => {
 });
 test('pixel budgets and stale source reject before allocating a canvas', async () => {
   let created = 0;
-  const h = { current: () => true, createCanvas: () => { created++; } };
-  await assert.rejects(render(wire(), { width: 2049, height: 96 }, h), /ChartCreatePreviewPixelLimit/);
-  await assert.rejects(render(wire(), size, { ...h, current: () => false }), /StaleChartCreatePreview/);
+  const h = {
+    current: () => true,
+    createCanvas: () => {
+      created++;
+    },
+  };
+  await assert.rejects(
+    render(wire(), { width: 2049, height: 96 }, h),
+    /ChartCreatePreviewPixelLimit/,
+  );
+  await assert.rejects(
+    render(wire(), size, { ...h, current: () => false }),
+    /StaleChartCreatePreview/,
+  );
   assert.equal(created, 0);
 });

@@ -12,20 +12,41 @@ const integer = (value, min, max) => {
   return value;
 };
 export function checkedHwp5ChartCreateOptions(input) {
-  const p = inlineInsertRecord(input, ['profile', 'width', 'height', 'categories', 'series', 'preview']);
+  const p = inlineInsertRecord(input, [
+    'profile',
+    'width',
+    'height',
+    'categories',
+    'series',
+    'preview',
+  ]);
   if (p.profile !== HWP5_CHART_CREATE_PROFILE) throw Error('UnsupportedChartCreateProfile');
-  const values = checkedChartCreateOptions({ width: p.width, height: p.height, categories: p.categories, series: p.series });
+  const values = checkedChartCreateOptions({
+    width: p.width,
+    height: p.height,
+    categories: p.categories,
+    series: p.series,
+  });
   const preview = inlineInsertRecord(p.preview, ['width', 'height']);
-  const width = integer(preview.width, 64, 2048), height = integer(preview.height, 64, 2048);
+  const width = integer(preview.width, 64, 2048),
+    height = integer(preview.height, 64, 2048);
   if (width * height > 4 * 1024 * 1024) throw Error('ChartCreatePreviewPixelLimit');
-  const aspectMatches = values.width >= values.height
-    ? height === Math.floor((width * values.height + Math.floor(values.width / 2)) / values.width)
-    : width === Math.floor((height * values.width + Math.floor(values.height / 2)) / values.height);
+  const aspectMatches =
+    values.width >= values.height
+      ? height === Math.floor((width * values.height + Math.floor(values.width / 2)) / values.width)
+      : width ===
+        Math.floor((height * values.width + Math.floor(values.height / 2)) / values.height);
   if (!aspectMatches) throw Error('InvalidHwp5ChartPreviewAspect');
   return Object.freeze({
-    ...values, profile: HWP5_CHART_CREATE_PROFILE, preview: Object.freeze({ width, height }),
+    ...values,
+    profile: HWP5_CHART_CREATE_PROFILE,
+    preview: Object.freeze({ width, height }),
     categories: Object.freeze([...values.categories]),
-    series: Object.freeze(values.series.map((s) => Object.freeze({ name: s.name, values: Object.freeze([...s.values]) }))),
+    series: Object.freeze(
+      values.series.map((s) =>
+        Object.freeze({ name: s.name, values: Object.freeze([...s.values]) }),
+      ),
+    ),
   });
 }
 const bytesFor = (value, limit) => {
@@ -39,21 +60,45 @@ const equal = (left, right) => left.length === right.length && left.every((v, i)
  * shared model painter always runs here; callers cannot substitute PNG payloads.
  * Native repeats owner/epoch/source/hash/image checks before atomic publication.
  */
-export function createHwp5ChartCreateApi({ wasm, memory, ready, check, encode, copyCurrentText, output, u32 }) {
+export function createHwp5ChartCreateApi({
+  wasm,
+  memory,
+  ready,
+  check,
+  encode,
+  copyCurrentText,
+  output,
+  u32,
+}) {
   const supported = () => {
     check();
-    try { ready(); } catch { return false; }
+    try {
+      ready();
+    } catch {
+      return false;
+    }
     for (const [name, signature] of Object.entries(HWP5_CHART_CREATE_ABI))
-      if (typeof wasm[name] !== 'function' || wasm[name].length !== signature.params.length) return false;
+      if (typeof wasm[name] !== 'function' || wasm[name].length !== signature.params.length)
+        return false;
     return wasm.hwp5_edit_chart_create_profile_version() === 1;
   };
   const prepare = (input) => {
     ready();
     if (!supported()) throw Error('InlineObjectInsertionUnavailable');
-    const { reference, start, ...raw } = inlineInsertRecord(input, ['reference', 'start', 'profile', 'width', 'height', 'categories', 'series', 'preview']);
+    const { reference, start, ...raw } = inlineInsertRecord(input, [
+      'reference',
+      'start',
+      'profile',
+      'width',
+      'height',
+      'categories',
+      'series',
+      'preview',
+    ]);
     // encode owns the editor-scope fence; do not rebuild/strip the reference.
     const referenceBytes = encode(reference).slice();
-    if (!['original', 'generated'].includes(reference.kind)) throw Error('UnsupportedChartInsertOwner');
+    if (!['original', 'generated'].includes(reference.kind))
+      throw Error('UnsupportedChartInsertOwner');
     const unit = u32(start, 'start');
     const options = checkedHwp5ChartCreateOptions(raw);
     const expected = copyCurrentText(reference).slice();
@@ -61,41 +106,84 @@ export function createHwp5ChartCreateApi({ wasm, memory, ready, check, encode, c
     const data = chartCreateWireData(options);
     const request = bytesFor({ start: unit, profile: options.profile, data }, 4 * 1024 * 1024);
     const wire = memory.withBytes(referenceBytes, (refPtr, refSize) =>
-      memory.withBytes(request, (ptr, size) => output(() => wasm.hwp5_edit_chart_create_preview(refPtr, refSize, ptr, size)).bytes.slice()));
+      memory.withBytes(request, (ptr, size) =>
+        output(() => wasm.hwp5_edit_chart_create_preview(refPtr, refSize, ptr, size)).bytes.slice(),
+      ),
+    );
     return { reference, referenceBytes, unit, options, expected, data, wire };
   };
   return {
-    supportsChartCreationAbi() { return supported(); },
-    chartCreateProfileVersion() { return supported() ? 1 : 0; },
-    chartCreatePreview(input) { return prepare(input).wire.slice(); },
+    supportsChartCreationAbi() {
+      return supported();
+    },
+    chartCreateProfileVersion() {
+      return supported() ? 1 : 0;
+    },
+    chartCreatePreview(input) {
+      return prepare(input).wire.slice();
+    },
     async createChart(input, renderer) {
       ready();
       if (!supported()) throw Error('InlineObjectInsertionUnavailable');
-      if (!renderer || typeof renderer.createCanvas !== 'function') throw Error('ChartCreatePreviewRendererUnavailable');
+      if (!renderer || typeof renderer.createCanvas !== 'function')
+        throw Error('ChartCreatePreviewRendererUnavailable');
       const { reference, referenceBytes, unit, options, expected, data, wire } = prepare(input);
       const current = () => {
         try {
           ready();
-          return supported() && (!renderer.current || renderer.current() === true) && equal(expected, copyCurrentText(reference));
-        } catch { return false; }
+          return (
+            supported() &&
+            (!renderer.current || renderer.current() === true) &&
+            equal(expected, copyCurrentText(reference))
+          );
+        } catch {
+          return false;
+        }
       };
-      const painted = await renderHwp5ChartCreatePreview(wire, options.preview, { createCanvas: renderer.createCanvas, current });
+      const painted = await renderHwp5ChartCreatePreview(wire, options.preview, {
+        createCanvas: renderer.createCanvas,
+        current,
+      });
       if (!current()) throw Error('StaleChartCreatePreview');
-      const body = bytesFor({
-        start: unit, profile: options.profile, width: options.width, height: options.height,
-        expected_text_utf16le: [...expected], data,
-        source_xml_sha256: painted.source_xml_sha256,
-        pixel_width: painted.pixel_width, pixel_height: painted.pixel_height,
-      }, 16 * 1024 * 1024);
+      const body = bytesFor(
+        {
+          start: unit,
+          profile: options.profile,
+          width: options.width,
+          height: options.height,
+          expected_text_utf16le: [...expected],
+          data,
+          source_xml_sha256: painted.source_xml_sha256,
+          pixel_width: painted.pixel_width,
+          pixel_height: painted.pixel_height,
+        },
+        16 * 1024 * 1024,
+      );
       let outcome;
       try {
         return memory.withBytes(referenceBytes, (refPtr, refSize) =>
           memory.withBytes(painted.bytes, (imagePtr, imageSize) => {
-            outcome = applyNativeEdit(memory, body,
-              (ptr, size) => wasm.hwp5_edit_create_chart_current(refPtr, refSize, ptr, size, imagePtr, imageSize),
-              'InvalidHwp5ChartCreateResult');
-            return { ...outcome, chartPreviewWarnings: painted.warnings, chartPreviewRendering: painted.rendering };
-          }));
+            outcome = applyNativeEdit(
+              memory,
+              body,
+              (ptr, size) =>
+                wasm.hwp5_edit_create_chart_current(
+                  refPtr,
+                  refSize,
+                  ptr,
+                  size,
+                  imagePtr,
+                  imageSize,
+                ),
+              'InvalidHwp5ChartCreateResult',
+            );
+            return {
+              ...outcome,
+              chartPreviewWarnings: painted.warnings,
+              chartPreviewRendering: painted.rendering,
+            };
+          }),
+        );
       } catch (error) {
         if (!outcome) throw error;
         return { ...outcome, cleanupError: error?.message || String(error), refreshRequired: true };

@@ -138,7 +138,16 @@ export function createHwp5CurrentReferenceApi({
   });
   return {
     ...exclusive,
-    ...createHwp5ChartCreateApi({ wasm, memory, ready, check, encode, copyCurrentText, output, u32 }),
+    ...createHwp5ChartCreateApi({
+      wasm,
+      memory,
+      ready,
+      check,
+      encode,
+      copyCurrentText,
+      output,
+      u32,
+    }),
     supportsEquationInsertionAbi() {
       check();
       return (

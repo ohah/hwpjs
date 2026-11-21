@@ -71,12 +71,15 @@ export function createInlineObjectInsertPort(
     )
       return { enabled: false, reason: '새 개체 삽입 SDK가 연결되지 않았습니다.' };
     const observed = editor.getEditorState();
-    const hwp5Chart = kind === 'chart' && (observed.content as Record<string, unknown> | undefined)?.format === 'hwp5';
+    const hwp5Chart =
+      kind === 'chart' &&
+      (observed.content as Record<string, unknown> | undefined)?.format === 'hwp5';
     if (
       hwp5Chart &&
       (!core.hwp5ChartCreatePreviewMessage ||
         !editor.readResource ||
-        (observed.content as Record<string, unknown> | undefined)?.hwp5ChartCreateProfileVersion !== 1 ||
+        (observed.content as Record<string, unknown> | undefined)?.hwp5ChartCreateProfileVersion !==
+          1 ||
         !captureCaret ||
         captureCaret()?.current() !== true)
     )
@@ -145,13 +148,27 @@ export function createInlineObjectInsertPort(
       if (!availability.enabled) throw Error(availability.reason);
       if (editor.getEditorState() !== initial) throw Error('StaleInlineObjectInsert');
       const caret =
-        kind === 'chart' && (initial.content as Record<string, unknown> | undefined)?.format === 'hwp5' ? captureCaret?.() : null;
-      if (kind === 'chart' && (initial.content as Record<string, unknown> | undefined)?.format === 'hwp5') {
+        kind === 'chart' &&
+        (initial.content as Record<string, unknown> | undefined)?.format === 'hwp5'
+          ? captureCaret?.()
+          : null;
+      if (
+        kind === 'chart' &&
+        (initial.content as Record<string, unknown> | undefined)?.format === 'hwp5'
+      ) {
         const target = initial.selection as SelectionTarget | null;
         const rows = (initial.content as Record<string, unknown> | undefined)?.paragraphs;
-        const row = Array.isArray(rows) ? rows.find((p: unknown): p is Record<string, unknown> =>
-          p !== null && typeof p === 'object' && 'section' in p && 'paragraph' in p &&
-          p.section === target?.section && p.paragraph === target?.paragraph) : undefined;
+        const row = Array.isArray(rows)
+          ? rows.find(
+              (p: unknown): p is Record<string, unknown> =>
+                p !== null &&
+                typeof p === 'object' &&
+                'section' in p &&
+                'paragraph' in p &&
+                p.section === target?.section &&
+                p.paragraph === target?.paragraph,
+            )
+          : undefined;
         if (
           !caret ||
           caret.state !== initial ||
