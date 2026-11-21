@@ -6,7 +6,7 @@ import type { EditorState, StateToken } from '../state/editor-state.ts';
 import { sourceTextChange } from '../../../../web/preview/text-offsets.mjs';
 // @ts-ignore Reuse the renderer's canonical table/list/explicit-owner projection.
 import { paragraphSelectionOwner } from '../../../../web/preview/paragraph-selection.mjs';
-export function validateToken(token: StateToken, state: EditorState, view = false): void {
+export function validateToken(token: StateToken, state: StateToken, view = false): void {
   if (
     !token ||
     token.editorId !== state.editorId ||
@@ -17,7 +17,11 @@ export function validateToken(token: StateToken, state: EditorState, view = fals
   )
     throw Error('StaleTarget');
 }
-export function validateSelection(target: SelectionTarget, state: EditorState, editable = false) {
+export function validateSelection(
+  target: SelectionTarget,
+  state: StateToken & Pick<EditorState, 'content'>,
+  editable = false,
+) {
   validateToken(target, state, true);
   if (
     target.coordinateSpace !== 'display' ||

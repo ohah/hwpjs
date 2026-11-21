@@ -47,7 +47,7 @@ export function captureInlineObjectCreateTarget(input: unknown): InlineObjectCre
   }) as InlineObjectCreateTarget;
 }
 export function admitInlineObjectCreateTarget(
-  state: EditorState,
+  state: Pick<EditorState, 'stateVersion' | 'token' | 'content' | 'nativeHistoryRevision'>,
   input: InlineObjectCreateTarget,
   version: number,
 ): InlineObjectOwnedAddress & { readonly unit: number; readonly expected_text: string } {

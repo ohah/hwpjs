@@ -15,7 +15,7 @@ const documentInsertErrors: CurrentCaretErrors = {
  * Diagnostic labels preserve existing command errors; they do not change admission.
  * The actual state and both selections are checked without rewriting observations. */
 export function validateCurrentCaret(
-  state: EditorState,
+  state: Parameters<typeof validateSelection>[1] & Pick<EditorState, 'stateVersion' | 'selection'>,
   target: SelectionTarget,
   selectionVersion: number,
   errors: CurrentCaretErrors = documentInsertErrors,
