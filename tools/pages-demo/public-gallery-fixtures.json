@@ -1,7 +1,39 @@
 {
   "schemaVersion": 1,
-  "catalogSHA256": "e2f29b3bce1bfd686c34cf965c50bc86cbf7772a9dccf8acb41eeb8f46bc0f40",
+  "catalogSHA256": "50c695ae61c3c9080b0b89655e26f460174f5b1857f547cdc3f4ed6363d990a1",
   "files": [
+    {
+      "id": "image-insert-blank.hwp",
+      "name": "image-insert-blank.hwp",
+      "label": "[기능 예제] 빈 HWP5 · 그림 삽입 준비",
+      "path": "fixtures/image-insert-blank.hwp",
+      "bytes": 3584,
+      "sha256": "3924fe5f437ffaa76f6696770cb4ae5fc19ffe485fb324bb21abc29b1f2cc689"
+    },
+    {
+      "id": "image-insert-blank.hwpx",
+      "name": "image-insert-blank.hwpx",
+      "label": "[기능 예제] 빈 HWPX · 그림 삽입 준비",
+      "path": "fixtures/image-insert-blank.hwpx",
+      "bytes": 6671,
+      "sha256": "8b74ee3b9a26ab112276241a39779f21de3b26ce8ec20ceb8093a443e41ff1ee"
+    },
+    {
+      "id": "picture-resize.hwp",
+      "name": "picture-resize.hwp",
+      "label": "[기능 예제] HWP5 그림 크기 조절",
+      "path": "fixtures/picture-resize.hwp",
+      "bytes": 4096,
+      "sha256": "6b2010227e9d6cd41c242e0a29281eddb58f8f618c5df137c4ca3d518665dda2"
+    },
+    {
+      "id": "picture-resize.hwpx",
+      "name": "picture-resize.hwpx",
+      "label": "[기능 예제] HWPX 그림 크기 조절",
+      "path": "fixtures/picture-resize.hwpx",
+      "bytes": 8508,
+      "sha256": "3beb9964f3a194f9d54ecac8ccc11949d1289fa141487028f6d070fd2b4ef255"
+    },
     {
       "id": "chart-data-edit.hwpx",
       "name": "chart-data-edit.hwpx",

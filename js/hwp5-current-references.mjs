@@ -1,3 +1,4 @@
+import { createLiveImageInsertApi } from './live-image-insertion.mjs';
 import { createHwp5ChartCreateApi } from './hwp5-chart-create.mjs';
 import { inlineInsertRecord } from './hwpx-inline-object-record.mjs';
 import { checkedHwp5EquationInsertOptions } from './hwp5-equation-insert.mjs';
@@ -138,6 +139,7 @@ export function createHwp5CurrentReferenceApi({
   });
   return {
     ...exclusive,
+    ...createLiveImageInsertApi({ wasm, memory, check: ready, encode }),
     ...createHwp5ChartCreateApi({
       wasm,
       memory,

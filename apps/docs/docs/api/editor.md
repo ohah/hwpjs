@@ -381,3 +381,9 @@ export async function typeInCreatedCell(
 일반 입력은 `insertion`을 생략하면 현재 Native run에서 서식을 상속합니다. 이력 이동·재열기·상태 변경 뒤에는 현재 셀을 다시 조회해 새 target을 발급받습니다. target을 복사하거나 다른 editor에서 재사용할 수 없습니다. `insertion.character`는 새로 삽입한 텍스트에만 적용하며 기존 범위의 서식 변경을 같은 텍스트의 삭제·재삽입으로 대신하지 않습니다. `openReadOnlyDocument.sdk`는 읽기 수명이므로 이 쓰기 경로에 사용하지 않습니다.
 
 정상 공개 Core에서 H5/HX의 일곱 언어 글꼴·밑줄·취소선·검정 글자색과 일반 D 입력을 저장·독립 CFB/XML 조회·cold reopen·전체 저장 바이트 undo/redo로 확인했습니다. HX 생성 셀의 현재 Native owner를 통한 수식 삽입과 rich D 보존도 확인했습니다. 새 셀의 Canvas/IME, CLI/MCP 전체 행렬, H5 직접 참조 조회의 선형 비용 후속, 텍스트를 보존하는 범위서식은 별도 검증·구현 대상입니다. 이 예제는 npm의 새 버전 게시를 의미하지 않습니다.
+
+## 그림 신규 삽입
+
+`INSERT_IMAGE_COMMAND`는 Native history v2가 활성화된 HWP5·HWPX 편집 세션에서 PNG 또는 JPEG를 삽입합니다. 요청의 `options`에는 `imageBytes`와 양의 정수인 `width`, `height`를 전달합니다. 두 크기의 단위는 HWPUNIT이며 1mm는 약 283.46 HWPUNIT입니다. 이미지 입력 한도는 8MiB입니다.
+
+HWP5는 현재 본문 캐럿의 `selection`을 `target`으로, 그 상태의 `stateVersion`을 `selectionVersion`으로 사용합니다. HWPX는 Native에서 조회한 현재 본문 삽입 대상이 필요합니다. 대상과 상태가 바뀌면 새로 포착해야 합니다. [데모 사용법](../guide/demo.md#새-그림-삽입)

@@ -11,6 +11,7 @@ import { validateFullSnapshotTextDelta, exactDisplayValue } from './full-snapsho
 // 명시 producer schema의 plain body/table/picture 부분집합. 문서 식별자나 SHA로 선택하지 않는다.
 // Typed current producer metadata only; never issues Native origin or edit authority.
 const PLAIN_BOOLEAN_CAPABILITY_KEYS = [
+  'imageInsertionAvailable',
   'equationInsertionAvailable',
   'chartCreationAvailable',
   'hwp5ChartLiteralEditAvailable',

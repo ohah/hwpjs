@@ -88,12 +88,12 @@ pub fn verifyText(actual: []const u8, request: Request) !usize {
 }
 
 /// 호출자는 원문 SHA·Native 문단 소속·컨트롤 경계를 확인한 뒤에만 후보 파일을 만들 수 있습니다.
-pub const ValidatedInput = struct { size: Size, media: picture_input.Media };
+pub const ValidatedInput = struct { size: Size, media: picture_input.Media, pixels: picture_input.PixelSize };
 
 pub fn validateInput(input: []const u8, image: []const u8, request: Request) !ValidatedInput {
     try verifySource(input, request.expected_source_sha256);
-    const media = try picture_input.inspectImage(image, picture_input.max_image_bytes);
+    const raster = try picture_input.inspectRaster(image, picture_input.max_image_bytes);
     if (request.expected_text.len > max_text_bytes) return error.LimitExceeded;
     _ = try byteOffset(request.expected_text, request.target.unit);
-    return .{ .size = try size(request), .media = media };
+    return .{ .size = try size(request), .media = raster.media, .pixels = raster.pixels };
 }

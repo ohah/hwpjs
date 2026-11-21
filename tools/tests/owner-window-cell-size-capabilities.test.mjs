@@ -39,9 +39,10 @@ test('actual HWP5 cell-size capabilities retain plain-owner admission and reject
     for (const value of [undefined, null, false, '', 'static-source-cell-rectangle', {}, []])
       assert.equal(probe({ sourceTableCellSplitProfile: value }), false);
     for (const key of [
+      'imageInsertionAvailable',
+      'hwp5ChartLiteralEditAvailable',
       'equationInsertionAvailable',
       'chartCreationAvailable',
-      'hwp5ChartLiteralEditAvailable',
       'strictMeasuredSaveAvailable',
     ]) {
       for (const value of [true, false]) assert.equal(probe({ [key]: value }), true);
@@ -51,8 +52,8 @@ test('actual HWP5 cell-size capabilities retain plain-owner admission and reject
     for (const value of [0, 1]) assert.equal(probe({ hwp5ChartCreateProfileVersion: value }), true);
     for (const value of [undefined, null, false, true, -0, -1, 2, 1.5, '0', '1', {}, []])
       assert.equal(probe({ hwp5ChartCreateProfileVersion: value }), false);
-    // The chart producer does not register image insertion metadata.
-    assert.equal(probe({ imageInsertionAvailable: false }), false);
+    // Recognized exact boolean observations do not grant Native image/chart authority.
+    // Unsupported and unknown metadata remain rejected below.
     assert.equal(isPlainOwnerBaseline(Object.freeze({ ...state.content }), 0, 15), false);
     assert.equal(probe({ futureCellCapability: true }), false);
     for (const key of [

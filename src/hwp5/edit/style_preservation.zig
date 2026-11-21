@@ -17,6 +17,7 @@ const created_table_limits: @import("created_table_records.zig").Limits = .{ .ma
 pub const ParagraphInfo = struct { source_node: ?u32, parent_node: ?u32, style_id: u8 };
 pub const Command = union(enum) {
     edit_chart_literals: @import("../chart/literal_edit_request.zig").Request,
+    insert_image: @import("image_create_request.zig").Request,
     insert_chart: @import("../chart/create_request.zig").Request,
     insert_equation: @import("equation_create_request.zig").Request,
     stage_table: @import("created_table_stage.zig").Edit,
@@ -1757,6 +1758,53 @@ pub const Session = opaque {
                 try @import("../chart/literal_edit_verify.zig").verify(state.allocator, before_file.bytes, saved.bytes, request.plan.owners, assets.values.entries[assets.values.entries.len - 1], max_bytes, max_stream);
                 // Exactly one publication. Existing History owns source bytes and COW resources together.
                 for (prepared.sections) |*part| std.mem.swap(model.Section, &state.document.sections[part.index], &part.value);
+                std.mem.swap(@import("../chart/created_resources.zig").Values, &state.chart_resources, &assets.values);
+                state.refreshSourceViews();
+            },
+            .insert_image => |request| {
+                const state = self.getState();
+                if (state.formatting_batch != null) return error.MutationInProgress;
+                if (state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview)) return error.UnsupportedPictureInsertionSaveFeatures;
+                if (state.source.header.version().raw < 0x05000300 or state.source.header.version().raw >= 0x05010000) return error.UnsupportedPictureInsertionVersion;
+                _ = try @import("image_insertion_profile.zig").layout(state.source.header.version());
+                try @import("image_create_request.zig").validate(request);
+                const ticket = try self.historyTicket();
+                if (!std.meta.eql(request.target.binding.?.binding, ticket.binding)) return error.SourceBindingMismatch;
+                if (request.target.binding.?.epoch != ticket.epoch) return error.StaleMutationEpoch;
+                const info = if (state.chart_resources.docinfo) |bytes| try state.allocator.dupe(u8, bytes) else try state.source.decodeDocInfo(state.allocator, max_stream);
+                defer state.allocator.free(info);
+                var assets = try @import("image_create_asset.zig").prepare(state.allocator, &state.source.file, state.chart_resources, info, state.source.header.version(), request, max_bytes);
+                defer assets.deinit(state.allocator);
+                var prepared = try @import("image_create_session.zig").prepare(state.allocator, state.decoded, &state.document, state.created_tables, state.cell_backgrounds, state.source.header.version(), request, assets.ordinal, self.createdTableResources(), created_table_limits);
+                defer prepared.deinit(state.allocator);
+                // Validate a borrowed prospective State through the actual save
+                // path. Only pointer arrays are copied; no live value is written.
+                var prospective = state.*;
+                const sections = try state.allocator.dupe(model.Section, state.document.sections);
+                defer state.allocator.free(sections);
+                sections[request.target.section] = prepared.section;
+                prospective.document.sections = sections;
+                const tables = try state.allocator.dupe(@import("created_table_values.zig").Values, state.created_tables);
+                defer state.allocator.free(tables);
+                tables[request.target.section] = prepared.tables;
+                prospective.created_tables = tables;
+                const decoded = try state.allocator.dupe([]u8, state.decoded);
+                defer state.allocator.free(decoded);
+                const offsets = try state.allocator.dupe([]usize, state.style_offsets);
+                defer state.allocator.free(offsets);
+                prospective.decoded = decoded;
+                prospective.style_offsets = offsets;
+                prospective.cell_backgrounds = prepared.backgrounds;
+                prospective.chart_resources = assets.values;
+                prospective.refreshSourceViews();
+                const draft: *const Session = @ptrCast(&prospective);
+                const saved = try draft.save(state.allocator, .{ .allow_stale_layout = true, .max_output_bytes = max_bytes });
+                defer state.allocator.free(saved.bytes);
+                try @import("image_create_session.zig").verifyFile(state.allocator, saved.bytes, request, assets.ordinal, assets.values.entries[assets.values.entries.len - 1]);
+                // All validation and allocation precede the single publication.
+                std.mem.swap(model.Section, &state.document.sections[request.target.section], &prepared.section);
+                std.mem.swap(@import("created_table_values.zig").Values, &state.created_tables[request.target.section], &prepared.tables);
+                std.mem.swap(@import("cell_background_values.zig").Values, &state.cell_backgrounds, &prepared.backgrounds);
                 std.mem.swap(@import("../chart/created_resources.zig").Values, &state.chart_resources, &assets.values);
                 state.refreshSourceViews();
             },

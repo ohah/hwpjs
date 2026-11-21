@@ -15,6 +15,11 @@ pub const Result = struct {
 };
 
 pub fn write(a: std.mem.Allocator, raw: []const u8, version: Version, current: model.Section, index: usize, req: Request, id: u32, ordinal: u16, char_count: usize, limit: usize) !Result {
+    return writeWith(a, raw, version, current, index, req, id, ordinal, char_count, limit, ChartAuthor);
+}
+
+/// Three-record inline drawing splice; author-specific payload and validation.
+pub fn writeWith(a: std.mem.Allocator, raw: []const u8, version: Version, current: model.Section, index: usize, req: anytype, id: u32, ordinal: u16, char_count: usize, limit: usize, comptime Author: type) !Result {
     var tree = try @import("../edit/source_tree.zig").parse(a, raw, version, .{});
     defer tree.deinit(a);
     if (index >= current.paragraphs.len) return error.InvalidParagraph;
@@ -49,7 +54,7 @@ pub fn write(a: std.mem.Allocator, raw: []const u8, version: Version, current: m
     defer a.free(runs);
     const ranges = try encodeRanges(a, draft.range_tags.?);
     defer a.free(ranges);
-    var fragment = try @import("create_records.zig").create(a, req, id, tree.nodes[owner].record.framing.level, ordinal, limit);
+    var fragment = try Author.create(a, req, id, tree.nodes[owner].record.framing.level, ordinal, limit);
     defer fragment.deinit();
     const head = try a.dupe(u8, tree.nodes[owner].record.framing.payload);
     defer a.free(head);
@@ -108,8 +113,7 @@ pub fn write(a: std.mem.Allocator, raw: []const u8, version: Version, current: m
         if (common.instance_id == id) count += 1;
     };
     if (count != 1) return error.ChartCreationVerificationFailed;
-    const ole_report = try @import("../body/ole_validation.zig").inspect(checked, .spec24);
-    if (ole_report.objects == 0) return error.ChartCreationVerificationFailed;
+    try Author.verify(a, out.items, version, id, ordinal, req);
     return .{ .raw = try out.toOwnedSlice(a), .map = .{ .nodes = map } };
 }
 fn put(a: std.mem.Allocator, out: *std.ArrayList(u8), b: []const u8, limit: usize) !void {
@@ -125,3 +129,13 @@ fn encodeRanges(a: std.mem.Allocator, ranges: []const model.TextRange) ![]u8 {
     }
     return b;
 }
+
+const ChartAuthor = struct {
+    pub const create = @import("create_records.zig").create;
+    pub fn verify(a: std.mem.Allocator, raw: []const u8, version: Version, _: u32, _: u16, _: Request) !void {
+        var checked = try @import("../edit/source_tree.zig").parse(a, raw, version, .{});
+        defer checked.deinit(a);
+        const ole_report = try @import("../body/ole_validation.zig").inspect(checked, .spec24);
+        if (ole_report.objects == 0) return error.ChartCreationVerificationFailed;
+    }
+};

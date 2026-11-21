@@ -207,8 +207,8 @@ jobs:
           grep -Eq '^# tests 38$' "$RUNNER_TEMP/object-selection-p.tap"
           grep -Eq '^# fail 0$' "$RUNNER_TEMP/object-selection-p.tap"
           grep -Eq '^# skipped 0$' "$RUNNER_TEMP/object-selection-p.tap"
-          node --experimental-transform-types --import ./tools/renderer-test-core-provider.mjs --test --test-concurrency=1 --test-reporter=tap tests/canvas/object-selection-frame-currentness.test.mjs 2>&1 | tee "$RUNNER_TEMP/object-selection-frame10.tap"
-          grep -Eq '^# tests 10$' "$RUNNER_TEMP/object-selection-frame10.tap"
+          node --experimental-transform-types --import ./tools/renderer-test-core-provider.mjs --test --test-concurrency=1 --test-reporter=tap tests/canvas/object-selection-frame-currentness.test.mjs tests/canvas/picture-resize-completed-paint.test.mjs 2>&1 | tee "$RUNNER_TEMP/object-selection-frame10.tap"
+          grep -Eq '^# tests 14$' "$RUNNER_TEMP/object-selection-frame10.tap"
           grep -Eq '^# fail 0$' "$RUNNER_TEMP/object-selection-frame10.tap"
           grep -Eq '^# skipped 0$' "$RUNNER_TEMP/object-selection-frame10.tap"
       - name: Test selected object property commands and focus boundaries
@@ -278,6 +278,12 @@ jobs:
 
       - name: Test chart typing display continuity
         run: node --test tests/hwpx/chart-display-continuity.test.mjs
+      - name: Test HWPX picture source crop rendering contract
+        run: node --test --test-concurrency=1 tests/image/hwpx-source-crop-rendering.test.mjs
+      - name: Test HWP5 picture source crop rendering contract
+        run: node --test --test-concurrency=1 tests/image/source-crop-rendering.test.mjs
+      - name: Test live image insertion transport and Core guards
+        run: node --experimental-transform-types --test --test-concurrency=1 tests/image/live-image-insertion.test.mjs
       - name: Test synthetic HWPX chart and equation creation
         timeout-minutes: 2
         shell: bash
@@ -867,6 +873,25 @@ jobs:
           test -f ./tests/hwpx/demo-fixture-provider-root.test.mjs || exit 1
           test -f ./tools/pages-demo/public-gallery-fixtures.json || exit 1
           node --test --test-concurrency=1 ./tests/hwpx/demo-fixture-provider-root.test.mjs ./tests/hwpx/demo-server-fixture-policy.test.mjs ./tests/hwpx/demo-server-bundle.test.mjs
+      - name: Test public picture resize Surface contracts
+        timeout-minutes: 2
+        run: |
+          test -f ./packages/vanilla/src/picture-resize-controls.ts || exit 1
+          test -f ./packages/vanilla/tests/picture-resize-controls.test.mjs || exit 1
+          node --experimental-transform-types --max-old-space-size=384 \
+            --import ./tools/tests/picture-resize-source-provider.mjs \
+            --test --test-concurrency=1 \
+            ./packages/vanilla/tests/picture-resize-controls.test.mjs \
+            ./packages/vanilla/tests/surface.test.ts \
+            ./packages/vanilla/tests/undo-onset-surface-integration.test.mjs
+          node --experimental-transform-types --max-old-space-size=384 \
+            --import ./tools/tests/picture-resize-source-provider.mjs \
+            --import ./packages/vanilla/tests/non-text-history-renderer-hook.mjs \
+            --test --test-concurrency=1 \
+            ./packages/vanilla/tests/non-text-history-surface.test.mjs \
+            ./packages/vanilla/tests/non-text-history-rejected-picture.test.mjs \
+            ./packages/vanilla/tests/non-text-history-rejected-picture-negative.test.mjs
+          node node_modules/typescript/lib/tsc.js --noEmit -p ./tools/tests/tsconfig.picture-resize.json
       - name: Test selected table object and formatting command regressions
         timeout-minutes: 2
         run: |
@@ -878,6 +903,7 @@ jobs:
             ./apps/demo/tests/table-cell-properties-port.test.mjs \
             ./apps/demo/tests/table-cell-properties-view.test.mjs \
             ./apps/demo/tests/table-cell-properties-tool.test.mjs \
+            ./apps/demo/tests/table-cell-properties-appearance-handoff.test.mjs \
             ./apps/demo/tests/object-properties-port.test.mjs \
             ./apps/demo/tests/object-properties-controller.test.mjs \
             ./apps/demo/tests/object-properties-view.test.mjs \

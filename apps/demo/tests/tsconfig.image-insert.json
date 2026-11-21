@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "target": "ES2023",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "paths": {
+      "@hwpjs/core": ["../../../packages/core/src/index.ts"],
+      "@hwpjs/hwpjs": ["../../../packages/hwpjs/src/index.ts"]
+    }
+  },
+  "files": [
+    "../src/assets.d.ts",
+    "../src/image-insert-input.ts",
+    "../src/image-insert-port.ts",
+    "../src/image-insert-tool.ts"
+  ]
+}

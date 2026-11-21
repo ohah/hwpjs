@@ -24,6 +24,17 @@ const ManifestLocator = struct {
 
 /// 전역 SHA는 이 파일 경계에서 한 번 검사합니다. 하위 생성기는 문서 바이트를 받지 않습니다.
 pub fn prepare(a: std.mem.Allocator, input: []const u8, image: []const u8, request: insertion.Request) !insertion.Result {
+    return prepareImpl(a, input, image, request, null);
+}
+
+/// Only the live History resolver supplies this physical owner; never public JSON.
+/// Preserve the file transform's independent plain-text coordinate contract.
+pub fn prepareCurrent(a: std.mem.Allocator, input: []const u8, image: []const u8, request: insertion.Request, target: @import("inline_object_insert.zig").Target) !insertion.Result {
+    if (target.owner != null or target.physical_paragraph == null or !target.anchor_insertion) return error.SourceBindingMismatch;
+    return prepareImpl(a, input, image, request, target);
+}
+
+fn prepareImpl(a: std.mem.Allocator, input: []const u8, image: []const u8, request: insertion.Request, current_target: ?@import("inline_object_insert.zig").Target) !insertion.Result {
     const validated = try insertion.validateInput(input, image, request);
     const size = validated.size;
     const media = validated.media;
@@ -38,9 +49,18 @@ pub fn prepare(a: std.mem.Allocator, input: []const u8, image: []const u8, reque
     defer used.deinit(a);
     var counters: @import("section_text.zig").Report = .{};
     var paragraph: ?usize = null;
+    var live_binding: ?@import("inline_object_insert.zig").Binding = null;
     for (trees.sections) |*tree| {
         try security.validateTree(tree);
-        if (try section_writer.locate(a, tree, request, &counters)) |node| {
+        if (current_target) |target| {
+            if (try @import("inline_object_insert.zig").bind(a, tree, target, &counters)) |binding| {
+                if (paragraph != null) return error.SourceBindingMismatch;
+                const parent = tree.elements[binding.element].parent orelse return error.UnsupportedPictureInsertionHost;
+                if (!tree.elements[parent].is(document_xml.section_uri, "sec")) return error.UnsupportedPictureInsertionHost;
+                paragraph = binding.element;
+                live_binding = binding;
+            }
+        } else if (try section_writer.locate(a, tree, request, &counters)) |node| {
             if (paragraph != null) return error.SourceBindingMismatch;
             paragraph = node;
         }
@@ -58,6 +78,13 @@ pub fn prepare(a: std.mem.Allocator, input: []const u8, image: []const u8, reque
     const selected = paragraph orelse return error.InvalidParagraphIndex;
     var instance_id: u32 = 1;
     while (used.contains(instance_id)) instance_id = std.math.add(u32, instance_id, 1) catch return error.PictureInstanceIdsExhausted;
+    var object_id = instance_id;
+    if (current_target != null) {
+        const ids = try @import("inline_object_insert.zig").nextPackageIds(a, &document, 2, xml_limit, total_limit);
+        defer a.free(ids);
+        object_id = ids[0];
+        instance_id = ids[1];
+    }
     var names: std.StringHashMapUnmanaged(void) = .empty;
     defer names.deinit(a);
     for (document.archive.entries) |entry| try names.put(a, entry.name, {});
@@ -77,10 +104,13 @@ pub fn prepare(a: std.mem.Allocator, input: []const u8, image: []const u8, reque
     }
     defer a.free(resource);
     errdefer a.free(path);
-    const picture = try @import("image_insertion_xml.zig").create(a, size, .{ .object_id = instance_id, .instance_id = instance_id, .resource_id = resource }, 4096);
+    const picture = try @import("image_insertion_xml.zig").create(a, size, validated.pixels, .{ .object_id = object_id, .instance_id = instance_id, .resource_id = resource }, 4096);
     defer a.free(picture);
     const tree = &trees.sections[request.target.section];
-    const section = try section_writer.write(a, tree, selected, request, picture, xml_limit);
+    const section = if (current_target) |target|
+        try @import("inline_object_insert.zig").writeBound(a, tree, live_binding.?, target, picture, xml_limit)
+    else
+        try section_writer.write(a, tree, selected, request, picture, xml_limit);
     defer a.free(section);
     const entry = document.archive.find(document.container.path) orelse return error.MissingContentManifest;
     const opf = try document.archive.decode(entry, xml_limit);
@@ -129,7 +159,13 @@ pub fn prepare(a: std.mem.Allocator, input: []const u8, image: []const u8, reque
     defer inventory.deinit(a);
     var found: usize = 0;
     for (inventory.sites) |site| if (site.id) |id| {
-        if (std.mem.eql(u8, id, resource) and site.target.state == .embedded) found += 1;
+        if (std.mem.eql(u8, id, resource) and site.target.state == .embedded) {
+            const crop = try @import("picture_crop_values.zig").read(a, &checked_tree, site.picture_element_index);
+            const source_size = try @import("image_insertion_xml.zig").sourceExtent(validated.pixels);
+            const expected: [4]?i64 = .{ 0, source_size.width, 0, source_size.height };
+            if (!std.meta.eql(crop.clip, expected) or !std.meta.eql(crop.image_dimensions, @as([2]?u32, .{ null, null }))) return error.PictureInsertionVerificationFailed;
+            found += 1;
+        }
     };
     if (found != 1) return error.PictureInsertionVerificationFailed;
     return .{ .bytes = output, .resource_path = path, .instance_id = instance_id };

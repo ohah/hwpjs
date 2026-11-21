@@ -195,7 +195,7 @@ pub const History = struct {
         s.history_transaction_active = true;
         defer s.history_transaction_active = false;
         try self.stack.prepare();
-        for (commands) |command| if (command.kind == .note_delete or command.kind == .note_create or command.kind == .insert_document or command.kind == .equation_insert or command.kind == .chart_create or command.kind == .bullet_definition or command.kind == .page_settings or command.kind == .object_geometry) {
+        for (commands) |command| if (command.kind == .note_delete or command.kind == .note_create or command.kind == .insert_document or command.kind == .equation_insert or command.kind == .chart_create or command.kind == .image_insert or command.kind == .bullet_definition or command.kind == .page_settings or command.kind == .object_geometry) {
             if (commands.len != 1 or command.break_before != null or command.deleted != 0)
                 return error.InvalidInsertDocumentBatch;
             if (!self.managed) return error.HistoryProtocol2Required;
@@ -209,7 +209,7 @@ pub const History = struct {
     }
     fn insertDocument(self: *Self, command: commands_mod.Command) !bool {
         const s = self.owner;
-        const inline_creation = command.kind == .equation_insert or command.kind == .chart_create or command.kind == .note_create;
+        const inline_creation = command.kind == .equation_insert or command.kind == .chart_create or command.kind == .image_insert or command.kind == .note_create;
         if (!inline_creation and command.kind != .note_delete and command.section != 0) return error.UnsupportedInsertSections;
         // Inline creation proves logical-to-physical owners using serializer
         // receipts. Geometry keeps its separately validated source-frame path.
@@ -225,6 +225,11 @@ pub const History = struct {
             if (command.inserted.len != 0) return error.InvalidNoteDeleteRequest;
             if (request.selector.section != command.section or request.paragraph != command.paragraph or request.anchor_unit != command.start) return error.SourceBindingMismatch;
             try @import("note_delete_owner.zig").validate(s.allocator, s, request.*, self.stack.current.revision);
+        }
+        if (command.kind == .image_insert) {
+            const request = command.image_insert orelse return error.InvalidImageInsertRequest;
+            try @import("image_insert.zig").validate(request.*);
+            if (request.target.owner.?.binding.revision != self.stack.current.revision) return error.StaleInlineObjectOwner;
         }
         if (command.kind == .note_create) {
             const request = command.note_create orelse return error.InvalidNoteCreateRequest;
@@ -279,6 +284,16 @@ pub const History = struct {
             resolved.target = placement.target;
             physical_target = .{ .section = resolved.target.section, .paragraph = resolved.target.paragraph };
             var prepared = try @import("chart_create.zig").prepare(s.allocator, before, resolved);
+            defer prepared.deinit(s.allocator);
+            break :blk try editor.open(s.allocator, prepared.bytes, s.options);
+        } else if (command.kind == .image_insert) blk: {
+            const request = command.image_insert orelse return error.InvalidImageInsertRequest;
+            if (command.inserted.len != 0 or request.target.section != command.section or request.target.paragraph != command.paragraph or request.target.unit != command.start) return error.SourceBindingMismatch;
+            try @import("image_insert.zig").validate(request.*);
+            var placement = try @import("inline_object_target_resolve.zig").resolve(s, &saved_owner.?, &owner_proof.?, request.target);
+            defer placement.deinit(s.allocator);
+            physical_target = .{ .section = placement.target.section, .paragraph = placement.target.paragraph };
+            var prepared = try @import("image_insert.zig").prepare(s.allocator, before, request.*, placement.target);
             defer prepared.deinit(s.allocator);
             break :blk try editor.open(s.allocator, prepared.bytes, s.options);
         } else if (command.kind == .object_geometry) blk: {

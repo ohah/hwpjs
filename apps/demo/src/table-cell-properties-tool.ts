@@ -18,6 +18,8 @@ export function createTableCellPropertiesController(options: {
   onStatus: (value: string) => void;
   onClose: () => void;
   onPresentationChange?: () => void;
+  onAppearance?: () => void;
+  appearanceAvailable?: () => boolean;
   createView?: typeof createTableCellPropertiesView;
 }) {
   let disposed = false,
@@ -134,6 +136,16 @@ export function createTableCellPropertiesController(options: {
           void submit(draft);
         },
         dismiss: () => close(true),
+        appearanceEnabled: options.appearanceAvailable?.() ?? false,
+        appearance: options.onAppearance
+          ? () => {
+              if (disposed || pending || captured !== lease || !options.port.isCurrent(lease))
+                return;
+              // Close this modal before the existing appearance tool recaptures its own owner.
+              close(false);
+              options.onAppearance?.();
+            }
+          : undefined,
       });
     },
     close: () => close(true),
@@ -159,6 +171,8 @@ export function createTableCellPropertiesTool(options: {
   onStatus: (value: string) => void;
   onClose: () => void;
   onPresentationChange?: () => void;
+  onAppearance?: () => void;
+  appearanceAvailable?: () => boolean;
 }) {
   return createTableCellPropertiesController({
     ...options,

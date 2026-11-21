@@ -1,4 +1,10 @@
 import {
+  INSERT_IMAGE_COMMAND,
+  captureImageInsertPayload,
+  imageInsertMessage,
+  type InsertImagePayload,
+} from '../commands/image-insert.ts';
+import {
   bindStrictLayoutSaveBridge,
   type StrictLayoutLease,
 } from '../internal/strict-layout-save.ts';
@@ -1111,6 +1117,7 @@ export function createEditor(options: CreateEditorOptions) {
         verifyReply(reply, ctx);
         if (
           [
+            'insert-image',
             'insert-equation',
             'create-chart',
             'delete-note',
@@ -1203,6 +1210,7 @@ export function createEditor(options: CreateEditorOptions) {
             'independent-text',
             'replace-document-text',
             'splice-rich-character',
+            'insert-image',
             'insert-equation',
             'create-chart',
             'delete-note',
@@ -1219,6 +1227,7 @@ export function createEditor(options: CreateEditorOptions) {
             'independent-text',
             'replace-document-text',
             'splice-rich-character',
+            'insert-image',
             'insert-equation',
             'create-chart',
             'delete-note',
@@ -1237,6 +1246,7 @@ export function createEditor(options: CreateEditorOptions) {
             'independent-text',
             'replace-document-text',
             'splice-rich-character',
+            'insert-image',
             'insert-equation',
             'create-chart',
             'delete-note',
@@ -1464,27 +1474,32 @@ export function createEditor(options: CreateEditorOptions) {
           ? 'end'
           : undefined;
     const owned =
-      command.id === DELETE_NOTE_COMMAND.id
-        ? captureNoteDeletePayload(payload)
-        : noteKind
-          ? captureNoteInsertPayload(payload)
-          : logicalSplice
-            ? captureCreatedCellSplicePayload(payload)
-            : objectGeometry
-              ? captureObjectGeometryPayload(payload)
-              : inlineKind
-                ? captureInlineObjectInsertPayload(payload, inlineKind)
-                : pageSettings
-                  ? capturePageSettingsPayload(payload)
-                  : split
-                    ? captureSourceTableCellSplitPayload(payload)
-                    : merge || width || height
-                      ? payload
-                      : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
-                        ? captureSourceTableGridRequest(payload, (snapshot.content as any)?.format)
-                        : command.id === INSERT_DOCUMENT_COMMAND.id
-                          ? captureDocumentInsertPayload(payload)
-                          : copyOwned(payload);
+      command.id === INSERT_IMAGE_COMMAND.id
+        ? captureImageInsertPayload(payload)
+        : command.id === DELETE_NOTE_COMMAND.id
+          ? captureNoteDeletePayload(payload)
+          : noteKind
+            ? captureNoteInsertPayload(payload)
+            : logicalSplice
+              ? captureCreatedCellSplicePayload(payload)
+              : objectGeometry
+                ? captureObjectGeometryPayload(payload)
+                : inlineKind
+                  ? captureInlineObjectInsertPayload(payload, inlineKind)
+                  : pageSettings
+                    ? capturePageSettingsPayload(payload)
+                    : split
+                      ? captureSourceTableCellSplitPayload(payload)
+                      : merge || width || height
+                        ? payload
+                        : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
+                          ? captureSourceTableGridRequest(
+                              payload,
+                              (snapshot.content as any)?.format,
+                            )
+                          : command.id === INSERT_DOCUMENT_COMMAND.id
+                            ? captureDocumentInsertPayload(payload)
+                            : copyOwned(payload);
     return {
       command: command as EditorCommand<unknown>,
       payload: owned,
@@ -1510,6 +1525,15 @@ export function createEditor(options: CreateEditorOptions) {
       assertLive();
       if (handled) return result('handled-without-runtime', ctx);
       writePolicy.assertWritable();
+      if (pending.command.id === INSERT_IMAGE_COMMAND.id) {
+        const payload = pending.payload as InsertImagePayload;
+        const guard = () => {
+          requireReady(payload.target, true);
+          imageInsertMessage(payload, state);
+        };
+        guard();
+        return await mutate(imageInsertMessage(payload, state), payload.target, false, guard);
+      }
       if (
         pending.command.id === INSERT_EQUATION_COMMAND.id ||
         pending.command.id === CREATE_CHART_COMMAND.id
@@ -2616,6 +2640,7 @@ export function createEditor(options: CreateEditorOptions) {
         'strict-layout-prepare',
         'strict-layout-commit',
         'strict-layout-cancel',
+        'insert-image',
         'insert-equation',
         'create-chart',
         'delete-note',

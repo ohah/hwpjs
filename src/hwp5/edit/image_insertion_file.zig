@@ -110,7 +110,7 @@ pub fn prepare(a: std.mem.Allocator, input: []const u8, image: []const u8, reque
     if (storage) |index| if (source.file.entries[index].kind != 1) return error.NotAStorage;
     const plan = try resources(&source, info, storage);
     const id = try instance(a, &source, request.target.section, original);
-    const changed = try @import("image_insertion_section.zig").write(a, original, source.header.version(), request, plan.count + 1, id, stream_limit);
+    const changed = try @import("image_insertion_section.zig").write(a, original, source.header.version(), request, validated.pixels, plan.count + 1, id, stream_limit);
     defer a.free(changed);
     var payload: [12]u8 = @splat(0);
     std.mem.writeInt(u16, payload[0..2], 0x21, .little);

@@ -11,7 +11,12 @@ import {
 export function createTableCellPropertiesView(
   root: HTMLElement,
   capture: TableCellCapture,
-  callbacks: { apply: (draft: TableCellDraft) => void; dismiss: () => void },
+  callbacks: {
+    apply: (draft: TableCellDraft) => void;
+    dismiss: () => void;
+    appearance?: () => void;
+    appearanceEnabled?: boolean;
+  },
 ) {
   const layer = createDialogLayer(root, {
     role: 'table-cell-properties-dialog',
@@ -30,7 +35,8 @@ export function createTableCellPropertiesView(
     note = doc.createElement('p'),
     apply = doc.createElement('button'),
     cancel = doc.createElement('button'),
-    unitNote = doc.createElement('p');
+    unitNote = doc.createElement('p'),
+    appearance = callbacks.appearance ? doc.createElement('button') : undefined;
   const sizes = createCellSizeUnitDraft(capture.cell!);
   let unitBlocked = false;
   let busy = false,
@@ -103,6 +109,15 @@ export function createTableCellPropertiesView(
   cancel.textContent = '취소';
   apply.dataset.role = 'cell-properties-apply';
   cancel.dataset.role = 'cell-properties-cancel';
+  if (appearance) {
+    appearance.type = 'button';
+    appearance.textContent = '테두리/배경…';
+    appearance.dataset.role = 'cell-properties-appearance';
+    appearance.addEventListener('click', (event) => {
+      if (!disposed && !appearance.disabled && !(event as any).isComposing)
+        callbacks.appearance?.();
+    });
+  }
   const draft = (): TableCellDraft => ({
     ...sizes.points(),
     mode: mode.value as TableCellDraft['mode'],
@@ -139,6 +154,15 @@ export function createTableCellPropertiesView(
     for (const field of [width, height, mode]) field.disabled = blocked();
     unit.disabled = blocked() || composing;
     status.textContent = reason ? tableCellReason(reason) : invalid;
+    if (appearance)
+      appearance.disabled =
+        disposed ||
+        busy ||
+        composing ||
+        !!stale ||
+        draft().dirty?.width === true ||
+        draft().dirty?.height === true ||
+        callbacks.appearanceEnabled === false;
     cancel.textContent = busy ? '닫기 (접수된 작업은 계속)' : '취소';
   }
   for (const [axis, input] of [
@@ -194,6 +218,7 @@ export function createTableCellPropertiesView(
   });
   cancel.addEventListener('click', callbacks.dismiss);
   layer.body.append(note, status);
+  if (appearance) layer.footer.append(appearance);
   layer.footer.append(apply, cancel);
   refresh();
   layer.show(width);

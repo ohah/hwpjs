@@ -213,3 +213,13 @@ export const HWP5_CHART_LITERAL_EDIT_ABI = Object.freeze({
 export const HWP5_CHART_LITERAL_EDIT_FUNCTIONS = Object.freeze(
   Object.keys(HWP5_CHART_LITERAL_EDIT_ABI),
 );
+
+export const LIVE_IMAGE_INSERT_ABI = Object.freeze({
+  hwp5_edit_image_insert_version: { params: [], results: ['i32'] },
+  hwp5_edit_insert_image_current: {
+    params: ['i32', 'i32', 'i32', 'i32', 'i32', 'i32'],
+    results: ['i32'],
+  },
+  hwpx_edit_image_insert_version: { params: [], results: ['i32'] },
+  hwpx_edit_insert_image: { params: ['i32', 'i32', 'i32', 'i32'], results: ['i32'] },
+});

@@ -2164,7 +2164,6 @@ node node_modules/typescript/bin/tsc -p tools/tests/tsconfig.note-create.json
 
 Native 집중 step은 test-hwpx-note-public-wire, test-hwpx-note-create, test-hwpx-note-delete-protection, test-hwpx-note-delete입니다. 각각 새 wire3, 생성18, 보호18, 삭제18 이름을 선택합니다. 실제 실행은 Main이 승인한 소스와 compiler 및 입력 핀, 전체 PG 관리, 자원 검사와 최대2 cohort 조율이 있는 공식 준비 driver로 수행합니다. 위 mock 명령은 Native 또는 실제 SDK 및 browser 통과가 아닙니다.
 
-
 ## HWP5 새 차트 생성 자원 준비 후보
 
 [후보 계약](hwp5-chart-creation-foundation.md)의 자체 합성9개다. 새 Native 슬롯 승인 전에는 다음 명령을 실행하지 않는다. 전체 HWP 파일 생성/History나 실제 앱 상호운용 시험과 구분한다.
@@ -2174,6 +2173,7 @@ nice -n 10 zig test src/hwp5_chart_create_resources_probe.zig -O ReleaseSafe -fl
 ```
 
 공유 Root에서 실행하지 않고 Main이 검토한 정확 격리 후보·컴파일러 핀과 전용 캐시/새 증거 디렉터리를 사용한다. 처음 실패는 보존하고 자동 재시도하지 않는다.
+
 ## HWPX 현재 주석 참조 삭제 후보
 
 [삭제 계약](hwpx-note-creation.md#현재-참조에서-주석-삭제-후보)을 따릅니다. 다음은 격리 소스의 가벼운 검사이며 실제 삭제 ABI 검증이 아닙니다.
@@ -2213,7 +2213,6 @@ node --test tools/tests/hwp5-strict-worker-ui.test.mjs tools/tests/hwp5-strict-p
 
 이 검사는 Node의 모의 realm/transport다. 실제 제품 E2E는 [측정 저장 연결](hwp5-strict-layout-integration.md)의 `tools/browser/strict-layout-worker-ui-product.mjs`를 별도 브라우저 조율 뒤 사용한다. 이 파일은 browser를 직접 시작하지 않으며 Main이 승인한 page와 fixture/font/WASM SHA, output 디렉터리, fixture의 검증한 caret 좌표가 필요하다. Native/SDK 빌드와 실제 브라우저는 별도 실행 증거로 둔다.
 
-
 ## 공개 데모의 HWP5 측정 저장 연결
 
 [typed 측정 저장 계약](hwp5-strict-layout-integration.md)의 Core/Window 연결과 공개 shell을 모의 runtime/DOM으로 검사한다. Native 또는 브라우저를 시작하지 않는다.
@@ -2226,3 +2225,22 @@ node --max-old-space-size=256 --test --test-concurrency=1 \
 ```
 
 Node 24.20의 TypeScript strip 실행을 사용한다. 실제 제품 E2E는 별도 승인된 page를 받아 tools/browser/strict-layout-demo-product.mjs의 runStrictDemoProductE2E를 호출한다. 공식 /demo/vanilla, 새 bundle manifest의 active Worker URL/SHA, 같은 WASM SHA, 승인된 own fixture/폰트 바이트 및 실제 확인한 caret 좌표가 필요하다. 이 모듈은 브라우저를 시작하지 않는다. exact preview 제품 경로의 검증과 공개 데모 결과를 서로 대체하지 않는다.
+
+## HWP5 신규 그림 source crop 후보
+
+[좌표·버전 계약](hwp5-image-source-crop.md)을 따른다. 아래 Node8은 실제 painter의 source/destination 인자 계약이며 Native나 브라우저 성공을 대신하지 않는다.
+
+```sh
+node --test --test-concurrency=1 tests/image/source-crop-rendering.test.mjs
+```
+
+Native source 등록은 신규6+writer4+live image8+기존chart5로 named23다. 별도 슬롯·정확 source/compiler 계약 승인 후에만 `zig build test-hwp5-image-source-crop -Doptimize=ReleaseSafe -j1`을 실행한다. 직접 실행은 같은 필터를 사용한다. 컴파일·실제 수집 전에는 등록 수를 실제 통과 수로 표시하지 않는다. 새 WASM·SDK·GUI·독립 저장 raw와 픽셀 비교는 후속 조율이다.
+
+## HWPX 새 그림 source crop 집중 후보
+
+[생성 소스 계약](hwpx-inserted-image-source-crop.md)을 따른다. Native 실행은 슬롯 승인 뒤 수행한다.
+
+```sh
+zig build test-hwpx-image-source-crop -Doptimize=ReleaseSafe -j1 --summary all
+node --test --test-concurrency=1 tests/image/hwpx-source-crop-rendering.test.mjs
+```

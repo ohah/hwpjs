@@ -4,7 +4,7 @@ const insertion = @import("../../image/image_insertion.zig");
 const Version = @import("../version.zig").Version;
 const records = @import("image_insertion_records.zig");
 
-pub fn write(a: std.mem.Allocator, source: []const u8, version: Version, request: insertion.Request, ordinal: u16, instance_id: u32, limit: usize) ![]u8 {
+pub fn write(a: std.mem.Allocator, source: []const u8, version: Version, request: insertion.Request, pixels: insertion.picture_input.PixelSize, ordinal: u16, instance_id: u32, limit: usize) ![]u8 {
     var tree = try @import("source_tree.zig").parse(a, source, version, .{});
     defer tree.deinit(a);
     var links = try @import("../body/control_links.zig").Links.build(a, tree);
@@ -52,7 +52,7 @@ pub fn write(a: std.mem.Allocator, source: []const u8, version: Version, request
     if (owner.parent != null) return error.UnsupportedPictureInsertionHost;
     const children = try @import("../body/paragraph_children.zig").collect(tree, node);
     const text_node = children.text_node orelse return error.UnsupportedEmptyPictureInsertionText;
-    const payloads = try records.create(try insertion.size(request), ordinal, instance_id);
+    const payloads = try records.create(version, try insertion.size(request), pixels, ordinal, instance_id);
     const controls = try records.encode(a, &payloads, owner.record.framing.level, limit);
     defer a.free(controls);
     const header = try a.dupe(u8, owner.record.framing.payload);

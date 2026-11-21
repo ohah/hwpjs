@@ -2104,6 +2104,36 @@ var init_abi_schema = __esmMin((() => {
 		})
 	});
 	Object.freeze(Object.keys(HWP5_CHART_LITERAL_EDIT_ABI));
+	Object.freeze({
+		hwp5_edit_image_insert_version: {
+			params: [],
+			results: ["i32"]
+		},
+		hwp5_edit_insert_image_current: {
+			params: [
+				"i32",
+				"i32",
+				"i32",
+				"i32",
+				"i32",
+				"i32"
+			],
+			results: ["i32"]
+		},
+		hwpx_edit_image_insert_version: {
+			params: [],
+			results: ["i32"]
+		},
+		hwpx_edit_insert_image: {
+			params: [
+				"i32",
+				"i32",
+				"i32",
+				"i32"
+			],
+			results: ["i32"]
+		}
+	});
 }));
 // ../../js/hwpx-inline-object-record.mjs
 /** Strict data-only record; shared by creation payload and owner contracts. */
@@ -6968,7 +6998,7 @@ function checkedHwp5LiteralEdits(input) {
 		for (const key of kind === "category" ? ["category"] : ["series", "category"]) if (!Number.isSafeInteger(raw[key]) || raw[key] < 0 || Object.is(raw[key], -0)) throw Error("InvalidChartLiteralEdits");
 		for (const key of ["expected", "value"]) {
 			if (typeof raw[key] !== "string" || /[\uD800-\uDFFF]/u.test(raw[key])) throw Error("InvalidChartLiteralEdits");
-			const bytes = encoder$13.encode(raw[key]).length;
+			const bytes = encoder$14.encode(raw[key]).length;
 			if (bytes > (kind === "category" ? 4096 : 128) || bytes > budget) throw Error("ChartLiteralEditValueLimit");
 			budget -= bytes;
 		}
@@ -7074,16 +7104,16 @@ function createHwp5ChartLiteralEditApi({ wasm, memory, check, output, u32 }) {
 		}
 	};
 }
-var encoder$13, maxWire, jsonBytes, parse$5, freeze;
+var encoder$14, maxWire, jsonBytes, parse$5, freeze;
 var init_hwp5_chart_literal_edit = __esmMin((() => {
 	init_abi_schema();
 	init_hwpx_inline_object_record();
 	init_native_edit_outcome();
 	init_hwp5_chart_create_preview();
-	encoder$13 = new TextEncoder();
+	encoder$14 = new TextEncoder();
 	maxWire = 16777216;
 	jsonBytes = (value) => {
-		const bytes = encoder$13.encode(JSON.stringify(value));
+		const bytes = encoder$14.encode(JSON.stringify(value));
 		if (!bytes.length || bytes.length > maxWire) throw Error("ChartLiteralEditWireLimit");
 		return bytes;
 	};
@@ -12176,6 +12206,136 @@ var init_hwpx_inline_object_placement = __esmMin((() => {
 		return value;
 	};
 }));
+// ../../js/file-transform-input.mjs
+function copyFileTransformInput(value, limit, name) {
+	let length, buffer, offset = 0;
+	try {
+		if (ArrayBuffer.isView(value) && tag.call(value) === "Uint8Array") {
+			length = lengthOf.call(value);
+			offset = offsetOf.call(value);
+			buffer = bufferOf.call(value);
+			bufferLength.call(buffer);
+		} else {
+			length = bufferLength.call(value);
+			buffer = value;
+		}
+	} catch {
+		throw new TypeError(`Invalid${name}Bytes`);
+	}
+	if (length < 1 || length > limit) throw new RangeError(`${name}ByteLimitExceeded`);
+	const result = new Uint8Array(length);
+	result.set(new Uint8Array(buffer, offset, length));
+	return result;
+}
+var typed, tag, lengthOf, offsetOf, bufferOf, bufferLength;
+var init_file_transform_input = __esmMin((() => {
+	typed = Object.getPrototypeOf(Uint8Array.prototype);
+	tag = Object.getOwnPropertyDescriptor(typed, Symbol.toStringTag).get;
+	lengthOf = Object.getOwnPropertyDescriptor(typed, "byteLength").get;
+	offsetOf = Object.getOwnPropertyDescriptor(typed, "byteOffset").get;
+	bufferOf = Object.getOwnPropertyDescriptor(typed, "buffer").get;
+	bufferLength = Object.getOwnPropertyDescriptor(ArrayBuffer.prototype, "byteLength").get;
+}));
+// ../../js/picture-replacement-input.mjs
+var PICTURE_REPLACEMENT_LIMITS;
+var init_picture_replacement_input = __esmMin((() => {
+	init_file_transform_input();
+	PICTURE_REPLACEMENT_LIMITS = Object.freeze({
+		documentBytes: 67108864,
+		imageBytes: 8388608,
+		wasmBytes: 33554432,
+		outputBytes: 67108864
+	});
+}));
+// ../../js/live-image-insertion.mjs
+function checkedImageInsertOptions(input) {
+	const p = inlineInsertRecord(input, [
+		"imageBytes",
+		"width",
+		"height"
+	]);
+	for (const key of ["width", "height"]) if (!Number.isSafeInteger(p[key]) || p[key] <= 0 || p[key] > 2147483647) throw Error("InvalidPictureInsertionSize");
+	return {
+		imageBytes: copyFileTransformInput(p.imageBytes, 8388608, "Image"),
+		width: p.width,
+		height: p.height
+	};
+}
+function invoke$2(memory, metadata, image, reference, action) {
+	let outcome;
+	const call = (rp, rn) => memory.withBytes(image, (ip, n) => {
+		outcome = applyNativeEdit(memory, encoder$13.encode(JSON.stringify(metadata)), (p, size) => action(rp, rn, p, size, ip, n), "InvalidImageInsertResult");
+		return outcome;
+	});
+	try {
+		return reference ? memory.withBytes(reference, call) : call(0, 0);
+	} catch (error) {
+		if (!outcome) throw error;
+		return {
+			...outcome,
+			cleanupError: error?.message || String(error),
+			refreshRequired: true
+		};
+	}
+}
+function createLiveImageInsertApi({ wasm, memory, check, encode }) {
+	const h5 = typeof encode === "function";
+	const name = h5 ? "hwp5_edit_insert_image_current" : "hwpx_edit_insert_image";
+	const version = h5 ? "hwp5_edit_image_insert_version" : "hwpx_edit_image_insert_version";
+	const supported = () => {
+		check();
+		return typeof wasm[version] === "function" && wasm[version].length === 0 && typeof wasm[name] === "function" && wasm[name].length === (h5 ? 6 : 4) && wasm[version]() === 1;
+	};
+	return {
+		supportsImageInsertionAbi: supported,
+		insertImage(input) {
+			check();
+			if (!supported()) throw Error("ImageInsertionUnavailable");
+			const p = inlineInsertRecord(input, h5 ? [
+				"reference",
+				"start",
+				"imageBytes",
+				"width",
+				"height"
+			] : [
+				"target",
+				"imageBytes",
+				"width",
+				"height"
+			]);
+			const { imageBytes, width, height } = checkedImageInsertOptions({
+				imageBytes: p.imageBytes,
+				width: p.width,
+				height: p.height
+			});
+			if (h5) {
+				const ref = encode(p.reference).slice();
+				if (!["original", "generated"].includes(p.reference.kind)) throw Error("UnsupportedPictureInsertionHost");
+				if (!Number.isSafeInteger(p.start) || p.start < 0 || Object.is(p.start, -0) || p.start > 4294967295) throw Error("InvalidImageInsertUnit");
+				return invoke$2(memory, {
+					start: p.start,
+					width,
+					height
+				}, imageBytes, ref, (rp, rn, ptr, size, ip, n) => wasm[name](rp, rn, ptr, size, ip, n));
+			}
+			const target = checkedInlineObjectTarget(p.target);
+			if (target.owner?.kind !== "body") throw Error("UnsupportedPictureInsertionHost");
+			return invoke$2(memory, {
+				target,
+				width,
+				height
+			}, imageBytes, null, (_rp, _rn, ptr, size, ip, n) => wasm[name](ptr, size, ip, n));
+		}
+	};
+}
+var encoder$13;
+var init_live_image_insertion = __esmMin((() => {
+	init_hwpx_inline_object_record();
+	init_hwpx_inline_object_placement();
+	init_picture_replacement_input();
+	init_native_edit_outcome();
+	encoder$13 = new TextEncoder();
+}));
 // ../../js/chart-create-decimal.mjs
 function parseChartDecimal(text) {
 	if (typeof text !== "string" || text.length === 0 || text.length > 128) throw Error("InvalidChartNumber");
@@ -13041,6 +13201,12 @@ function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u
 			currentSourceReferences: (section, options) => windowQuery("hwp5_edit_current_source_references", section, options),
 			output: (action, bytes) => bytes === void 0 ? output(action).bytes : memory.withBytes(bytes, (ptr, size) => output(() => action(ptr, size)).bytes)
 		}),
+		...createLiveImageInsertApi({
+			wasm,
+			memory,
+			check: ready,
+			encode
+		}),
 		...createHwp5ChartCreateApi({
 			wasm,
 			memory,
@@ -13131,6 +13297,7 @@ function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u
 }
 var utf8$2, utf16, encoder$11, fields$6, scopeSequence$1, invalid$2, uint$38, decimal;
 var init_hwp5_current_references = __esmMin((() => {
+	init_live_image_insertion();
 	init_hwp5_chart_create();
 	init_hwpx_inline_object_record();
 	init_hwp5_equation_insert();
@@ -18380,6 +18547,11 @@ async function createHwpxEditor(source) {
 			prefix: "hwpx_edit"
 		}),
 		...documentInsert,
+		...createLiveImageInsertApi({
+			wasm,
+			memory,
+			check: ready
+		}),
 		...createHwpxInlineObjectInsertApi({
 			wasm,
 			memory,
@@ -20697,6 +20869,7 @@ async function createHwpxEditor(source) {
 	};
 }
 var init_hwpx_editor = __esmMin((() => {
+	init_live_image_insertion();
 	init_hwpx_note_delete();
 	init_hwpx_note_create();
 	init_hwpx_control_text_batch();
@@ -22791,47 +22964,6 @@ var render_exports = /* @__PURE__ */ __exportAll({
 });
 var init_render = __esmMin((() => {
 	init_render$1();
-}));
-// ../../js/file-transform-input.mjs
-function copyFileTransformInput(value, limit, name) {
-	let length, buffer, offset = 0;
-	try {
-		if (ArrayBuffer.isView(value) && tag.call(value) === "Uint8Array") {
-			length = lengthOf.call(value);
-			offset = offsetOf.call(value);
-			buffer = bufferOf.call(value);
-			bufferLength.call(buffer);
-		} else {
-			length = bufferLength.call(value);
-			buffer = value;
-		}
-	} catch {
-		throw new TypeError(`Invalid${name}Bytes`);
-	}
-	if (length < 1 || length > limit) throw new RangeError(`${name}ByteLimitExceeded`);
-	const result = new Uint8Array(length);
-	result.set(new Uint8Array(buffer, offset, length));
-	return result;
-}
-var typed, tag, lengthOf, offsetOf, bufferOf, bufferLength;
-var init_file_transform_input = __esmMin((() => {
-	typed = Object.getPrototypeOf(Uint8Array.prototype);
-	tag = Object.getOwnPropertyDescriptor(typed, Symbol.toStringTag).get;
-	lengthOf = Object.getOwnPropertyDescriptor(typed, "byteLength").get;
-	offsetOf = Object.getOwnPropertyDescriptor(typed, "byteOffset").get;
-	bufferOf = Object.getOwnPropertyDescriptor(typed, "buffer").get;
-	bufferLength = Object.getOwnPropertyDescriptor(ArrayBuffer.prototype, "byteLength").get;
-}));
-// ../../js/picture-replacement-input.mjs
-var PICTURE_REPLACEMENT_LIMITS;
-var init_picture_replacement_input = __esmMin((() => {
-	init_file_transform_input();
-	PICTURE_REPLACEMENT_LIMITS = Object.freeze({
-		documentBytes: 67108864,
-		imageBytes: 8388608,
-		wasmBytes: 33554432,
-		outputBytes: 67108864
-	});
 }));
 // src/table-reference-resolution.ts
 function field$2(value, key, optional = false) {

@@ -37,7 +37,7 @@ test "image insertion guard H5 secd 토큰과 cold 헤더 불일치 거부" {
     value.expected_text = try insertion.utf8FromUtf16(a, text);
     defer a.free(value.expected_text);
     value.target.unit = 8;
-    try refused(error.ControlIdMismatch, @import("hwp5/edit/image_insertion_section.zig").write(a, source, .{ .raw = 0x05000300 }, value, 1, 1, 4096));
+    try refused(error.ControlIdMismatch, @import("hwp5/edit/image_insertion_section.zig").write(a, source, .{ .raw = 0x05000300 }, value, .{ .width = 64, .height = 32 }, 1, 1, 4096));
 }
 
 test "image insertion guard H5 마지막 CR 뒤 위치는 기존 guard가 거부" {
@@ -46,7 +46,7 @@ test "image insertion guard H5 마지막 CR 뒤 위치는 기존 guard가 거부
     var value = request();
     value.expected_text = "A\r";
     value.target.unit = 2;
-    try refused(error.InvalidTextPosition, @import("hwp5/edit/image_insertion_section.zig").write(a, source, .{ .raw = 0x05000300 }, value, 1, 1, 4096));
+    try refused(error.InvalidTextPosition, @import("hwp5/edit/image_insertion_section.zig").write(a, source, .{ .raw = 0x05000300 }, value, .{ .width = 64, .height = 32 }, 1, 1, 4096));
 }
 
 test "image insertion guard HX 문단을 가로지르는 필드의 중간 본문 거부" {
@@ -83,5 +83,5 @@ test "image insertion guard H5 문단을 가로지르는 필드의 중간 본문
     var value = request();
     value.target.paragraph = 1;
     value.expected_text = "A\r";
-    try refused(error.ProtectedFieldRange, @import("hwp5/edit/image_insertion_section.zig").write(a, source.items, .{ .raw = 0x05000300 }, value, 1, 1, 4096));
+    try refused(error.ProtectedFieldRange, @import("hwp5/edit/image_insertion_section.zig").write(a, source.items, .{ .raw = 0x05000300 }, value, .{ .width = 64, .height = 32 }, 1, 1, 4096));
 }

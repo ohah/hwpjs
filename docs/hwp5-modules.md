@@ -1,5 +1,6 @@
 # HWP5 모듈 계약 인덱스
 
+- [열린 문서 그림 신규 삽입 후보와 History 계약](live-picture-insertion.md)
 - [모양 복사: 현재 문서의 지원 항목](shape-copy.md)
 - [셀 모양 복사](cell-shape-copy.md)
 
@@ -600,3 +601,5 @@
 - [HWP5 own chart literal edit source candidate](hwp5-chart-literal-edit.md)
 
 - [HWP5 literal editor optional lease and ABI successor](hwp5-chart-literal-edit-abi.md)
+
+- [신규 그림 source crop과 display 기하](hwp5-image-source-crop.md)

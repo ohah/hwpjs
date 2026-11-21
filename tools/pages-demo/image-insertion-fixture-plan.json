@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "status": "generated-verified-isolated-candidate",
+  "sourceTree": "616f3e3ae629bb6389036416611643c47d490a40",
+  "wasmSHA256": "c4762035e49c79f8911a10f867ce992a7f8262d8d4168893c628f12eb19c44da",
+  "producer": {
+    "apiPackage": "@ohah/hwpjs",
+    "api": "createEditor/createDocument/save",
+    "sourceBindings": [
+      {
+        "path": "src/new_document/hwp5.zig",
+        "sha256": "728d648e030bd39e18aaf3cc05b049211115a71895efab33dc41ffce4f3bc50e"
+      },
+      {
+        "path": "src/new_document/hwpx.zig",
+        "sha256": "ae8b1677747514705fa3af1aa50440cd8a3ab4066104592c96f5d940b128f501"
+      },
+      {
+        "path": "src/new_document/defaults.zig",
+        "sha256": "89700ed283f9a74aca009154ec364c4fdc813c694cf1c8c53d7d3364ea3cf08d"
+      },
+      {
+        "path": "src/new_document/hwp5_profile.zig",
+        "sha256": "ca5486e170e1c76b364556f55c152facaf27c46321a41cf8572fedc2fe325e2b"
+      },
+      {
+        "path": "packages/core/src/editor/create-editor.ts",
+        "sha256": "8ea7cb8670f50579f65c6828139a21647b8490b6152654f6b1a56a54a9a43281"
+      },
+      {
+        "path": "web/preview/document-save.mjs",
+        "sha256": "15d4863e742b9d9d547e8dd77d0e2d0c0474e4a7298613feaea9bfe615127013"
+      },
+      {
+        "path": "apps/demo/src/save-policy.ts",
+        "sha256": "21a0b675ef7058fb8706bbbf3373855d5a0522a40457234cc48e16cf5e465448"
+      }
+    ],
+    "steps": [
+      "Use the exact qualified Core/runtime and engine, not a template or a replacement CLI.",
+      "Create an independent editor and normal runtime for each format.",
+      "Call createDocument({format}) with no text, controls, metadata, external images, font bytes, or protected source.",
+      "Call save() with no options; do not enable allowStaleLayout, recovery, or unprotected-output consent.",
+      "Verify current format, no protection, no image resources and no external relationships independently.",
+      "Run the same producer twice in isolated outputs and compare bytes/SHA.",
+      "Publish bytes exclusively to new private files with a receipt; no public writes in the producer."
+    ],
+    "artifactWrites": "exclusive private destination only",
+    "outputReceiptRequired": true,
+    "receipt": "tools/pages-demo/image-insertion-fixture-receipt.json",
+    "actualRuns": 1,
+    "script": "tools/pages-demo/produce-image-insertion-blanks.mjs",
+    "independentReopenAndCLI": true
+  },
+  "legal": {
+    "origin": "Own deterministic new_document factories; no copied document template.",
+    "containsExternalOrProtectedContent": false,
+    "embeddedFonts": false,
+    "fontNamesAreMetadataOnly": true,
+    "reuseOfPublicSampleWithoutProvenance": false
+  },
+  "artifacts": [
+    {
+      "id": "image-insert-blank.hwp",
+      "format": "hwp5",
+      "bytes": 3584,
+      "sha256": "3924fe5f437ffaa76f6696770cb4ae5fc19ffe485fb324bb21abc29b1f2cc689",
+      "repeatedBytesEqual": true,
+      "freshSdkReopenDefaultSaveEqual": true,
+      "saveOptions": {},
+      "label": "[기능 예제] 빈 HWP5 · 그림 삽입 준비"
+    },
+    {
+      "id": "image-insert-blank.hwpx",
+      "format": "hwpx",
+      "bytes": 6671,
+      "sha256": "8b74ee3b9a26ab112276241a39779f21de3b26ce8ec20ceb8093a443e41ff1ee",
+      "repeatedBytesEqual": true,
+      "freshSdkReopenDefaultSaveEqual": true,
+      "saveOptions": {},
+      "label": "[기능 예제] 빈 HWPX · 그림 삽입 준비"
+    }
+  ],
+  "gallery": {
+    "registered": true,
+    "currentApprovedRows": 122,
+    "catalogSHA256": "eae37ff250ed52d79775282878b11d84b5ee3c29da91c7a24a502e32c0f050ee",
+    "policySHA256": "7c82bf137e1d2280d526de8c0e5d42f2e9f26ce25c5241b6e197af1541a2435a",
+    "requires": [
+      "Actual producer receipt and artifact hashes.",
+      "Baseline default save succeeds without stale permission.",
+      "Independent raw validation and ownership/legal review.",
+      "Main coordinates gallery source map, explicit policy, catalog and assets together.",
+      "Official bundle verification and browser evidence before a browser success claim."
+    ],
+    "registrationScope": "isolated-candidate-only",
+    "publicDeployment": false,
+    "baselineApprovedRows": 120
+  },
+  "NativeBuilds": 0,
+  "browserRuns": 0
+}

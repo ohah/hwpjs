@@ -338,7 +338,7 @@ test "H5 chart literal edit request byte budget exact and plus one and text cap 
 test "H5 chart literal allocation failures release all owned stages" {
     const xml = try @import("../../hwpx/chart_create_xml.zig").create(a, data);
     defer a.free(xml);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: []const u8) !void {
             var prepared = try @import("literal_edit_xml.zig").prepare(allocator, source, digest(source), changes, 1048576);
             defer prepared.deinit(allocator);

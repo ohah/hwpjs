@@ -8,7 +8,8 @@ pub const Payloads = struct {
     text_control: [16]u8,
     control: [46]u8,
     component: [196]u8,
-    picture: [82]u8,
+    picture: [91]u8,
+    picture_len: usize,
 };
 
 fn put32(bytes: []u8, at: usize, value: u32) void {
@@ -21,8 +22,10 @@ fn matrix(bytes: []u8) void {
 }
 
 /// instance_id와 bin_data_ordinal은 문서 전체에서 검증·예약한 값이어야 합니다.
-/// 크기는 절대값, 인라인·줄간격 영향 켬, 여백·회전·크롭·효과 없음인 명시 프로필입니다.
-pub fn create(size: Size, bin_data_ordinal: u16, instance_id: u32) !Payloads {
+/// Display dimensions stay explicit; full source crop comes only from inspected pixels.
+pub fn create(version: @import("../version.zig").Version, size: Size, pixels: @import("../../image/picture_input.zig").PixelSize, bin_data_ordinal: u16, instance_id: u32) !Payloads {
+    const profile = try @import("image_insertion_profile.zig").layout(version);
+    const source = try @import("image_insertion_profile.zig").sourceSize(pixels);
     if (size.width == 0 or size.height == 0 or size.width > std.math.maxInt(i32) or size.height > std.math.maxInt(i32)) return error.InvalidPictureInsertionSize;
     if (bin_data_ordinal == 0 or instance_id == 0) return error.InvalidPictureInsertionIdentity;
     var result: Payloads = .{
@@ -30,6 +33,11 @@ pub fn create(size: Size, bin_data_ordinal: u16, instance_id: u32) !Payloads {
         .control = @splat(0),
         .component = @splat(0),
         .picture = @splat(0),
+        .picture_len = switch (profile) {
+            .effects_only => 82,
+            .dimensions8 => 90,
+            .with_alpha9 => 91,
+        },
     };
     std.mem.writeInt(u16, result.text_control[0..2], 11, .little);
     put32(&result.text_control, 2, rules.drawing_id);
@@ -56,10 +64,16 @@ pub fn create(size: Size, bin_data_ordinal: u16, instance_id: u32) !Payloads {
     put32(&result.picture, 28, size.width);
     put32(&result.picture, 32, size.height);
     put32(&result.picture, 40, size.height);
-    put32(&result.picture, 52, size.width);
-    put32(&result.picture, 56, size.height);
+    put32(&result.picture, 52, source.width);
+    put32(&result.picture, 56, source.height);
     std.mem.writeInt(u16, result.picture[71..73], bin_data_ordinal, .little);
     put32(&result.picture, 74, instance_id);
+    if (profile != .effects_only) {
+        // Table116: original image size in HWPUNIT, independent of display box.
+        put32(&result.picture, 82, source.width);
+        put32(&result.picture, 86, source.height);
+    }
+    // with_alpha9 keeps explicit zero transparency; absent fields stay absent.
     return result;
 }
 
@@ -71,6 +85,6 @@ pub fn encode(a: std.mem.Allocator, payloads: *const Payloads, paragraph_level: 
     const writer = @import("../record_writer.zig");
     try writer.append(a, &output, 71, paragraph_level + 1, &payloads.control, limit);
     try writer.append(a, &output, 76, paragraph_level + 2, &payloads.component, limit);
-    try writer.append(a, &output, 85, paragraph_level + 3, &payloads.picture, limit);
+    try writer.append(a, &output, 85, paragraph_level + 3, payloads.picture[0..payloads.picture_len], limit);
     return output.toOwnedSlice(a);
 }

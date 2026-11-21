@@ -293,6 +293,40 @@ pub fn build(b: *std.Build) void {
     hwpx_generated_atomic_step.dependOn(&run_hwpx_generated_atomic_tests.step);
     core_test_step.dependOn(&run_hwpx_generated_atomic_tests.step);
 
+    const hx_source_crop_tests = b.addTest(.{ .use_llvm = true, .filters = &.{ "HX image source crop", "image insertion HX", "live image", "H5 chart integrated Native" }, .root_module = b.createModule(.{
+        .root_source_file = b.path("src/hwpx_image_source_crop_probe.zig"),
+        .target = target,
+        .optimize = .ReleaseSafe,
+    }) });
+    hx_source_crop_tests.step.dependOn(&abi_check.step);
+    hx_source_crop_tests.step.dependOn(&icc_registry_check.step);
+    const run_hx_source_crop_tests = b.addRunArtifact(hx_source_crop_tests);
+    run_hx_source_crop_tests.has_side_effects = true;
+    const hx_source_crop_step = b.step("test-hwpx-image-source-crop", "Verify HWPX inserted raster source crop independent from display and saved XML");
+    hx_source_crop_step.dependOn(&run_hx_source_crop_tests.step);
+
+    const source_crop_tests = b.addTest(.{ .use_llvm = true, .filters = &.{ "image source crop", "image insertion H5", "live image", "H5 chart integrated Native" }, .root_module = b.createModule(.{
+        .root_source_file = b.path("src/hwp5_image_source_crop_probe.zig"),
+        .target = target,
+        .optimize = .ReleaseSafe,
+    }) });
+    source_crop_tests.step.dependOn(&abi_check.step);
+    source_crop_tests.step.dependOn(&icc_registry_check.step);
+    const run_source_crop_tests = b.addRunArtifact(source_crop_tests);
+    run_source_crop_tests.has_side_effects = true;
+    const source_crop_step = b.step("test-hwp5-image-source-crop", "Verify new picture source crop, display geometry, saved raw and existing chart isolation");
+    source_crop_step.dependOn(&run_source_crop_tests.step);
+
+    const live_image_tests = b.addTest(.{ .use_llvm = true, .filters = &.{ "live image", "H5 chart integrated Native" }, .root_module = b.createModule(.{
+        .root_source_file = b.path("src/live_image_insert_test_root.zig"),
+        .target = target,
+        .optimize = .ReleaseSafe,
+    }) });
+    const run_live_image_tests = b.addRunArtifact(live_image_tests);
+    run_live_image_tests.has_side_effects = true;
+    const live_image_step = b.step("test-live-image-insert", "Verify live picture History and independent chart resources");
+    live_image_step.dependOn(&run_live_image_tests.step);
+
     const file_transform_tests = b.addTest(.{ .use_llvm = true, .filters = &.{
         "표 삭제 보호",
         "파일 변환 보호",

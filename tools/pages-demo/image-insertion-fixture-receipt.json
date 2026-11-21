@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "sourceTree": "616f3e3ae629bb6389036416611643c47d490a40",
+  "sdkBuildManifestSHA256": "d05a6c6d48c0911abd6232d1669cfb9b0bd3c59ca910f8e7995141b49e8880d0",
+  "sourceReceiptSHA256": "8541cd9403b167da25922071937a8765f189334f285c879bfebb5b5e85d3e7f0",
+  "wasmSHA256": "c4762035e49c79f8911a10f867ce992a7f8262d8d4168893c628f12eb19c44da",
+  "producerSHA256": "d98e30560b4d83c3de1f8d2a9c0c91fb4d6444844d4306a07baa5312e4659561",
+  "artifacts": [
+    {
+      "id": "image-insert-blank.hwp",
+      "format": "hwp5",
+      "bytes": 3584,
+      "sha256": "3924fe5f437ffaa76f6696770cb4ae5fc19ffe485fb324bb21abc29b1f2cc689",
+      "repeatedBytesEqual": true,
+      "freshSdkReopenDefaultSaveEqual": true,
+      "saveOptions": {}
+    },
+    {
+      "id": "image-insert-blank.hwpx",
+      "format": "hwpx",
+      "bytes": 6671,
+      "sha256": "8b74ee3b9a26ab112276241a39779f21de3b26ce8ec20ceb8093a443e41ff1ee",
+      "repeatedBytesEqual": true,
+      "freshSdkReopenDefaultSaveEqual": true,
+      "saveOptions": {}
+    }
+  ],
+  "SDKOnly": true,
+  "NativeBuilds": 0,
+  "browserRuns": 0,
+  "externalContent": false,
+  "embeddedFontBytes": false,
+  "baselineStaleConsent": false
+}

@@ -13,6 +13,13 @@ pub const Prepared = struct {
 };
 
 pub fn prepare(a: std.mem.Allocator, input: []const u8, version: Version, direct_names: []const []const u8, limit: usize) !Prepared {
+    return prepareResource(a, input, version, direct_names, null, limit);
+}
+pub fn prepareEmbedding(a: std.mem.Allocator, input: []const u8, version: Version, direct_names: []const []const u8, extension: []const u8, limit: usize) !Prepared {
+    if (!std.mem.eql(u8, extension, "png") and !std.mem.eql(u8, extension, "jpg")) return error.UnsupportedReplacementImageFormat;
+    return prepareResource(a, input, version, direct_names, extension, limit);
+}
+fn prepareResource(a: std.mem.Allocator, input: []const u8, version: Version, direct_names: []const []const u8, extension: ?[]const u8, limit: usize) !Prepared {
     if (input.len > limit) return error.LimitExceeded;
     var records: std.ArrayList(BinData) = .empty;
     defer records.deinit(a);
@@ -48,11 +55,16 @@ pub fn prepare(a: std.mem.Allocator, input: []const u8, version: Version, direct
     if (count < 0) return error.NegativeMappingCount;
     if (@as(usize, @intCast(count)) != records.items.len) return error.ResourceCountMismatch;
     const allocated = try ids.plan(records.items, direct_names);
-    // One STORAGE resource, explicitly uncompressed. The painter PNG is
-    // carried inside its OLE presentation, not a second unbound BinData.
-    var ole: [4]u8 = undefined;
-    std.mem.writeInt(u16, ole[0..2], 0x22, .little);
-    std.mem.writeInt(u16, ole[2..4], allocated.physical, .little);
-    const output = try @import("../edit/docinfo_resource_append.zig").write(a, input, insert_at, mapping_offset, count, 18, &ole, limit);
+    // Exactly one uncompressed resource: STORAGE for chart, EMBEDDING for picture.
+    // Chart retains its original four-byte payload and independent presentation.
+    var payload: [12]u8 = @splat(0);
+    std.mem.writeInt(u16, payload[0..2], if (extension != null) 0x21 else 0x22, .little);
+    std.mem.writeInt(u16, payload[2..4], allocated.physical, .little);
+    const length: usize = if (extension) |ext| blk: {
+        std.mem.writeInt(u16, payload[4..6], @intCast(ext.len), .little);
+        for (ext, 0..) |value, i| std.mem.writeInt(u16, payload[6 + i * 2 ..][0..2], value, .little);
+        break :blk 6 + ext.len * 2;
+    } else 4;
+    const output = try @import("../edit/docinfo_resource_append.zig").write(a, input, insert_at, mapping_offset, count, 18, payload[0..length], limit);
     return .{ .bytes = output, .ids = allocated };
 }

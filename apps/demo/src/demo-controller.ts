@@ -1,3 +1,4 @@
+import { createImageInsertTool } from './image-insert-tool.ts';
 import { mountStrictLayoutSaveTool } from './strict-layout-save-tool.ts';
 import { createMeasuredPlainLayoutSaver } from '@hwpjs/core/runtime';
 import { createHwp5ChartPropertiesTool } from './hwp5-chart-properties-tool.ts';
@@ -337,6 +338,8 @@ export async function mountDemo(
       host?.focus?.();
     },
     onPresentationChange: () => shell.update(),
+    onAppearance: () => tableCellAppearance.open(),
+    appearanceAvailable: () => tableCellAppearance.presentation().enabled,
   });
   const tableCellAppearance = createTableCellAppearanceTool({
     root,
@@ -422,6 +425,17 @@ export async function mountDemo(
     editor,
     onStatus: note,
     onPresentationChange: () => shell.update(),
+  });
+  const imageInsert = createImageInsertTool({
+    root,
+    editor,
+    core: paragraphShapeCore,
+    captureCaret: () => host?.captureInlineObjectInsertCaret?.() ?? null,
+    onStatus: note,
+    onPresentationChange: () => shell.update(),
+    onClose: () => {
+      host?.focus?.();
+    },
   });
   const inlineObjectInsert = createInlineObjectInsertTool({
     root,
@@ -509,6 +523,7 @@ export async function mountDemo(
       },
       ...textTools.presentation(),
       'insert-table': tableInsert.presentation(),
+      'insert-image': imageInsert.presentation(),
       'insert-chart': inlineObjectInsert.presentation('chart'),
       'insert-equation': inlineObjectInsert.presentation('equation'),
       'delete-note': noteDelete.presentation(),
@@ -853,6 +868,10 @@ export async function mountDemo(
       host?.requestSelectedObjectProperties?.();
       return;
     }
+    if (action.command === 'insert-image') {
+      void imageInsert.open();
+      return;
+    }
     if (action.command === 'insert-chart' || action.command === 'insert-equation') {
       inlineObjectInsert.open(action.command === 'insert-chart' ? 'chart' : 'equation');
       return;
@@ -1157,6 +1176,7 @@ export async function mountDemo(
     closed = true;
     cellSplit.dispose();
     inlineObjectInsert.dispose();
+    imageInsert.dispose();
     noteInsert.dispose();
     noteDelete.dispose();
     chartData.dispose();
@@ -1214,6 +1234,7 @@ export async function mountDemo(
       closed = true;
       cellSplit.dispose();
       inlineObjectInsert.dispose();
+      imageInsert.dispose();
       noteInsert.dispose();
       noteDelete.dispose();
       chartData.dispose();

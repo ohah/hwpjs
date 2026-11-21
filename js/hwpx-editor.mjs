@@ -1,3 +1,4 @@
+import { createLiveImageInsertApi } from './live-image-insertion.mjs';
 import { createHwpxNoteDeleteApi } from './hwpx-note-delete.mjs';
 import { createHwpxNoteCreateApi } from './hwpx-note-create.mjs';
 import { createHwpxControlTextBatchApi } from './hwpx-control-text-batch.mjs';
@@ -249,6 +250,7 @@ export async function createHwpxEditor(source) {
     ...createIndependentTextApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
     ...createDocumentTextApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
     ...documentInsert,
+    ...createLiveImageInsertApi({ wasm, memory, check: ready }),
     ...createHwpxInlineObjectInsertApi({ wasm, memory, check: ready }),
     ...createHwpxNoteCreateApi({ wasm, memory, check: ready }),
     ...createHwpxNoteDeleteApi({ wasm, memory, check: ready }),

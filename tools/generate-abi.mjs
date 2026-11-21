@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import {
   ABI_VERSION,
+  LIVE_IMAGE_INSERT_ABI,
   HWP5_DOCUMENT_TEXT_READ_FUNCTIONS,
   HWP5_CHART_READ_ABI,
   HWP5_CHART_CREATE_ABI,
@@ -106,6 +107,14 @@ const generated =
   '};\n' +
   'pub const hwpx_chart_create_profile_exports = [_][]const u8{\n' +
   HWPX_CHART_CREATE_PROFILE_FUNCTIONS.map((name) => `    ${JSON.stringify(name)},\n`).join('') +
+  '};\n' +
+  'pub const live_image_insert_signatures = [_]OptionalFunctionSignature{\n' +
+  Object.entries(LIVE_IMAGE_INSERT_ABI)
+    .map(
+      ([name, signature]) =>
+        `    .{ .name = ${JSON.stringify(name)}, .params = ${signatureTypes(signature.params)}, .results = ${signatureTypes(signature.results)} },\n`,
+    )
+    .join('') +
   '};\n' +
   'pub const document = struct {\n' +
   Object.entries(DOCUMENT)

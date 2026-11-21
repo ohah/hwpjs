@@ -5,6 +5,7 @@ import { prepareDocumentTextReadView } from './document-text-read-view.ts';
 import { readNativeReadSourceEvidence } from '@hwpjs/core/_internal/native-read-source';
 import { captureDocumentTextCaret } from './document-text-caret.ts';
 import { createObjectPropertiesControls } from './object-properties-controls.ts';
+import { createSurfacePictureResizeControls } from './picture-resize-controls.ts';
 import {
   createObjectSelection,
   bindObjectSelectionEvents,
@@ -304,6 +305,7 @@ export function createCanvasSurface({
     selectionKey = '',
     observedStateVersion = -1;
   let checkBoxControls: any, formTextControls: any;
+  let pictureResizeControls: ReturnType<typeof createSurfacePictureResizeControls> | undefined;
   let documentReadPermit: ReturnType<typeof createDocumentTextReadPermit> | undefined;
   let nonTextHistoryAdmissionReady = false;
   let nonTextHistoryPending: object | undefined;
@@ -589,6 +591,7 @@ export function createCanvasSurface({
         createdCellCutReceipt.invalid = true;
       else createdCellCutReceipt.observed = state;
     }
+    pictureResizeControls?.observeState(state);
     objectSelection?.observeState(state);
     if (closed || !renderer) return;
     // Only new observations may change the projection. Native acknowledgment
@@ -837,6 +840,7 @@ export function createCanvasSurface({
     hostFocused: objectHostFocused,
     onClear: () => renderer?.selectObject(null),
     onChange: () => {
+      pictureResizeControls?.cancel();
       for (const listener of Array.from(objectSelectionListeners)) {
         if (!objectSelectionListeners.has(listener)) continue;
         try {
@@ -897,26 +901,29 @@ export function createCanvasSurface({
     canvas.ownerDocument,
     () => !closed && objectHostFocused() && objectSelection?.current() != null,
   );
-  const unbindObjectSelection = bindObjectSelectionEvents({
-    canvas,
-    input,
-    viewport,
-    document: doc,
-    selection: objectSelection,
-    retainPropertiesControl: objectPropertiesControls.retain,
-    point: (event) =>
-      canvasDocumentPoint(
-        event,
-        canvas.getBoundingClientRect(),
-        viewport.scrollTop,
-        renderer?.viewScale() ?? 1,
-        viewport.scrollLeft,
-      ),
-  });
+  let unbindObjectSelection = () => {};
+  const bindObjectSelection = () =>
+    bindObjectSelectionEvents({
+      canvas,
+      input,
+      viewport,
+      document: doc,
+      selection: objectSelection,
+      retainPropertiesControl: objectPropertiesControls.retain,
+      point: (event) =>
+        canvasDocumentPoint(
+          event,
+          canvas.getBoundingClientRect(),
+          viewport.scrollTop,
+          renderer?.viewScale() ?? 1,
+          viewport.scrollLeft,
+        ),
+    });
   const cleanup = () => {
     if (closed) return;
     closed = true;
     unbindObjectSelection();
+    pictureResizeControls?.close();
     objectPropertiesControls.dispose();
     objectSelectionListeners.clear();
     objectSelection?.dispose();
@@ -1285,6 +1292,55 @@ export function createCanvasSurface({
           });
       },
     });
+    // Resize handles must capture a certified picture before the generic object
+    // selector consumes the same pointerdown. Direct text handlers stay unchanged.
+    pictureResizeControls = createSurfacePictureResizeControls({
+      canvas,
+      viewport,
+      renderer,
+      window: realm,
+      note,
+      capture() {
+        const scene = captureObjectScene();
+        if (!scene) return null;
+        const selected = objectSelection?.current();
+        if (
+          !selected ||
+          selected.target.kind !== 'picture' ||
+          !objectHostFocused() ||
+          !rangeWritable(scene.state)
+        )
+          return null;
+        const content = scene.state.content as { format?: unknown; limited?: unknown };
+        if (!['hwp5', 'hwpx'].includes(String(content.format)) || content.limited === true)
+          return null;
+        const target = direct.selectedPicture();
+        const after = captureObjectScene();
+        if (
+          !target ||
+          !after ||
+          after.state !== scene.state ||
+          after.lease !== scene.lease ||
+          after.source !== scene.source ||
+          after.modalRevision !== scene.modalRevision ||
+          objectSelection?.current() !== selected ||
+          !objectHostFocused() ||
+          target.section !== selected.target.section ||
+          target.pictureNode !== selected.target.pictureNode
+        )
+          return null;
+        return Object.freeze({
+          state: scene.state,
+          selection: selected,
+          lease: scene.lease,
+          source: scene.source,
+          modalRevision: scene.modalRevision,
+          target: Object.freeze({ ...target }),
+        });
+      },
+      request: (width, height) => !closed && direct.resizePicture(width, height),
+    });
+    unbindObjectSelection = bindObjectSelection();
     const resource = async (kind: string, payload: Record<string, number>, field: string) => {
       const token = editor.getEditorState().token;
       const answer = await editor.readResource({ kind, ...payload }, token);
@@ -2425,8 +2481,9 @@ export function createCanvasSurface({
           // HWP5 creation owns a scoped current-reference path, not the HWPX
           // placement ABI. This observes UX caret only; Core still admits it.
           (content?.format === 'hwp5' &&
-            content?.chartCreationAvailable === true &&
-            content?.hwp5ChartCreateProfileVersion === 1 &&
+            ((content?.chartCreationAvailable === true &&
+              content?.hwp5ChartCreateProfileVersion === 1) ||
+              content?.imageInsertionAvailable === true) &&
             state.nativeHistoryStats?.protocolVersion === 2)) &&
         content?.readOnly !== true &&
         (state.capabilities as any)?.readOnly !== true &&

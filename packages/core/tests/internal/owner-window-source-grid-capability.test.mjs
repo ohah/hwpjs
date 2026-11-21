@@ -298,6 +298,7 @@ test('created cell typing scope remains exact metadata across COW and full-snaps
 });
 
 for (const key of [
+  'imageInsertionAvailable',
   'equationInsertionAvailable',
   'chartCreationAvailable',
   'hwp5ChartLiteralEditAvailable',
@@ -339,6 +340,7 @@ test('HWP5 chart create profile is exactly unavailable0 or supported1, never arb
 });
 test('complete current producer capabilities preserve strict unknown-key and ownership refusal', () => {
   const keys = {
+    imageInsertionAvailable: true,
     equationInsertionAvailable: true,
     hwp5ChartCreateProfileVersion: 1,
     chartCreationAvailable: false,
@@ -396,6 +398,53 @@ test('chart literal capability is exact metadata, not independent edit authority
       validateFullSnapshotTextDelta(
         f.before,
         ownObservation({ ...next, hwp5ChartLiteralEditAvailable: value })(),
+        f.packet,
+      ),
+      false,
+    );
+});
+
+test('image capability is exact metadata, not independent edit authority', () => {
+  for (const value of [false, true]) {
+    const f = fixture({ imageInsertionAvailable: value });
+    const next = f.merge();
+    assert(next);
+    assert.equal(next.imageInsertionAvailable, value);
+    assert.equal(validateFullSnapshotTextDelta(f.before, next, f.packet), true);
+    for (const changed of [!value, undefined, null, 0, 1, 'true', {}, []]) {
+      assert.equal(
+        validateFullSnapshotTextDelta(
+          f.before,
+          ownObservation({ ...next, imageInsertionAvailable: changed })(),
+          f.packet,
+        ),
+        false,
+      );
+    }
+    const removed = { ...next };
+    delete removed.imageInsertionAvailable;
+    assert.equal(
+      validateFullSnapshotTextDelta(f.before, ownObservation(removed)(), f.packet),
+      false,
+    );
+    for (const extra of [
+      { readOnly: true },
+      { futureInsertionCapability: true },
+      { imageInsertionAvailableExtra: true },
+    ]) {
+      const bad = fixture({ imageInsertionAvailable: value, ...extra });
+      assert.equal(isPlainOwnerBaseline(bad.before, 0, 0), false);
+      assert.equal(bad.merge(), null);
+    }
+  }
+  const f = fixture(),
+    next = f.merge();
+  assert(next);
+  for (const value of [false, true])
+    assert.equal(
+      validateFullSnapshotTextDelta(
+        f.before,
+        ownObservation({ ...next, imageInsertionAvailable: value })(),
         f.packet,
       ),
       false,

@@ -117,9 +117,19 @@
     "chart-create-bubbleChart.hwpx": "fixtures/newcharts/chart-create-bubbleChart.hwpx",
     "chart-create-stockChart.hwpx": "fixtures/newcharts/chart-create-stockChart.hwpx",
     "chart-create-surfaceChart.hwpx": "fixtures/newcharts/chart-create-surfaceChart.hwpx",
-    "chart-create-surface3DChart.hwpx": "fixtures/newcharts/chart-create-surface3DChart.hwpx"
+    "chart-create-surface3DChart.hwpx": "fixtures/newcharts/chart-create-surface3DChart.hwpx",
+    "image-insert-blank.hwp": "apps/docs/docs/public/editor/fixtures/image-insert-blank.hwp",
+    "image-insert-blank.hwpx": "apps/docs/docs/public/editor/fixtures/image-insert-blank.hwpx",
+    "picture-resize.hwp": "apps/docs/docs/public/editor/fixtures/picture-resize.hwp",
+    "picture-resize.hwpx": "apps/docs/docs/public/editor/fixtures/picture-resize.hwpx"
   },
-  "nooriAliases": ["noori.hwp", "noori.hwpx"],
-  "excludedPassword": ["password-12345.hwp", "password-12345.hwpx"],
+  "nooriAliases": [
+    "noori.hwp",
+    "noori.hwpx"
+  ],
+  "excludedPassword": [
+    "password-12345.hwp",
+    "password-12345.hwpx"
+  ],
   "excludedReferenceCount": 16
 }

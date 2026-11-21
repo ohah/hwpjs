@@ -1,3 +1,4 @@
+import { DomEventTarget } from './dom-event-target-fixture.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createCanvasSurface } from '../src/surface.ts';
@@ -13,9 +14,10 @@ function fixture(ready = false) {
     { measureText: () => ({ width: 8, actualBoundingBoxAscent: 8, actualBoundingBoxDescent: 2 }) },
     { get: (o: any, k) => o[k] ?? (() => {}) },
   );
-  const doc: any = {
+  const doc: any = Object.assign(new DomEventTarget(), {
     activeElement: null,
-    defaultView: {
+    querySelector: () => null,
+    defaultView: Object.assign(new DomEventTarget(), {
       AbortController,
       navigator: { platform: 'test' },
       setInterval,
@@ -36,8 +38,8 @@ function fixture(ready = false) {
           observers.delete(this);
         }
       },
-    },
-  };
+    }),
+  });
   class Element extends EventTarget {
     ownerDocument = doc;
     children: any[] = [];
@@ -149,14 +151,14 @@ function fixture(ready = false) {
   };
 }
 test('multiple scoped mounts focus in their own realm and cleanup preserves editor and sibling nodes', async () => {
-  const a = fixture(),
-    b = fixture();
+  const a = fixture(true),
+    b = fixture(true);
   const x = createCanvasSurface({ root: a.root as any, editor: a.editor }),
     y = createCanvasSurface({ root: b.root as any, editor: b.editor });
   assert.equal(a.root.children.length, 2);
   assert.equal(b.root.children.length, 2);
-  x.focus();
-  y.focus();
+  assert.equal(x.focus(), true);
+  assert.equal(y.focus(), true);
   assert.notEqual(a.root.ownerDocument.activeElement, b.root.ownerDocument.activeElement);
   await x.dispose();
   await x.dispose();
@@ -184,6 +186,14 @@ test('failed second lease acquisition cleans up only its own subtree and observe
   assert.equal(a.root.children.length, 2);
   await first.dispose();
   assert.equal(a.observers.size, 0);
+});
+
+test('an empty realm keeps focus refused until a ready document is displayed', async () => {
+  const a = fixture();
+  const surface = createCanvasSurface({ root: a.root as any, editor: a.editor });
+  assert.equal(surface.focus(), false);
+  assert.equal(a.root.ownerDocument.activeElement, null);
+  await surface.dispose();
 });
 
 test('ready snapshot mounts using canonical renderer and capability initialization', async () => {

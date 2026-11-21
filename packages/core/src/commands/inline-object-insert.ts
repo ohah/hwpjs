@@ -224,7 +224,7 @@ export function captureInlineObjectInsertPayload(
  * provenance even though the saved host contains only empty text runs.
  * Native still validates the exact source witness and physical host structure.
  * Document insertion keeps its independent, stricter plain paragraph policy. */
-function currentInlineObjectInsertCaret(
+export function currentInlineObjectInsertCaret(
   state: EditorState,
   target: SelectionTarget,
   version: number,

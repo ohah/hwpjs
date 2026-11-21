@@ -132,6 +132,7 @@ export function resolveCommandSupport(
   if (!input.connected) return deny('unconnected', UNCONNECTED_COMMAND_REASON);
   const surfaceSelection =
     [
+      'insert-image',
       'generated-table-insert-row',
       'generated-table-delete-row',
       'generated-table-insert-column',

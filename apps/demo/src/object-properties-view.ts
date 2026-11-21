@@ -74,7 +74,7 @@ export function createObjectPropertiesView(
   const hint = doc.createElement('p'),
     status = doc.createElement('p');
   hint.textContent =
-    '선택한 그림의 크기를 변경합니다. 위치·회전·자르기 등 추가 속성은 현재 이 창에서 지원하지 않습니다.';
+    '너비·높이를 mm로 입력하세요. 지원되는 그림은 캔버스 조절점을 끌어도 크기를 바꿀 수 있습니다. 위치·회전·자르기 등 추가 속성은 현재 이 창에서 지원하지 않습니다.';
   hint.className = 'hwp-object-hint';
   status.id = `${prefix}-status`;
   status.dataset.role = 'object-status';

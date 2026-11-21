@@ -356,3 +356,10 @@ export type {
   Hwp5ChartDataCapture,
   Hwp5ChartDataEditor,
 } from './commands/hwp5-chart-data.ts';
+
+export {
+  INSERT_IMAGE_COMMAND,
+  captureImageInsertPayload,
+  imageInsertMessage,
+} from './commands/image-insert.ts';
+export type { ImageInsertOptions, InsertImagePayload } from './commands/image-insert.ts';

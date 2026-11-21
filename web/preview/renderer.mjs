@@ -1552,29 +1552,6 @@ export function createRenderer(
           paintedPictureProof = { target, receipt };
       }
     }
-    const resize = pictureResizeSelection?.();
-    if (resize) {
-      paintRowTransform(ctx, { pageClip: resize.pageClip }, viewport.scrollTop, () => {
-        ctx.fillStyle = '#145b96';
-        for (const handle of pictureResizeHandles(resize))
-          ctx.fillRect(handle.point[0] - 4, handle.point[1] - viewport.scrollTop - 4, 8, 8);
-      });
-    }
-    if (pictureResizeGuide) {
-      const { basis, size } = pictureResizeGuide;
-      const x =
-        basis.origin[0] +
-        (basis.x[0] * size.width) / basis.width +
-        (basis.y[0] * size.height) / basis.height;
-      const y =
-        basis.origin[1] +
-        (basis.x[1] * size.width) / basis.width +
-        (basis.y[1] * size.height) / basis.height;
-      paintRowTransform(ctx, { pageClip: basis.pageClip }, viewport.scrollTop, () => {
-        ctx.fillStyle = '#145b96';
-        ctx.fillRect(x - 3, y - viewport.scrollTop - 3, 6, 6);
-      });
-    }
     // Publish hit targets only with the scroll origin of this completed frame.
     checkBoxPaintScrollTop = formPaintScrollTop;
     checkBoxPaintScrollLeft = formPaintScrollLeft;
@@ -1686,6 +1663,34 @@ export function createRenderer(
           : null,
       picture: paintedPictureProof,
     });
+    // Host resize scopes require the completed frame and its private paint receipt.
+    // Querying while paintedStamp is cleared would reject every handle and can
+    // destructively retire the host's existing selected object.
+    if (!output && pictureResizeSelection && isPaintedFrameCurrent()) {
+      const resize = pictureResizeSelection?.();
+      if (resize) {
+        paintRowTransform(ctx, { pageClip: resize.pageClip }, viewport.scrollTop, () => {
+          ctx.fillStyle = '#145b96';
+          for (const handle of pictureResizeHandles(resize))
+            ctx.fillRect(handle.point[0] - 4, handle.point[1] - viewport.scrollTop - 4, 8, 8);
+        });
+      }
+      if (resize && pictureResizeGuide) {
+        const { basis, size } = pictureResizeGuide;
+        const x =
+          basis.origin[0] +
+          (basis.x[0] * size.width) / basis.width +
+          (basis.y[0] * size.height) / basis.height;
+        const y =
+          basis.origin[1] +
+          (basis.x[1] * size.width) / basis.width +
+          (basis.y[1] * size.height) / basis.height;
+        paintRowTransform(ctx, { pageClip: basis.pageClip }, viewport.scrollTop, () => {
+          ctx.fillStyle = '#145b96';
+          ctx.fillRect(x - 3, y - viewport.scrollTop - 3, 6, 6);
+        });
+      }
+    }
   };
   let frame = 0;
   let queuedTypingHold = null;

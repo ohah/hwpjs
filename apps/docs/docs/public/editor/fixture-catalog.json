@@ -1,5 +1,29 @@
 [
   {
+    "id": "image-insert-blank.hwp",
+    "name": "image-insert-blank.hwp",
+    "label": "[기능 예제] 빈 HWP5 · 그림 삽입 준비",
+    "available": true
+  },
+  {
+    "id": "image-insert-blank.hwpx",
+    "name": "image-insert-blank.hwpx",
+    "label": "[기능 예제] 빈 HWPX · 그림 삽입 준비",
+    "available": true
+  },
+  {
+    "id": "picture-resize.hwp",
+    "name": "picture-resize.hwp",
+    "label": "[기능 예제] HWP5 그림 크기 조절",
+    "available": true
+  },
+  {
+    "id": "picture-resize.hwpx",
+    "name": "picture-resize.hwpx",
+    "label": "[기능 예제] HWPX 그림 크기 조절",
+    "available": true
+  },
+  {
     "id": "chart-data-edit.hwpx",
     "name": "chart-data-edit.hwpx",
     "label": "[기능 예제] 차트 데이터 편집",

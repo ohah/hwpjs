@@ -314,6 +314,11 @@ export function createReaderRuntime({
     }
     const content = projected ?? displayContent(hwp5DisplayProjection());
     content.editorSessionAvailable = Boolean(editor);
+    content.imageInsertionAvailable =
+      historyEnabled &&
+      !historyPoisoned &&
+      editor?.historyStats?.()?.protocolVersion === 2 &&
+      editor?.supportsImageInsertionAbi?.() === true;
     content.equationInsertionAvailable =
       historyEnabled &&
       !historyPoisoned &&
@@ -1190,6 +1195,11 @@ export function createReaderRuntime({
                 historyStats?.poisoned !== true &&
                 !historyPoisoned &&
                 editor?.supportsNoteCreationAbi?.() === true,
+              imageInsertionAvailable:
+                historyEnabled &&
+                !historyPoisoned &&
+                editor?.historyStats?.()?.protocolVersion === 2 &&
+                editor?.supportsImageInsertionAbi?.() === true,
               equationInsertionAvailable:
                 historyEnabled &&
                 historyStats?.protocolVersion === 2 &&
@@ -2232,6 +2242,31 @@ export function createReaderRuntime({
         reader = await createHwpxReader(module);
         preview = reader.readTextEvents(editor.saveForDisplay());
         reply({ kind: message.kind, content: hwpxDisplay() });
+      } else if (message.kind === 'insert-image') {
+        if (
+          !['hwp5', 'hwpx'].includes(format) ||
+          !editor ||
+          !historyEnabled ||
+          editor.historyStats?.()?.protocolVersion !== 2 ||
+          editor?.supportsImageInsertionAbi?.() !== true
+        )
+          throw Error('ImageInsertionUnavailable');
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        atomicOutcome = editor.insertImage(message.request);
+        applied = atomicOutcome.application === 'applied';
+        mutationUncertain = atomicOutcome.application === 'unknown';
+        if (mutationUncertain) historyPoisoned = true;
+        if (atomicOutcome.error || atomicOutcome.cleanupError)
+          throw Error(atomicOutcome.error || atomicOutcome.cleanupError);
+        if (format === 'hwpx' && applied) {
+          reader = await createHwpxReader(module);
+          preview = reader.readTextEvents(editor.saveForDisplay());
+        }
+        reply({
+          kind: message.kind,
+          changed: applied,
+          content: format === 'hwp5' ? hwp5Display() : hwpxDisplay(),
+        });
       } else if (message.kind === 'create-chart' && format === 'hwp5') {
         if (
           !editor ||

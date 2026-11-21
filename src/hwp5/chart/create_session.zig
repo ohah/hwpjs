@@ -20,7 +20,12 @@ pub const Prepared = struct {
 };
 
 pub fn prepare(a: std.mem.Allocator, decoded: []const []u8, document: *const model.Document, pending: []const Tables, backgrounds: Backgrounds, version: Version, request: Request, ordinal: u16, resources: records.Resources, limits: records.Limits) !Prepared {
-    try @import("create_request.zig").validate(request);
+    return prepareWith(a, decoded, document, pending, backgrounds, version, request, ordinal, resources, limits, ChartAuthor);
+}
+
+/// Shared own source/remap transaction; the author retains its format verifier.
+pub fn prepareWith(a: std.mem.Allocator, decoded: []const []u8, document: *const model.Document, pending: []const Tables, backgrounds: Backgrounds, version: Version, request: anytype, ordinal: u16, resources: records.Resources, limits: records.Limits, comptime Author: type) !Prepared {
+    try Author.validate(request);
     const section_index = request.target.section;
     if (section_index >= document.sections.len) return error.InvalidSection;
     if (decoded.len != document.sections.len or pending.len != decoded.len) return error.SourceBindingMismatch;
@@ -61,7 +66,7 @@ pub fn prepare(a: std.mem.Allocator, decoded: []const []u8, document: *const mod
     }
     var physical_request = request;
     physical_request.target.anchor.host = .{ .original_node = try normalized.paragraphs[target].originalNode() };
-    var changed = try @import("create_section.zig").write(a, emitted, version, normalized, target, physical_request, id, ordinal, resources.paragraphs.char_shapes, limits.max_bytes);
+    var changed = try Author.write(a, emitted, version, normalized, target, physical_request, id, ordinal, resources.paragraphs.char_shapes, limits.max_bytes);
     defer changed.deinit(a);
     var final_projection = try @import("../model_projection.zig").fromDecodedSections(a, version, &.{changed.raw});
     defer final_projection.deinit(a);
@@ -96,13 +101,13 @@ pub fn prepare(a: std.mem.Allocator, decoded: []const []u8, document: *const mod
     // is published on a late refusal; all other adapter intents remain owned.
     const verified = try @import("../edit/created_table_section.zig").write(a, owned, candidate, &tables, version, resources, limits);
     defer a.free(verified);
-    try verify(a, owned, version, id, ordinal, request, candidate, target, true);
+    try Author.verify(a, owned, version, id, ordinal, request, candidate, target, true);
     var actual = try @import("../model_projection.zig").fromDecodedSections(a, version, &.{verified});
     defer actual.deinit(a);
-    try verify(a, verified, version, id, ordinal, request, actual.sections[0], target, false);
+    try Author.verify(a, verified, version, id, ordinal, request, actual.sections[0], target, false);
     return .{ .section = candidate, .tables = tables, .backgrounds = cells };
 }
-fn verify(a: std.mem.Allocator, raw: []const u8, version: Version, id: u32, ordinal: u16, request: Request, candidate: model.Section, target: usize, check_anchor: bool) !void {
+fn verifyChart(a: std.mem.Allocator, raw: []const u8, version: Version, id: u32, ordinal: u16, request: Request, candidate: model.Section, target: usize, check_anchor: bool) !void {
     const sites = try @import("ole_sites.zig").read(a, raw, version, candidate.paragraphs, .spec24);
     defer a.free(sites);
     var count: usize = 0;
@@ -133,3 +138,9 @@ fn styleOffsets(a: std.mem.Allocator, raw: []const u8, version: Version, section
     if (index != offsets.len) return error.SourceBindingMismatch;
     return offsets;
 }
+
+const ChartAuthor = struct {
+    pub const validate = @import("create_request.zig").validate;
+    pub const write = @import("create_section.zig").write;
+    pub const verify = verifyChart;
+};

@@ -1163,7 +1163,7 @@ fn apply(command: histories.Command) !void {
         _ = try @import("../hwpx/display_resource_generation.zig").applyOwned(value, session, &.{command});
     } else switch (command.kind) {
         // Independent source-axis batches require the existing owned History.
-        .page_settings, .object_geometry, .bullet_definition, .paragraph_bullet, .independent_text, .document_text, .insert_document, .equation_insert, .chart_create, .note_delete, .note_create, .named_field_rename, .named_field_create, .named_field_parameters, .source_table_cell_merge, .source_table_cell_split, .splice_created_cell => return error.HistoryNotEnabled,
+        .page_settings, .object_geometry, .bullet_definition, .paragraph_bullet, .independent_text, .document_text, .insert_document, .equation_insert, .chart_create, .image_insert, .note_delete, .note_create, .named_field_rename, .named_field_create, .named_field_parameters, .source_table_cell_merge, .source_table_cell_split, .splice_created_cell => return error.HistoryNotEnabled,
         .source_table_grid => {
             _ = try @import("../hwpx/source_table_grid_session.zig").apply(session, .{ .section = command.section, .node = command.source_grid_node, .expected_rows = command.source_grid_expected_rows, .expected_columns = command.source_grid_expected_columns, .action = command.source_grid_action });
         },
@@ -2753,6 +2753,26 @@ export fn hwpx_edit_create_chart(ptr: [*]const u8, size: u32) u32 {
     const target = parsed.request.target;
     checkInlineInsertBinding(target) catch |err| return fail(err);
     apply(.{ .kind = .chart_create, .section = target.section, .paragraph = target.paragraph, .start = target.unit, .deleted = 0, .inserted = "", .chart_create = &parsed.request }) catch |err| return fail(err);
+    return 1;
+}
+
+// Optional v1 live picture insertion. Independent file insertion ABI stays unchanged.
+export fn hwpx_edit_image_insert_version() u32 {
+    return 1;
+}
+export fn hwpx_edit_insert_image(ptr: [*]const u8, size: u32, image_ptr: [*]const u8, image_size: u32) u32 {
+    hwpx_edit_output_free();
+    if (image_size == 0 or image_size > 8 * 1024 * 1024) return fail(error.LimitExceeded);
+    const digest = inlineInsertSourceDigest() catch |err| return fail(err);
+    var parsed = @import("../hwpx/image_insert_request.zig").parse(a, ptr[0..size], image_ptr[0..image_size], digest) catch |err| return fail(err);
+    defer parsed.deinit();
+    const target = parsed.request.target;
+    checkInlineInsertBinding(target) catch |err| return fail(err);
+    apply(.{ .kind = .image_insert, .section = target.section, .paragraph = target.paragraph, .start = target.unit, .deleted = 0, .inserted = "", .image_insert = &parsed.request }) catch |err| {
+        const uncertain = if (history) |*h| h.stats().poisoned else false;
+        _ = fail(err);
+        return if (uncertain or err == error.MutationUncertain or err == error.HistoryMutationUncertain) 3 else 0;
+    };
     return 1;
 }
 

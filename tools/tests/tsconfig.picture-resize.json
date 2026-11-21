@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "types": [],
+    "paths": {
+      "@hwpjs/core": ["../../packages/core/src/index.ts"],
+      "@hwpjs/core/_internal/native-geometry": [
+        "../../packages/core/src/_internal/native-geometry.ts"
+      ],
+      "@hwpjs/core/_internal/native-read-source": [
+        "../../packages/core/src/_internal/native-read-source.ts"
+      ]
+    }
+  },
+  "include": [
+    "../../packages/vanilla/src/picture-resize-controls.ts",
+    "../../packages/vanilla/src/surface.ts",
+    "../../apps/demo/src/object-properties-port.ts",
+    "../../apps/demo/src/assets.d.ts"
+  ]
+}

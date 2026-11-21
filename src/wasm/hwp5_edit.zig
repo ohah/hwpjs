@@ -2053,6 +2053,42 @@ export fn hwp5_edit_create_chart_current(ref_ptr: [*]const u8, ref_size: usize, 
     return 1;
 }
 
+// Optional native picture creation. No OLE/chart resource or source rebinding.
+export fn hwp5_edit_image_insert_version() u32 {
+    return 1;
+}
+export fn hwp5_edit_insert_image_current(ref_ptr: [*]const u8, ref_size: usize, ptr: [*]const u8, size: usize, image_ptr: [*]const u8, image_size: usize) u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    if (h.owned == null) return fail(error.HistoryV2Required);
+    if (h.owned.?.poisoned) {
+        _ = fail(error.HistoryMutationUncertain);
+        return 3;
+    }
+    if (ref_size == 0 or ref_size > 1024 or image_size == 0 or image_size > 8 * 1024 * 1024) return fail(error.LimitExceeded);
+    const reference = @import("hwp5_current_reference.zig").decode(a, ref_ptr[0..ref_size], view_epoch.current() catch |err| return fail(err)) catch |err| return fail(err);
+    const source = switch (reference) {
+        .source => |v| v,
+        else => return fail(error.UnsupportedPictureInsertionHost),
+    };
+    const parsed = @import("live_image_insert_wire.zig").parse(a, ptr[0..size]) catch |err| return fail(err);
+    defer parsed.deinit();
+    const raw = s.copyCurrentParagraphTextUtf16(a, source.section, reference) catch |err| return fail(err);
+    defer a.free(raw);
+    const request: @import("../hwp5/edit/image_create_request.zig").Request = .{
+        .target = .{ .section = source.section, .anchor = .{ .host = source.host, .unit = parsed.value.start }, .binding = s.historyTicket() catch |err| return fail(err) },
+        .expected_text_utf16le = raw,
+        .box = .{ .width = parsed.value.width, .height = parsed.value.height },
+        .image = image_ptr[0..image_size],
+    };
+    apply(.{ .insert_image = request }) catch |err| {
+        _ = fail(err);
+        return if (h.owned.?.poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    return 1;
+}
+
 // Optional fixed-shape chart literal editing. No existing export body is changed.
 fn chartLiteralEditHistory() !*History {
     _ = try session();
