@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "catalogSHA256": "c1acd0ca1bec88d88c04d790a026dcd0d9707a1d8dc899c5fa5c4d70bf5e6a5e",
+  "catalogSHA256": "eb04aa6cdb80ac990a704845341d099daaa7a3eda2679dbbe6587ca50f05c7bd",
   "files": [
     {
       "id": "image-insert-blank.hwp",
@@ -1081,6 +1081,22 @@
       "path": "fixtures/hwp5-chart-create-pie.hwp",
       "bytes": 11776,
       "sha256": "f0419e00552b521c72188064820ddf5a0b268a37e5cc24a18c8dfd510f4619fd"
+    },
+    {
+      "id": "hwp5-page-restart.hwp",
+      "name": "hwp5-page-restart.hwp",
+      "label": "[기능 예제] HWP5 기존 쪽 번호 재시작",
+      "path": "fixtures/hwp5-page-restart.hwp",
+      "bytes": 4096,
+      "sha256": "566f34a377b2d06f2e5fe56a29ee60b4981612558f312ca93e0c32f9c2be0dd2"
+    },
+    {
+      "id": "hwpx-page-restart.hwpx",
+      "name": "hwpx-page-restart.hwpx",
+      "label": "[기능 예제] HWPX 기존 쪽 번호 재시작",
+      "path": "fixtures/hwpx-page-restart.hwpx",
+      "bytes": 6937,
+      "sha256": "ff03f70bb048a45abcd21d2a40d2e1828d89ae8e2c85ee9cb42ed9c36c738a6d"
     }
   ]
 }

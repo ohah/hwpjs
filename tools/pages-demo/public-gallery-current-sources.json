@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "policy": "public-gallery-fixtures.json",
-  "policySHA256": "4696f129a96e4b9bdcbf5cfb0f0057a5146c43fb29c17b9dc346748755cf097a",
+  "policySHA256": "47dd226b4aeb1731d3c29c086b5dfa0a4690f9bfdb537d252d50b6d1fcf04bc3",
   "sourcePaths": {
     "image-insert-blank.hwp": "apps/docs/docs/public/editor/fixtures/image-insert-blank.hwp",
     "image-insert-blank.hwpx": "apps/docs/docs/public/editor/fixtures/image-insert-blank.hwpx",
@@ -137,6 +137,8 @@
     "anchored-picture.hwp": "tools/pages-demo/fixtures/anchored-picture.hwp",
     "anchored-picture.hwpx": "tools/pages-demo/fixtures/anchored-picture.hwpx",
     "hwp5-chart-create-horizontal-bar.hwp": "tools/pages-demo/fixtures/hwp5-chart-create-horizontal-bar.hwp",
-    "hwp5-chart-create-pie.hwp": "tools/pages-demo/fixtures/hwp5-chart-create-pie.hwp"
+    "hwp5-chart-create-pie.hwp": "tools/pages-demo/fixtures/hwp5-chart-create-pie.hwp",
+    "hwp5-page-restart.hwp": "tools/pages-demo/fixtures/hwp5-page-restart.hwp",
+    "hwpx-page-restart.hwpx": "tools/pages-demo/fixtures/hwpx-page-restart.hwpx"
   }
 }

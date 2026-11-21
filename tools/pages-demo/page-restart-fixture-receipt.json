@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "feature": "existing-page-restart",
+  "baseCount": 135,
+  "targetCount": 137,
+  "baseManifestSHA256": "f6be27b5b485e16ca64ad1895f0d6bc46a3d89010a4c70734ed57947ee5eaba9",
+  "basePolicySHA256": "4696f129a96e4b9bdcbf5cfb0f0057a5146c43fb29c17b9dc346748755cf097a",
+  "baseCatalogSHA256": "c1acd0ca1bec88d88c04d790a026dcd0d9707a1d8dc899c5fa5c4d70bf5e6a5e",
+  "targetPolicyPath": "tools/pages-demo/page-restart-fixture-policy.json",
+  "targetPolicySHA256": "47dd226b4aeb1731d3c29c086b5dfa0a4690f9bfdb537d252d50b6d1fcf04bc3",
+  "targetCatalogSHA256": "eb04aa6cdb80ac990a704845341d099daaa7a3eda2679dbbe6587ca50f05c7bd",
+  "additions": [
+    {
+      "row": {
+        "id": "hwp5-page-restart.hwp",
+        "name": "hwp5-page-restart.hwp",
+        "label": "[기능 예제] HWP5 기존 쪽 번호 재시작",
+        "path": "fixtures/hwp5-page-restart.hwp",
+        "bytes": 4096,
+        "sha256": "566f34a377b2d06f2e5fe56a29ee60b4981612558f312ca93e0c32f9c2be0dd2"
+      },
+      "sourcePath": "tools/pages-demo/fixtures/hwp5-page-restart.hwp",
+      "parentId": "image-insert-blank.hwp",
+      "parentBytes": 3584,
+      "parentSHA256": "3924fe5f437ffaa76f6696770cb4ae5fc19ffe485fb324bb21abc29b1f2cc689",
+      "provenanceSHA256": "b9e1d7d7a8f0f9db638e8eba52bb665919673c181268ad64e008732689e4f812"
+    },
+    {
+      "row": {
+        "id": "hwpx-page-restart.hwpx",
+        "name": "hwpx-page-restart.hwpx",
+        "label": "[기능 예제] HWPX 기존 쪽 번호 재시작",
+        "path": "fixtures/hwpx-page-restart.hwpx",
+        "bytes": 6937,
+        "sha256": "ff03f70bb048a45abcd21d2a40d2e1828d89ae8e2c85ee9cb42ed9c36c738a6d"
+      },
+      "sourcePath": "tools/pages-demo/fixtures/hwpx-page-restart.hwpx",
+      "parentId": "image-insert-blank.hwpx",
+      "parentBytes": 6671,
+      "parentSHA256": "8b74ee3b9a26ab112276241a39779f21de3b26ce8ec20ceb8093a443e41ff1ee",
+      "provenanceSHA256": "b9e1d7d7a8f0f9db638e8eba52bb665919673c181268ad64e008732689e4f812"
+    }
+  ],
+  "producer": {
+    "GUIAuditSHA256": "d54f6a2ac67809a3313e3b252d975a70f18effefacccb508bfa783565d5f87ba",
+    "recipeSHA256": "8d8bdb159d28c12c898f3c5af67dc2e314c9b12e929b83f6b6ff48a86f5928f3",
+    "HWP5RawNormalSHA256": "94a8fd3563eaad6a9710482c43fd695ca333c40d03552f0b3d5a06619e06517c",
+    "HWPXRawNormalSHA256": "ab454a18ac59711cd989c5a28aefcd0fdc42b51787e46a94bafa9e7145c8eb27"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "feature": "existing-page-restart",
+  "recipePath": "tools/pages-demo/page-restart-fixture-recipe.json",
+  "recipeSHA256": "8d8bdb159d28c12c898f3c5af67dc2e314c9b12e929b83f6b6ff48a86f5928f3",
+  "GUIAuditSHA256": "d54f6a2ac67809a3313e3b252d975a70f18effefacccb508bfa783565d5f87ba",
+  "browserWasmSHA256": "fe1be718c3fc2a677275d22421d22aba3d80a6d6ec6bf5d04345247da6030a20",
+  "inputs": [
+    {
+      "id": "hwp5-page-restart.hwp",
+      "fixtureSHA256": "566f34a377b2d06f2e5fe56a29ee60b4981612558f312ca93e0c32f9c2be0dd2",
+      "fixtureBytes": 4096,
+      "parentId": "image-insert-blank.hwp",
+      "parentSHA256": "3924fe5f437ffaa76f6696770cb4ae5fc19ffe485fb324bb21abc29b1f2cc689",
+      "parentBytes": 3584,
+      "parentNormalBlankByteMatch": true,
+      "source": "자체 증명용 Native fixture",
+      "actualGUIOriginal": true,
+      "selectedSection": 1,
+      "before": 7,
+      "after": 30,
+      "rawSavedSHA256": "03ece2d13b7bbfc8ee7a5c98e52238cae8b4811c2a4e4ac1c98c0b3255b90d48"
+    },
+    {
+      "id": "hwpx-page-restart.hwpx",
+      "fixtureSHA256": "ff03f70bb048a45abcd21d2a40d2e1828d89ae8e2c85ee9cb42ed9c36c738a6d",
+      "fixtureBytes": 6937,
+      "parentId": "image-insert-blank.hwpx",
+      "parentSHA256": "8b74ee3b9a26ab112276241a39779f21de3b26ce8ec20ceb8093a443e41ff1ee",
+      "parentBytes": 6671,
+      "parentNormalBlankByteMatch": true,
+      "source": "정식 Native 빈 문서와 제어된 단일 XML 문단",
+      "actualGUIOriginal": true,
+      "selectedSection": 0,
+      "before": 7,
+      "after": 30,
+      "rawSavedSHA256": "1ad8c9ed31b6ed0e54c2a90750cb6bf492e688cbc03f3aa7addfcb33829360ed"
+    }
+  ],
+  "instructions": [
+    "파일 메뉴의 예제 문서에서 예제를 엽니다.",
+    "쪽 메뉴에서 기존 새 쪽 번호 편집을 엽니다.",
+    "HWP5는 2구역을 선택하고, HWPX는 단일 기존 대상을 확인합니다.",
+    "번호 7을 30으로 바꾸고 기존 번호에 적용을 누릅니다.",
+    "실행 취소와 다시 실행, 저장 후 재열기를 확인합니다.",
+    "HWP5 기본 저장이 줄 배치 오류로 거부되면 파일 메뉴의 명시 동의를 읽고 선택한 뒤 저장합니다."
+  ],
+  "licenseBasis": "저장소의 정식 빈 문서에서 만든 자체 합성 예제입니다. 공식 producer의 LICENSE와 THIRD_PARTY_NOTICES를 유지합니다.",
+  "claims": {
+    "existingControlEdit": true,
+    "newControlInsertion": false,
+    "newPageNumberPlacement": false,
+    "defaultEditedHwp5Save": false,
+    "noReflow": false,
+    "publicDeployment": false
+  },
+  "GUIManifestSHA256": "c924e56cbf080b367d6cf9ca03b2344478cb276b43792b0516db4c469c17f89c",
+  "receiptBaselineManifestSHA256": "f6be27b5b485e16ca64ad1895f0d6bc46a3d89010a4c70734ed57947ee5eaba9",
+  "receiptBaselineWasmSHA256": "3ab19ae617ee840acef3bcbc5043f0a7447cb2b7fd1a89ddae78e7b62c11165f",
+  "receiptBaselineActiveWorkerSHA256": "56fdcd05db0f6b590c04e3a58499e3f55b5bb068f6be16b8186a07b7ff10fe43",
+  "evidenceDistinction": "실제 메뉴 GUI 증거는 c924/fe1b 번들에서 관측했습니다. 최종 lease guard 번들은 f6be/3ab1이며 GUI 재실행은 하지 않았습니다. 최종 direct/public Node 저장 바이트 동일성은 별도 검증 증거입니다."
+}

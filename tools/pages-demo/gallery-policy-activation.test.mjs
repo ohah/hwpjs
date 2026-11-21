@@ -69,7 +69,7 @@ test('archived131 appends the exact vertical-margin samples to the archived129',
   for (const item of receipt.additions)
     assert.equal(sha(await readFile(resolve(root, item.sourcePath))), item.row.sha256);
 });
-test('actual producer policy reader defaults to135 and historical margin extension uses126 without touching the receipt', async () => {
+test('actual producer policy reader defaults to137 and historical margin extension uses126 without touching the receipt', async () => {
   for (const extension of [undefined, resolve(root, HWP5_MARGIN_RECEIPT)]) {
     const reads = [];
     const data = await loadPublicFixtureBaselinePolicy({
@@ -86,7 +86,7 @@ test('actual producer policy reader defaults to135 and historical margin extensi
         extension === undefined ? CURRENT_PUBLIC_FIXTURE_POLICY : HWP5_MARGIN_BASE_POLICY,
       ),
     ]);
-    assert.equal(JSON.parse(data).files.length, extension === undefined ? 135 : 126);
+    assert.equal(JSON.parse(data).files.length, extension === undefined ? 137 : 126);
   }
   let extra = 0;
   assert.equal(
@@ -102,7 +102,7 @@ test('actual producer policy reader defaults to135 and historical margin extensi
   );
   assert.equal(extra, 0);
 });
-test('current135 source metadata covers every exact ID without rewriting historical sourceHEAD', async () => {
+test('current137 source metadata covers every exact ID without rewriting historical sourceHEAD', async () => {
   const [
     policyBytes,
     sourceBytes,
@@ -113,6 +113,7 @@ test('current135 source metadata covers every exact ID without rewriting histori
     anchoredReceiptBytes,
     horizontalReceiptBytes,
     pieReceiptBytes,
+    pageRestartReceiptBytes,
   ] = await Promise.all([
     bytes('public-gallery-fixtures.json'),
     bytes('public-gallery-current-sources.json'),
@@ -123,6 +124,7 @@ test('current135 source metadata covers every exact ID without rewriting histori
     bytes('anchored-picture-fixture-receipt.json'),
     bytes('hwp5-horizontal-chart-fixture-receipt.json'),
     bytes('hwp5-pie-chart-fixture-receipt.json'),
+    bytes('page-restart-fixture-receipt.json'),
   ]);
   const policy = JSON.parse(policyBytes),
     current = JSON.parse(sourceBytes),
@@ -135,7 +137,7 @@ test('current135 source metadata covers every exact ID without rewriting histori
     Object.keys(current.sourcePaths),
     policy.files.map((r) => r.id),
   );
-  assert.equal(Object.keys(current.sourcePaths).length, 135);
+  assert.equal(Object.keys(current.sourcePaths).length, 137);
   assert.equal('sourceHEAD' in current, false);
   assert.equal(historic.sourceHEAD, '8376bd004580d2429a52be544a1706210a21b0fd');
   for (const row of policy.files) {
@@ -146,6 +148,7 @@ test('current135 source metadata covers every exact ID without rewriting histori
       ...JSON.parse(anchoredReceiptBytes).additions,
       ...JSON.parse(horizontalReceiptBytes).additions,
       ...JSON.parse(pieReceiptBytes).additions,
+      ...JSON.parse(pageRestartReceiptBytes).additions,
     ].find((a) => a.row.id === row.id);
     assert.equal(
       current.sourcePaths[row.id],
@@ -302,11 +305,11 @@ test('historical134 appends one HWP5 horizontal bar example to immutable133', as
   assert.equal(sha(source), addition.row.sha256);
 });
 
-test('active135 appends a single standard HWP5 pie example to immutable134', async () => {
+test('historical135 appends a single standard HWP5 pie example to immutable134', async () => {
   const receiptPath = resolve(root, 'tools/pages-demo/hwp5-pie-chart-fixture-receipt.json');
   const baseline = await loadPublicFixtureBaselinePolicy({ root, receiptPath, read: readFile });
   const receipt = JSON.parse(await readFile(receiptPath));
-  const activeBytes = await bytes('public-gallery-fixtures.json');
+  const activeBytes = await bytes('public-gallery-fixtures-135.json');
   const active = JSON.parse(activeBytes);
   assert.deepEqual(baseline, await bytes('hwp5-horizontal-chart-fixture-policy.json'));
   assert.equal(sha(baseline), receipt.basePolicySHA256);
@@ -322,4 +325,97 @@ test('active135 appends a single standard HWP5 pie example to immutable134', asy
   const provenance = await bytes('hwp5-pie-chart-fixture-provenance.json');
   assert.equal(sha(provenance), addition.provenanceSHA256);
   assert.deepEqual(JSON.parse(provenance).values, [1, 2, 3]);
+});
+
+test('active137 adds exactly the two own existing PAGE examples to immutable135', async () => {
+  const receiptPath = resolve(root, 'tools/pages-demo/page-restart-fixture-receipt.json');
+  const baseline = await loadPublicFixtureBaselinePolicy({ root, receiptPath, read: readFile });
+  const receiptBytes = await readFile(receiptPath);
+  const receipt = JSON.parse(receiptBytes);
+  const activeBytes = await bytes('public-gallery-fixtures.json');
+  assert.deepEqual(baseline, await bytes('public-gallery-fixtures-135.json'));
+  assert.deepEqual(baseline, await bytes('hwp5-pie-chart-fixture-policy.json'));
+  assert.equal(sha(baseline), receipt.basePolicySHA256);
+  assert.equal(
+    receipt.baseManifestSHA256,
+    'f6be27b5b485e16ca64ad1895f0d6bc46a3d89010a4c70734ed57947ee5eaba9',
+  );
+  assert.equal(receipt.baseCount, 135);
+  assert.equal(receipt.targetCount, 137);
+  assert.deepEqual(activeBytes, await bytes('page-restart-fixture-policy.json'));
+  assert.equal(sha(activeBytes), receipt.targetPolicySHA256);
+  assert.deepEqual(JSON.parse(activeBytes).files, [
+    ...JSON.parse(baseline).files,
+    ...receipt.additions.map((a) => a.row),
+  ]);
+  assert.deepEqual(
+    receipt.additions.map((a) => a.row.id),
+    ['hwp5-page-restart.hwp', 'hwpx-page-restart.hwpx'],
+  );
+  const provenanceBytes = await bytes('page-restart-fixture-provenance.json');
+  const provenance = JSON.parse(provenanceBytes);
+  const recipeBytes = await bytes('page-restart-fixture-recipe.json');
+  const recipe = JSON.parse(recipeBytes);
+  assert.equal(sha(recipeBytes), provenance.recipeSHA256);
+  assert.equal(provenance.claims.newControlInsertion, false);
+  assert.equal(provenance.claims.defaultEditedHwp5Save, false);
+  for (const addition of receipt.additions) {
+    const artifact = await readFile(resolve(root, addition.sourcePath));
+    assert.equal(artifact.length, addition.row.bytes);
+    assert.equal(sha(artifact), addition.row.sha256);
+    assert.equal(addition.provenanceSHA256, sha(provenanceBytes));
+    const parent = JSON.parse(baseline).files.find((r) => r.id === addition.parentId);
+    assert.equal(parent.bytes, addition.parentBytes);
+    assert.equal(parent.sha256, addition.parentSHA256);
+    const parentBytes = await readFile(resolve(root, 'apps/docs/docs/public/editor', parent.path));
+    assert.equal(parentBytes.length, addition.parentBytes);
+    assert.equal(sha(parentBytes), addition.parentSHA256);
+  }
+  for (const format of ['HWP5', 'HWPX']) {
+    for (const key of format === 'HWP5'
+      ? ['producer', 'normalBlankProducer', 'restartRecordProducer', 'containerProofProducer']
+      : ['normalBlankProducer']) {
+      assert.equal(
+        sha(await readFile(resolve(root, recipe[format][key]))),
+        recipe[format][key + 'SHA256'],
+      );
+    }
+  }
+  const first = [];
+  await assert.rejects(
+    loadPublicFixtureExtension({
+      root,
+      receiptPath,
+      baselinePolicyBytes: baseline,
+      read(path) {
+        first.push(path);
+        return Buffer.from('{}');
+      },
+    }),
+    /UnapprovedFixtureReceipt/,
+  );
+  assert.deepEqual(first, [receiptPath]);
+  const inventory = publicFixtureModules(JSON.parse(activeBytes)).inventory;
+  assert.match(inventory, /hwp5-page-restart\.hwp/);
+  assert.match(inventory, /hwpx-page-restart\.hwpx/);
+  assert.doesNotMatch(
+    inventory,
+    /sourcePath|recipePath|GUIAudit|parentSHA256|\/private\/|\/Users\//,
+  );
+});
+
+test('PAGE parent proof matches approved normal blank bytes in normal and optimized Python', async () => {
+  const { spawnSync } = await import('node:child_process');
+  for (const flags of [[], ['-O']]) {
+    const result = spawnSync(
+      'python3',
+      ['-B', ...flags, resolve(root, 'tools/pages-demo/verify-page-restart-fixture-parents.py')],
+      { encoding: 'utf8' },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    const proof = JSON.parse(result.stdout);
+    assert.equal(proof['hwp5-page-restart.hwp'].normalBlankHeaderExact, true);
+    assert.equal(proof['hwp5-page-restart.hwp'].parentContainerWholePreservationClaim, false);
+    assert.equal(proof['hwpx-page-restart.hwpx'].normalBlankOtherEntriesExact, true);
+  }
 });

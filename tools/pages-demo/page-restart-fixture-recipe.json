@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "feature": "existing-page-restart",
+  "scope": "예제에는 기존 PAGE 컨트롤이 있습니다. 제품의 새 컨트롤 삽입 기능을 뜻하지 않습니다.",
+  "HWP5": {
+    "producer": "src/page_restart_history_fixture.zig",
+    "function": "h5",
+    "arguments": {
+      "sections": 2
+    },
+    "producerSHA256": "42e2a7dff51f9bffa289946a71047ed0c7005a037cbeb6652c4905043d2181c5",
+    "normalBlankProducer": "src/new_document/hwp5.zig",
+    "normalBlankProducerSHA256": "728d648e030bd39e18aaf3cc05b049211115a71895efab33dc41ffce4f3bc50e",
+    "restartRecordProducer": "src/hwp5/edit/page_restart_edit_fixture.zig",
+    "restartRecordProducerSHA256": "a2c6652c6e4f9b756959ee0d7de297adb297c7ccf88a1bb8b0b1e6f18a97729b",
+    "containerProofProducer": "src/hwp5/test_section_count_fixture.zig",
+    "containerProofProducerSHA256": "5aa0adc9c9a2ec6787b859908c6ef826bcfaa40be87f82eae0ed07465b1aded2",
+    "method": "정식 빈 문서의 FileHeader와 해독한 DocInfo/Section0에서 시작합니다. 구역 수를 2로 바꾸고 두 구역에 번호 7인 합성 restart 문단을 붙입니다. 증명용 Opaque 스트림 00ff007f를 추가합니다. 부모 컨테이너 전체 보존을 주장하지 않습니다."
+  },
+  "HWPX": {
+    "normalBlankProducer": "src/new_document/hwpx.zig",
+    "normalBlankProducerSHA256": "ae8b1677747514705fa3af1aa50440cd8a3ab4066104592c96f5d940b128f501",
+    "method": "정식 Native 빈 HWPX의 Section0 끝에 아래 제어된 문단 하나만 추가했습니다. 나머지 ZIP 내용은 같습니다. HWP5 증명용 fixture 함수의 hx 출력과 같은 파일이라고 주장하지 않습니다.",
+    "insertBefore": "</hs:sec>",
+    "paragraph": "<hp:p id='1' paraPrIDRef='0' styleIDRef='0' pageBreak='0' columnBreak='0' merged='0'><hp:run charPrIDRef='0'><hp:t>쪽 번호 예제</hp:t><hp:ctrl><hp:newNum numType='PAGE' num='7'/></hp:ctrl><hp:t>이 문단부터 7쪽으로 시작합니다.</hp:t></hp:run></hp:p>"
+  }
+}

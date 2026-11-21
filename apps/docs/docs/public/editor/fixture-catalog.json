@@ -808,5 +808,17 @@
     "name": "hwp5-chart-create-pie.hwp",
     "label": "[기능 예제] HWP5 원형 차트",
     "available": true
+  },
+  {
+    "id": "hwp5-page-restart.hwp",
+    "name": "hwp5-page-restart.hwp",
+    "label": "[기능 예제] HWP5 기존 쪽 번호 재시작",
+    "available": true
+  },
+  {
+    "id": "hwpx-page-restart.hwpx",
+    "name": "hwpx-page-restart.hwpx",
+    "label": "[기능 예제] HWPX 기존 쪽 번호 재시작",
+    "available": true
   }
 ]

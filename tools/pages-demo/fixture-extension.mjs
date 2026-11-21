@@ -19,7 +19,17 @@ export const HWP5_VERTICAL_MARGINS_RECEIPT =
 export const ANCHORED_PICTURE_RECEIPT = 'tools/pages-demo/anchored-picture-fixture-receipt.json';
 const HWP5_HORIZONTAL_CHART_RECEIPT = 'tools/pages-demo/hwp5-horizontal-chart-fixture-receipt.json';
 const HWP5_PIE_CHART_RECEIPT = 'tools/pages-demo/hwp5-pie-chart-fixture-receipt.json';
+const PAGE_RESTART_RECEIPT = 'tools/pages-demo/page-restart-fixture-receipt.json';
 const approvedReceipts = new Map([
+  [
+    PAGE_RESTART_RECEIPT,
+    {
+      feature: 'existing-page-restart',
+      sha256: '1dcb0861845025caa3ecd73d671b302dadbce78645b2b70cc5583cee882af610',
+      baselinePolicy: 'tools/pages-demo/public-gallery-fixtures-135.json',
+      additions: 2,
+    },
+  ],
   [
     HWP5_PIE_CHART_RECEIPT,
     {
