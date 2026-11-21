@@ -127,7 +127,10 @@ export function createReaderEditorRuntime(options: ReaderRuntimeOptions = {}): E
     runtime,
     (message, context, admission, projection) =>
       requestInternal(message, context, admission, projection),
-    () => !closed && !poisoned,
+    (kind) =>
+      !closed &&
+      !poisoned &&
+      (!['picture-replacement-query', 'picture-replace'].includes(kind ?? '') || valid()),
   );
   origins.set(runtime, {
     valid,

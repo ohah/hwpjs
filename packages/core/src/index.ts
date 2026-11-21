@@ -363,3 +363,15 @@ export {
   imageInsertMessage,
 } from './commands/image-insert.ts';
 export type { ImageInsertOptions, InsertImagePayload } from './commands/image-insert.ts';
+
+export { EDIT_CREATED_CELL_PROPERTIES_COMMAND } from './commands/commands.ts';
+export type { CreatedCellPropertiesPayload } from './commands/created-cell-properties.ts';
+
+export { REPLACE_PICTURE_COMMAND } from './commands/picture-replacement.ts';
+export type {
+  ReplacePicturePayload,
+  PictureReplacementSelector,
+  PictureReplacementTarget,
+  PictureReplacementObservation,
+  PictureReplacementRead,
+} from './commands/picture-replacement.ts';

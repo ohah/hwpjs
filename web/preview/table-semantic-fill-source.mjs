@@ -131,9 +131,58 @@ export function tableSemanticFillProjection(style, selected) {
     }
   }
   const color = (node, field) => rgbCss(values.get(`${node.element_index}:${field}`));
+  // Exact own-writer compatibility for already saved table resources. The shared
+  // drawing selector still requires explicit alpha; no source DTO is rewritten.
+  const profile = style.source_color_profile,
+    minimal = nodes[0];
+  const authoredMinimalSolid =
+    isSourceColorProfile(profile) &&
+    profile.id === 'hwpjs-authored-v1-rgb24' &&
+    profile.encoding === 'rgb24' &&
+    profile.verified === true &&
+    style.unknown_attributes === 0 &&
+    style.unknown_children === 0 &&
+    report.header_and_sections === 1 &&
+    report.master_pages === 0 &&
+    report.other_attributes === 0 &&
+    report.unknown_enums === 0 &&
+    report.non_six_hex_colors === 0 &&
+    report.attribute_bytes === 7 &&
+    report.direct_children === 1 &&
+    report.color_count_mismatch === 0 &&
+    Array.isArray(report.kind_counts) &&
+    report.kind_counts.length === 5 &&
+    report.kind_counts.every((n, i) => n === (i === 0 ? 1 : 0)) &&
+    brush.part_item_index === 0 &&
+    brush.direct_children === 1 &&
+    brush.other_attributes === 0 &&
+    Array.isArray(brush.child_counts) &&
+    brush.child_counts.length === 3 &&
+    brush.child_counts.every((n, i) => n === (i === 0 ? 1 : 0)) &&
+    nodes.length === 1 &&
+    minimal.kind === 'win_brush' &&
+    minimal.parent_node_index === null &&
+    minimal.attribute_bytes === 7 &&
+    minimal.direct_children === 0 &&
+    minimal.recognized_children === 0 &&
+    minimal.other_attributes === 0 &&
+    minimal.unknown_enums === 0 &&
+    minimal.non_six_hex_colors === 0 &&
+    /^#[0-9a-f]{6}$/i.test(minimal.raw[0] ?? '') &&
+    minimal.raw.slice(1).every((value) => value === null) &&
+    values.size === 1 &&
+    Array.isArray(style.semantic_face_colors) &&
+    style.semantic_face_colors.length === 1 &&
+    color(minimal, 'winBrush.faceColor') === minimal.raw[0].toLowerCase();
   return {
     state: 'ready',
     project(source) {
+      if (
+        authoredMinimalSolid &&
+        source.state === 'unavailable' &&
+        source.error === 'UnsupportedDrawingPatternFill'
+      )
+        return { state: 'solid', color: color(minimal, 'winBrush.faceColor') };
       if (source.state === 'solid' || source.state === 'pattern') {
         const node = nodes[0],
           face = color(node, 'winBrush.faceColor');

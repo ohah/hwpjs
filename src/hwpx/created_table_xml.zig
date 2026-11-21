@@ -26,17 +26,18 @@ pub fn write(a: std.mem.Allocator, table: *const model.Table, max_bytes: usize) 
     for (table.cells) |cell| {
         if (cell.paragraph_id == 0 or (try used.getOrPut(cell.paragraph_id)).found_existing) return error.InvalidTableParagraphIds;
     }
+    const extent = try table.extent();
     var output: Builder = .{ .a = a, .limit = max_bytes };
     defer output.bytes.deinit(a);
     try output.print("<hp:tbl xmlns:hp=\"http://www.hancom.co.kr/hwpml/2011/paragraph\" id=\"{d}\" zOrder=\"0\" numberingType=\"TABLE\" textWrap=\"TOP_AND_BOTTOM\" textFlow=\"BOTH_SIDES\" lock=\"0\" dropcapstyle=\"None\" pageBreak=\"CELL\" repeatHeader=\"0\" rowCnt=\"{d}\" colCnt=\"{d}\" cellSpacing=\"0\" borderFillIDRef=\"{d}\" noAdjust=\"0\">", .{ table.instance_id, table.plan.rows, table.plan.columns, table.resources.border_fill });
-    try output.print("<hp:sz width=\"{d}\" widthRelTo=\"ABSOLUTE\" height=\"{d}\" heightRelTo=\"ABSOLUTE\" protect=\"0\"/>", .{ table.plan.width, try table.plan.height() });
+    try output.print("<hp:sz width=\"{d}\" widthRelTo=\"ABSOLUTE\" height=\"{d}\" heightRelTo=\"ABSOLUTE\" protect=\"0\"/>", .{ extent.width, extent.height });
     try output.append("<hp:pos treatAsChar=\"1\" affectLSpacing=\"0\" flowWithText=\"1\" allowOverlap=\"0\" holdAnchorAndSO=\"0\" vertRelTo=\"PARA\" horzRelTo=\"COLUMN\" vertAlign=\"TOP\" horzAlign=\"LEFT\" vertOffset=\"0\" horzOffset=\"0\"/><hp:outMargin left=\"0\" right=\"0\" top=\"0\" bottom=\"0\"/><hp:inMargin left=\"0\" right=\"0\" top=\"0\" bottom=\"0\"/>");
     for (0..table.plan.rows) |row| {
         try output.append("<hp:tr>");
         for (0..table.plan.columns) |column| {
-            const geometry = try table.plan.cell(@intCast(row), @intCast(column));
+            const geometry = try table.cell(@intCast(row), @intCast(column));
             const cell = table.cells[row * table.plan.columns + column];
-            try output.print("<hp:tc name=\"\" header=\"0\" hasMargin=\"0\" protect=\"0\" editable=\"0\" dirty=\"0\" borderFillIDRef=\"{d}\"><hp:subList id=\"\" textDirection=\"HORIZONTAL\" lineWrap=\"BREAK\" vertAlign=\"TOP\" linkListIDRef=\"0\" linkListNextIDRef=\"0\" textWidth=\"0\" textHeight=\"0\" hasTextRef=\"0\" hasNumRef=\"0\"><hp:p id=\"{d}\" paraPrIDRef=\"{d}\" styleIDRef=\"{d}\" pageBreak=\"0\" columnBreak=\"0\" merged=\"0\">", .{ table.resources.border_fill, cell.paragraph_id, table.resources.paragraph, table.resources.style });
+            try output.print("<hp:tc name=\"\" header=\"0\" hasMargin=\"0\" protect=\"0\" editable=\"0\" dirty=\"0\" borderFillIDRef=\"{d}\"><hp:subList id=\"\" textDirection=\"HORIZONTAL\" lineWrap=\"BREAK\" vertAlign=\"TOP\" linkListIDRef=\"0\" linkListNextIDRef=\"0\" textWidth=\"0\" textHeight=\"0\" hasTextRef=\"0\" hasNumRef=\"0\"><hp:p id=\"{d}\" paraPrIDRef=\"{d}\" styleIDRef=\"{d}\" pageBreak=\"0\" columnBreak=\"0\" merged=\"0\">", .{ try table.cellBorderFill(@intCast(row), @intCast(column)), cell.paragraph_id, table.resources.paragraph, table.resources.style });
             var run_scratch: [1]@import("../model/document.zig").CharacterRun = undefined;
             var spans = try cell.spans(table.resources.character, &run_scratch);
             while (try spans.next()) |span| {

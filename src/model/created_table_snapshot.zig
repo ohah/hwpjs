@@ -27,7 +27,8 @@ pub fn deinit(a: std.mem.Allocator, rows: []Row) void {
     a.free(rows);
 }
 pub fn fromTable(a: std.mem.Allocator, table: *const @import("created_table.zig").Table, host: usize, unit: u32) !Row {
-    const height = try table.plan.height();
+    const extent = try table.extent();
+    const height = extent.height;
     if (table.cells.len != try std.math.mul(usize, table.plan.rows, table.plan.columns)) return error.InvalidTableParagraphIds;
     const identity = try std.fmt.allocPrint(a, "{d}", .{table.identity});
     errdefer a.free(identity);
@@ -41,7 +42,7 @@ pub fn fromTable(a: std.mem.Allocator, table: *const @import("created_table.zig"
         a.free(cells);
     }
     for (table.cells, cells, 0..) |source, *cell, index| {
-        const geometry = try table.plan.cell(@intCast(index / table.plan.columns), @intCast(index % table.plan.columns));
+        const geometry = try table.cell(@intCast(index / table.plan.columns), @intCast(index % table.plan.columns));
         _ = try source.validate(table.resources.character);
         const text = try a.dupe(u8, source.text);
         errdefer a.free(text);
@@ -50,5 +51,5 @@ pub fn fromTable(a: std.mem.Allocator, table: *const @import("created_table.zig"
         cell.* = .{ .paragraph_id = source.paragraph_id, .row = geometry.row, .column = geometry.column, .x = geometry.x, .y = geometry.y, .width = geometry.width, .height = geometry.height, .text = text, .character_runs = runs };
         copied += 1;
     }
-    return .{ .identity = identity, .instance_id = table.instance_id, .host_paragraph = host, .anchor_unit = unit, .rows = table.plan.rows, .columns = table.plan.columns, .width = table.plan.width, .height = height, .resources = table.resources, .cells = cells };
+    return .{ .identity = identity, .instance_id = table.instance_id, .host_paragraph = host, .anchor_unit = unit, .rows = table.plan.rows, .columns = table.plan.columns, .width = extent.width, .height = height, .resources = table.resources, .cells = cells };
 }

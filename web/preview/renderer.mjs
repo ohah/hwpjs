@@ -1,3 +1,4 @@
+import { capturePictureSelection } from './picture-selection-capture.mjs';
 import {
   createHwp5ChartResources,
   compatibleHwp5ChartPreviewKeys,
@@ -2308,6 +2309,15 @@ export function createRenderer(
         ? `${selectedPicture.section}:${selectedPicture.pictureNode}`
         : '';
       schedule();
+    },
+    // Selection witness only, independent from resize or Native edit capability.
+    capturePictureSelection() {
+      return capturePictureSelection(() => ({
+        picture: selectedPicture,
+        receipt: pictureSelectionReceipt,
+        source: content,
+        epoch: resourceEpoch,
+      }));
     },
     selectedPicture() {
       return selectedPicture

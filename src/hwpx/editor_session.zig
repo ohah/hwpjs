@@ -979,6 +979,94 @@ pub const Session = struct {
         if (self.formatting_batch == context) self.formatting_batch = null;
         context.deinit(self.allocator);
     }
+    /// Read only: use the same detached COW header as the real save path.
+    pub fn createdCellPropertyStyles(self: *const Session, a1: std.mem.Allocator) ![]@import("../model/created_cell_properties_projection.zig").Style {
+        return self.createdCellPropertyStylesWithStats(a1, null);
+    }
+
+    pub fn createdCellPropertyStylesWithStats(self: *const Session, a1: std.mem.Allocator, stats: ?*@import("../model/created_cell_properties_projection.zig").Stats) ![]@import("../model/created_cell_properties_projection.zig").Style {
+        var any = false;
+        for (self.sections) |part| if (part.created_tables.entries.items.len != 0) {
+            any = true;
+            break;
+        };
+        if (!any) {
+            if (stats) |out| out.* = .{};
+            return a1.alloc(@import("../model/created_cell_properties_projection.zig").Style, 0);
+        }
+        var document = try @import("package.zig").inspectDocument(a1, self.source, .{});
+        defer document.deinit(a1);
+        var original = try document.readHeaderTree(a1, .{});
+        defer original.deinit(a1);
+        const profile = try @import("table_cell_background_session.zig").profile(self);
+        var prepared = try @import("created_cell_properties_resources.zig").prepare(a1, original.source, self.sections, self.options.max_xml_bytes, profile);
+        defer prepared.deinit(a1);
+        var header = try @import("header_tree.zig").parse(a1, prepared.bytes, 0, .{});
+        defer header.deinit(a1);
+        var memo = @import("../model/created_cell_properties_projection.zig").Memo.init(a1);
+        defer memo.deinit();
+        memo.stats.document_prepares = 1;
+        var resource_index = try @import("border_fill_resource_patch.zig").resourceIndex(a1, &header);
+        defer resource_index.deinit();
+        var rows: std.ArrayList(@import("../model/created_cell_properties_projection.zig").Style) = .empty;
+        errdefer {
+            for (rows.items) |row| a1.free(row.identity);
+            rows.deinit(a1);
+        }
+        for (prepared.tables, 0..) |values, section| for (values.entries.items) |entry| {
+            const table = &entry.table;
+            for (table.cells, 0..) |_, i| {
+                const row: u32 = @intCast(i / table.plan.columns);
+                const column: u32 = @intCast(i % table.plan.columns);
+                const id = try table.cellBorderFill(row, column);
+                const resolved = memo.get(id) orelse resolved: {
+                    const node = try resource_index.source(id);
+                    const observed = try @import("border_fill_xml_patch.zig").observeSelectedWithDiagonal(a1, &header, node, profile, @splat(true), true, .{ .directions = .none, .stroke = .{ .style = .SOLID, .width_hundredth_mm = 10, .color = 0 } });
+                    var supported = true;
+                    var tag = try @import("xml_part_attributes.zig").parseStartTag(a1, &header, node);
+                    defer tag.deinit(a1);
+                    for (tag.attributes) |attribute| {
+                        if (try @import("../xml/root.zig").namespaces.isDeclaration(attribute.name)) continue;
+                        const name = try @import("../xml/root.zig").qname.parse(attribute.name);
+                        var known = false;
+                        if (name.prefix == null) for ([_][]const u8{ "id", "threeD", "shadow", "centerLine", "breakCellSeparateLine" }) |key| {
+                            if (name.local.equals(key, false)) known = true;
+                        };
+                        if (!known) supported = false;
+                    }
+                    var child = header.elements[node].first_child;
+                    while (child) |index| : (child = header.elements[index].next_sibling) {
+                        var known = header.elements[index].is("http://www.hancom.co.kr/hwpml/2011/core", "fillBrush");
+                        for ([_][]const u8{ "leftBorder", "rightBorder", "topBorder", "bottomBorder", "diagonal", "slash", "backSlash" }) |key| {
+                            if (header.elements[index].is(@import("document_xml.zig").head_uri, key)) known = true;
+                        }
+                        if (!known) supported = false;
+                    }
+                    for ([_][]const u8{ "threeD", "shadow", "breakCellSeparateLine" }) |key| {
+                        if (try header.attributeValue(a1, node, "", key)) |attribute| {
+                            const text = try attribute.toUtf8(a1, 64);
+                            defer a1.free(text);
+                            if (!std.mem.eql(u8, text, "0") and !std.mem.eql(u8, text, "false")) supported = false;
+                        } else supported = false;
+                    }
+                    break :resolved try memo.resolve(id, observed, header.sourceOf(node), supported, .save_materialized_resource);
+                };
+                try @import("../model/created_cell_properties_projection.zig").append(a1, &rows, &memo, @intCast(section), table.identity, row, column, resolved);
+            }
+        };
+        const result = try rows.toOwnedSlice(a1);
+        if (stats) |out| out.* = memo.stats;
+        return result;
+    }
+
+    pub fn createdCellPropertiesTicket(self: *const Session) !@import("../model/history_mutation_epoch.zig").Ticket {
+        if (!self.history_delta_managed) return error.HistoryProtocol2Required;
+        return .{ .binding = .{ .document = @intFromPtr(self.source.ptr), .generation = 1, .owner = @intFromPtr(self) }, .epoch = self.mutation_serial };
+    }
+    pub fn editCreatedCellProperties(self: *Session, request: @import("../model/created_cell_properties_values.zig").Request) !bool {
+        if (!self.history_delta_managed or !self.history_transaction_active or self.formatting_batch != null) return error.MutationInProgress;
+        return @import("created_cell_properties_session.zig").apply(self, request);
+    }
     pub fn save(self: *const Session) ![]u8 {
         return self.saveWithTablePlacements(null);
     }
@@ -1001,19 +1089,33 @@ pub const Session = struct {
             replacements.deinit(a);
         }
         var xml_bytes: usize = 0;
+        const created_resources = @import("created_cell_properties_resources.zig");
+        const created_style = created_resources.has(self.sections);
+        var generated: ?created_resources.Prepared = null;
+        defer if (generated) |*value| value.deinit(a);
+        const rendering_sections = if (created_style) try a.dupe(Section, self.sections) else null;
+        defer if (rendering_sections) |sections| a.free(sections);
+        var rendering = self.*;
+        if (rendering_sections) |sections| rendering.sections = sections;
         var cell_background_plan: ?@import("table_cell_background_save.zig").CurrentHeader = null;
         defer if (cell_background_plan) |plan| {
             a.free(plan.ids);
             a.free(plan.offsets);
             a.free(plan.indices);
         };
-        if (self.paragraph_resources.entries.items.len != 0 or self.character_resources.entries.items.len != 0 or self.font_resources.entries.items.len != 0 or self.cell_backgrounds.items.len != 0) {
-            const header = if (self.cell_backgrounds.items.len != 0) block: {
+        if (self.paragraph_resources.entries.items.len != 0 or self.character_resources.entries.items.len != 0 or self.font_resources.entries.items.len != 0 or self.cell_backgrounds.items.len != 0 or created_style) {
+            var header = if (self.cell_backgrounds.items.len != 0) block: {
                 const prepared = try @import("table_cell_background_save.zig").currentHeader(self);
                 cell_background_plan = prepared;
                 break :block prepared.replacement;
             } else if (self.formatting_batch) |context| try @import("header_resource_save.zig").replacementBatch(a, self.source, &self.paragraph_resources, &self.character_resources, &self.font_resources, self.options.max_xml_bytes, &context.header_stats) else try @import("header_resource_save.zig").replacementWithFonts(a, self.source, &self.paragraph_resources, &self.character_resources, &self.font_resources, self.options.max_xml_bytes);
             errdefer a.free(header.bytes);
+            if (created_style) {
+                generated = try created_resources.prepare(a, header.bytes, self.sections, self.options.max_xml_bytes, try @import("table_cell_background_session.zig").profile(self));
+                a.free(header.bytes);
+                header.bytes = generated.?.takeBytes();
+                for (rendering.sections, generated.?.tables) |*section, tables| section.created_tables = tables;
+            }
             try replacements.append(a, header);
             xml_bytes += header.bytes.len;
         }
@@ -1078,7 +1180,7 @@ pub const Session = struct {
             };
             const bytes = if (section.created_tables.entries.items.len == 0) equations else block: {
                 defer a.free(equations);
-                break :block try @import("created_table_section_save.zig").writeWithPlacements(self, index, equations, self.options.max_xml_bytes -| xml_bytes, if (output_placements != null) &placements else null);
+                break :block try @import("created_table_section_save.zig").writeWithPlacements(&rendering, index, equations, self.options.max_xml_bytes -| xml_bytes, if (output_placements != null) &placements else null);
             };
             errdefer a.free(bytes);
             try replacements.append(a, .{ .entry_index = section.entry_index, .bytes = bytes });

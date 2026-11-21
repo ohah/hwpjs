@@ -9,10 +9,12 @@ pub const Table = struct {
     plan: creation.Plan,
     resources: Resources,
     cells: []Cell,
+    cell_properties: []@import("created_cell_property.zig").Property = &.{},
 
     pub fn deinit(self: *Table, a: std.mem.Allocator) void {
-        for (self.cells) |*cell| cell.deinit(a);
+        for (self.cells) |*owned_cell| owned_cell.deinit(a);
         a.free(self.cells);
+        a.free(self.cell_properties);
         self.* = undefined;
     }
 
@@ -20,7 +22,7 @@ pub const Table = struct {
         const cells = try a.alloc(Cell, self.cells.len);
         var initialized: usize = 0;
         errdefer {
-            for (cells[0..initialized]) |*cell| cell.deinit(a);
+            for (cells[0..initialized]) |*owned_cell| owned_cell.deinit(a);
             a.free(cells);
         }
         for (self.cells, cells) |source, *target| {
@@ -29,9 +31,58 @@ pub const Table = struct {
         }
         var result = self.*;
         result.cells = cells;
+        result.cell_properties = try a.dupe(@import("created_cell_property.zig").Property, self.cell_properties);
         return result;
     }
 
+    pub fn cell(self: *const Table, row: u32, column: u32) !creation.Cell {
+        const base = try self.plan.cell(row, column);
+        if (self.cell_properties.len == 0) return base;
+        if (self.cell_properties.len != self.cells.len) return error.InvalidTableCell;
+        const value = self.cell_properties[@as(usize, row) * self.plan.columns + column].geometry;
+        if (value.row != row or value.column != column or value.width == 0 or value.height == 0) return error.InvalidTableCell;
+        return value;
+    }
+    pub fn extent(self: *const Table) !struct { width: u32, height: u32 } {
+        if (self.cell_properties.len == 0) return .{ .width = self.plan.width, .height = try self.plan.height() };
+        if (self.cell_properties.len != self.cells.len) return error.InvalidTableCell;
+        var width: u32 = 0;
+        var height: u32 = 0;
+        for (self.cell_properties) |value| {
+            width = @max(width, try std.math.add(u32, value.geometry.x, value.geometry.width));
+            height = @max(height, try std.math.add(u32, value.geometry.y, value.geometry.height));
+        }
+        return .{ .width = width, .height = height };
+    }
+    /// Explicit per-cell geometry: x is the current row prefix, y uses row maxima.
+    /// Does not rewrite peer cell dimensions or invent equal-column constraints.
+    pub fn reflowProperties(self: *Table) !void {
+        if (self.cell_properties.len == 0) return;
+        if (self.cell_properties.len != try std.math.mul(usize, self.plan.rows, self.plan.columns)) return error.InvalidTableCell;
+        var y: u32 = 0;
+        for (0..self.plan.rows) |row| {
+            var x: u32 = 0;
+            var height: u32 = 0;
+            for (0..self.plan.columns) |column| {
+                const value = &self.cell_properties[row * self.plan.columns + column].geometry;
+                if (value.width == 0 or value.height == 0) return error.InvalidTableCell;
+                value.row = @intCast(row);
+                value.column = @intCast(column);
+                value.x = x;
+                value.y = y;
+                x = try std.math.add(u32, x, value.width);
+                height = @max(height, value.height);
+            }
+            y = try std.math.add(u32, y, height);
+        }
+    }
+    pub fn cellBorderFill(self: *const Table, row: u32, column: u32) !u32 {
+        _ = try self.cell(row, column);
+        if (self.cell_properties.len == 0) return self.resources.border_fill;
+        const property = self.cell_properties[@as(usize, row) * self.plan.columns + column];
+        if (!@import("border_fill_patch.zig").has(property.appearance)) return self.resources.border_fill;
+        return property.materialized_border_fill orelse error.UnmaterializedCreatedCellAppearance;
+    }
     pub fn replaceText(self: *Table, a: std.mem.Allocator, row: u32, column: u32, text: []const u8, max_bytes: usize) !bool {
         _ = try self.plan.cell(row, column);
         const index = try std.math.add(usize, try std.math.mul(usize, row, self.plan.columns), column);

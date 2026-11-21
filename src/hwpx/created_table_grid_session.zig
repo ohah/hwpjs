@@ -37,8 +37,7 @@ pub fn apply(session: *editor.Session, section: usize, identity: u64, command: s
     });
     candidate.entries.items[index].table.deinit(a);
     candidate.entries.items[index].table = edited;
-    const fragment = try @import("created_table_xml.zig").write(a, &candidate.entries.items[index].table, session.options.max_xml_bytes);
-    defer a.free(fragment);
+    // The full save below invokes the same XML writer after Native COW materialization.
     _ = try candidate.byteSize(session.options.max_xml_bytes);
     std.mem.swap(Values, values, &candidate);
     var committed = false;

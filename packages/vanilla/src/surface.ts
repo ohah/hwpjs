@@ -1,4 +1,5 @@
 import { captureCreatedCellClipboard } from './created-cell-clipboard.ts';
+import type { PictureSelectionCapture } from '../../../web/preview/picture-selection-capture.mjs';
 import { displayDocumentParagraph } from '../../../js/document-text-coordinates.mjs';
 import { createDocumentTextReadPermit } from './document-text-read-permit.ts';
 import { prepareDocumentTextReadView } from './document-text-read-view.ts';
@@ -1550,7 +1551,7 @@ export function createCanvasSurface({
       return false;
     }
   };
-  // 서식 캡처가 소유한 단일 실제 모달만 허용한다. 두 캡처가 같은 수명을 공유한다.
+  // 서식 캡처가 소유한 단일 실제 모달만 허용한다. 캡처마다 동일한 소유권 규칙을 사용한다.
   const formattingModalOwner = () => {
     let dialog: HTMLDialogElement | undefined,
       bound = false,
@@ -2508,6 +2509,46 @@ export function createCanvasSurface({
         },
       });
     },
+    /** Separate modal owner for generated properties; the existing grid capture is unchanged. */
+    captureCreatedCellPropertiesSelection() {
+      const state = editor.getEditorState();
+      const canonical = () =>
+        viewAllowsCurrentSelection() &&
+        !closed &&
+        !nonTextHistoryPending &&
+        lease?.isActive() === true &&
+        !bridge?.busy() &&
+        editor.getEditorState() === state &&
+        state.status === 'ready' &&
+        state.stateVersion === observedStateVersion &&
+        displayed ===
+          `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}` &&
+        (state.capabilities as any)?.createdTableGridAvailable === true &&
+        (state.capabilities as any)?.readOnly !== true &&
+        (state.content as any)?.readOnly !== true &&
+        direct.settled() &&
+        renderer.historyModelMatches(state);
+      if (modalOpen() || !canonical()) return null;
+      const captured = direct.captureGeneratedTableGridSelection();
+      if (!captured || !canonical() || !captured.current()) return null;
+      const modal = formattingModalOwner();
+      let invalid = false;
+      const current = () => {
+        if (invalid) return false;
+        if (canonical() && modal.current() && captured.current() && canonical()) return true;
+        invalid = true;
+        return false;
+      };
+      return Object.freeze({
+        state,
+        section: captured.section,
+        createdCell: captured.createdCell,
+        current,
+        bindDialog(element: HTMLDialogElement) {
+          return modal.bind(element, current);
+        },
+      });
+    },
     captureGeneratedTableGridSelection() {
       const state = editor.getEditorState();
       const current = () =>
@@ -3168,6 +3209,36 @@ export function createCanvasSurface({
       listener: (event: CanvasObjectPropertiesRequest) => void | Promise<void>,
     ) {
       return objectSelection!.registerPropertiesRequest(listener);
+    },
+    /** Current host selection only. Core/Native separately issue replacement authority. */
+    capturePictureReplacementSelection() {
+      const state = editor.getEditorState();
+      const ownedLease = lease;
+      const captured: PictureSelectionCapture | null = renderer.capturePictureSelection?.() ?? null;
+      const current = () => {
+        const latest = editor.getEditorState();
+        const key = `${latest.documentId}:${latest.generation}:${latest.operationRevision}:${latest.viewRevision}`;
+        return (
+          !closed &&
+          lease === ownedLease &&
+          ownedLease?.isActive() === true &&
+          nonTextHistoryPending === undefined &&
+          !bridge?.busy() &&
+          direct?.settled?.() === true &&
+          latest === state &&
+          state.status === 'ready' &&
+          !state.historyRecoveryRequired &&
+          observedStateVersion === state.stateVersion &&
+          key === displayed &&
+          captured?.current() === true
+        );
+      };
+      if (!captured || !renderer.isPaintedFrameCurrent() || !current()) return null;
+      return Object.freeze({
+        section: captured.section,
+        pictureNode: captured.pictureNode,
+        current,
+      });
     },
     getContextPicture() {
       const state = editor.getEditorState();

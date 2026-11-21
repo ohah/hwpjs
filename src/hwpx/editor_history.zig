@@ -5,7 +5,7 @@ const checkpoints = @import("editor_checkpoint.zig");
 const Stacks = @import("../model/history_stack.zig").Stack(checkpoints.Checkpoint, release);
 
 pub const Command = struct {
-    kind: enum { plain, anchored, field, named_field_rename, named_field_create, named_field_parameters, split, merge, format, character_properties, character_font_name, cell_size, cell_background, cell_border, cell_borders, cell_fills, cell_styles, paragraph_format, paragraph_alignment, paragraph_bullet, bullet_definition, page_settings, object_geometry, paragraph_flags, paragraph_border_fill, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state, form_radio_select, form_text, created_table_stage, created_table_grid, source_table_grid, source_table_cell_merge, source_table_cell_split, created_cell_text, splice_created_cell, formula_result_override, chart_numeric_point, chart_point, chart_points, chart_series_text, chart_rich_text, dutmal_text, equation_script, formula_result_splice, independent_text, document_text, insert_document, equation_insert, chart_create, image_insert, note_delete, note_create } = .plain,
+    kind: enum { plain, anchored, field, named_field_rename, named_field_create, named_field_parameters, split, merge, format, character_properties, character_font_name, cell_size, cell_background, cell_border, cell_borders, cell_fills, cell_styles, paragraph_format, paragraph_alignment, paragraph_bullet, bullet_definition, page_settings, object_geometry, paragraph_flags, paragraph_border_fill, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state, form_radio_select, form_text, created_table_stage, created_table_grid, created_cell_properties, source_table_grid, source_table_cell_merge, source_table_cell_split, created_cell_text, splice_created_cell, formula_result_override, chart_numeric_point, chart_point, chart_points, chart_series_text, chart_rich_text, dutmal_text, equation_script, formula_result_splice, independent_text, document_text, insert_document, equation_insert, chart_create, image_insert, picture_replace, note_delete, note_create } = .plain,
     document_text_intent: ?*const @import("document_replace_all.zig").Intent = null,
     independent_text_edits: []const @import("../model/independent_text_edits.zig").Edit = &.{},
     /// Borrowed only for the owned independent-text batch.
@@ -51,6 +51,7 @@ pub const Command = struct {
     created_table: ?*const @import("../model/created_table.zig").Table = null,
     created_table_identity: u64 = 0,
     created_grid: @import("../model/created_table_grid.zig").Command = .{ .insert_row = 0 },
+    created_cell_properties: ?*const @import("../model/created_cell_properties_values.zig").Request = null,
     source_grid_node: usize = 0,
     source_grid_expected_rows: u32 = 0,
     source_grid_expected_columns: u32 = 0,
@@ -72,6 +73,7 @@ pub const Command = struct {
     equation_insert: ?*const @import("equation_insert.zig").Request = null,
     chart_create: ?*const @import("chart_create.zig").Request = null,
     image_insert: ?*const @import("image_insert.zig").Request = null,
+    picture_replace: ?*const @import("picture_replacement_current.zig").Request = null,
     note_delete: ?*const @import("note_delete.zig").Request = null,
     note_create: ?*const @import("note_create.zig").Request = null,
     dutmal_kind: @import("dutmal_text_session.zig").Kind = .main_text,
@@ -126,7 +128,7 @@ pub const History = struct {
         if (self.owned) |h| return h.applyBatch(session, commands);
         try self.bind(session);
         for (commands) |command| {
-            if (command.kind == .note_delete or command.kind == .note_create or command.kind == .document_text or command.kind == .insert_document or command.kind == .equation_insert or command.kind == .chart_create or command.kind == .image_insert or command.kind == .bullet_definition or command.kind == .page_settings or command.kind == .object_geometry or command.kind == .named_field_create or command.kind == .named_field_parameters)
+            if (command.kind == .note_delete or command.kind == .note_create or command.kind == .document_text or command.kind == .insert_document or command.kind == .equation_insert or command.kind == .chart_create or command.kind == .image_insert or command.kind == .picture_replace or command.kind == .bullet_definition or command.kind == .page_settings or command.kind == .object_geometry or command.kind == .named_field_create or command.kind == .named_field_parameters)
                 return error.HistoryProtocol2Required;
         }
         for (commands) |command| if (command.break_before != null and command.kind != .split) return error.InvalidStructureCommand;
@@ -213,7 +215,7 @@ pub const History = struct {
             else => font_cache.clear(),
         }
         return switch (command.kind) {
-            .insert_document, .equation_insert, .chart_create, .image_insert, .note_delete, .note_create => error.InvalidInsertDocumentBatch,
+            .insert_document, .equation_insert, .chart_create, .image_insert, .picture_replace, .note_delete, .note_create => error.InvalidInsertDocumentBatch,
             .independent_text => error.InvalidIndependentTextCommand,
             .document_text => block: {
                 if (command.break_before != null or command.section != 0 or command.paragraph != 0 or command.start != 0 or
@@ -251,6 +253,12 @@ pub const History = struct {
             .created_cell_text => block: {
                 if (command.start != 0 or command.deleted != 0) return error.InvalidCreatedTableCommand;
                 break :block try @import("created_cell_text_session.zig").set(session, command.section, command.created_table_identity, command.created_cell[0], command.created_cell[1], command.inserted);
+            },
+            .created_cell_properties => block: {
+                if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidCreatedTableCommand;
+                const request = command.created_cell_properties orelse return error.InvalidCreatedTableCommand;
+                if (command.section != request.address.section) return error.InvalidCreatedTableCommand;
+                break :block try session.editCreatedCellProperties(request.*);
             },
             .created_table_grid => block: {
                 if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidCreatedTableCommand;

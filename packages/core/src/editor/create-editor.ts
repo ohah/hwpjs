@@ -1,3 +1,8 @@
+import { EDIT_CREATED_CELL_PROPERTIES_COMMAND } from '../commands/commands.ts';
+import {
+  createdCellPropertiesMessage,
+  type CreatedCellPropertiesPayload,
+} from '../commands/created-cell-properties.ts';
 import {
   INSERT_IMAGE_COMMAND,
   captureImageInsertPayload,
@@ -57,6 +62,20 @@ import {
   documentTextAnchorObservation,
 } from '../state/document-text-anchor.ts';
 import type { DocumentTextCaretPoint, DocumentTextAnchor } from '../state/document-text-anchor.ts';
+import {
+  REPLACE_PICTURE_COMMAND,
+  captureReplacePicturePayload,
+  pictureReplacementMessage,
+  type ReplacePicturePayload,
+  type PictureReplacementTarget,
+  type PictureReplacementSelector,
+  type PictureReplacementRead,
+} from '../commands/picture-replacement.ts';
+import type { PictureReplacementOwner } from '../commands/picture-replacement-dto.ts';
+import {
+  checkedPictureReplacementSelector,
+  checkedPictureReplacementOwner,
+} from '../../../../js/live-picture-replacement.mjs';
 import {
   SET_OBJECT_GEOMETRY_COMMAND,
   captureObjectGeometryPayload,
@@ -1430,6 +1449,10 @@ export function createEditor(options: CreateEditorOptions) {
       current: () => boolean;
     }
   >();
+  const pictureReplacementTargets = new WeakMap<
+    PictureReplacementTarget,
+    { state: EditorState; runtime: EditorRuntime; native: PictureReplacementOwner }
+  >();
   const objectGeometryTargets = new WeakMap<
     ObjectGeometryTarget,
     { state: EditorState; native: ReturnType<typeof checkedObjectGeometryObservation> }
@@ -1454,7 +1477,9 @@ export function createEditor(options: CreateEditorOptions) {
     const height = command.id === EQUALIZE_SOURCE_TABLE_CELL_HEIGHT_COMMAND.id;
     const pageSettings = command.id === EDIT_PAGE_SETTINGS_COMMAND.id;
     const objectGeometry = command.id === SET_OBJECT_GEOMETRY_COMMAND.id;
-    const tableCell = merge || split || width || height || pageSettings || objectGeometry;
+    const pictureReplacement = command.id === REPLACE_PICTURE_COMMAND.id;
+    const tableCell =
+      merge || split || width || height || pageSettings || objectGeometry || pictureReplacement;
     const inlineKind =
       command.id === INSERT_EQUATION_COMMAND.id
         ? 'equation'
@@ -1473,8 +1498,9 @@ export function createEditor(options: CreateEditorOptions) {
         : command.id === INSERT_ENDNOTE_COMMAND.id
           ? 'end'
           : undefined;
-    const owned =
-      command.id === INSERT_IMAGE_COMMAND.id
+    const owned = pictureReplacement
+      ? captureReplacePicturePayload(payload)
+      : command.id === INSERT_IMAGE_COMMAND.id
         ? captureImageInsertPayload(payload)
         : command.id === DELETE_NOTE_COMMAND.id
           ? captureNoteDeletePayload(payload)
@@ -1574,6 +1600,27 @@ export function createEditor(options: CreateEditorOptions) {
         };
         guard();
         return await mutate(noteInsertMessage(payload, state, kind), payload.target, false, guard);
+      }
+      if (pending.command.id === REPLACE_PICTURE_COMMAND.id) {
+        const payload = pending.payload as ReplacePicturePayload;
+        const owned = pictureReplacementTargets.get(payload.target);
+        if (!owned) throw Error('ForeignPictureReplacementTarget');
+        const guard = () => {
+          requireReady(pending.token, true);
+          if (state !== owned.state || active !== owned.runtime)
+            throw Error('StalePictureReplacementTarget');
+          if (state.nativeHistoryRevision !== owned.native.historyRevision)
+            throw Error('StalePictureReplacementBinding');
+          if (!hasRuntimeAdmission(active, 'picture-replace'))
+            throw Error('UnsupportedPictureReplacementRuntime');
+        };
+        guard();
+        return await mutate(
+          pictureReplacementMessage(owned.native, payload.imageBytes),
+          pending.token,
+          false,
+          guard,
+        );
       }
       if (pending.command.id === SET_OBJECT_GEOMETRY_COMMAND.id) {
         const payload = pending.payload as SetObjectGeometryPayload;
@@ -2155,6 +2202,13 @@ export function createEditor(options: CreateEditorOptions) {
         );
         return await mutate(message, pending.token);
       }
+      if (pending.command.id === EDIT_CREATED_CELL_PROPERTIES_COMMAND.id) {
+        requireReady(pending.token, true);
+        return await mutate(
+          createdCellPropertiesMessage(pending.payload as CreatedCellPropertiesPayload, state),
+          pending.token,
+        );
+      }
       if (pending.command.id === EDIT_CREATED_TABLE_GRID_COMMAND.id) {
         requireReady(pending.token, true);
         const message = createdTableGridMessage(
@@ -2213,6 +2267,15 @@ export function createEditor(options: CreateEditorOptions) {
   function dispatchCommand<T>(command: EditorCommand<T>, payload: T): Promise<CommandResult> {
     assertPublicMutation();
     const pending = capture(command, payload);
+    if (command.id === REPLACE_PICTURE_COMMAND.id) {
+      const owned = pictureReplacementTargets.get(
+        (pending.payload as ReplacePicturePayload).target,
+      );
+      if (!owned)
+        return Promise.resolve(reject(context(pending.token), 'ForeignPictureReplacementTarget'));
+      if (state !== owned.state || active !== owned.runtime)
+        return Promise.resolve(reject(context(pending.token), 'StalePictureReplacementTarget'));
+    }
     if (command.id === SET_OBJECT_GEOMETRY_COMMAND.id) {
       const owned = objectGeometryTargets.get((pending.payload as SetObjectGeometryPayload).target);
       if (!owned)
@@ -2650,6 +2713,8 @@ export function createEditor(options: CreateEditorOptions) {
         'document-insert-capabilities',
         'inline-object-owner',
         'created-cell-text-target',
+        'picture-replacement-query',
+        'picture-replace',
         'object-geometry-query',
         'object-geometry-set',
         'page-settings-capabilities',
@@ -2873,6 +2938,88 @@ export function createEditor(options: CreateEditorOptions) {
           }),
         }),
       );
+    });
+  }
+  function getPictureReplacement(
+    selector: PictureReplacementSelector,
+    options: { token?: StateToken } = {},
+  ): Promise<PictureReplacementRead> {
+    assertPublicMutation();
+    const snapshot = state;
+    const selected = checkedPictureReplacementSelector(selector);
+    const settings = copyOwned(options);
+    if (
+      !settings ||
+      typeof settings !== 'object' ||
+      Array.isArray(settings) ||
+      Object.keys(settings).some((key) => key !== 'token')
+    )
+      throw Error('InvalidPictureReplacementOptions');
+    const token = copyOwned(settings.token ?? snapshot.token);
+    if (state !== snapshot) throw Error('StalePictureReplacementTarget');
+    return enqueue(async () => {
+      requireReady(token, true);
+      const runtime = active;
+      const guard = () => {
+        requireReady(token, true);
+        if (state !== snapshot || active !== runtime) throw Error('StalePictureReplacementTarget');
+      };
+      guard();
+      const content = snapshot.content as Record<string, unknown> | undefined;
+      const capabilities = snapshot.capabilities as Record<string, unknown> | undefined;
+      if (content?.readOnly === true || capabilities?.readOnly === true)
+        return { state: 'unavailable', reason: 'ReadOnlyDocument' };
+      if (
+        !content ||
+        !['hwp5', 'hwpx'].includes(String(content.format)) ||
+        content.limited ||
+        content.window
+      )
+        return { state: 'unavailable', reason: 'PictureReplacementRequiresFullDocument' };
+      if (
+        snapshot.nativeHistoryStats?.protocolVersion !== 2 ||
+        !Number.isSafeInteger(snapshot.nativeHistoryRevision) ||
+        snapshot.nativeHistoryRevision! < 0 ||
+        snapshot.nativeHistoryRevision! >= 0xffffffff
+      )
+        return { state: 'unavailable', reason: 'HistoryProtocol2Required' };
+      if (!runtime || !hasRuntimeAdmission(runtime, 'picture-replacement-query'))
+        return { state: 'unavailable', reason: 'UnsupportedPictureReplacementRuntime' };
+      const reply = await readRequest(
+        { kind: 'picture-replacement-query', selector: selected },
+        token,
+        guard,
+        true,
+      );
+      guard();
+      if (reply.pictureOwner === null)
+        return {
+          state: 'unavailable',
+          reason: typeof reply.reason === 'string' ? reply.reason : 'PictureReplacementUnavailable',
+        };
+      const native = checkedPictureReplacementOwner(reply.pictureOwner);
+      if (
+        native.format !== content.format ||
+        native.section !== selected.section ||
+        native.pictureNode !== selected.pictureNode ||
+        native.historyRevision !== snapshot.nativeHistoryRevision
+      )
+        throw Error('PictureReplacementBindingMismatch');
+      guard();
+      const target = Object.freeze({}) as PictureReplacementTarget;
+      pictureReplacementTargets.set(target, { state: snapshot, runtime, native });
+      return Object.freeze({
+        state: 'available',
+        target,
+        observation: Object.freeze({
+          format: native.format,
+          section: native.section,
+          pictureNode: native.pictureNode,
+          pictureIdentity: native.pictureIdentity,
+          resourceLink: native.resourceLink,
+          historyRevision: native.historyRevision,
+        }),
+      });
     });
   }
   function getObjectGeometry(
@@ -3973,6 +4120,7 @@ export function createEditor(options: CreateEditorOptions) {
     getDocumentInsertionCapabilities: geometryGuard(getDocumentInsertionCapabilities),
     getInlineObjectInsertTarget: geometryGuard(getInlineObjectInsertTarget),
     getCreatedCellTextTarget: geometryGuard(getCreatedCellTextTarget),
+    getPictureReplacement: geometryGuard(getPictureReplacement),
     getObjectGeometry: geometryGuard(getObjectGeometry),
     getPageSettings: geometryGuard(getPageSettings),
     getSourceTableCellSplitCapabilities: geometryGuard(getSourceTableCellSplitCapabilities),

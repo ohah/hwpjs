@@ -9,6 +9,7 @@ pub const Value = struct {
 
     pub fn ownedSize(table: *const model.Table, options: records.Options) !usize {
         var size = try std.math.add(usize, @sizeOf(Value), try std.math.mul(usize, table.cells.len, @sizeOf(model.Cell)));
+        size = try std.math.add(usize, size, try std.math.mul(usize, table.cell_properties.len, @sizeOf(@import("../../model/created_cell_property.zig").Property)));
         for (table.cells) |cell| size = try std.math.add(usize, size, try cell.dynamicBytes());
         return std.math.add(usize, size, options.common.description.len);
     }

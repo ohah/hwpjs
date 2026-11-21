@@ -18,12 +18,14 @@ pub const ParagraphInfo = struct { source_node: ?u32, parent_node: ?u32, style_i
 pub const Command = union(enum) {
     edit_chart_literals: @import("../chart/literal_edit_request.zig").Request,
     insert_image: @import("image_create_request.zig").Request,
+    replace_picture: @import("picture_replacement_current.zig").Request,
     insert_chart: @import("../chart/create_request.zig").Request,
     insert_equation: @import("equation_create_request.zig").Request,
     stage_table: @import("created_table_stage.zig").Edit,
     set_created_cell_text: @import("created_cell_text.zig").Edit,
     splice_created_cell: @import("../../model/created_cell_typing.zig").Edit,
     edit_created_table_grid: @import("created_table_grid_session.zig").Edit,
+    edit_created_cell_properties: @import("../../model/created_cell_properties_values.zig").Request,
     split_source_table_cell: @import("source_table_cell_split_service.zig").Edit,
     edit_source_table_grid: @import("source_table_grid_session.zig").Edit,
     splice_current_paragraph: @import("current_paragraph_edit.zig").Splice,
@@ -500,6 +502,59 @@ pub const Session = opaque {
         const state = self.stateConst();
         if (section >= state.created_tables.len) return error.InvalidSection;
         return @import("created_table_snapshot.zig").read(allocator, &state.document.sections[section], &state.created_tables[section]);
+    }
+
+    /// Read only: materialize the exact save resource policy on detached clones.
+    pub fn createdCellPropertyStyles(self: *const Session, allocator: std.mem.Allocator) ![]@import("../../model/created_cell_properties_projection.zig").Style {
+        return self.createdCellPropertyStylesWithStats(allocator, null);
+    }
+
+    pub fn createdCellPropertyStylesWithStats(self: *const Session, allocator: std.mem.Allocator, stats: ?*@import("../../model/created_cell_properties_projection.zig").Stats) ![]@import("../../model/created_cell_properties_projection.zig").Style {
+        try self.materializeLiveText();
+        const state = self.stateConst();
+        var any = false;
+        for (state.created_tables) |values| if (values.entries.len != 0) {
+            any = true;
+            break;
+        };
+        if (!any) {
+            if (stats) |out| out.* = .{};
+            return allocator.alloc(@import("../../model/created_cell_properties_projection.zig").Style, 0);
+        }
+        const owned = if (state.chart_resources.docinfo == null) try state.source.decodeDocInfo(allocator, max_stream) else null;
+        defer if (owned) |bytes| allocator.free(bytes);
+        const info = state.chart_resources.docinfo orelse owned.?;
+        var prepared = try @import("created_cell_properties_resources.zig").prepare(allocator, info, state.created_tables, state.source.header.version(), max_stream);
+        defer prepared.deinit(allocator);
+        var resources = try @import("cell_background_write.zig").resourceIndex(allocator, prepared.bytes, state.source.header.version(), max_stream);
+        defer resources.deinit(allocator);
+        var memo = @import("../../model/created_cell_properties_projection.zig").Memo.init(allocator);
+        defer memo.deinit();
+        memo.stats.document_prepares = 1;
+        var rows: std.ArrayList(@import("../../model/created_cell_properties_projection.zig").Style) = .empty;
+        errdefer {
+            for (rows.items) |row| allocator.free(row.identity);
+            rows.deinit(allocator);
+        }
+        const empty: [40]u8 = @splat(0);
+        for (prepared.tables, 0..) |values, section| for (values.entries) |entry| {
+            const table = &entry.value.table;
+            for (table.cells, 0..) |_, i| {
+                const row: u32 = @intCast(i / table.plan.columns);
+                const column: u32 = @intCast(i % table.plan.columns);
+                const id = try table.cellBorderFill(row, column);
+                const resolved = memo.get(id) orelse resolved: {
+                    const payload = if (id == 0) &empty else (try resources.resource(std.math.cast(u16, id) orelse return error.InvalidBorderFillReference)).payload;
+                    const source = try @import("../docinfo/border_fill.zig").BorderFill.parseWithAdditionalPolicy(payload, .observed_absent);
+                    const supported = source.attributes & ~@as(u16, @import("../../model/table_diagonal_values.zig").hwp5_direction_mask) == 0;
+                    break :resolved try memo.resolve(id, try @import("border_fill_payload_patch.zig").observe(payload), payload, supported, if (id == 0) .owned_absent_profile else .save_materialized_resource);
+                };
+                try @import("../../model/created_cell_properties_projection.zig").append(allocator, &rows, &memo, @intCast(section), table.identity, row, column, resolved);
+            }
+        };
+        const result = try rows.toOwnedSlice(allocator);
+        if (stats) |out| out.* = memo.stats;
+        return result;
     }
 
     pub fn documentTextAnchor(self: *const Session, allocator: std.mem.Allocator, binding: @import("../../model/formatting_binding.zig").State, revision: ?u32, request: @import("../../model/document_text_anchor.zig").Request) !@import("../../model/document_text_anchor.zig").Response {
@@ -1217,6 +1272,25 @@ pub const Session = opaque {
         if (section >= state.document.sections.len) return error.InvalidSection;
         return @import("picture_sources.zig").read(a, state.decoded[section], state.source.header.version(), prefix);
     }
+    pub fn pictureReplacementOwner(self: *const Session, a: std.mem.Allocator, section: u32, picture: u32, revision: u32, binding: @import("../../model/object_geometry.zig").Binding) !@import("../../model/picture_replacement.zig").Owner {
+        try self.materializeLiveText();
+        const state = self.stateConst();
+        if (state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview)) return error.UnsupportedPictureReplacementSaveFeatures;
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        const raw = state.decoded[section];
+        try @import("picture_replacement_current.zig").validateOwner(a, raw, state.source.header.version(), state.document.sections[section], picture);
+        const ordinal = try @import("picture_replacement_current.zig").ordinal(a, raw, state.source.header.version(), picture);
+        const resource = try self.binaryResource(a, ordinal, @import("../../model/picture_replacement.zig").max_image_bytes);
+        defer a.free(resource);
+        const identity = try std.fmt.allocPrint(a, "node:{d}", .{picture});
+        errdefer a.free(identity);
+        const link = try std.fmt.allocPrint(a, "{d}", .{ordinal});
+        errdefer a.free(link);
+        const session_binding = try a.dupe(u8, binding.session);
+        errdefer a.free(session_binding);
+        const serial_binding = try a.dupe(u8, binding.serial);
+        return .{ .format = .hwp5, .section = section, .pictureNode = picture, .pictureIdentity = identity, .sourceSha256 = @import("../../model/picture_replacement.zig").hash(raw), .resourceSha256 = @import("../../model/picture_replacement.zig").hash(resource), .resourceLink = link, .historyRevision = revision, .binding = .{ .session = session_binding, .serial = serial_binding } };
+    }
     /// Decoded internal resource bytes; caller frees them. Never resolves external paths.
     pub fn binaryResource(self: *const Session, a: std.mem.Allocator, ordinal: u16, limit: usize) ![]u8 {
         try self.materializeLiveText();
@@ -1761,6 +1835,49 @@ pub const Session = opaque {
                 std.mem.swap(@import("../chart/created_resources.zig").Values, &state.chart_resources, &assets.values);
                 state.refreshSourceViews();
             },
+            .replace_picture => |request| {
+                const state = self.getState();
+                if (state.formatting_batch != null) return error.MutationInProgress;
+                const types = @import("../../model/picture_replacement.zig");
+                const ticket = try self.historyTicket();
+                if (!std.meta.eql(ticket, request.ticket)) return error.StaleMutationEpoch;
+                var actual = try self.pictureReplacementOwner(state.allocator, request.owner.section, request.owner.pictureNode, request.owner.historyRevision, request.owner.binding);
+                defer actual.deinit(state.allocator);
+                if (!types.matches(actual, request.owner)) return error.StalePictureReplacementOwner;
+                _ = try @import("../../image/picture_input.zig").inspectImage(request.image, types.max_image_bytes);
+                const old = try self.binaryResource(state.allocator, try std.fmt.parseInt(u16, actual.resourceLink, 10), types.max_image_bytes);
+                defer state.allocator.free(old);
+                if (std.mem.eql(u8, old, request.image)) return;
+                const index = actual.section;
+                const ordinal = try std.fmt.parseInt(u16, actual.resourceLink, 10);
+                const info = if (state.chart_resources.docinfo) |bytes| try state.allocator.dupe(u8, bytes) else try state.source.decodeDocInfo(state.allocator, max_stream);
+                defer state.allocator.free(info);
+                var assets = try @import("image_create_asset.zig").prepareImage(state.allocator, &state.source.file, state.chart_resources, info, state.source.header.version(), request.image, max_bytes);
+                defer assets.deinit(state.allocator);
+                var section = try @import("picture_replacement_current.zig").section(state.allocator, state.document.sections[index], state.decoded[index], state.style_offsets[index], state.source.header.version(), actual.pictureNode, ordinal, assets.ordinal);
+                defer section.deinit(state.allocator);
+                var prospective = state.*;
+                const sections = try state.allocator.dupe(model.Section, state.document.sections);
+                defer state.allocator.free(sections);
+                sections[index] = section;
+                prospective.document.sections = sections;
+                const decoded = try state.allocator.dupe([]u8, state.decoded);
+                defer state.allocator.free(decoded);
+                const offsets = try state.allocator.dupe([]usize, state.style_offsets);
+                defer state.allocator.free(offsets);
+                prospective.decoded = decoded;
+                prospective.style_offsets = offsets;
+                prospective.chart_resources = assets.values;
+                prospective.refreshSourceViews();
+                const draft: *const Session = @ptrCast(&prospective);
+                const saved = try draft.save(state.allocator, .{ .allow_stale_layout = true, .max_output_bytes = max_bytes });
+                defer state.allocator.free(saved.bytes);
+                // The same save/checkpoint ledger already used for authored PNG/JPEG.
+                // The only source delta above is this picture's two-byte reference.
+                std.mem.swap(model.Section, &state.document.sections[index], &section);
+                std.mem.swap(@import("../chart/created_resources.zig").Values, &state.chart_resources, &assets.values);
+                state.refreshSourceViews();
+            },
             .insert_image => |request| {
                 const state = self.getState();
                 if (state.formatting_batch != null) return error.MutationInProgress;
@@ -1875,9 +1992,53 @@ pub const Session = opaque {
                 try @import("created_cell_text.zig").apply(state.allocator, state.decoded, &state.document, state.created_tables, state.source.header.version(), edit, self.createdTableResources(), created_table_limits);
             },
             .splice_created_cell => |edit| try self.applyCreatedCellTyping(edit),
+            .edit_created_cell_properties => |request| {
+                const state = self.getState();
+                if (state.formatting_batch != null) return error.MutationInProgress;
+                if (state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview)) return error.UnsupportedCreatedCellPropertiesSaveFeatures;
+                const section = request.address.section;
+                if (section >= state.created_tables.len) return error.InvalidSection;
+                var selected: ?usize = null;
+                for (state.created_tables, 0..) |tables, part| for (tables.entries, 0..) |entry, i| if (entry.value.table.identity == request.address.identity) {
+                    if (selected != null or part != section or request.address.identity == 0) return error.InvalidCreatedTableIdentity;
+                    selected = i;
+                };
+                const index = selected orelse return error.InvalidCreatedTableIdentity;
+                const entry = state.created_tables[section].entries[index];
+                const host = try @import("created_table_anchor.zig").resolve(state.allocator, &state.document.sections[section], entry.anchor);
+                var protection = try @import("text_source_protection.zig").read(state.allocator, state.decoded, state.source.header.version(), section, state.document.sections[section]);
+                defer protection.deinit(state.allocator);
+                if (host >= protection.protected_paragraphs.len or protection.protected_paragraphs[host]) return error.ProtectedCell;
+                var replacement = (try @import("../../model/created_cell_properties_table.zig").prepare(state.allocator, &entry.value.table, section, try self.historyTicket(), request, max_stream)) orelse return;
+                defer replacement.deinit(state.allocator);
+                const cell_index = @as(usize, request.address.row) * replacement.plan.columns + request.address.column;
+                const info = try self.originalInfo();
+                defer if (info.owned) state.allocator.free(info.bytes);
+                var resources = try @import("cell_background_write.zig").resourceIndex(state.allocator, info.bytes, state.source.header.version(), max_stream);
+                defer resources.deinit(state.allocator);
+                const empty: [40]u8 = @splat(0);
+                const original = if (replacement.resources.border_fill == 0) @as([]const u8, &empty) else (try resources.resource(std.math.cast(u16, replacement.resources.border_fill) orelse return error.InvalidBorderFillReference)).payload;
+                replacement.cell_properties[cell_index].appearance = @import("../../model/border_fill_patch.zig").canonical(try @import("border_fill_payload_patch.zig").observe(original), replacement.cell_properties[cell_index].appearance);
+                var candidate = try state.created_tables[section].clone(state.allocator, max_stream);
+                defer candidate.deinit(state.allocator);
+                std.mem.swap(@import("../../model/created_table.zig").Table, &candidate.entries[index].value.table, &replacement);
+                _ = try candidate.byteSize(max_stream);
+                _ = try self.commitCreatedTableCandidate(section, &candidate);
+            },
             .edit_created_table_grid => |edit| {
                 const state = self.getState();
-                try @import("created_table_grid_session.zig").apply(state.allocator, state.decoded, &state.document, state.created_tables, state.source.header.version(), edit, self.createdTableResources(), created_table_limits);
+                var has_properties = false;
+                if (edit.section >= state.created_tables.len) return error.InvalidSection;
+                for (state.created_tables[edit.section].entries) |entry| if (entry.value.table.cell_properties.len != 0) {
+                    has_properties = true;
+                };
+                if (has_properties) {
+                    var candidate = try @import("created_table_grid_session.zig").prepare(state.allocator, state.decoded, &state.document, state.created_tables, state.source.header.version(), edit, self.createdTableResources(), created_table_limits);
+                    defer candidate.deinit(state.allocator);
+                    _ = try self.commitCreatedTableCandidate(edit.section, &candidate);
+                } else {
+                    try @import("created_table_grid_session.zig").apply(state.allocator, state.decoded, &state.document, state.created_tables, state.source.header.version(), edit, self.createdTableResources(), created_table_limits);
+                }
             },
             .split_source_table_cell => |edit| {
                 const state = self.getState();
@@ -2182,6 +2343,24 @@ pub const Session = opaque {
     }
 
     /// Native-owned created paragraph; resources and exact splice share History.
+    /// Prospective serialization precedes the only live table-value swap.
+    fn commitCreatedTableCandidate(self: *Session, section: usize, candidate: *@import("created_table_values.zig").Values) !bool {
+        const state = self.getState();
+        const a = state.allocator;
+        const before = try self.save(a, .{ .allow_stale_layout = true, .max_output_bytes = max_bytes });
+        defer a.free(before.bytes);
+        var prospective = state.*;
+        const tables = try a.dupe(@import("created_table_values.zig").Values, state.created_tables);
+        defer a.free(tables);
+        tables[section] = candidate.*;
+        prospective.created_tables = tables;
+        const draft: *const Session = @ptrCast(&prospective);
+        const after = try draft.save(a, .{ .allow_stale_layout = true, .max_output_bytes = max_bytes });
+        defer a.free(after.bytes);
+        if (std.mem.eql(u8, before.bytes, after.bytes)) return false;
+        std.mem.swap(@import("created_table_values.zig").Values, &state.created_tables[section], candidate);
+        return true;
+    }
     fn applyCreatedCellTyping(self: *Session, edit: @import("../../model/created_cell_typing.zig").Edit) !void {
         try @import("../../model/created_cell_typing.zig").validate(edit);
         const state = self.getState();
@@ -2345,7 +2524,9 @@ pub const Session = opaque {
             try self.validateStrictLayoutOwner(request);
         }
         const state = self.stateConst();
-        const resource_changed = !state.chart_resources.empty() or state.document.bullet_resources.len != 0 or state.cell_backgrounds.entries.len != 0 or state.document.paragraph_resources.len != 0 or state.document.character_resources.len != 0 or state.document.font_resources.entries.items.len != 0;
+        const created_resources = @import("created_cell_properties_resources.zig");
+        const base_resource_changed = !state.chart_resources.empty() or state.document.bullet_resources.len != 0 or state.cell_backgrounds.entries.len != 0 or state.document.paragraph_resources.len != 0 or state.document.character_resources.len != 0 or state.document.font_resources.entries.items.len != 0;
+        const resource_changed = base_resource_changed or created_resources.has(state.created_tables);
         var changed = resource_changed or options.strict_layout != null;
         for (state.document.sections, 0..) |section, index| {
             changed = changed or sectionChanged(state, index, section);
@@ -2359,11 +2540,20 @@ pub const Session = opaque {
         defer arena.deinit();
         const scratch = arena.allocator();
         var replacements: std.ArrayList(cfb.stream_replace.Replacement) = .empty;
-        const cells = try self.cellResources(scratch);
+        var cells = try self.cellResources(scratch);
+        var generated: ?created_resources.Prepared = null;
+        var created_info_changed = false;
+        if (created_resources.has(state.created_tables)) {
+            generated = try created_resources.prepare(scratch, cells.bytes, state.created_tables, state.source.header.version(), max_stream);
+            created_info_changed = !std.mem.eql(u8, cells.bytes, generated.?.bytes);
+            cells.bytes = generated.?.bytes;
+        }
+        var generated_limits = self.createdTableResources();
+        if (generated) |value| generated_limits.border_count = value.border_count;
         if (options.strict_layout) |request| {
             if (!std.mem.eql(u8, request.snapshot.docinfo, cells.bytes)) return error.LayoutSourceChanged;
         }
-        if (resource_changed) {
+        if (base_resource_changed or created_info_changed) {
             const encoded = if (state.source.header.has(.compressed)) try @import("../../compression/raw_deflate.zig").encodeStored(scratch, cells.bytes, max_stream) else cells.bytes;
             try replacements.append(scratch, .{ .path = "/DocInfo", .content = encoded });
         }
@@ -2390,7 +2580,7 @@ pub const Session = opaque {
             else
                 picture_source;
             const decoded = if (state.created_tables[index].entries.len != 0)
-                try @import("created_table_section.zig").write(scratch, cell_source, section, &state.created_tables[index], state.source.header.version(), self.createdTableResources(), created_table_limits)
+                try @import("created_table_section.zig").write(scratch, cell_source, section, if (generated) |*value| &value.tables[index] else &state.created_tables[index], state.source.header.version(), generated_limits, created_table_limits)
             else if (structural)
                 try @import("structure_section_writer.zig").writeWithDeletions(scratch, cell_source, section, state.source.header.version(), self.characterShapeCount(), max_stream, true)
             else

@@ -500,7 +500,7 @@ function members(proto, table) {
 	}
 }
 /** Shadows a prototype member with an own value, so a getter that builds from the instance runs once. */
-function own$3(inst, key, value, enumerable = true) {
+function own$4(inst, key, value, enumerable = true) {
 	Object.defineProperty(inst, key, {
 		configurable: true,
 		writable: true,
@@ -511,7 +511,7 @@ function own$3(inst, key, value, enumerable = true) {
 }
 /** Like {@link own}, for a member that was never an own data property and has to stay out of `Object.keys`. */
 function hide(inst, key, value) {
-	return own$3(inst, key, value, false);
+	return own$4(inst, key, value, false);
 }
 /** Adds members a table derives from the instance: each builds on first read and shadows as own data, and assignment shadows the same way, as when these were own properties. */
 /* @__NO_SIDE_EFFECTS__ */
@@ -522,10 +522,10 @@ function derived(computes, table) {
 			configurable: true,
 			enumerable: true,
 			get() {
-				return own$3(this, key, compute(this));
+				return own$4(this, key, compute(this));
 			},
 			set(value) {
-				own$3(this, key, value);
+				own$4(this, key, value);
 			}
 		});
 	}
@@ -535,10 +535,10 @@ function defineBound(proto, key, fn) {
 	Object.defineProperty(proto, key, {
 		configurable: true,
 		get() {
-			return this == null ? fn : own$3(this, key, fn.bind(this));
+			return this == null ? fn : own$4(this, key, fn.bind(this));
 		},
 		set(value) {
-			own$3(this, key, value);
+			own$4(this, key, value);
 		}
 	});
 }
@@ -1553,7 +1553,7 @@ const $ZodType = /*@__PURE__*/ $constructor("$ZodType", (inst, def) => {
 		return hide(this, "~standard", standardProps(this));
 	},
 	set "~standard"(value) {
-		own$3(this, "~standard", value);
+		own$4(this, "~standard", value);
 	}
 });
 /** The Standard Schema surface for `inst`. Shared so wrappers can extend it without forcing it. */
@@ -5159,7 +5159,7 @@ const ZodType = /*@__PURE__*/ $constructor("ZodType", (inst, def) => {
 		});
 	},
 	set "~standard"(value) {
-		own$3(this, "~standard", value);
+		own$4(this, "~standard", value);
 	},
 	parse: function _parse(data, params) {
 		return parse$6(this, data, params, { callee: _parse });
@@ -5177,7 +5177,7 @@ const ZodType = /*@__PURE__*/ $constructor("ZodType", (inst, def) => {
 		return this?.safeParseAsync;
 	},
 	set spa(value) {
-		own$3(this, "spa", value);
+		own$4(this, "spa", value);
 	},
 	validate(data, params) {
 		return validate$4(this, data, params);
@@ -24403,7 +24403,7 @@ function parseObjectReference(reference, expected = {}) {
 		kind: match[4],
 		node: Number(match[5])
 	};
-	if (!uint$56(result.section) || !uint$56(result.node)) throw new TypeError("InvalidObjectReference");
+	if (!uint$59(result.section) || !uint$59(result.node)) throw new TypeError("InvalidObjectReference");
 	if (expectedSha256 !== void 0 && expectedSha256 !== result.sourceSha256) throw new Error("StaleObjectReference");
 	if (expectedFormat !== void 0 && expectedFormat !== result.format) throw new Error("ObjectReferenceFormatMismatch");
 	return result;
@@ -24418,7 +24418,7 @@ function canonicalImageId(value) {
 	})) throw new TypeError("InvalidImageIdentity");
 	return `${documentFormat}:s${section}:i${node}`;
 }
-var KINDS, SHA, REFERENCE, object$12, uint$56, format$1, identity$1;
+var KINDS, SHA, REFERENCE, object$12, uint$59, format$1, identity$1;
 var init_object_reference$1 = __esmMin((() => {
 	KINDS = /* @__PURE__ */ new Set([
 		"image",
@@ -24433,9 +24433,9 @@ var init_object_reference$1 = __esmMin((() => {
 	SHA = /^[a-f0-9]{64}$/u;
 	REFERENCE = /^hwpjs-object:([a-f0-9]{64})\/(hwp5|hwpx)\/s(0|[1-9]\d*)\/(image|table|chart|equation|drawing|ole|form|unknown)\/(0|[1-9]\d*)$/u;
 	object$12 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	uint$56 = (value) => typeof value === "number" && Number.isSafeInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
+	uint$59 = (value) => typeof value === "number" && Number.isSafeInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
 	format$1 = (value) => value === "hwp5" || value === "hwpx";
-	identity$1 = (value) => object$12(value) && format$1(value.format) && uint$56(value.section) && uint$56(value.node);
+	identity$1 = (value) => object$12(value) && format$1(value.format) && uint$59(value.section) && uint$59(value.node);
 }));
 // src/object-reference.ts
 var init_object_reference = __esmMin((() => {
@@ -25815,6 +25815,913 @@ var init_document_format = __esmMin((() => {
 	hwp3Signature = new TextEncoder().encode("HWP Document File V3");
 	startsWith = (bytes, signature) => bytes.length >= signature.length && signature.every((value, index) => bytes[index] === value);
 }));
+// ../../js/created-cell-geometry.mjs
+/** Native projection v1 only; old uniform snapshots use their existing validator. */
+function validateCreatedCellGeometry(table) {
+	const fail = () => {
+		throw Error("InvalidCreatedCellGeometry");
+	};
+	const uint = (n) => Number.isInteger(n) && !Object.is(n, -0) && n >= 0 && n <= 4294967295;
+	if (!table || ![
+		table.rows,
+		table.columns,
+		table.width,
+		table.height
+	].every((n) => uint(n) && n > 0) || table.rows * table.columns > 1e5 || !Array.isArray(table.cells) || table.cells.length !== table.rows * table.columns) return fail();
+	let y = 0, extent = 0;
+	for (let row = 0; row < table.rows; row++) {
+		let x = 0, height = 0;
+		for (let column = 0; column < table.columns; column++) {
+			const cell = table.cells[row * table.columns + column];
+			if (!cell || ![
+				cell.x,
+				cell.y,
+				cell.width,
+				cell.height,
+				cell.row,
+				cell.column
+			].every(uint) || cell.row !== row || cell.column !== column || cell.x !== x || cell.y !== y || !cell.width || !cell.height) return fail();
+			x += cell.width;
+			height = Math.max(height, cell.height);
+			if (x > 4294967295) return fail();
+		}
+		extent = Math.max(extent, x);
+		y += height;
+		if (y > 4294967295) return fail();
+	}
+	if (extent !== table.width || y !== table.height) return fail();
+	return table;
+}
+var init_created_cell_geometry = __esmMin((() => {}));
+// ../../js/created-cell-character-runs.mjs
+function validateCreatedCellCharacterRuns(text, runs) {
+	const fail = () => {
+		throw Error("InvalidCreatedCellCharacterRuns");
+	};
+	if (typeof text !== "string" || !text.isWellFormed() || !Array.isArray(runs) || !runs.length || runs.length > 65535 || runs[0]?.start_unit !== 0) return fail();
+	let previous = -1;
+	for (const run of runs) {
+		if (!run || typeof run !== "object" || Array.isArray(run) || Object.keys(run).length !== 2 || !Object.hasOwn(run, "start_unit") || !Object.hasOwn(run, "char_shape_id") || !uint$58(run.start_unit) || !uint$58(run.char_shape_id) || run.start_unit <= previous || run.start_unit > text.length) return fail();
+		const at = run.start_unit;
+		if (at > 0 && at < text.length && text.charCodeAt(at - 1) >= 55296 && text.charCodeAt(at - 1) <= 56319 && text.charCodeAt(at) >= 56320 && text.charCodeAt(at) <= 57343) return fail();
+		previous = at;
+	}
+	return runs;
+}
+var uint$58;
+var init_created_cell_character_runs = __esmMin((() => {
+	uint$58 = (n) => Number.isInteger(n) && n >= 0 && n <= 4294967295 && !Object.is(n, -0);
+}));
+// ../../js/created-table-identity.mjs
+function createdTableIdentity(value) {
+	if (typeof value !== "string" || !/^[1-9][0-9]{0,19}$/.test(value)) throw new RangeError("InvalidCreatedTableIdentity");
+	const id = BigInt(value);
+	if (id > 18446744073709551615n) throw new RangeError("InvalidCreatedTableIdentity");
+	return id;
+}
+var init_created_table_identity = __esmMin((() => {}));
+// ../../js/hwpx-created-tables.mjs
+function decodeCreatedTables(bytes, options) {
+	const fail = () => {
+		throw new Error("InvalidCreatedTables");
+	};
+	if (!(bytes instanceof Uint8Array)) return fail();
+	let rows;
+	try {
+		rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+	} catch {
+		return fail();
+	}
+	return validateCreatedTables(rows, options);
+}
+function validateCreatedTables(rows, { hostBase = 1, cellGeometryVersion = 0 } = {}) {
+	const fail = () => {
+		throw new Error("InvalidCreatedTables");
+	};
+	if (hostBase !== 0 && hostBase !== 1) return fail();
+	if (cellGeometryVersion !== 0 && cellGeometryVersion !== 1) return fail();
+	if (!Array.isArray(rows) || rows.length > 1e5) return fail();
+	const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	const keys = (value, names) => value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === names.length && names.every((name) => Object.hasOwn(value, name));
+	const identities = /* @__PURE__ */ new Set(), instances = /* @__PURE__ */ new Set(), paragraphs = /* @__PURE__ */ new Set();
+	for (const row of rows) {
+		if (!keys(row, [
+			"identity",
+			"instance_id",
+			"host_paragraph",
+			"anchor_unit",
+			"rows",
+			"columns",
+			"width",
+			"height",
+			"resources",
+			"cells"
+		])) return fail();
+		try {
+			createdTableIdentity(row.identity);
+		} catch {
+			return fail();
+		}
+		if (identities.has(row.identity)) return fail();
+		identities.add(row.identity);
+		if (![
+			row.instance_id,
+			row.host_paragraph,
+			row.anchor_unit,
+			row.rows,
+			row.columns,
+			row.width,
+			row.height
+		].every(uint) || !row.instance_id || row.host_paragraph < hostBase || !row.rows || !row.columns || row.width < row.columns || row.height < row.rows || cellGeometryVersion === 0 && row.height % row.rows || instances.has(row.instance_id)) return fail();
+		instances.add(row.instance_id);
+		if (!keys(row.resources, [
+			"paragraph",
+			"character",
+			"style",
+			"border_fill"
+		]) || !Object.values(row.resources).every(uint)) return fail();
+		const count = row.rows * row.columns;
+		if (count > 1e5 || !Array.isArray(row.cells) || row.cells.length !== count) return fail();
+		if (cellGeometryVersion === 1) validateCreatedCellGeometry(row);
+		const height = row.height / row.rows;
+		let x = 0;
+		for (let index = 0; index < count; index++) {
+			const cell = row.cells[index];
+			const rich = Object.hasOwn(cell ?? {}, "character_runs");
+			if (!keys(cell, [
+				"paragraph_id",
+				"row",
+				"column",
+				"x",
+				"y",
+				"width",
+				"height",
+				"text",
+				...rich ? ["character_runs"] : []
+			]) || ![
+				cell.paragraph_id,
+				cell.row,
+				cell.column,
+				cell.x,
+				cell.y,
+				cell.width,
+				cell.height
+			].every(uint)) return fail();
+			if (!cell.paragraph_id || paragraphs.has(cell.paragraph_id) || cell.row !== Math.floor(index / row.columns) || cell.column !== index % row.columns || cell.x !== x || !cell.width || cellGeometryVersion === 0 && (cell.height !== height || cell.y !== cell.row * height) || typeof cell.text !== "string" || !cell.text.isWellFormed()) return fail();
+			if (rich) try {
+				validateCreatedCellCharacterRuns(cell.text, cell.character_runs);
+			} catch {
+				return fail();
+			}
+			paragraphs.add(cell.paragraph_id);
+			x += cell.width;
+			if (x > row.width) return fail();
+			if (cell.column === row.columns - 1) {
+				if (cellGeometryVersion === 0 && x !== row.width) return fail();
+				x = 0;
+			}
+		}
+	}
+	return rows;
+}
+var init_hwpx_created_tables = __esmMin((() => {
+	init_created_cell_geometry();
+	init_created_cell_character_runs();
+	init_created_table_identity();
+}));
+// ../../js/hwp5-created-tables.mjs
+function decodeHwp5CreatedTables(bytes, { cellGeometryVersion = 0 } = {}) {
+	const fail = () => {
+		throw new Error("InvalidHwp5CreatedTables");
+	};
+	const rows = JSON.parse(decoder$7.decode(bytes));
+	if (!Array.isArray(rows) || rows.length > 1e5 || rows.some((r) => !keys$6(r, ["table", "options"]))) fail();
+	validateCreatedTables(rows.map((row) => row.table), {
+		hostBase: 0,
+		cellGeometryVersion
+	});
+	for (const row of rows) {
+		const o = row.options;
+		if (!keys$6(o, [
+			"common",
+			"table",
+			"cell"
+		])) fail();
+		const c = o.common, t = o.table, l = o.cell;
+		if (!keys$6(c, [
+			"flags",
+			"offset_y",
+			"offset_x",
+			"z_order",
+			"margins",
+			"prevent_page_break",
+			"description"
+		]) || !integer$4(c.flags, 0, 4294967295) || ![
+			c.offset_y,
+			c.offset_x,
+			c.z_order
+		].every((n) => integer$4(n, -2147483648, 2147483647)) || !margins(c.margins) || typeof c.prevent_page_break !== "boolean" || typeof c.description !== "string" || !c.description.isWellFormed()) fail();
+		if (!keys$6(t, [
+			"page_break",
+			"repeat_header",
+			"cell_spacing",
+			"margins"
+		]) || !integer$4(t.page_break, 0, 2) || typeof t.repeat_header !== "boolean" || !integer$4(t.cell_spacing, -32768, 32767) || !margins(t.margins)) fail();
+		if (!keys$6(l, [
+			"layout",
+			"unknown",
+			"attributes",
+			"margins"
+		]) || !integer$4(l.attributes, 0, 4294967295) || !margins(l.margins) || !(l.layout === "spec6" && l.unknown === null || l.layout === "observed8" && integer$4(l.unknown, 0, 65535))) fail();
+	}
+	return rows;
+}
+var decoder$7, keys$6, integer$4, margins;
+var init_hwp5_created_tables = __esmMin((() => {
+	init_hwpx_created_tables();
+	decoder$7 = new TextDecoder("utf-8", {
+		fatal: true,
+		ignoreBOM: true
+	});
+	keys$6 = (v, names) => v && typeof v === "object" && !Array.isArray(v) && Object.keys(v).length === names.length && names.every((k) => Object.hasOwn(v, k));
+	integer$4 = (v, low, high) => Number.isInteger(v) && v >= low && v <= high;
+	margins = (v) => Array.isArray(v) && v.length === 4 && v.every((n) => integer$4(n, -32768, 32767));
+}));
+// ../../js/border-fill-values.mjs
+var BORDER_LINE_STYLES$1, BORDER_WIDTHS_HUNDREDTH_MM$1;
+var init_border_fill_values = __esmMin((() => {
+	BORDER_LINE_STYLES$1 = Object.freeze([
+		"NONE",
+		"SOLID",
+		"DASH",
+		"DOT",
+		"DASH_DOT",
+		"DASH_DOT_DOT",
+		"LONG_DASH",
+		"DOUBLE_SLIM",
+		"SLIM_THICK",
+		"THICK_SLIM",
+		"SLIM_THICK_SLIM",
+		"WAVE",
+		"DOUBLEWAVE",
+		"THICK3D",
+		"THICKREV3D",
+		"3D",
+		"REV3D"
+	]);
+	BORDER_WIDTHS_HUNDREDTH_MM$1 = Object.freeze([
+		10,
+		12,
+		15,
+		20,
+		25,
+		30,
+		40,
+		50,
+		60,
+		70,
+		100,
+		150,
+		200,
+		300,
+		400,
+		500
+	]);
+}));
+// ../../js/cell-border-command.mjs
+function cellBorderStyleCode(style) {
+	const code = styleCodes.get(style);
+	if (code === void 0) throw new RangeError("UnsupportedCellBorderStyle");
+	return code;
+}
+function validate$3(input, message) {
+	if (!input || typeof input !== "object" || Array.isArray(input)) throw new TypeError("InvalidCellBorder");
+	const keys = Reflect.ownKeys(input);
+	if (keys.length !== names$2.length + Number(message) || keys.some((key) => !allowed$3.has(key) && !(message && key === "kind")) || message && input.kind !== "cell-border") throw new TypeError("InvalidCellBorder");
+	const values = names$2.map((name) => {
+		if (!Object.hasOwn(input, name)) throw new TypeError("InvalidCellBorder");
+		const value = input[name];
+		if (name === "style") cellBorderStyleCode(value);
+		else if (name === "width") {
+			if (!widths$1.has(value)) throw new RangeError("UnsupportedBorderWidth");
+		} else {
+			const maximum = name === "color" ? 16777215 : name === "edges" ? 15 : 4294967295;
+			const minimum = name === "edges" ? 1 : 0;
+			if (!Number.isInteger(value) || value < minimum || value > maximum) throw new RangeError("InvalidCellBorder");
+		}
+		return value;
+	});
+	return Object.freeze(Object.fromEntries(names$2.map((name, index) => [name, values[index]])));
+}
+function validateCellBorder(input) {
+	return validate$3(input, false);
+}
+var CELL_BORDER_STYLES, CELL_BORDER_WIDTHS, styleCodes, widths$1, names$2, allowed$3;
+var init_cell_border_command = __esmMin((() => {
+	init_border_fill_values();
+	CELL_BORDER_STYLES = Object.freeze([
+		"NONE",
+		"SOLID",
+		"DOUBLE_SLIM"
+	]);
+	CELL_BORDER_WIDTHS = BORDER_WIDTHS_HUNDREDTH_MM$1;
+	styleCodes = new Map(CELL_BORDER_STYLES.map((style, code) => [style, code]));
+	widths$1 = new Set(CELL_BORDER_WIDTHS);
+	names$2 = Object.freeze([
+		"section",
+		"tableNode",
+		"listNode",
+		"edges",
+		"style",
+		"width",
+		"color"
+	]);
+	allowed$3 = new Set(names$2);
+}));
+// ../../js/cell-border-batch.mjs
+function validateCellBorders(cells) {
+	if (!Array.isArray(cells)) throw new TypeError("InvalidCellBorderBatch");
+	const length = cells.length;
+	if (length > 4096) throw new RangeError("LimitExceeded");
+	if (Reflect.ownKeys(cells).length !== length + 1) throw new TypeError("InvalidCellBorderBatch");
+	const result = [], owners = /* @__PURE__ */ new Set();
+	for (let index = 0; index < length; index++) {
+		if (!Object.hasOwn(cells, index)) throw new TypeError("InvalidCellBorderBatch");
+		const value = validateCellBorder(cells[index]);
+		const key = `${value.section}:${value.listNode}`;
+		if (owners.has(key)) throw new TypeError("DuplicateCellBorderEdit");
+		owners.add(key);
+		result.push(value);
+	}
+	return Object.freeze(result);
+}
+function encodeCellBorders(cells) {
+	const values = validateCellBorders(cells);
+	const bytes = new Uint8Array(values.length * 28), view = new DataView(bytes.buffer);
+	values.forEach((v, index) => {
+		[
+			v.section,
+			v.tableNode,
+			v.listNode,
+			v.edges,
+			cellBorderStyleCode(v.style),
+			v.width,
+			v.color
+		].forEach((number, field) => view.setUint32(index * 28 + field * 4, number, true));
+	});
+	return bytes;
+}
+var init_cell_border_batch = __esmMin((() => {
+	init_cell_border_command();
+}));
+// ../../js/cell-fill-command.mjs
+function exact$2(value, names) {
+	if (!value || typeof value !== "object" || Array.isArray(value)) throw TypeError("InvalidCellFill");
+	if (Reflect.ownKeys(value).length !== names.length || names.some((name) => !Object.hasOwn(value, name))) throw TypeError("InvalidCellFill");
+}
+function number$1(value, maximum) {
+	if (!Number.isInteger(value) || value < 0 || value > maximum) throw RangeError("InvalidCellFill");
+	return value;
+}
+function tuple(value) {
+	if (!Array.isArray(value) || value.length !== 2 || Reflect.ownKeys(value).length !== 3 || !Object.hasOwn(value, 0) || !Object.hasOwn(value, 1)) throw TypeError("InvalidCellFill");
+	return Object.freeze([number$1(value[0], 16777215), number$1(value[1], 16777215)]);
+}
+function validateCellFill(input) {
+	if (!input || typeof input !== "object") throw TypeError("InvalidCellFill");
+	const kind = input.kind;
+	switch (kind) {
+		case "none":
+			exact$2(input, ["kind"]);
+			return Object.freeze({ kind });
+		case "solid":
+			exact$2(input, ["kind", "color"]);
+			return Object.freeze({
+				kind,
+				color: number$1(input.color, 16777215)
+			});
+		case "hatch": {
+			exact$2(input, [
+				"kind",
+				"face",
+				"hatch",
+				"style"
+			]);
+			const style = input.style;
+			if (!hatchCodes.has(style)) throw TypeError("InvalidCellFill");
+			return Object.freeze({
+				kind,
+				face: number$1(input.face, 16777215),
+				hatch: number$1(input.hatch, 16777215),
+				style
+			});
+		}
+		case "linear":
+			exact$2(input, [
+				"kind",
+				"colors",
+				"angle",
+				"centerX",
+				"centerY",
+				"step",
+				"stepCenter"
+			]);
+			return Object.freeze({
+				kind,
+				colors: tuple(input.colors),
+				angle: number$1(input.angle, 359),
+				centerX: number$1(input.centerX, 100),
+				centerY: number$1(input.centerY, 100),
+				step: number$1(input.step, 100),
+				stepCenter: number$1(input.stepCenter, 100)
+			});
+		default: throw TypeError("InvalidCellFill");
+	}
+}
+function validateCellFills(input) {
+	if (!Array.isArray(input)) throw TypeError("InvalidCellFillBatch");
+	const length = input.length;
+	if (length > 4096) throw RangeError("LimitExceeded");
+	if (Reflect.ownKeys(input).length !== length + 1) throw TypeError("InvalidCellFillBatch");
+	const owners = /* @__PURE__ */ new Set(), values = [];
+	for (let index = 0; index < length; index++) {
+		if (!Object.hasOwn(input, index)) throw TypeError("InvalidCellFillBatch");
+		const source = input[index];
+		exact$2(source, [
+			"section",
+			"tableNode",
+			"listNode",
+			"fill"
+		]);
+		const section = number$1(source.section, 4294967295), tableNode = number$1(source.tableNode, 4294967295), listNode = number$1(source.listNode, 4294967295), fill = validateCellFill(source.fill), key = `${section}:${listNode}`;
+		if (owners.has(key)) throw TypeError("DuplicateCellFillEdit");
+		owners.add(key);
+		values.push(Object.freeze({
+			section,
+			tableNode,
+			listNode,
+			fill
+		}));
+	}
+	return Object.freeze(values);
+}
+function encodeCellFills(input) {
+	const rows = validateCellFills(input), bytes = new Uint8Array(rows.length * 48), view = new DataView(bytes.buffer);
+	rows.forEach((row, index) => {
+		const fill = row.fill, fields = [
+			row.section,
+			row.tableNode,
+			row.listNode,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0
+		];
+		if (fill.kind === "solid") {
+			fields[3] = 1;
+			fields[4] = fill.color;
+		}
+		if (fill.kind === "hatch") {
+			fields[3] = 2;
+			fields[4] = fill.face;
+			fields[5] = fill.hatch;
+			fields[6] = hatchCodes.get(fill.style);
+		}
+		if (fill.kind === "linear") {
+			fields[3] = 3;
+			fields.splice(4, 7, ...fill.colors, fill.angle, fill.centerX, fill.centerY, fill.step, fill.stepCenter);
+		}
+		fields.forEach((value, field) => view.setUint32(index * 48 + field * 4, value, true));
+	});
+	return bytes;
+}
+var CELL_HATCH_STYLES, hatchCodes;
+var init_cell_fill_command = __esmMin((() => {
+	init_cell_border_batch();
+	CELL_HATCH_STYLES = Object.freeze([
+		"HORIZONTAL",
+		"VERTICAL",
+		"BACK_SLASH",
+		"SLASH",
+		"CROSS",
+		"CROSS_DIAGONAL"
+	]);
+	hatchCodes = new Map(CELL_HATCH_STYLES.map((value, index) => [value, index]));
+}));
+// ../../js/created-cell-properties-projection.mjs
+function exact$1(v, keys) {
+	if (!v || typeof v !== "object" || Array.isArray(v) || Object.keys(v).length !== keys.length || keys.some((k) => !Object.hasOwn(v, k))) throw Error("InvalidCreatedCellProjection");
+}
+function validateCreatedCellAppearance(value) {
+	exact$1(value, [
+		"edges",
+		"background",
+		"diagonal"
+	]);
+	if (!Array.isArray(value.edges) || value.edges.length !== 4) throw Error("InvalidCreatedCellProjection");
+	for (const edge of value.edges) {
+		exact$1(edge, [
+			"style",
+			"width_hundredth_mm",
+			"color"
+		]);
+		if (edge.style !== null && !BORDER_LINE_STYLES$1.includes(edge.style) || edge.width_hundredth_mm !== null && !BORDER_WIDTHS_HUNDREDTH_MM$1.includes(edge.width_hundredth_mm) || edge.color !== null && !uint$57(edge.color)) throw Error("InvalidCreatedCellProjection");
+	}
+	exact$1(value.diagonal, ["directions", "stroke"]);
+	exact$1(value.diagonal.stroke, [
+		"style",
+		"width_hundredth_mm",
+		"color"
+	]);
+	const ds = value.diagonal.stroke;
+	if (ds.style !== null && !BORDER_LINE_STYLES$1.includes(ds.style) || ds.width_hundredth_mm !== null && !BORDER_WIDTHS_HUNDREDTH_MM$1.includes(ds.width_hundredth_mm) || ds.color !== null && !uint$57(ds.color)) throw Error("InvalidCreatedCellProjection");
+	const d = value.diagonal.directions;
+	if (d !== null && ![
+		"none",
+		"rising",
+		"falling",
+		"cross"
+	].includes(d)) throw Error("InvalidCreatedCellProjection");
+	if (value.background !== null) {
+		const keys = Object.keys(value.background);
+		if (keys.length !== 1) throw Error("InvalidCreatedCellProjection");
+		const kind = keys[0], f = value.background[kind];
+		if (kind === "none") exact$1(f, []);
+		else if (kind === "solid") {
+			exact$1(f, ["color", "hatch_color"]);
+			if (!uint$57(f.color) || f.hatch_color !== null && !uint$57(f.hatch_color)) throw Error("InvalidCreatedCellProjection");
+		} else if (kind === "hatch") {
+			exact$1(f, [
+				"face",
+				"hatch",
+				"style"
+			]);
+			validateCellFill({
+				kind,
+				face: f.face,
+				hatch: f.hatch,
+				style: f.style
+			});
+		} else if (kind === "linear") {
+			exact$1(f, [
+				"colors",
+				"angle",
+				"center_x",
+				"center_y",
+				"step",
+				"step_center"
+			]);
+			validateCellFill({
+				kind,
+				colors: f.colors,
+				angle: f.angle,
+				centerX: f.center_x,
+				centerY: f.center_y,
+				step: f.step,
+				stepCenter: f.step_center
+			});
+		} else throw Error("InvalidCreatedCellProjection");
+	}
+	return value;
+}
+function decodeCreatedCellDocumentProjection(bytes, format) {
+	const value = JSON.parse(decoder$6.decode(bytes));
+	exact$1(value, [
+		"schemaVersion",
+		"format",
+		"sections",
+		"styles"
+	]);
+	if (value.schemaVersion !== 1 || value.format !== format || !["hwp5", "hwpx"].includes(format) || !Array.isArray(value.sections) || !Array.isArray(value.styles) || value.styles.length > 1e5) throw Error("InvalidCreatedCellProjection");
+	const owners = /* @__PURE__ */ new Map(), identities = /* @__PURE__ */ new Set(), sections = [];
+	for (const [section, part] of value.sections.entries()) {
+		exact$1(part, ["section", "tables"]);
+		if (part.section !== section) throw Error("InvalidCreatedCellProjection");
+		const rows = format === "hwp5" ? decodeHwp5CreatedTables(encoder$17.encode(JSON.stringify(part.tables)), { cellGeometryVersion: 1 }) : validateCreatedTables(part.tables, { cellGeometryVersion: 1 });
+		sections.push(rows);
+		for (const row of rows) {
+			const table = format === "hwp5" ? row.table : row;
+			if (identities.has(table.identity)) throw Error("InvalidCreatedCellProjection");
+			identities.add(table.identity);
+			table.createdCellPropertiesVersion = 1;
+			for (const cell of table.cells) {
+				owners.set(`${section}:${table.identity}:${cell.row}:${cell.column}`, cell);
+				if (owners.size > 1e5) throw Error("LimitExceeded");
+			}
+		}
+	}
+	if (owners.size !== value.styles.length) throw Error("InvalidCreatedCellProjection");
+	const seen = /* @__PURE__ */ new Set();
+	for (const entry of value.styles) {
+		exact$1(entry, [
+			"section",
+			"identity",
+			"row",
+			"column",
+			"value",
+			"resource_id",
+			"raw_sha256",
+			"effects_supported",
+			"raw_origin"
+		]);
+		if (!uint$57(entry.resource_id, 4294967295) || !uint$57(entry.section, 4294967295) || typeof entry.effects_supported !== "boolean" || typeof entry.raw_sha256 !== "string" || !/^[0-9a-f]{64}$/.test(entry.raw_sha256)) throw Error("InvalidCreatedCellProjection");
+		if (!["save_materialized_resource", "owned_absent_profile"].includes(entry.raw_origin) || entry.raw_origin === "owned_absent_profile" && (format !== "hwp5" || entry.resource_id !== 0)) throw Error("InvalidCreatedCellProjection");
+		if (typeof entry.identity !== "string" || !uint$57(entry.row, 4294967295) || !uint$57(entry.column, 4294967295)) throw Error("InvalidCreatedCellProjection");
+		const key = `${entry.section}:${entry.identity}:${entry.row}:${entry.column}`, cell = owners.get(key);
+		if (!cell || seen.has(key)) throw Error("InvalidCreatedCellProjection");
+		seen.add(key);
+		cell.createdCellAppearance = {
+			value: validateCreatedCellAppearance(entry.value),
+			effectsSupported: entry.effects_supported,
+			resourceId: entry.resource_id,
+			rawSHA256: entry.raw_sha256,
+			rawOrigin: entry.raw_origin
+		};
+	}
+	return sections;
+}
+var decoder$6, encoder$17, uint$57;
+var init_created_cell_properties_projection = __esmMin((() => {
+	init_hwpx_created_tables();
+	init_hwp5_created_tables();
+	init_border_fill_values();
+	init_cell_fill_command();
+	decoder$6 = new TextDecoder("utf-8", { fatal: true });
+	encoder$17 = new TextEncoder();
+	uint$57 = (n, max = 16777215) => Number.isInteger(n) && n >= 0 && n <= max;
+}));
+// ../../js/created-cell-properties.mjs
+function own$3(value, depth = 0) {
+	if (value === null || typeof value !== "object") return value;
+	if (depth > 6) return invalid$7();
+	const array = Array.isArray(value);
+	if (!array && ![Object.prototype, null].includes(Object.getPrototypeOf(value))) return invalid$7();
+	const keys = Reflect.ownKeys(value);
+	if (keys.length > 32 || keys.some((key) => typeof key !== "string")) return invalid$7();
+	const out = array ? [] : Object.create(null);
+	for (const key of keys) {
+		const field = Object.getOwnPropertyDescriptor(value, key);
+		if (!field || !Object.hasOwn(field, "value")) return invalid$7();
+		if (array && key === "length") continue;
+		if (!field.enumerable) return invalid$7();
+		if (array && !/^(0|[1-9][0-9]*)$/.test(key)) return invalid$7();
+		Object.defineProperty(out, key, {
+			value: own$3(field.value, depth + 1),
+			enumerable: true
+		});
+	}
+	if (array && (out.length !== value.length || keys.length !== out.length + 1)) return invalid$7();
+	return Object.freeze(out);
+}
+function shape$1(value, allowed, required = []) {
+	if (!value || typeof value !== "object" || Array.isArray(value)) return invalid$7();
+	const keys = Reflect.ownKeys(value);
+	if (keys.some((key) => !allowed.includes(key)) || required.some((key) => !Object.hasOwn(value, key))) return invalid$7();
+	return keys;
+}
+function uint$56(value, positive = false, max = 4294967295) {
+	if (!Number.isInteger(value) || Object.is(value, -0) || value < Number(positive) || value > max) throw RangeError("InvalidCreatedCellPropertiesInteger");
+	return value;
+}
+/** Distinct generated identity address. No source tableNode/listNode is accepted. */
+function captureCreatedCellPropertiesRequest(input) {
+	const value = own$3(input);
+	shape$1(value, [
+		"section",
+		"identity",
+		"row",
+		"column",
+		"expected",
+		"size",
+		"appearance"
+	], [
+		"section",
+		"identity",
+		"row",
+		"column",
+		"expected"
+	]);
+	for (const key of [
+		"section",
+		"row",
+		"column"
+	]) uint$56(value[key]);
+	if (typeof value.identity !== "string" || createdTableIdentity(value.identity).toString() !== value.identity) throw RangeError("InvalidCreatedTableIdentity");
+	shape$1(value.expected, ["width", "height"], ["width", "height"]);
+	uint$56(value.expected.width, true);
+	uint$56(value.expected.height, true);
+	let changed = false;
+	if (Object.hasOwn(value, "size")) {
+		if (!shape$1(value.size, ["width", "height"]).length) return invalid$7();
+		for (const key of Reflect.ownKeys(value.size)) uint$56(value.size[key], true);
+		changed = true;
+	}
+	let appearance;
+	if (Object.hasOwn(value, "appearance")) {
+		if (!shape$1(value.appearance, ["borders", "fill"]).length) return invalid$7();
+		appearance = { ...value.appearance };
+		if (Object.hasOwn(appearance, "borders")) {
+			const edges = shape$1(appearance.borders, [
+				"left",
+				"right",
+				"top",
+				"bottom"
+			]);
+			if (!edges.length) return invalid$7();
+			for (const edge of edges) {
+				const stroke = appearance.borders[edge];
+				if (!shape$1(stroke, [
+					"style",
+					"width",
+					"color"
+				]).length) return invalid$7();
+				if (Object.hasOwn(stroke, "style") && !CELL_BORDER_STYLES.includes(stroke.style)) return invalid$7();
+				if (Object.hasOwn(stroke, "width") && !CELL_BORDER_WIDTHS.includes(stroke.width)) return invalid$7();
+				if (Object.hasOwn(stroke, "color")) uint$56(stroke.color, false, 16777215);
+			}
+		}
+		if (Object.hasOwn(appearance, "fill")) appearance.fill = validateCellFill(appearance.fill);
+		appearance = Object.freeze(appearance);
+		changed = true;
+	}
+	if (!changed) return invalid$7();
+	return Object.freeze({
+		...value,
+		...appearance ? { appearance } : {}
+	});
+}
+var invalid$7;
+var init_created_cell_properties = __esmMin((() => {
+	init_created_table_identity();
+	init_cell_fill_command();
+	init_cell_border_command();
+	invalid$7 = () => {
+		throw TypeError("InvalidCreatedCellProperties");
+	};
+}));
+// ../../js/created-cell-properties-api.mjs
+function witness(input) {
+	if (!input || typeof input !== "object" || Array.isArray(input)) throw Error("InvalidCreatedCellWitness");
+	const keys = [
+		"document",
+		"generation",
+		"owner",
+		"epoch"
+	];
+	if (Reflect.ownKeys(input).length !== 4) throw Error("InvalidCreatedCellWitness");
+	const out = {};
+	for (const key of keys) {
+		const value = Object.getOwnPropertyDescriptor(input, key)?.value;
+		if (typeof value !== "string" || !/^(0|[1-9][0-9]{0,19})$/.test(value) || BigInt(value) > 18446744073709551615n) throw Error("InvalidCreatedCellWitness");
+		out[key] = value;
+	}
+	return Object.freeze(out);
+}
+function appearance(value) {
+	const out = {};
+	if (value?.borders) out.border = { edges: [
+		"left",
+		"right",
+		"top",
+		"bottom"
+	].map((edge) => {
+		const s = value.borders[edge];
+		return s ? {
+			...s.style === void 0 ? {} : { style: s.style },
+			...s.width === void 0 ? {} : { width_hundredth_mm: s.width },
+			...s.color === void 0 ? {} : { color: s.color }
+		} : null;
+	}) };
+	const f = value?.fill;
+	if (f) {
+		if (f.kind === "none") out.background = { none: {} };
+		else if (f.kind === "solid") out.background = { solid: { color: f.color } };
+		else if (f.kind === "hatch") out.background = { hatch: {
+			face: f.face,
+			hatch: f.hatch,
+			style: f.style
+		} };
+		else out.background = { linear: {
+			colors: f.colors,
+			angle: f.angle,
+			center_x: f.centerX,
+			center_y: f.centerY,
+			step: f.step,
+			step_center: f.stepCenter
+		} };
+	}
+	return out;
+}
+function createCreatedCellPropertiesApi({ wasm, memory, check, prefix }) {
+	const version = `${prefix}_created_cell_properties_version`, ticket = `${prefix}_created_cell_properties_ticket`, write = `${prefix}_set_created_cell_properties`;
+	const supported = () => [
+		version,
+		ticket,
+		write
+	].every((name) => typeof wasm[name] === "function") && wasm[version]() === 1;
+	const projection = `${prefix}_created_cell_properties_projection`;
+	let cached;
+	function readWitness() {
+		if (!wasm[ticket]()) throw memory.error();
+		try {
+			return witness(JSON.parse(new TextDecoder().decode(memory.copy(wasm[`${prefix}_output_ptr`](), wasm[`${prefix}_output_len`]()))));
+		} finally {
+			wasm[`${prefix}_output_free`]();
+		}
+	}
+	return {
+		supportsCreatedCellPropertiesProjection() {
+			check();
+			return supported() && typeof wasm[projection] === "function";
+		},
+		createdCellPropertiesProjection(section) {
+			check();
+			if (!Number.isInteger(section) || section < 0 || section > 4294967295 || Object.is(section, -0)) throw RangeError("InvalidSection");
+			if (!supported() || typeof wasm[projection] !== "function") throw Error("CreatedCellPropertiesProjectionUnavailable");
+			const key = JSON.stringify(readWitness());
+			if (cached?.key !== key) {
+				cached = void 0;
+				let sections;
+				try {
+					if (!wasm[projection]()) throw memory.error();
+					sections = decodeCreatedCellDocumentProjection(memory.copy(wasm[`${prefix}_output_ptr`](), wasm[`${prefix}_output_len`]()), prefix === "hwp5_edit" ? "hwp5" : "hwpx");
+				} finally {
+					wasm[`${prefix}_output_free`]();
+				}
+				if (JSON.stringify(readWitness()) !== key) throw Error("StaleCreatedCellProjection");
+				cached = {
+					key,
+					sections
+				};
+			}
+			if (section >= cached.sections.length) throw RangeError("InvalidSection");
+			return structuredClone(cached.sections[section]);
+		},
+		supportsCreatedCellProperties() {
+			check();
+			return supported();
+		},
+		editCreatedCellProperties(input) {
+			check();
+			const request = captureCreatedCellPropertiesRequest(input);
+			if (!supported()) throw Error("CreatedCellPropertiesUnavailable");
+			if (!wasm[ticket]()) throw memory.error();
+			let binding;
+			try {
+				binding = witness(JSON.parse(new TextDecoder().decode(memory.copy(wasm[`${prefix}_output_ptr`](), wasm[`${prefix}_output_len`]()))));
+			} finally {
+				wasm[`${prefix}_output_free`]();
+			}
+			const bytes = encoder$16.encode(JSON.stringify({
+				...request,
+				appearance: appearance(request.appearance),
+				witness: binding
+			}));
+			if (bytes.length > 16384) throw RangeError("LimitExceeded");
+			let attempted = false, result;
+			try {
+				result = memory.withBytes(bytes, (ptr, size) => {
+					attempted = true;
+					return wasm[write](ptr, size);
+				});
+			} catch (error) {
+				if (attempted) return {
+					application: "unknown",
+					changed: null
+				};
+				throw error;
+			}
+			if (result === 1) return {
+				application: "applied",
+				changed: true
+			};
+			if (result === 2) return {
+				application: "not-applied",
+				changed: false
+			};
+			if (result === 3) return {
+				application: "unknown",
+				changed: null
+			};
+			if (result !== 0) return {
+				application: "unknown",
+				changed: null
+			};
+			throw memory.error();
+		}
+	};
+}
+var encoder$16;
+var init_created_cell_properties_api = __esmMin((() => {
+	init_created_cell_properties_projection();
+	init_created_cell_properties();
+	encoder$16 = new TextEncoder();
+}));
 // ../../js/hwp5-strict-layout-transport.mjs
 function registerStrictLayoutTransport(editor, transport) {
 	transports.set(editor, transport);
@@ -26232,6 +27139,60 @@ var init_abi_schema = __esmMin((() => {
 			results: ["i32"]
 		}
 	});
+	Object.freeze({
+		hwp5_edit_picture_replace_version: {
+			params: [],
+			results: ["i32"]
+		},
+		hwp5_edit_picture_replace_owner: {
+			params: ["i32", "i32"],
+			results: ["i32"]
+		},
+		hwp5_edit_replace_picture: {
+			params: [
+				"i32",
+				"i32",
+				"i32",
+				"i32"
+			],
+			results: ["i32"]
+		},
+		hwpx_edit_picture_replace_version: {
+			params: [],
+			results: ["i32"]
+		},
+		hwpx_edit_picture_replace_owner: {
+			params: ["i32", "i32"],
+			results: ["i32"]
+		},
+		hwpx_edit_replace_picture: {
+			params: [
+				"i32",
+				"i32",
+				"i32",
+				"i32"
+			],
+			results: ["i32"]
+		}
+	});
+	Object.freeze(Object.fromEntries(["hwp5_edit", "hwpx_edit"].flatMap((prefix) => [
+		[`${prefix}_created_cell_properties_version`, {
+			params: [],
+			results: ["i32"]
+		}],
+		[`${prefix}_created_cell_properties_ticket`, {
+			params: [],
+			results: ["i32"]
+		}],
+		[`${prefix}_created_cell_properties_projection`, {
+			params: [],
+			results: ["i32"]
+		}],
+		[`${prefix}_set_created_cell_properties`, {
+			params: ["i32", "i32"],
+			results: ["i32"]
+		}]
+	])));
 }));
 // ../../js/hwpx-inline-object-record.mjs
 /** Strict data-only record; shared by creation payload and owner contracts. */
@@ -26338,7 +27299,7 @@ var init_chart_display_owner_limits = __esmMin((() => {}));
 function field$3(value, accepts, owner) {
 	return value === null || object$11(value) && uint$55(value.node) && value.node > owner && (value.value === null || accepts(value.value));
 }
-function number$1(value) {
+function number(value) {
 	return object$11(value) && (value.kind === "finite" ? typeof value.value === "number" && Number.isFinite(value.value) : [
 		"positive_infinity",
 		"negative_infinity",
@@ -26350,7 +27311,7 @@ function scaling(value, owner) {
 		value.minimum,
 		value.maximum,
 		value.log_base
-	].every((item) => field$3(item, number$1, value.node));
+	].every((item) => field$3(item, number, value.node));
 }
 var object$11, uint$55, text$4, nullableUint, oneOf;
 var init_chart_display_fields = __esmMin((() => {
@@ -26701,7 +27662,7 @@ function validateChartDisplayData(value) {
 			"percent",
 			"pos",
 			"val"
-		]), plot.node) && field$3(settings.split_position, number$1, plot.node) && nullableUint(settings.custom_split_node) && (settings.custom_split_node === null || settings.custom_split_node > plot.node));
+		]), plot.node) && field$3(settings.split_position, number, plot.node) && nullableUint(settings.custom_split_node) && (settings.custom_split_node === null || settings.custom_split_node > plot.node));
 		if ([
 			settings.of_pie_type,
 			settings.second_pie_size,
@@ -31096,7 +32057,7 @@ function checkedHwp5LiteralEdits(input) {
 		for (const key of kind === "category" ? ["category"] : ["series", "category"]) if (!Number.isSafeInteger(raw[key]) || raw[key] < 0 || Object.is(raw[key], -0)) throw Error("InvalidChartLiteralEdits");
 		for (const key of ["expected", "value"]) {
 			if (typeof raw[key] !== "string" || /[\uD800-\uDFFF]/u.test(raw[key])) throw Error("InvalidChartLiteralEdits");
-			const bytes = encoder$14.encode(raw[key]).length;
+			const bytes = encoder$15.encode(raw[key]).length;
 			if (bytes > (kind === "category" ? 4096 : 128) || bytes > budget) throw Error("ChartLiteralEditValueLimit");
 			budget -= bytes;
 		}
@@ -31202,16 +32163,16 @@ function createHwp5ChartLiteralEditApi({ wasm, memory, check, output, u32 }) {
 		}
 	};
 }
-var encoder$14, maxWire, jsonBytes, parse$5, freeze;
+var encoder$15, maxWire, jsonBytes, parse$5, freeze;
 var init_hwp5_chart_literal_edit = __esmMin((() => {
 	init_abi_schema();
 	init_hwpx_inline_object_record();
 	init_native_edit_outcome();
 	init_hwp5_chart_create_preview();
-	encoder$14 = new TextEncoder();
+	encoder$15 = new TextEncoder();
 	maxWire = 16777216;
 	jsonBytes = (value) => {
-		const bytes = encoder$14.encode(JSON.stringify(value));
+		const bytes = encoder$15.encode(JSON.stringify(value));
 		if (!bytes.length || bytes.length > maxWire) throw Error("ChartLiteralEditWireLimit");
 		return bytes;
 	};
@@ -31275,9 +32236,9 @@ function decodeHwp5DrawingSources(bytes) {
 var init_hwp5_drawing_sources = __esmMin((() => {}));
 // ../../js/hwp5-chart-display-api.mjs
 function envelope(bytes, kind) {
-	if (!(bytes instanceof Uint8Array) || bytes.length > 16777216) invalid$5();
+	if (!(bytes instanceof Uint8Array) || bytes.length > 16777216) invalid$6();
 	const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-	if (!value || value.format !== "hwp5" || value.version !== 1 || value.kind !== kind || typeof value.source_epoch !== "string" || !/^[1-9][0-9]{0,19}$/.test(value.source_epoch) || BigInt(value.source_epoch) > 18446744073709551615n || value.history_revision !== null && !uint$54(value.history_revision)) invalid$5();
+	if (!value || value.format !== "hwp5" || value.version !== 1 || value.kind !== kind || typeof value.source_epoch !== "string" || !/^[1-9][0-9]{0,19}$/.test(value.source_epoch) || BigInt(value.source_epoch) > 18446744073709551615n || value.history_revision !== null && !uint$54(value.history_revision)) invalid$6();
 	return value;
 }
 function owner$2(value, allowUnresolved = false) {
@@ -31291,42 +32252,42 @@ function owner$2(value, allowUnresolved = false) {
 		"current_unit",
 		"attributes",
 		"opaque_tail_bytes"
-	].every((key) => uint$54(value[key])) || !uint$54(value.ordinal, 65535) || !allowUnresolved && value.ordinal === 0 || !["spec24", "observed26"].includes(value.ole_layout) || ![value.extent_x, value.extent_y].every((number) => Number.isInteger(number) && number >= -2147483648 && number <= 2147483647) || !(value.paragraph_node < value.control_node && value.control_node < value.component_node && value.component_node < value.ole_node)) invalid$5();
-	if (!digest$3(value.section_source_sha256)) invalid$5();
+	].every((key) => uint$54(value[key])) || !uint$54(value.ordinal, 65535) || !allowUnresolved && value.ordinal === 0 || !["spec24", "observed26"].includes(value.ole_layout) || ![value.extent_x, value.extent_y].every((number) => Number.isInteger(number) && number >= -2147483648 && number <= 2147483647) || !(value.paragraph_node < value.control_node && value.control_node < value.component_node && value.component_node < value.ole_node)) invalid$6();
+	if (!digest$4(value.section_source_sha256)) invalid$6();
 	validateHwp5DrawingSources([value.geometry]);
 	if (value.geometry.kind_id !== 611282021 || [
 		"control_node",
 		"component_node",
 		"paragraph_node"
-	].some((key) => value[key] !== value.geometry[key])) invalid$5();
+	].some((key) => value[key] !== value.geometry[key])) invalid$6();
 	return value;
 }
 function decodeHwp5ChartCandidates(bytes) {
 	const value = envelope(bytes, "hwp5_chart_candidates");
-	if (!Array.isArray(value.candidates) || value.candidates.length > 4096) invalid$5();
+	if (!Array.isArray(value.candidates) || value.candidates.length > 4096) invalid$6();
 	const seen = /* @__PURE__ */ new Map();
 	for (const row of value.candidates) {
-		if (!row || !uint$54(row.section)) invalid$5();
+		if (!row || !uint$54(row.section)) invalid$6();
 		owner$2(row.owner, true);
 		const key = row.section + ":" + row.owner.control_node;
-		if (seen.has(key)) invalid$5();
+		if (seen.has(key)) invalid$6();
 		seen.set(key, row);
 		const r = row.resource;
 		if (!r || ![
 			"modern_chart",
 			"unresolved_ole",
 			"unavailable"
-		].includes(r.state)) invalid$5();
+		].includes(r.state)) invalid$6();
 		if (r.state === "modern_chart") {
-			if (row.owner.ordinal === 0 || !uint$54(r.physical_id, 65535) || !digest$3(r.resource_sha256) || !uint$54(r.stream_entry) || typeof r.legacy_backup_present !== "boolean" || !uint$54(r.presentation_streams) || r.error_name !== null) invalid$5();
-		} else if (typeof r.error_name !== "string" || !r.error_name.length || r.physical_id !== null || r.resource_sha256 !== null || r.stream_entry !== null || r.legacy_backup_present !== null || r.presentation_streams !== null) invalid$5();
+			if (row.owner.ordinal === 0 || !uint$54(r.physical_id, 65535) || !digest$4(r.resource_sha256) || !uint$54(r.stream_entry) || typeof r.legacy_backup_present !== "boolean" || !uint$54(r.presentation_streams) || r.error_name !== null) invalid$6();
+		} else if (typeof r.error_name !== "string" || !r.error_name.length || r.physical_id !== null || r.resource_sha256 !== null || r.stream_entry !== null || r.legacy_backup_present !== null || r.presentation_streams !== null) invalid$6();
 	}
 	return value;
 }
 function decodeHwp5ChartDisplay(bytes) {
 	const value = envelope(bytes, "hwp5_chart_display");
 	owner$2(value.owner);
-	if (!uint$54(value.section) || !uint$54(value.physical_id, 65535) || !digest$3(value.resource_sha256) || !uint$54(value.stream_entry) || typeof value.legacy_backup_present !== "boolean" || !uint$54(value.presentation_streams) || Object.hasOwn(value, "pair") || Object.hasOwn(value, "host")) invalid$5();
+	if (!uint$54(value.section) || !uint$54(value.physical_id, 65535) || !digest$4(value.resource_sha256) || !uint$54(value.stream_entry) || typeof value.legacy_backup_present !== "boolean" || !uint$54(value.presentation_streams) || Object.hasOwn(value, "pair") || Object.hasOwn(value, "host")) invalid$6();
 	validateChartDisplayData(value.data);
 	return value;
 }
@@ -31352,29 +32313,29 @@ function createHwp5ChartDisplayApi({ wasm, check, output, u32 }) {
 			ready();
 			const s = u32(section, "section"), c = u32(control, "control");
 			const value = decodeHwp5ChartDisplay(output(() => wasm.hwp5_edit_chart_display(s, c)).bytes);
-			if (value.section !== s || value.owner.control_node !== c) invalid$5();
+			if (value.section !== s || value.owner.control_node !== c) invalid$6();
 			return value;
 		}
 	};
 }
-var invalid$5, uint$54, digest$3;
+var invalid$6, uint$54, digest$4;
 var init_hwp5_chart_display_api = __esmMin((() => {
 	init_abi_schema();
 	init_hwp5_drawing_sources();
 	init_chart_display_data();
-	invalid$5 = () => {
+	invalid$6 = () => {
 		throw Error("InvalidHwp5ChartReply");
 	};
 	uint$54 = (value, maximum = 4294967295) => Number.isInteger(value) && value >= 0 && value <= maximum;
-	digest$3 = (value) => Array.isArray(value) && value.length === 32 && value.every((byte) => uint$54(byte, 255));
+	digest$4 = (value) => Array.isArray(value) && value.length === 32 && value.every((byte) => uint$54(byte, 255));
 }));
 // ../../js/hwp5-equation-sources.mjs
-function keys$6(value, required) {
-	if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).length !== required.length || required.some((key) => !Object.hasOwn(value, key))) invalid$4();
+function keys$5(value, required) {
+	if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).length !== required.length || required.some((key) => !Object.hasOwn(value, key))) invalid$5();
 }
 function parse$4(bytes) {
-	if (!(bytes instanceof Uint8Array) || bytes.length > 16777216) invalid$4();
-	return JSON.parse(utf8$4.decode(bytes));
+	if (!(bytes instanceof Uint8Array) || bytes.length > 16777216) invalid$5();
+	return JSON.parse(utf8$5.decode(bytes));
 }
 function site(value) {
 	const fields = [
@@ -31385,8 +32346,8 @@ function site(value) {
 		"source_unit",
 		"current_unit"
 	];
-	keys$6(value, fields);
-	if (fields.some((key) => !uint$53(value[key])) || value.control_node <= value.paragraph_node || value.equation_node <= value.control_node) invalid$4();
+	keys$5(value, fields);
+	if (fields.some((key) => !uint$53(value[key])) || value.control_node <= value.paragraph_node || value.equation_node <= value.control_node) invalid$5();
 	return Object.freeze({
 		controlNode: value.control_node,
 		equationNode: value.equation_node,
@@ -31398,12 +32359,12 @@ function site(value) {
 }
 function decodeHwp5EquationSites(bytes) {
 	const value = parse$4(bytes);
-	keys$6(value, ["schemaVersion", "sites"]);
-	if (value.schemaVersion !== 1 || !Array.isArray(value.sites) || value.sites.length > 1e4) invalid$4();
+	keys$5(value, ["schemaVersion", "sites"]);
+	if (value.schemaVersion !== 1 || !Array.isArray(value.sites) || value.sites.length > 1e4) invalid$5();
 	const controls = /* @__PURE__ */ new Set(), equations = /* @__PURE__ */ new Set();
 	return Object.freeze(value.sites.map((row) => {
 		const result = site(row);
-		if (controls.has(result.controlNode) || equations.has(result.equationNode)) invalid$4();
+		if (controls.has(result.controlNode) || equations.has(result.equationNode)) invalid$5();
 		controls.add(result.controlNode);
 		equations.add(result.equationNode);
 		return result;
@@ -31411,10 +32372,10 @@ function decodeHwp5EquationSites(bytes) {
 }
 function rawArray(value, max, budget, byteWidth) {
 	const maxLength = byteWidth === 2 ? 65535 : MAX_DETAIL;
-	if (!Array.isArray(value) || value.length > maxLength) invalid$4();
+	if (!Array.isArray(value) || value.length > maxLength) invalid$5();
 	budget.bytes += value.length * byteWidth;
-	if (budget.bytes > MAX_DETAIL) invalid$4();
-	if (value.some((item) => !uint$53(item, max))) invalid$4();
+	if (budget.bytes > MAX_DETAIL) invalid$5();
+	if (value.some((item) => !uint$53(item, max))) invalid$5();
 	return Object.freeze(value);
 }
 function text$3(words) {
@@ -31433,7 +32394,7 @@ function text$3(words) {
 	}
 }
 function decodeSource(value) {
-	keys$6(value, [
+	keys$5(value, [
 		"schemaVersion",
 		"layout",
 		"site",
@@ -31447,7 +32408,7 @@ function decodeSource(value) {
 		"fontUtf16LE",
 		"extraBytes"
 	]);
-	if (value.schemaVersion !== 1 || !["version-only", "with-font"].includes(value.layout) || !uint$53(value.attributes) || !uint$53(value.fontSize) || !uint$53(value.color) || !uint$53(value.unknown, 65535) || !Number.isInteger(value.baseline) || Object.is(value.baseline, -0) || value.baseline < -32768 || value.baseline > 32767 || (value.layout === "version-only" ? value.fontUtf16LE !== null : value.fontUtf16LE === null)) invalid$4();
+	if (value.schemaVersion !== 1 || !["version-only", "with-font"].includes(value.layout) || !uint$53(value.attributes) || !uint$53(value.fontSize) || !uint$53(value.color) || !uint$53(value.unknown, 65535) || !Number.isInteger(value.baseline) || Object.is(value.baseline, -0) || value.baseline < -32768 || value.baseline > 32767 || (value.layout === "version-only" ? value.fontUtf16LE !== null : value.fontUtf16LE === null)) invalid$5();
 	const metadata = site(value.site), budget = { bytes: 0 };
 	const scriptRaw = rawArray(value.scriptUtf16LE, 65535, budget, 2), versionRaw = rawArray(value.versionUtf16LE, 65535, budget, 2), fontRaw = value.fontUtf16LE === null ? null : rawArray(value.fontUtf16LE, 65535, budget, 2), extraRaw = rawArray(value.extraBytes, 255, budget, 1);
 	const script = text$3(scriptRaw), version = text$3(versionRaw), font = fontRaw === null ? {
@@ -31483,12 +32444,12 @@ function decodeHwp5EquationSource(bytes) {
 /** A section snapshot owns every raw string and anchor in its JS result. */
 function decodeHwp5EquationSnapshot(bytes) {
 	const value = parse$4(bytes);
-	keys$6(value, ["schemaVersion", "sources"]);
-	if (value.schemaVersion !== 1 || !Array.isArray(value.sources) || value.sources.length > 1e4) invalid$4();
+	keys$5(value, ["schemaVersion", "sources"]);
+	if (value.schemaVersion !== 1 || !Array.isArray(value.sources) || value.sources.length > 1e4) invalid$5();
 	const controls = /* @__PURE__ */ new Set(), equations = /* @__PURE__ */ new Set();
 	return Object.freeze(value.sources.map((source) => {
 		const row = decodeSource(source);
-		if (controls.has(row.site.controlNode) || equations.has(row.site.equationNode)) invalid$4();
+		if (controls.has(row.site.controlNode) || equations.has(row.site.equationNode)) invalid$5();
 		controls.add(row.site.controlNode);
 		equations.add(row.site.equationNode);
 		return row;
@@ -31531,16 +32492,16 @@ function createHwp5EquationApi({ wasm, check, output, u32 }) {
 		}
 	};
 }
-var utf8$4, utf16$1, MAX_DETAIL, uint$53, invalid$4;
+var utf8$5, utf16$1, MAX_DETAIL, uint$53, invalid$5;
 var init_hwp5_equation_sources = __esmMin((() => {
-	utf8$4 = new TextDecoder("utf-8", { fatal: true });
+	utf8$5 = new TextDecoder("utf-8", { fatal: true });
 	utf16$1 = new TextDecoder("utf-16le", {
 		fatal: true,
 		ignoreBOM: true
 	});
 	MAX_DETAIL = 2097152;
 	uint$53 = (value, max = 4294967295) => Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= max;
-	invalid$4 = () => {
+	invalid$5 = () => {
 		throw Error("InvalidHwp5EquationSources");
 	};
 }));
@@ -32472,7 +33433,7 @@ var init_hwp5_source_table_cell_split = __esmMin((() => {
 }));
 // ../../js/hwp5-named-fields.mjs
 function decodeHwp5NamedFields(bytes) {
-	const source = JSON.parse(utf8$3.decode(bytes));
+	const source = JSON.parse(utf8$4.decode(bytes));
 	const invalid = () => /* @__PURE__ */ new Error("InvalidHwp5NamedFields");
 	if (source?.format !== "hwp5" || !["complete", "partial"].includes(source.coverage) || !Array.isArray(source.rows) || source.rows.length > 2e4) throw invalid();
 	const ids = /* @__PURE__ */ new Set();
@@ -32510,137 +33471,10 @@ function decodeHwp5NamedFields(bytes) {
 		rows
 	};
 }
-var utf8$3, uint$50;
+var utf8$4, uint$50;
 var init_hwp5_named_fields = __esmMin((() => {
-	utf8$3 = new TextDecoder("utf-8", { fatal: true });
+	utf8$4 = new TextDecoder("utf-8", { fatal: true });
 	uint$50 = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 4294967295;
-}));
-// ../../js/border-fill-values.mjs
-var BORDER_LINE_STYLES$1, BORDER_WIDTHS_HUNDREDTH_MM$1;
-var init_border_fill_values = __esmMin((() => {
-	BORDER_LINE_STYLES$1 = Object.freeze([
-		"NONE",
-		"SOLID",
-		"DASH",
-		"DOT",
-		"DASH_DOT",
-		"DASH_DOT_DOT",
-		"LONG_DASH",
-		"DOUBLE_SLIM",
-		"SLIM_THICK",
-		"THICK_SLIM",
-		"SLIM_THICK_SLIM",
-		"WAVE",
-		"DOUBLEWAVE",
-		"THICK3D",
-		"THICKREV3D",
-		"3D",
-		"REV3D"
-	]);
-	BORDER_WIDTHS_HUNDREDTH_MM$1 = Object.freeze([
-		10,
-		12,
-		15,
-		20,
-		25,
-		30,
-		40,
-		50,
-		60,
-		70,
-		100,
-		150,
-		200,
-		300,
-		400,
-		500
-	]);
-}));
-// ../../js/cell-border-command.mjs
-function cellBorderStyleCode(style) {
-	const code = styleCodes.get(style);
-	if (code === void 0) throw new RangeError("UnsupportedCellBorderStyle");
-	return code;
-}
-function validate$3(input, message) {
-	if (!input || typeof input !== "object" || Array.isArray(input)) throw new TypeError("InvalidCellBorder");
-	const keys = Reflect.ownKeys(input);
-	if (keys.length !== names$2.length + Number(message) || keys.some((key) => !allowed$3.has(key) && !(message && key === "kind")) || message && input.kind !== "cell-border") throw new TypeError("InvalidCellBorder");
-	const values = names$2.map((name) => {
-		if (!Object.hasOwn(input, name)) throw new TypeError("InvalidCellBorder");
-		const value = input[name];
-		if (name === "style") cellBorderStyleCode(value);
-		else if (name === "width") {
-			if (!widths$1.has(value)) throw new RangeError("UnsupportedBorderWidth");
-		} else {
-			const maximum = name === "color" ? 16777215 : name === "edges" ? 15 : 4294967295;
-			const minimum = name === "edges" ? 1 : 0;
-			if (!Number.isInteger(value) || value < minimum || value > maximum) throw new RangeError("InvalidCellBorder");
-		}
-		return value;
-	});
-	return Object.freeze(Object.fromEntries(names$2.map((name, index) => [name, values[index]])));
-}
-function validateCellBorder(input) {
-	return validate$3(input, false);
-}
-var CELL_BORDER_STYLES, CELL_BORDER_WIDTHS, styleCodes, widths$1, names$2, allowed$3;
-var init_cell_border_command = __esmMin((() => {
-	init_border_fill_values();
-	CELL_BORDER_STYLES = Object.freeze([
-		"NONE",
-		"SOLID",
-		"DOUBLE_SLIM"
-	]);
-	CELL_BORDER_WIDTHS = BORDER_WIDTHS_HUNDREDTH_MM$1;
-	styleCodes = new Map(CELL_BORDER_STYLES.map((style, code) => [style, code]));
-	widths$1 = new Set(CELL_BORDER_WIDTHS);
-	names$2 = Object.freeze([
-		"section",
-		"tableNode",
-		"listNode",
-		"edges",
-		"style",
-		"width",
-		"color"
-	]);
-	allowed$3 = new Set(names$2);
-}));
-// ../../js/cell-border-batch.mjs
-function validateCellBorders(cells) {
-	if (!Array.isArray(cells)) throw new TypeError("InvalidCellBorderBatch");
-	const length = cells.length;
-	if (length > 4096) throw new RangeError("LimitExceeded");
-	if (Reflect.ownKeys(cells).length !== length + 1) throw new TypeError("InvalidCellBorderBatch");
-	const result = [], owners = /* @__PURE__ */ new Set();
-	for (let index = 0; index < length; index++) {
-		if (!Object.hasOwn(cells, index)) throw new TypeError("InvalidCellBorderBatch");
-		const value = validateCellBorder(cells[index]);
-		const key = `${value.section}:${value.listNode}`;
-		if (owners.has(key)) throw new TypeError("DuplicateCellBorderEdit");
-		owners.add(key);
-		result.push(value);
-	}
-	return Object.freeze(result);
-}
-function encodeCellBorders(cells) {
-	const values = validateCellBorders(cells);
-	const bytes = new Uint8Array(values.length * 28), view = new DataView(bytes.buffer);
-	values.forEach((v, index) => {
-		[
-			v.section,
-			v.tableNode,
-			v.listNode,
-			v.edges,
-			cellBorderStyleCode(v.style),
-			v.width,
-			v.color
-		].forEach((number, field) => view.setUint32(index * 28 + field * 4, number, true));
-	});
-	return bytes;
-}
-var init_cell_border_batch = __esmMin((() => {
-	init_cell_border_command();
 }));
 // ../../js/table-diagonal-directions.mjs
 var TABLE_DIAGONAL_DIRECTIONS;
@@ -32790,145 +33624,6 @@ var init_cell_border_patch_command = __esmMin((() => {
 		"color"
 	];
 	allowed$1 = /* @__PURE__ */ new Set([...required, ...optional$1]);
-}));
-// ../../js/cell-fill-command.mjs
-function exact$1(value, names) {
-	if (!value || typeof value !== "object" || Array.isArray(value)) throw TypeError("InvalidCellFill");
-	if (Reflect.ownKeys(value).length !== names.length || names.some((name) => !Object.hasOwn(value, name))) throw TypeError("InvalidCellFill");
-}
-function number(value, maximum) {
-	if (!Number.isInteger(value) || value < 0 || value > maximum) throw RangeError("InvalidCellFill");
-	return value;
-}
-function tuple(value) {
-	if (!Array.isArray(value) || value.length !== 2 || Reflect.ownKeys(value).length !== 3 || !Object.hasOwn(value, 0) || !Object.hasOwn(value, 1)) throw TypeError("InvalidCellFill");
-	return Object.freeze([number(value[0], 16777215), number(value[1], 16777215)]);
-}
-function validateCellFill(input) {
-	if (!input || typeof input !== "object") throw TypeError("InvalidCellFill");
-	const kind = input.kind;
-	switch (kind) {
-		case "none":
-			exact$1(input, ["kind"]);
-			return Object.freeze({ kind });
-		case "solid":
-			exact$1(input, ["kind", "color"]);
-			return Object.freeze({
-				kind,
-				color: number(input.color, 16777215)
-			});
-		case "hatch": {
-			exact$1(input, [
-				"kind",
-				"face",
-				"hatch",
-				"style"
-			]);
-			const style = input.style;
-			if (!hatchCodes.has(style)) throw TypeError("InvalidCellFill");
-			return Object.freeze({
-				kind,
-				face: number(input.face, 16777215),
-				hatch: number(input.hatch, 16777215),
-				style
-			});
-		}
-		case "linear":
-			exact$1(input, [
-				"kind",
-				"colors",
-				"angle",
-				"centerX",
-				"centerY",
-				"step",
-				"stepCenter"
-			]);
-			return Object.freeze({
-				kind,
-				colors: tuple(input.colors),
-				angle: number(input.angle, 359),
-				centerX: number(input.centerX, 100),
-				centerY: number(input.centerY, 100),
-				step: number(input.step, 100),
-				stepCenter: number(input.stepCenter, 100)
-			});
-		default: throw TypeError("InvalidCellFill");
-	}
-}
-function validateCellFills(input) {
-	if (!Array.isArray(input)) throw TypeError("InvalidCellFillBatch");
-	const length = input.length;
-	if (length > 4096) throw RangeError("LimitExceeded");
-	if (Reflect.ownKeys(input).length !== length + 1) throw TypeError("InvalidCellFillBatch");
-	const owners = /* @__PURE__ */ new Set(), values = [];
-	for (let index = 0; index < length; index++) {
-		if (!Object.hasOwn(input, index)) throw TypeError("InvalidCellFillBatch");
-		const source = input[index];
-		exact$1(source, [
-			"section",
-			"tableNode",
-			"listNode",
-			"fill"
-		]);
-		const section = number(source.section, 4294967295), tableNode = number(source.tableNode, 4294967295), listNode = number(source.listNode, 4294967295), fill = validateCellFill(source.fill), key = `${section}:${listNode}`;
-		if (owners.has(key)) throw TypeError("DuplicateCellFillEdit");
-		owners.add(key);
-		values.push(Object.freeze({
-			section,
-			tableNode,
-			listNode,
-			fill
-		}));
-	}
-	return Object.freeze(values);
-}
-function encodeCellFills(input) {
-	const rows = validateCellFills(input), bytes = new Uint8Array(rows.length * 48), view = new DataView(bytes.buffer);
-	rows.forEach((row, index) => {
-		const fill = row.fill, fields = [
-			row.section,
-			row.tableNode,
-			row.listNode,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0
-		];
-		if (fill.kind === "solid") {
-			fields[3] = 1;
-			fields[4] = fill.color;
-		}
-		if (fill.kind === "hatch") {
-			fields[3] = 2;
-			fields[4] = fill.face;
-			fields[5] = fill.hatch;
-			fields[6] = hatchCodes.get(fill.style);
-		}
-		if (fill.kind === "linear") {
-			fields[3] = 3;
-			fields.splice(4, 7, ...fill.colors, fill.angle, fill.centerX, fill.centerY, fill.step, fill.stepCenter);
-		}
-		fields.forEach((value, field) => view.setUint32(index * 48 + field * 4, value, true));
-	});
-	return bytes;
-}
-var CELL_HATCH_STYLES, hatchCodes;
-var init_cell_fill_command = __esmMin((() => {
-	init_cell_border_batch();
-	CELL_HATCH_STYLES = Object.freeze([
-		"HORIZONTAL",
-		"VERTICAL",
-		"BACK_SLASH",
-		"SLASH",
-		"CROSS",
-		"CROSS_DIAGONAL"
-	]);
-	hatchCodes = new Map(CELL_HATCH_STYLES.map((value, index) => [value, index]));
 }));
 // ../../js/cell-style-command.mjs
 function validateCellStyles(input) {
@@ -33208,7 +33903,7 @@ function prepareIndependentTextRequest(input, limits) {
 		"requestStructure"
 	]) if (!Number.isSafeInteger(limits?.[key]) || limits[key] <= 0) throw Error("InvalidTextTransactionLimits");
 	if (limits.requestDepth > 64) throw Error("InvalidTextTransactionLimits");
-	if (!input || typeof input !== "object" || Array.isArray(input)) throw invalid$3();
+	if (!input || typeof input !== "object" || Array.isArray(input)) throw invalid$4();
 	let bytes = 0, structure = 0;
 	const active = /* @__PURE__ */ new Set();
 	const addBytes = (amount) => {
@@ -33256,11 +33951,11 @@ function prepareIndependentTextRequest(input, limits) {
 			addBytes(JSON.stringify(value).length);
 			return value;
 		}
-		if (typeof value !== "object" || active.has(value)) throw invalid$3();
+		if (typeof value !== "object" || active.has(value)) throw invalid$4();
 		if (depth > limits.requestDepth) throw Error("LimitExceeded");
 		const array = Array.isArray(value);
 		const proto = Object.getPrototypeOf(value);
-		if (!array && proto !== Object.prototype && proto !== null) throw invalid$3();
+		if (!array && proto !== Object.prototype && proto !== null) throw invalid$4();
 		const keys = Reflect.ownKeys(value);
 		if (keys.length > limits.requestStructure) throw Error("LimitExceeded");
 		addStructure(2);
@@ -33270,12 +33965,12 @@ function prepareIndependentTextRequest(input, limits) {
 			let count = 0;
 			for (const key of keys) {
 				if (array && key === "length") continue;
-				if (typeof key !== "string") throw invalid$3();
-				if (array && !/^(0|[1-9][0-9]*)$/.test(key)) throw invalid$3();
+				if (typeof key !== "string") throw invalid$4();
+				if (array && !/^(0|[1-9][0-9]*)$/.test(key)) throw invalid$4();
 				const descriptor = Object.getOwnPropertyDescriptor(value, key);
 				if (!descriptor || !Object.hasOwn(descriptor, "value")) throw Error("AccessorPayloadUnsupported");
 				if (descriptor.value === void 0) {
-					if (array) throw invalid$3();
+					if (array) throw invalid$4();
 					continue;
 				}
 				if (count++) addStructure(1);
@@ -33287,8 +33982,8 @@ function prepareIndependentTextRequest(input, limits) {
 			}
 			if (array) {
 				const length = Object.getOwnPropertyDescriptor(value, "length")?.value;
-				if (count !== length || output.length !== length) throw invalid$3();
-				for (let index = 0; index < length; index++) if (!Object.hasOwn(output, index)) throw invalid$3();
+				if (count !== length || output.length !== length) throw invalid$4();
+				for (let index = 0; index < length; index++) if (!Object.hasOwn(output, index)) throw invalid$4();
 			}
 			return output;
 		} finally {
@@ -33303,9 +33998,9 @@ function prepareIndependentTextRequest(input, limits) {
 		bytes: encoded
 	};
 }
-var invalid$3;
+var invalid$4;
 var init_independent_text_request = __esmMin((() => {
-	invalid$3 = () => Error("InvalidTextTransactionDTO");
+	invalid$4 = () => Error("InvalidTextTransactionDTO");
 }));
 // ../../js/text-transaction-args.mjs
 function textTransactionArgs({ section, paragraph, startUnit, endUnit, text }) {
@@ -33345,7 +34040,7 @@ function createRichTypingApi({ wasm, memory, check, prefix, available, capabilit
 			if (!input || typeof input !== "object" || ![Object.prototype, null].includes(Object.getPrototypeOf(input))) throw Error("InvalidRichTypingRequest");
 			const request = Object.create(null);
 			for (const key of Reflect.ownKeys(input)) {
-				if (!keys$5.has(key)) throw Error("InvalidRichTypingRequest");
+				if (!keys$4.has(key)) throw Error("InvalidRichTypingRequest");
 				const descriptor = Object.getOwnPropertyDescriptor(input, key);
 				if (!descriptor || !Object.hasOwn(descriptor, "value")) throw Error("AccessorPayloadUnsupported");
 				request[key] = descriptor.value;
@@ -33371,12 +34066,12 @@ function createRichTypingApi({ wasm, memory, check, prefix, available, capabilit
 		}
 	};
 }
-var keys$5, modes, requestLimit;
+var keys$4, modes, requestLimit;
 var init_rich_typing_api = __esmMin((() => {
 	init_independent_text_request();
 	init_native_edit_outcome();
 	init_text_transaction_args();
-	keys$5 = /* @__PURE__ */ new Set([
+	keys$4 = /* @__PURE__ */ new Set([
 		"section",
 		"paragraph",
 		"startUnit",
@@ -33393,14 +34088,6 @@ var init_rich_typing_api = __esmMin((() => {
 	];
 	requestLimit = 65536;
 }));
-// ../../js/created-table-identity.mjs
-function createdTableIdentity(value) {
-	if (typeof value !== "string" || !/^[1-9][0-9]{0,19}$/.test(value)) throw new RangeError("InvalidCreatedTableIdentity");
-	const id = BigInt(value);
-	if (id > 18446744073709551615n) throw new RangeError("InvalidCreatedTableIdentity");
-	return id;
-}
-var init_created_table_identity = __esmMin((() => {}));
 // ../../js/created-cell-typing-api.mjs
 function createCreatedCellTypingApi({ wasm, memory, check, prefix, available, capabilities }) {
 	const action = wasm[`${prefix}_splice_created_cell`];
@@ -33431,7 +34118,7 @@ function createCreatedCellTypingApi({ wasm, memory, check, prefix, available, ca
 			if (!input || typeof input !== "object" || ![Object.prototype, null].includes(Object.getPrototypeOf(input))) throw Error("InvalidCreatedCellTypingRequest");
 			const request = Object.create(null);
 			for (const key of Reflect.ownKeys(input)) {
-				if (!keys$4.has(key)) throw Error("InvalidCreatedCellTypingRequest");
+				if (!keys$3.has(key)) throw Error("InvalidCreatedCellTypingRequest");
 				const d = Object.getOwnPropertyDescriptor(input, key);
 				if (!d || !Object.hasOwn(d, "value")) throw Error("AccessorPayloadUnsupported");
 				request[key] = d.value;
@@ -33464,12 +34151,12 @@ function createCreatedCellTypingApi({ wasm, memory, check, prefix, available, ca
 		}
 	};
 }
-var keys$4, uint$48;
+var keys$3, uint$48;
 var init_created_cell_typing_api = __esmMin((() => {
 	init_created_table_identity();
 	init_independent_text_request();
 	init_native_edit_outcome();
-	keys$4 = /* @__PURE__ */ new Set([
+	keys$3 = /* @__PURE__ */ new Set([
 		"section",
 		"identity",
 		"row",
@@ -34403,11 +35090,11 @@ function documentTextFormat(prefix) {
 	if (prefix === "hwpx_edit") return "hwpx";
 	throw Error("InvalidDocumentTextAbiFamily");
 }
-var uint$45, keys$3, binding, scalarText, scalarBoundary, identity;
+var uint$45, keys$2, binding, scalarText, scalarBoundary, identity;
 var init_document_text_observation_schema = __esmMin((() => {
 	uint$45 = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 4294967295;
-	keys$3 = (value, names) => value !== null && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === names.length && names.every((name) => Object.hasOwn(value, name));
-	binding = (value) => keys$3(value, ["session", "revision"]) && typeof value.session === "string" && value.session.length > 0 && (value.revision === null || uint$45(value.revision) && value.revision < 4294967295);
+	keys$2 = (value, names) => value !== null && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === names.length && names.every((name) => Object.hasOwn(value, name));
+	binding = (value) => keys$2(value, ["session", "revision"]) && typeof value.session === "string" && value.session.length > 0 && (value.revision === null || uint$45(value.revision) && value.revision < 4294967295);
 	scalarText = (text) => {
 		if (typeof text !== "string") return false;
 		for (let i = 0; i < text.length; i++) {
@@ -34455,7 +35142,7 @@ function createDocumentTextReadBindingApi({ wasm, memory, check, prefix }) {
 				const length = wasm[`${prefix}_output_len`]();
 				if (!Number.isSafeInteger(length) || length < 0 || length > 2048) throw Error("LimitExceeded");
 				const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm[`${prefix}_output_ptr`](), length)));
-				if (!keys$3(value, [
+				if (!keys$2(value, [
 					"schemaVersion",
 					"scope",
 					"executionAuthority",
@@ -34503,19 +35190,19 @@ function createDocumentTextAnchorApi({ wasm, memory, check, prefix }) {
 			});
 			const request = owned.value, point = request.target;
 			const paragraph = point?.kind === "paragraph";
-			if (!keys$3(request, [
+			if (!keys$2(request, [
 				"schemaVersion",
 				"scope",
 				"binding",
 				"target",
 				...Object.hasOwn(request, "readBinding") ? ["readBinding"] : []
-			]) || request.schemaVersion !== 1 || request.scope !== scope$1 || !binding(request.binding) || Object.hasOwn(request, "readBinding") && !validDocumentTextReadStamp(request.readBinding) || !(paragraph ? keys$3(point, [
+			]) || request.schemaVersion !== 1 || request.scope !== scope$1 || !binding(request.binding) || Object.hasOwn(request, "readBinding") && !validDocumentTextReadStamp(request.readBinding) || !(paragraph ? keys$2(point, [
 				"kind",
 				"section",
 				"paragraph",
 				"unit",
 				"beforeText"
-			]) && uint$45(point.paragraph) : point?.kind === "created-cell" && keys$3(point, [
+			]) && uint$45(point.paragraph) : point?.kind === "created-cell" && keys$2(point, [
 				"kind",
 				"section",
 				"identity",
@@ -34530,7 +35217,7 @@ function createDocumentTextAnchorApi({ wasm, memory, check, prefix }) {
 					const length = wasm[`${prefix}_output_len`]();
 					if (!Number.isSafeInteger(length) || length < 0 || length > maximum) throw Error("LimitExceeded");
 					const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm[`${prefix}_output_ptr`](), length)));
-					if (!keys$3(value, [
+					if (!keys$2(value, [
 						"schemaVersion",
 						"scope",
 						"coordinateSpace",
@@ -34582,7 +35269,7 @@ function createDocumentTextSelectionApi({ wasm, memory, check, prefix }) {
 				requestStructure: 64
 			});
 			const request = owned.value;
-			if (!keys$3(request, [
+			if (!keys$2(request, [
 				"schemaVersion",
 				"scope",
 				"binding",
@@ -34598,7 +35285,7 @@ function createDocumentTextSelectionApi({ wasm, memory, check, prefix }) {
 					const length = wasm[`${prefix}_output_len`]();
 					if (!Number.isSafeInteger(length) || length < 0 || length > maxReplyBytes) throw Error("LimitExceeded");
 					const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm[`${prefix}_output_ptr`](), length)));
-					if (!keys$3(value, [
+					if (!keys$2(value, [
 						"schemaVersion",
 						"scope",
 						"coordinateSpace",
@@ -34612,13 +35299,13 @@ function createDocumentTextSelectionApi({ wasm, memory, check, prefix }) {
 						"target"
 					]) || value.schemaVersion !== 1 || value.scope !== scope || value.coordinateSpace !== "native-current-text-observation" || value.executionAuthority !== false || value.format !== format || !binding(value.binding) || !sameDocumentTextReadStamp(value.readBinding, request.readBinding) || value.binding.session !== request.binding.session || value.binding.revision !== request.binding.revision || value.ref !== request.ref || value.expectedOriginal !== request.expectedOriginal || !scalarText(value.beforeText) || value.beforeText.length > 4194304) throw Error("MalformedDocumentTextSelection");
 					const target = value.target;
-					if (!(target?.kind === "paragraph" ? keys$3(target, [
+					if (!(target?.kind === "paragraph" ? keys$2(target, [
 						"kind",
 						"section",
 						"paragraph",
 						"startUnit",
 						"endUnit"
-					]) && uint$45(target.paragraph) : target?.kind === "created-cell" && keys$3(target, [
+					]) && uint$45(target.paragraph) : target?.kind === "created-cell" && keys$2(target, [
 						"kind",
 						"section",
 						"identity",
@@ -35959,7 +36646,7 @@ var init_hwp5_flow_sources = __esmMin((() => {
 }));
 // ../../js/hwp5-formula-sources.mjs
 function decodeHwp5FormulaSources(bytes) {
-	const rows = JSON.parse(decoder$6.decode(bytes));
+	const rows = JSON.parse(decoder$5.decode(bytes));
 	if (!Array.isArray(rows) || rows.length > 1e6) throw new Error("InvalidHwp5FormulaSources");
 	const seen = /* @__PURE__ */ new Set();
 	for (const row of rows) {
@@ -35968,9 +36655,9 @@ function decodeHwp5FormulaSources(bytes) {
 	}
 	return rows;
 }
-var decoder$6, uint$43;
+var decoder$5, uint$43;
 var init_hwp5_formula_sources = __esmMin((() => {
-	decoder$6 = new TextDecoder("utf-8", { fatal: true });
+	decoder$5 = new TextDecoder("utf-8", { fatal: true });
 	uint$43 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 }));
 // ../../js/hwp5-field-spans.mjs
@@ -36062,7 +36749,7 @@ function decodeHwp5TextSourceProtection(bytes, count) {
 var init_hwp5_text_source_protection = __esmMin((() => {}));
 // ../../js/hwp5-normalization-info.mjs
 function decodeHwp5NormalizationInfo(bytes) {
-	const value = JSON.parse(decoder$5.decode(bytes));
+	const value = JSON.parse(decoder$4.decode(bytes));
 	if (value === null) return {
 		normalized: false,
 		historyBaseline: "original",
@@ -36085,9 +36772,9 @@ function decodeHwp5NormalizationInfo(bytes) {
 		}
 	};
 }
-var decoder$5, counts;
+var decoder$4, counts;
 var init_hwp5_normalization_info = __esmMin((() => {
-	decoder$5 = new TextDecoder("utf-8", { fatal: true });
+	decoder$4 = new TextDecoder("utf-8", { fatal: true });
 	counts = [
 		"zero_fat_tail_slots",
 		"off_by_one_fat_markers",
@@ -36155,6 +36842,188 @@ var init_hwp5_available_section_copy = __esmMin((() => {
 	init_hwp5_section_inventory();
 	Object.freeze(["hwp5_edit_open_available_section_copy", "hwp5_edit_available_section_copy_info"]);
 }));
+// ../../js/file-transform-input.mjs
+function copyFileTransformInput(value, limit, name) {
+	let length, buffer, offset = 0;
+	try {
+		if (ArrayBuffer.isView(value) && tag.call(value) === "Uint8Array") {
+			length = lengthOf.call(value);
+			offset = offsetOf.call(value);
+			buffer = bufferOf.call(value);
+			bufferLength.call(buffer);
+		} else {
+			length = bufferLength.call(value);
+			buffer = value;
+		}
+	} catch {
+		throw new TypeError(`Invalid${name}Bytes`);
+	}
+	if (length < 1 || length > limit) throw new RangeError(`${name}ByteLimitExceeded`);
+	const result = new Uint8Array(length);
+	result.set(new Uint8Array(buffer, offset, length));
+	return result;
+}
+var typed, tag, lengthOf, offsetOf, bufferOf, bufferLength;
+var init_file_transform_input = __esmMin((() => {
+	typed = Object.getPrototypeOf(Uint8Array.prototype);
+	tag = Object.getOwnPropertyDescriptor(typed, Symbol.toStringTag).get;
+	lengthOf = Object.getOwnPropertyDescriptor(typed, "byteLength").get;
+	offsetOf = Object.getOwnPropertyDescriptor(typed, "byteOffset").get;
+	bufferOf = Object.getOwnPropertyDescriptor(typed, "buffer").get;
+	bufferLength = Object.getOwnPropertyDescriptor(ArrayBuffer.prototype, "byteLength").get;
+}));
+// ../../js/picture-replacement-input.mjs
+var PICTURE_REPLACEMENT_LIMITS;
+var init_picture_replacement_input = __esmMin((() => {
+	init_file_transform_input();
+	PICTURE_REPLACEMENT_LIMITS = Object.freeze({
+		documentBytes: 67108864,
+		imageBytes: 8388608,
+		wasmBytes: 33554432,
+		outputBytes: 67108864
+	});
+}));
+// ../../js/live-picture-replacement.mjs
+function digest$3(value) {
+	if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype || value.length !== 32) invalid$3();
+	const descriptors = Object.getOwnPropertyDescriptors(value);
+	if (Reflect.ownKeys(descriptors).length !== 33) invalid$3();
+	const bytes = [];
+	for (let index = 0; index < 32; index++) {
+		const entry = descriptors[index];
+		if (!entry || !Object.hasOwn(entry, "value") || !uint$41(entry.value) || entry.value > 255) invalid$3();
+		bytes.push(entry.value);
+	}
+	return Object.freeze(bytes);
+}
+function checkedPictureReplacementSelector(value) {
+	const p = ownObjectGeometryRecord(value, ["section", "pictureNode"]);
+	if (!uint$41(p.section) || !uint$41(p.pictureNode)) throw Error("InvalidPictureReplacementSelector");
+	return Object.freeze(p);
+}
+function checkedPictureReplacementOwner(value) {
+	const p = ownObjectGeometryRecord(value, [
+		"format",
+		"section",
+		"pictureNode",
+		"pictureIdentity",
+		"sourceSha256",
+		"resourceSha256",
+		"resourceLink",
+		"historyRevision",
+		"binding"
+	]);
+	if (!["hwp5", "hwpx"].includes(p.format) || ![
+		p.section,
+		p.pictureNode,
+		p.historyRevision
+	].every(uint$41)) invalid$3();
+	const binding = ownObjectGeometryRecord(p.binding, ["session", "serial"]);
+	if (typeof binding.session !== "string" || !/^[\x20-\x7e]{1,512}$/.test(binding.session) || typeof binding.serial !== "string" || !/^(0|[1-9][0-9]{0,19})$/.test(binding.serial) || binding.serial.length === 20 && binding.serial > "18446744073709551615") invalid$3();
+	return Object.freeze({
+		...p,
+		pictureIdentity: boundedString(p.pictureIdentity),
+		resourceLink: boundedString(p.resourceLink),
+		sourceSha256: digest$3(p.sourceSha256),
+		resourceSha256: digest$3(p.resourceSha256),
+		binding: Object.freeze(binding)
+	});
+}
+function copyPictureReplacementImage(bytes) {
+	return copyFileTransformInput(bytes, maxImageBytes, "Image");
+}
+/** The caller owns the live editor instance; no file transform or reopening. */
+function createLivePictureReplacementApi({ format, wasm, memory, check, output }) {
+	if (!["hwp5", "hwpx"].includes(format)) throw Error("InvalidPictureReplacementFormat");
+	let scope;
+	try {
+		const nonce = globalThis.crypto?.randomUUID?.();
+		if (typeof nonce === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(nonce)) scope = "picture-replacement-" + nonce + ":";
+	} catch {}
+	const prefix = format === "hwp5" ? "hwp5_edit_" : "hwpx_edit_";
+	const version = prefix + "picture_replace_version";
+	const ownerQuery = prefix + "picture_replace_owner";
+	const replace = prefix + "replace_picture";
+	function supportsPictureReplacement() {
+		check();
+		return typeof scope === "string" && [
+			version,
+			ownerQuery,
+			replace
+		].every((name) => typeof wasm[name] === "function") && wasm[version]() === 1;
+	}
+	function requireSupported() {
+		if (!supportsPictureReplacement()) throw Error("PictureReplacementAbiUnavailable");
+	}
+	return {
+		supportsPictureReplacement,
+		pictureReplacementOwner(selector) {
+			check();
+			const selected = checkedPictureReplacementSelector(selector);
+			requireSupported();
+			const bytes = output(() => wasm[ownerQuery](selected.section, selected.pictureNode)).bytes;
+			if (!(bytes instanceof Uint8Array) || bytes.length > 16384) throw Error("InvalidPictureReplacementOwner");
+			const owner = checkedPictureReplacementOwner(JSON.parse(utf8$3.decode(bytes)));
+			if (owner.format !== format || owner.section !== selected.section || owner.pictureNode !== selected.pictureNode) throw Error("PictureReplacementBindingMismatch");
+			if (owner.binding.session.length > 256) throw Error("InvalidPictureReplacementOwner");
+			return checkedPictureReplacementOwner({
+				...owner,
+				binding: {
+					...owner.binding,
+					session: scope + owner.binding.session
+				}
+			});
+		},
+		replacePicture(value, imageBytes) {
+			check();
+			const owner = checkedPictureReplacementOwner(value);
+			if (owner.format !== format) throw Error("PictureReplacementBindingMismatch");
+			if (!owner.binding.session.startsWith(scope)) throw Error("ForeignPictureReplacementOwner");
+			const nativeSession = owner.binding.session.slice(scope.length);
+			if (!nativeSession || nativeSession.length > 256) throw Error("InvalidPictureReplacementOwner");
+			const image = copyPictureReplacementImage(imageBytes);
+			requireSupported();
+			const wire = encoder$14.encode(JSON.stringify({
+				...owner,
+				binding: {
+					...owner.binding,
+					session: nativeSession
+				}
+			}));
+			let observed;
+			try {
+				return memory.withBytes(image, (imagePtr, imageSize) => {
+					observed = applyNativeEdit(memory, wire, (ptr, size) => wasm[replace](ptr, size, imagePtr, imageSize), "InvalidPictureReplacementResult");
+					return observed;
+				});
+			} catch (error) {
+				if (!observed) throw error;
+				return {
+					...observed,
+					cleanupError: error?.message || String(error),
+					refreshRequired: true
+				};
+			}
+		}
+	};
+}
+var utf8$3, encoder$14, maxImageBytes, uint$41, invalid$3, boundedString;
+var init_live_picture_replacement = __esmMin((() => {
+	init_object_geometry_edit();
+	init_picture_replacement_input();
+	init_native_edit_outcome();
+	utf8$3 = new TextDecoder("utf-8", { fatal: true });
+	encoder$14 = new TextEncoder();
+	maxImageBytes = 8388608;
+	uint$41 = (value) => Number.isSafeInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
+	invalid$3 = () => {
+		throw Error("InvalidPictureReplacementOwner");
+	};
+	boundedString = (value) => {
+		if (typeof value !== "string" || !value || value.includes("\0") || !value.isWellFormed() || encoder$14.encode(value).length > 4096) invalid$3();
+		return value;
+	};
+}));
 // ../../js/hwpx-inline-object-placement.mjs
 function checkedInlineObjectOwner(input) {
 	const kind = input && Object.getOwnPropertyDescriptor(input, "kind");
@@ -36181,20 +37050,20 @@ function checkedInlineObjectOwner(input) {
 		kind: kind.value,
 		binding: {
 			session: binding.session,
-			revision: uint$41(binding.revision),
+			revision: uint$40(binding.revision),
 			serial: decimal$1(binding.serial)
 		}
 	};
 	if (kind.value === "sourceCell") return {
 		...out,
-		table_node: uint$41(owner.table_node),
-		list_node: uint$41(owner.list_node)
+		table_node: uint$40(owner.table_node),
+		list_node: uint$40(owner.list_node)
 	};
 	if (kind.value === "createdCell") return {
 		...out,
 		identity: decimal$1(owner.identity, true),
-		row: uint$41(owner.row),
-		column: uint$41(owner.column)
+		row: uint$40(owner.row),
+		column: uint$40(owner.column)
 	};
 	return out;
 }
@@ -36213,16 +37082,16 @@ function checkedInlineObjectTarget(input, equation = false) {
 		...owner ? ["owner"] : [],
 		...affinity ? ["affinity"] : []
 	]);
-	const section = uint$41(value.section);
+	const section = uint$40(value.section);
 	if (section !== 0 && !owner) throw Error("InlineObjectOwnerRequired");
 	if (affinity && (!owner || !["forward", "backward"].includes(value.affinity))) throw Error("InvalidInlineObjectOwner");
 	if (typeof value[witness] !== "string") throw Error("InvalidInlineObjectText");
-	const paragraph = created ? void 0 : uint$41(value.paragraph);
+	const paragraph = created ? void 0 : uint$40(value.paragraph);
 	if (paragraph === 0) throw Error("InvalidInlineObjectOwner");
 	return {
 		section,
 		...created ? {} : { paragraph },
-		[unit]: uint$41(value[unit]),
+		[unit]: uint$40(value[unit]),
 		[witness]: value[witness],
 		...owner ? { owner } : {},
 		...affinity ? { affinity: value.affinity } : {}
@@ -36231,9 +37100,9 @@ function checkedInlineObjectTarget(input, equation = false) {
 function checkedInlineObjectSelector(input) {
 	const created = !!input && Object.hasOwn(input, "created_cell");
 	const value = inlineInsertRecord(input, ["section", created ? "created_cell" : "paragraph"]);
-	const section = uint$41(value.section);
+	const section = uint$40(value.section);
 	if (!created) {
-		const paragraph = uint$41(value.paragraph);
+		const paragraph = uint$40(value.paragraph);
 		if (!paragraph) throw Error("InvalidInlineObjectOwner");
 		return {
 			section,
@@ -36249,8 +37118,8 @@ function checkedInlineObjectSelector(input) {
 		section,
 		created_cell: {
 			identity: decimal$1(cell.identity, true),
-			row: uint$41(cell.row),
-			column: uint$41(cell.column)
+			row: uint$40(cell.row),
+			column: uint$40(cell.column)
 		}
 	};
 }
@@ -36292,10 +37161,10 @@ function requireInlineObjectPlacement(wasm, request) {
 	const target = request.target ?? request;
 	if ((target.section !== 0 || Object.hasOwn(target, "owner")) && !inlineObjectPlacementAvailable(wasm)) throw Error("InlineObjectPlacementUnavailable");
 }
-var uint$41, decimal$1;
+var uint$40, decimal$1;
 var init_hwpx_inline_object_placement = __esmMin((() => {
 	init_hwpx_inline_object_record();
-	uint$41 = (value) => {
+	uint$40 = (value) => {
 		if (!Number.isSafeInteger(value) || value < 0 || value > 4294967295 || Object.is(value, -0)) throw Error("InvalidInlineObjectOwner");
 		return value;
 	};
@@ -36303,47 +37172,6 @@ var init_hwpx_inline_object_placement = __esmMin((() => {
 		if (typeof value !== "string" || !/^(0|[1-9][0-9]{0,19})$/.test(value) || BigInt(value) > 18446744073709551615n || positive && value === "0") throw Error("InvalidInlineObjectOwner");
 		return value;
 	};
-}));
-// ../../js/file-transform-input.mjs
-function copyFileTransformInput(value, limit, name) {
-	let length, buffer, offset = 0;
-	try {
-		if (ArrayBuffer.isView(value) && tag.call(value) === "Uint8Array") {
-			length = lengthOf.call(value);
-			offset = offsetOf.call(value);
-			buffer = bufferOf.call(value);
-			bufferLength.call(buffer);
-		} else {
-			length = bufferLength.call(value);
-			buffer = value;
-		}
-	} catch {
-		throw new TypeError(`Invalid${name}Bytes`);
-	}
-	if (length < 1 || length > limit) throw new RangeError(`${name}ByteLimitExceeded`);
-	const result = new Uint8Array(length);
-	result.set(new Uint8Array(buffer, offset, length));
-	return result;
-}
-var typed, tag, lengthOf, offsetOf, bufferOf, bufferLength;
-var init_file_transform_input = __esmMin((() => {
-	typed = Object.getPrototypeOf(Uint8Array.prototype);
-	tag = Object.getOwnPropertyDescriptor(typed, Symbol.toStringTag).get;
-	lengthOf = Object.getOwnPropertyDescriptor(typed, "byteLength").get;
-	offsetOf = Object.getOwnPropertyDescriptor(typed, "byteOffset").get;
-	bufferOf = Object.getOwnPropertyDescriptor(typed, "buffer").get;
-	bufferLength = Object.getOwnPropertyDescriptor(ArrayBuffer.prototype, "byteLength").get;
-}));
-// ../../js/picture-replacement-input.mjs
-var PICTURE_REPLACEMENT_LIMITS;
-var init_picture_replacement_input = __esmMin((() => {
-	init_file_transform_input();
-	PICTURE_REPLACEMENT_LIMITS = Object.freeze({
-		documentBytes: 67108864,
-		imageBytes: 8388608,
-		wasmBytes: 33554432,
-		outputBytes: 67108864
-	});
 }));
 // ../../js/live-image-insertion.mjs
 function checkedImageInsertOptions(input) {
@@ -36470,7 +37298,7 @@ function compareChartDecimals(left, right) {
 }
 var init_chart_create_decimal = __esmMin((() => {}));
 // ../../js/hwpx-inline-object-insert.mjs
-function integer$4(value, min = 0, max = 4294967295) {
+function integer$3(value, min = 0, max = 4294967295) {
 	if (!Number.isSafeInteger(value) || value < min || value > max || Object.is(value, -0)) throw Error("InvalidInlineObjectInteger");
 	return value;
 }
@@ -36500,10 +37328,10 @@ function checkedEquationInsertOptions(input) {
 	]);
 	return {
 		script: text$2(p.script, 1048576, true),
-		width: integer$4(p.width, 1, maxInt),
-		height: integer$4(p.height, 1, maxInt),
-		baseLine: integer$4(p.baseLine),
-		baseUnit: integer$4(p.baseUnit, 1, maxInt),
+		width: integer$3(p.width, 1, maxInt),
+		height: integer$3(p.height, 1, maxInt),
+		baseLine: integer$3(p.baseLine),
+		baseUnit: integer$3(p.baseUnit, 1, maxInt),
 		version: text$2(p.version, 128),
 		font: text$2(p.font, 128)
 	};
@@ -36530,8 +37358,8 @@ function legacyChartCreateOptions(input) {
 	});
 	if (categories.length * series.length > 16384) throw Error("ChartPointLimitExceeded");
 	return {
-		width: integer$4(p.width, 1, maxInt),
-		height: integer$4(p.height, 1, maxInt),
+		width: integer$3(p.width, 1, maxInt),
+		height: integer$3(p.height, 1, maxInt),
 		categories,
 		series
 	};
@@ -36715,8 +37543,8 @@ function checkedChartCreateOptions(input) {
 	]);
 	const chart = checkedChartCreateProfile(p.chart);
 	return {
-		width: integer$4(p.width, 1, maxInt),
-		height: integer$4(p.height, 1, maxInt),
+		width: integer$3(p.width, 1, maxInt),
+		height: integer$3(p.height, 1, maxInt),
 		...profileData({
 			categories: p.categories,
 			series: p.series
@@ -36746,8 +37574,8 @@ function checkedChartCreateRequest(input) {
 function profileChartCreatePayload(size, data, chart) {
 	return {
 		size: {
-			width: integer$4(size.width, 1, maxInt),
-			height: integer$4(size.height, 1, maxInt)
+			width: integer$3(size.width, 1, maxInt),
+			height: integer$3(size.height, 1, maxInt)
 		},
 		data: profileData(data, chart, true),
 		chart
@@ -36896,7 +37724,7 @@ function checkedHwp5ChartCreateOptions(input) {
 		series: p.series
 	});
 	const preview = inlineInsertRecord(p.preview, ["width", "height"]);
-	const width = integer$3(preview.width, 64, 2048), height = integer$3(preview.height, 64, 2048);
+	const width = integer$2(preview.width, 64, 2048), height = integer$2(preview.height, 64, 2048);
 	if (width * height > 4194304) throw Error("ChartCreatePreviewPixelLimit");
 	if (!(values.width >= values.height ? height === Math.floor((width * values.height + Math.floor(values.width / 2)) / values.width) : width === Math.floor((height * values.width + Math.floor(values.height / 2)) / values.height))) throw Error("InvalidHwp5ChartPreviewAspect");
 	return Object.freeze({
@@ -37023,7 +37851,7 @@ function createHwp5ChartCreateApi({ wasm, memory, ready, check, encode, copyCurr
 		}
 	};
 }
-var HWP5_CHART_CREATE_PROFILE, encoder$12, integer$3, bytesFor, equal;
+var HWP5_CHART_CREATE_PROFILE, encoder$12, integer$2, bytesFor, equal;
 var init_hwp5_chart_create = __esmMin((() => {
 	init_abi_schema();
 	init_hwpx_inline_object_record();
@@ -37032,7 +37860,7 @@ var init_hwp5_chart_create = __esmMin((() => {
 	init_hwp5_chart_create_preview();
 	HWP5_CHART_CREATE_PROFILE = "spec24-registered-png-presentation-v1";
 	encoder$12 = new TextEncoder();
-	integer$3 = (value, min, max) => {
+	integer$2 = (value, min, max) => {
 		if (!Number.isSafeInteger(value) || Object.is(value, -0) || value < min || value > max) throw Error("InvalidHwp5ChartCreateInteger");
 		return value;
 	};
@@ -37079,7 +37907,7 @@ function decodeHwp5TextWindow(bytes) {
 	const v = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 	const n = (i) => v.getUint32(4 + i * 4, true);
 	const e = (BigInt(n(2)) << 32n | BigInt(n(1))).toString();
-	if (String.fromCharCode(...bytes.slice(0, 4)) !== "H5W1" || n(0) !== 1 || !epoch(e) || !uint$40(n(3)) || !uint$40(n(4)) || n(7) > n(8) || n(8) > n(6) || n(8) - n(7) > 4096 || n(9) !== 1 || n(10) !== (n(8) - n(7)) * 2 || bytes.length !== 48 + n(10)) bad();
+	if (String.fromCharCode(...bytes.slice(0, 4)) !== "H5W1" || n(0) !== 1 || !epoch(e) || !uint$39(n(3)) || !uint$39(n(4)) || n(7) > n(8) || n(8) > n(6) || n(8) - n(7) > 4096 || n(9) !== 1 || n(10) !== (n(8) - n(7)) * 2 || bytes.length !== 48 + n(10)) bad();
 	const text = new TextDecoder("utf-16le", {
 		fatal: true,
 		ignoreBOM: true
@@ -37122,13 +37950,13 @@ function decodeHwp5TextDelta(bytes) {
 		"sourceNode",
 		"startUnit",
 		"totalUnits"
-	]) if (!uint$40(r[k])) bad();
-	if (r.parentNode !== null && !uint$40(r.parentNode)) bad();
+	]) if (!uint$39(r[k])) bad();
+	if (r.parentNode !== null && !uint$39(r.parentNode)) bad();
 	for (const k of ["removed", "inserted"]) if (!Array.isArray(r[k]) || r[k].length > 4096 || r[k].some((x) => !Number.isInteger(x) || x < 0 || x > 65535)) bad();
 	if (!Array.isArray(r.runs) || !r.runs.length || r.runs.length > 4096) bad();
 	let prev = -1;
 	for (const run of r.runs) {
-		if (Object.keys(run).sort().join() !== "char_shape_id,start_unit" || !uint$40(run.start_unit) || !uint$40(run.char_shape_id) || run.start_unit <= prev || run.start_unit > r.totalUnits) bad();
+		if (Object.keys(run).sort().join() !== "char_shape_id,start_unit" || !uint$39(run.start_unit) || !uint$39(run.char_shape_id) || run.start_unit <= prev || run.start_unit > r.totalUnits) bad();
 		prev = run.start_unit;
 	}
 	if (r.runs[0].start_unit !== 0 || r.totalUnits < 1 || r.totalUnits > 4096) bad();
@@ -37166,7 +37994,7 @@ function createHwp5ExclusiveTextApi({ wasm, output, check, encode, currentSource
 			const length = w.text.length - 1;
 			let cursor = 0;
 			for (const range of raw) {
-				if (range.start !== cursor || range.end < range.start || range.end > w.totalUnits || !uint$40(range.charShapeId)) bad();
+				if (range.start !== cursor || range.end < range.start || range.end > w.totalUnits || !uint$39(range.charShapeId)) bad();
 				cursor = range.end;
 				const start = Math.min(length, range.start), end = Math.min(length, range.end), charShapeId = range.charShapeId;
 				if (start === end) {
@@ -37217,10 +38045,10 @@ function createHwp5ExclusiveTextApi({ wasm, output, check, encode, currentSource
 		}
 	};
 }
-var uint$40, epoch, bad;
+var uint$39, epoch, bad;
 var init_hwp5_exclusive_text_delta = __esmMin((() => {
 	init_character_shapes_wire();
-	uint$40 = (x) => Number.isSafeInteger(x) && x >= 0 && x < 4294967295;
+	uint$39 = (x) => Number.isSafeInteger(x) && x >= 0 && x < 4294967295;
 	epoch = (x) => typeof x === "string" && /^[1-9][0-9]{0,19}$/.test(x) && BigInt(x) <= 18446744073709551615n;
 	bad = () => {
 		throw Error("InvalidExclusiveTextDelta");
@@ -37231,7 +38059,7 @@ function validate$1(reference) {
 	if (!reference || typeof reference !== "object" || Array.isArray(reference)) invalid$2();
 	if (Object.keys(reference).length !== fields$6.length || fields$6.some((key) => !Object.hasOwn(reference, key))) invalid$2();
 	const { epoch, kind, section, id, row, column } = reference;
-	if (!decimal(epoch) || epoch === "0" || !decimal(id) || !uint$39(section) || !uint$39(row) || !uint$39(column)) invalid$2();
+	if (!decimal(epoch) || epoch === "0" || !decimal(id) || !uint$38(section) || !uint$38(row) || !uint$38(column)) invalid$2();
 	if (![
 		"original",
 		"generated",
@@ -37244,7 +38072,7 @@ function validate$1(reference) {
 function decodeHwp5CurrentReferences(bytes) {
 	const value = JSON.parse(utf8$2.decode(bytes));
 	if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).sort().join() !== "first,references,total,version") invalid$2();
-	if (value.version !== 1 || !uint$39(value.total) || !uint$39(value.first) || value.first > value.total || !Array.isArray(value.references) || value.references.length > 1024 || value.first + value.references.length > value.total) invalid$2();
+	if (value.version !== 1 || !uint$38(value.total) || !uint$38(value.first) || value.first > value.total || !Array.isArray(value.references) || value.references.length > 1024 || value.first + value.references.length > value.total) invalid$2();
 	for (const reference of value.references) validate$1(reference);
 	if (value.references.some((reference) => reference.epoch !== value.references[0].epoch)) invalid$2();
 	return value;
@@ -37298,6 +38126,13 @@ function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u
 			encode,
 			currentSourceReferences: (section, options) => windowQuery("hwp5_edit_current_source_references", section, options),
 			output: (action, bytes) => bytes === void 0 ? output(action).bytes : memory.withBytes(bytes, (ptr, size) => output(() => action(ptr, size)).bytes)
+		}),
+		...createLivePictureReplacementApi({
+			format: "hwp5",
+			wasm,
+			memory,
+			check: ready,
+			output
 		}),
 		...createLiveImageInsertApi({
 			wasm,
@@ -37393,8 +38228,9 @@ function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u
 		}
 	};
 }
-var utf8$2, utf16, encoder$11, fields$6, scopeSequence$1, invalid$2, uint$39, decimal;
+var utf8$2, utf16, encoder$11, fields$6, scopeSequence$1, invalid$2, uint$38, decimal;
 var init_hwp5_current_references = __esmMin((() => {
+	init_live_picture_replacement();
 	init_live_image_insertion();
 	init_hwp5_chart_create();
 	init_hwpx_inline_object_record();
@@ -37422,7 +38258,7 @@ var init_hwp5_current_references = __esmMin((() => {
 	invalid$2 = () => {
 		throw new Error("InvalidHwp5CurrentReference");
 	};
-	uint$39 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$38 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	decimal = (value) => typeof value === "string" && /^(0|[1-9][0-9]{0,19})$/.test(value) && BigInt(value) <= 18446744073709551615n;
 }));
 // ../../js/created-table-grid.mjs
@@ -37479,186 +38315,6 @@ var init_created_table_grid = __esmMin((() => {
 		"action",
 		"index"
 	];
-}));
-// ../../js/created-cell-character-runs.mjs
-function validateCreatedCellCharacterRuns(text, runs) {
-	const fail = () => {
-		throw Error("InvalidCreatedCellCharacterRuns");
-	};
-	if (typeof text !== "string" || !text.isWellFormed() || !Array.isArray(runs) || !runs.length || runs.length > 65535 || runs[0]?.start_unit !== 0) return fail();
-	let previous = -1;
-	for (const run of runs) {
-		if (!run || typeof run !== "object" || Array.isArray(run) || Object.keys(run).length !== 2 || !Object.hasOwn(run, "start_unit") || !Object.hasOwn(run, "char_shape_id") || !uint$38(run.start_unit) || !uint$38(run.char_shape_id) || run.start_unit <= previous || run.start_unit > text.length) return fail();
-		const at = run.start_unit;
-		if (at > 0 && at < text.length && text.charCodeAt(at - 1) >= 55296 && text.charCodeAt(at - 1) <= 56319 && text.charCodeAt(at) >= 56320 && text.charCodeAt(at) <= 57343) return fail();
-		previous = at;
-	}
-	return runs;
-}
-var uint$38;
-var init_created_cell_character_runs = __esmMin((() => {
-	uint$38 = (n) => Number.isInteger(n) && n >= 0 && n <= 4294967295 && !Object.is(n, -0);
-}));
-// ../../js/hwpx-created-tables.mjs
-function decodeCreatedTables(bytes) {
-	const fail = () => {
-		throw new Error("InvalidCreatedTables");
-	};
-	if (!(bytes instanceof Uint8Array)) return fail();
-	let rows;
-	try {
-		rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-	} catch {
-		return fail();
-	}
-	return validateCreatedTables(rows);
-}
-function validateCreatedTables(rows, { hostBase = 1 } = {}) {
-	const fail = () => {
-		throw new Error("InvalidCreatedTables");
-	};
-	if (hostBase !== 0 && hostBase !== 1) return fail();
-	if (!Array.isArray(rows) || rows.length > 1e5) return fail();
-	const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
-	const keys = (value, names) => value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === names.length && names.every((name) => Object.hasOwn(value, name));
-	const identities = /* @__PURE__ */ new Set(), instances = /* @__PURE__ */ new Set(), paragraphs = /* @__PURE__ */ new Set();
-	for (const row of rows) {
-		if (!keys(row, [
-			"identity",
-			"instance_id",
-			"host_paragraph",
-			"anchor_unit",
-			"rows",
-			"columns",
-			"width",
-			"height",
-			"resources",
-			"cells"
-		])) return fail();
-		try {
-			createdTableIdentity(row.identity);
-		} catch {
-			return fail();
-		}
-		if (identities.has(row.identity)) return fail();
-		identities.add(row.identity);
-		if (![
-			row.instance_id,
-			row.host_paragraph,
-			row.anchor_unit,
-			row.rows,
-			row.columns,
-			row.width,
-			row.height
-		].every(uint) || !row.instance_id || row.host_paragraph < hostBase || !row.rows || !row.columns || row.width < row.columns || row.height < row.rows || row.height % row.rows || instances.has(row.instance_id)) return fail();
-		instances.add(row.instance_id);
-		if (!keys(row.resources, [
-			"paragraph",
-			"character",
-			"style",
-			"border_fill"
-		]) || !Object.values(row.resources).every(uint)) return fail();
-		const count = row.rows * row.columns;
-		if (count > 1e5 || !Array.isArray(row.cells) || row.cells.length !== count) return fail();
-		const height = row.height / row.rows;
-		let x = 0;
-		for (let index = 0; index < count; index++) {
-			const cell = row.cells[index];
-			const rich = Object.hasOwn(cell ?? {}, "character_runs");
-			if (!keys(cell, [
-				"paragraph_id",
-				"row",
-				"column",
-				"x",
-				"y",
-				"width",
-				"height",
-				"text",
-				...rich ? ["character_runs"] : []
-			]) || ![
-				cell.paragraph_id,
-				cell.row,
-				cell.column,
-				cell.x,
-				cell.y,
-				cell.width,
-				cell.height
-			].every(uint)) return fail();
-			if (!cell.paragraph_id || paragraphs.has(cell.paragraph_id) || cell.row !== Math.floor(index / row.columns) || cell.column !== index % row.columns || cell.x !== x || !cell.width || cell.height !== height || cell.y !== cell.row * height || typeof cell.text !== "string" || !cell.text.isWellFormed()) return fail();
-			if (rich) try {
-				validateCreatedCellCharacterRuns(cell.text, cell.character_runs);
-			} catch {
-				return fail();
-			}
-			paragraphs.add(cell.paragraph_id);
-			x += cell.width;
-			if (x > row.width) return fail();
-			if (cell.column === row.columns - 1) {
-				if (x !== row.width) return fail();
-				x = 0;
-			}
-		}
-	}
-	return rows;
-}
-var init_hwpx_created_tables = __esmMin((() => {
-	init_created_cell_character_runs();
-	init_created_table_identity();
-}));
-// ../../js/hwp5-created-tables.mjs
-function decodeHwp5CreatedTables(bytes) {
-	const fail = () => {
-		throw new Error("InvalidHwp5CreatedTables");
-	};
-	const rows = JSON.parse(decoder$4.decode(bytes));
-	if (!Array.isArray(rows) || rows.length > 1e5 || rows.some((r) => !keys$2(r, ["table", "options"]))) fail();
-	validateCreatedTables(rows.map((row) => row.table), { hostBase: 0 });
-	for (const row of rows) {
-		const o = row.options;
-		if (!keys$2(o, [
-			"common",
-			"table",
-			"cell"
-		])) fail();
-		const c = o.common, t = o.table, l = o.cell;
-		if (!keys$2(c, [
-			"flags",
-			"offset_y",
-			"offset_x",
-			"z_order",
-			"margins",
-			"prevent_page_break",
-			"description"
-		]) || !integer$2(c.flags, 0, 4294967295) || ![
-			c.offset_y,
-			c.offset_x,
-			c.z_order
-		].every((n) => integer$2(n, -2147483648, 2147483647)) || !margins(c.margins) || typeof c.prevent_page_break !== "boolean" || typeof c.description !== "string" || !c.description.isWellFormed()) fail();
-		if (!keys$2(t, [
-			"page_break",
-			"repeat_header",
-			"cell_spacing",
-			"margins"
-		]) || !integer$2(t.page_break, 0, 2) || typeof t.repeat_header !== "boolean" || !integer$2(t.cell_spacing, -32768, 32767) || !margins(t.margins)) fail();
-		if (!keys$2(l, [
-			"layout",
-			"unknown",
-			"attributes",
-			"margins"
-		]) || !integer$2(l.attributes, 0, 4294967295) || !margins(l.margins) || !(l.layout === "spec6" && l.unknown === null || l.layout === "observed8" && integer$2(l.unknown, 0, 65535))) fail();
-	}
-	return rows;
-}
-var decoder$4, keys$2, integer$2, margins;
-var init_hwp5_created_tables = __esmMin((() => {
-	init_hwpx_created_tables();
-	decoder$4 = new TextDecoder("utf-8", {
-		fatal: true,
-		ignoreBOM: true
-	});
-	keys$2 = (v, names) => v && typeof v === "object" && !Array.isArray(v) && Object.keys(v).length === names.length && names.every((k) => Object.hasOwn(v, k));
-	integer$2 = (v, low, high) => Number.isInteger(v) && v >= low && v <= high;
-	margins = (v) => Array.isArray(v) && v.length === 4 && v.every((n) => integer$2(n, -32768, 32767));
 }));
 // ../../js/table-creation-resources.mjs
 function decodeTableCreationResources(bytes) {
@@ -37749,6 +38405,12 @@ var init_table_initial_texts = __esmMin((() => {
 }));
 // ../../js/hwp5-table-creation.mjs
 function createHwp5TableCreationApi({ wasm, memory, check, output, u32 }) {
+	const properties = createCreatedCellPropertiesApi({
+		wasm,
+		memory,
+		check,
+		prefix: "hwp5_edit"
+	});
 	return {
 		...createCreatedTableGridApi({
 			wasm,
@@ -37772,6 +38434,7 @@ function createHwp5TableCreationApi({ wasm, memory, check, output, u32 }) {
 		},
 		createdTables(section) {
 			check();
+			if (properties.supportsCreatedCellPropertiesProjection()) return properties.createdCellPropertiesProjection(section);
 			if (typeof wasm.hwp5_edit_created_tables !== "function") throw new Error("Hwp5CreatedTablesAbiUnavailable");
 			return decodeHwp5CreatedTables(output(() => wasm.hwp5_edit_created_tables(u32(section, "section"))).bytes);
 		},
@@ -37801,6 +38464,7 @@ function createHwp5TableCreationApi({ wasm, memory, check, output, u32 }) {
 }
 var encoder$9, decoder$2;
 var init_hwp5_table_creation = __esmMin((() => {
+	init_created_cell_properties_api();
 	init_created_table_grid();
 	init_hwp5_created_tables();
 	init_table_creation_resources();
@@ -37979,6 +38643,12 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		}
 	};
 	const api = {
+		...createCreatedCellPropertiesApi({
+			wasm,
+			memory,
+			check,
+			prefix: "hwp5_edit"
+		}),
 		...createHwp5EquationApi({
 			wasm,
 			check,
@@ -39022,6 +39692,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 }
 var encoder$8, decoder, u32$2;
 var init_hwp5_editor = __esmMin((() => {
+	init_created_cell_properties_api();
 	init_hwp5_strict_layout_transport();
 	init_hwp5_browser_strict_layout();
 	init_hwp5_chart_literal_edit();
@@ -40747,7 +41418,7 @@ function decodeChartDisplay(bytes) {
 			"percent",
 			"pos",
 			"val"
-		]), plot.node) && field$3(settings.split_position, number$1, plot.node) && nullableUint(settings.custom_split_node) && (settings.custom_split_node === null || settings.custom_split_node > plot.node));
+		]), plot.node) && field$3(settings.split_position, number, plot.node) && nullableUint(settings.custom_split_node) && (settings.custom_split_node === null || settings.custom_split_node > plot.node));
 		if ([
 			settings.of_pie_type,
 			settings.second_pie_size,
@@ -42589,17 +43260,43 @@ async function createHwpxEditor(source) {
 			wasm.hwpx_edit_output_free();
 		}
 	}
+	const cellProperties = createCreatedCellPropertiesApi({
+		wasm,
+		memory,
+		check: ready,
+		prefix: "hwpx_edit"
+	});
 	const documentInsert = createHwpxDocumentInsertApi({
 		wasm,
 		memory,
 		check: ready
 	});
 	return {
+		...createCreatedCellPropertiesApi({
+			wasm,
+			memory,
+			check: ready,
+			prefix: "hwpx_edit"
+		}),
 		...createObjectGeometryApi({
 			wasm,
 			memory,
 			check: ready,
 			format: "hwpx"
+		}),
+		...createLivePictureReplacementApi({
+			format: "hwpx",
+			wasm,
+			memory,
+			check: ready,
+			output(action) {
+				try {
+					if (action() !== 1) throw memory.error();
+					return { bytes: memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()) };
+				} finally {
+					wasm.hwpx_edit_output_free();
+				}
+			}
 		}),
 		...createPageSettingsEditApi({
 			wasm,
@@ -43782,6 +44479,7 @@ async function createHwpxEditor(source) {
 		},
 		createdTables(section) {
 			ready();
+			if (cellProperties.supportsCreatedCellPropertiesProjection()) return cellProperties.createdCellPropertiesProjection(section);
 			uint(section);
 			if (typeof wasm.hwpx_edit_created_tables !== "function") throw new Error("HwpxCreatedTablesAbiUnavailable");
 			try {
@@ -44967,7 +45665,9 @@ async function createHwpxEditor(source) {
 	};
 }
 var init_hwpx_editor = __esmMin((() => {
+	init_live_picture_replacement();
 	init_live_image_insertion();
+	init_created_cell_properties_api();
 	init_hwpx_note_delete();
 	init_hwpx_note_create();
 	init_hwpx_control_text_batch();

@@ -51,7 +51,7 @@ pub fn writeTable(a: std.mem.Allocator, table: *const Model, version: Version, o
 /// Table 80 only. Caller owns the explicitly selected ListHeader layout.
 pub fn writeCell(table: *const Model, row: u32, column: u32, margins: [4]i16) ![26]u8 {
     const size = try dimensions(table);
-    const cell = try table.plan.cell(row, column);
+    const cell = try table.cell(row, column);
     var bytes: [26]u8 = undefined;
     var offset: usize = 0;
     put(u16, &bytes, &offset, @intCast(cell.column));
@@ -61,7 +61,8 @@ pub fn writeCell(table: *const Model, row: u32, column: u32, margins: [4]i16) ![
     put(u32, &bytes, &offset, cell.width);
     put(u32, &bytes, &offset, cell.height);
     for (margins) |margin| put(i16, &bytes, &offset, margin);
-    put(u16, &bytes, &offset, size.border);
+    _ = size;
+    put(u16, &bytes, &offset, std.math.cast(u16, try table.cellBorderFill(row, column)) orelse return error.InvalidBorderFillReference);
     std.debug.assert(offset == bytes.len);
     return bytes;
 }

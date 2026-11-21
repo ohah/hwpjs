@@ -2147,3 +2147,104 @@ export fn hwp5_edit_chart_literal_edit_commit(ptr: [*]const u8, size: usize, ima
     };
     return if (h.revision() == before) 2 else 1;
 }
+
+// Optional generated-cell properties v1; existing exports are unchanged.
+export fn hwp5_edit_created_cell_properties_version() u32 {
+    const h = if (history) |*value| value else return 0;
+    return if (h.owned != null and !h.stats().poisoned) 1 else 0;
+}
+export fn hwp5_edit_created_cell_properties_ticket() u32 {
+    hwp5_edit_output_free();
+    const current = session() catch |err| return fail(err);
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    if (h.owned == null) return fail(error.HistoryV2Required);
+    if (h.stats().poisoned) return fail(error.HistoryMutationUncertain);
+    output = @import("created_cell_properties_wire.zig").ticketJSON(a, current.historyTicket() catch |err| return fail(err)) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_set_created_cell_properties(ptr: [*]const u8, size: usize) u32 {
+    hwp5_edit_output_free();
+    const current = session() catch |err| return fail(err);
+    _ = current;
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    if (h.owned == null) return fail(error.HistoryV2Required);
+    if (h.stats().poisoned) return fail(error.HistoryMutationUncertain);
+    const request = @import("created_cell_properties_wire.zig").decode(a, ptr[0..size]) catch |err| return fail(err);
+    const before = h.revision();
+    apply(.{ .edit_created_cell_properties = request }) catch |err| {
+        _ = fail(err);
+        return if (h.stats().poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    return if (h.revision() != before) 1 else 2;
+}
+
+export fn hwp5_edit_created_cell_properties_projection() u32 {
+    hwp5_edit_output_free();
+    const current = session() catch |err| return fail(err);
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    if (h.owned == null) return fail(error.HistoryV2Required);
+    if (h.stats().poisoned) return fail(error.HistoryMutationUncertain);
+    const styles = current.createdCellPropertyStyles(a) catch |err| return fail(err);
+    defer @import("../model/created_cell_properties_projection.zig").deinit(a, styles);
+    const Section = struct { section: u32, tables: []@import("../hwp5/edit/created_table_snapshot.zig").Row };
+    const sections = a.alloc(Section, current.sectionCount()) catch |err| return fail(err);
+    var copied: usize = 0;
+    defer {
+        for (sections[0..copied]) |part| @import("../hwp5/edit/created_table_snapshot.zig").deinit(a, part.tables);
+        a.free(sections);
+    }
+    for (sections, 0..) |*part, section| {
+        const tables = current.createdTables(a, section) catch |err| return fail(err);
+        part.* = .{ .section = @intCast(section), .tables = tables };
+        copied += 1;
+    }
+    output = std.json.Stringify.valueAlloc(a, .{ .schemaVersion = @as(u32, 1), .format = "hwp5", .sections = sections, .styles = styles }, .{}) catch |err| return fail(err);
+    return 1;
+}
+
+// Optional live picture replacement; independent file transform exports stay unchanged.
+export fn hwp5_edit_picture_replace_version() u32 {
+    return 1;
+}
+export fn hwp5_edit_picture_replace_owner(section: u32, picture_node: u32) u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    if (h.stats().protocolVersion != 2) return fail(error.HistoryProtocol2Required);
+    if (h.stats().poisoned) return fail(error.HistoryMutationUncertain);
+    h.owned.?.validateCurrentForLayout(s) catch |err| return fail(err);
+    const epoch = formatting_lifetime.session(a) catch |err| return fail(err);
+    defer a.free(epoch);
+    var buffer: [20]u8 = undefined;
+    const serial = std.fmt.bufPrint(&buffer, "{d}", .{view_epoch.current() catch |err| return fail(err)}) catch unreachable;
+    var owner = s.pictureReplacementOwner(a, section, picture_node, h.revision(), .{ .session = epoch, .serial = serial }) catch |err| return fail(err);
+    defer owner.deinit(a);
+    output = std.json.Stringify.valueAlloc(a, owner, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_replace_picture(ptr: [*]const u8, size: usize, image_ptr: [*]const u8, image_size: usize) u32 {
+    hwp5_edit_output_free();
+    const ranges = @import("live_picture_replace_range.zig");
+    ranges.validate(ptr, size, image_ptr, image_size) catch |err| return fail(err);
+    const s = session() catch |err| return fail(err);
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    if (h.stats().protocolVersion != 2) return fail(error.HistoryProtocol2Required);
+    if (h.stats().poisoned) {
+        _ = fail(error.HistoryMutationUncertain);
+        return 3;
+    }
+    var parsed = @import("../model/picture_replacement.zig").parse(a, ptr[0..size]) catch |err| return fail(err);
+    defer parsed.deinit();
+    const owner = parsed.value;
+    if (owner.format != .hwp5 or owner.historyRevision != h.revision()) return fail(error.StalePictureReplacementOwner);
+    formatting_lifetime.check(.{ .session = owner.binding.session, .revision = owner.historyRevision }, h.revision()) catch return fail(error.StalePictureReplacementOwner);
+    const serial = @import("../model/formatting_binding.zig").decimal(owner.binding.serial) catch |err| return fail(err);
+    if (serial != (view_epoch.current() catch |err| return fail(err))) return fail(error.StalePictureReplacementOwner);
+    const ticket = s.historyTicket() catch |err| return fail(err);
+    const before = h.revision();
+    apply(.{ .replace_picture = .{ .owner = owner, .image = image_ptr[0..image_size], .ticket = ticket } }) catch |err| {
+        _ = fail(err);
+        return if (h.stats().poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    return if (h.revision() == before) 2 else 1;
+}

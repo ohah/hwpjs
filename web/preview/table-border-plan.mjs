@@ -1,3 +1,7 @@
+import {
+  addCreatedCellPaintIndex,
+  createdCellPlanForBox,
+} from './created-cell-appearance-plan.mjs';
 import { hwpxDiagonalDirections } from '../../js/table-diagonal-directions.mjs';
 import { tableDiagonalPaintPlan } from './table-diagonal-paint.mjs';
 import { tableSemanticFillProjection } from './table-semantic-fill-source.mjs';
@@ -107,7 +111,8 @@ function hwpxBorderStroke(edge, index) {
 }
 const key = (box) => `${box.section}:${box.tableNode}:${box.listNode}`;
 export function tableBorderPaintIndex(content) {
-  if (Array.isArray(content.hwp5BorderFillSources)) return hwp5TableBorderPaintIndex(content);
+  if (Array.isArray(content.hwp5BorderFillSources))
+    return addCreatedCellPaintIndex(hwp5TableBorderPaintIndex(content), content);
   const index = { available: Array.isArray(content.tableBorderSources), cells: new Map() };
   for (const report of content.tableBorderSources ?? []) {
     if (report.sourceOnly !== true) continue;
@@ -123,10 +128,11 @@ export function tableBorderPaintIndex(content) {
       );
     }
   }
-  return index;
+  return addCreatedCellPaintIndex(index, content);
 }
 export function tableBorderPlanForBox(index, box) {
-  if (box.createdCell || !index.available) return { state: 'proxy' };
+  if (box.createdCell) return createdCellPlanForBox(index, box);
+  if (!index.available) return { state: 'proxy' };
   return (
     index.cells.get(key(box)) ?? { state: 'unavailable', error: 'MissingTableBorderPaintSource' }
   );

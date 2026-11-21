@@ -1,3 +1,4 @@
+import { createLivePictureReplacementApi } from './live-picture-replacement.mjs';
 import { createLiveImageInsertApi } from './live-image-insertion.mjs';
 import { createHwp5ChartCreateApi } from './hwp5-chart-create.mjs';
 import { inlineInsertRecord } from './hwpx-inline-object-record.mjs';
@@ -139,6 +140,7 @@ export function createHwp5CurrentReferenceApi({
   });
   return {
     ...exclusive,
+    ...createLivePictureReplacementApi({ format: 'hwp5', wasm, memory, check: ready, output }),
     ...createLiveImageInsertApi({ wasm, memory, check: ready, encode }),
     ...createHwp5ChartCreateApi({
       wasm,

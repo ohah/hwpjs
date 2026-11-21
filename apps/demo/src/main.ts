@@ -85,12 +85,16 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       setDisplayOptions: (value) => ref.current?.surface?.setDisplayOptions(value) ?? false,
       getDisplayOptions: () => ref.current?.surface?.getDisplayOptions(),
       getContextPicture: () => ref.current?.surface?.getContextPicture(),
+      capturePictureReplacementSelection: () =>
+        ref.current?.surface?.capturePictureReplacementSelection() ?? null,
       captureCellAppearanceSelection: () =>
         ref.current?.surface?.captureCellAppearanceSelection?.() ?? null,
       captureSourceTableGridSelection: () =>
         ref.current?.surface?.captureSourceTableGridSelection?.() ?? null,
       captureGeneratedTableGridSelection: () =>
         ref.current?.surface?.captureGeneratedTableGridSelection?.() ?? null,
+      captureCreatedCellPropertiesSelection: () =>
+        ref.current?.surface?.captureCreatedCellPropertiesSelection() ?? null,
       captureCaretFormatting: () => ref.current?.surface?.captureCaretFormatting?.() ?? null,
       captureSelectionFormatting: () =>
         ref.current?.surface?.captureSelectionFormatting?.() ?? null,
@@ -187,10 +191,14 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       setDisplayOptions: (value) => surface?.setDisplayOptions(value) ?? false,
       getDisplayOptions: () => surface?.getDisplayOptions(),
       getContextPicture: () => surface?.getContextPicture(),
+      capturePictureReplacementSelection: () =>
+        surface?.capturePictureReplacementSelection() ?? null,
       captureCellAppearanceSelection: () => surface?.captureCellAppearanceSelection?.() ?? null,
       captureSourceTableGridSelection: () => surface?.captureSourceTableGridSelection?.() ?? null,
       captureGeneratedTableGridSelection: () =>
         surface?.captureGeneratedTableGridSelection?.() ?? null,
+      captureCreatedCellPropertiesSelection: () =>
+        surface?.captureCreatedCellPropertiesSelection() ?? null,
       captureCaretFormatting: () => surface?.captureCaretFormatting?.() ?? null,
       captureSelectionFormatting: () => surface?.captureSelectionFormatting?.() ?? null,
       captureRangeFormatting: (property) => surface?.captureRangeFormatting?.(property) ?? null,

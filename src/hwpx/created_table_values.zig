@@ -23,6 +23,8 @@ pub const Values = struct {
             const bytes = std.math.mul(usize, entry.table.cells.len, @sizeOf(model.Cell)) catch return error.LimitExceeded;
             total = std.math.add(usize, total, bytes) catch return error.LimitExceeded;
             if (total > limit) return error.LimitExceeded;
+            total = std.math.add(usize, total, try std.math.mul(usize, entry.table.cell_properties.len, @sizeOf(@import("../model/created_cell_property.zig").Property))) catch return error.LimitExceeded;
+            if (total > limit) return error.LimitExceeded;
             for (entry.table.cells) |cell| {
                 total = std.math.add(usize, total, cell.dynamicBytes() catch return error.LimitExceeded) catch return error.LimitExceeded;
                 if (total > limit) return error.LimitExceeded;

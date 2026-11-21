@@ -48,6 +48,7 @@ export function createDialogLayer(root: HTMLElement, options: DialogLayerOptions
     if (!disposed) options.onDismiss();
   });
   listen(element, 'cancel', (event: Event) => {
+    if (event.target !== element) return;
     event.preventDefault();
     if (!disposed) options.onDismiss();
   });

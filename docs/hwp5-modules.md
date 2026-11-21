@@ -80,6 +80,7 @@
 - [HWP5 테두리·배경 리소스 원본](hwp5-border-fill-sources.md)
 
 - [원본 셀 테두리·채우기 배치](table-cell-fill-batches.md)
+- [공개 셀 속성 진입과 생성 셀 준비 후보](created-cell-properties-source-candidate.md)
 
 - [원본 셀의 기본 대각선](table-cell-diagonal.md)
 

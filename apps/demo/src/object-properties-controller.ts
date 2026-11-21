@@ -14,6 +14,8 @@ export interface ObjectPropertiesView {
   setBusy(value: boolean): void;
   setAvailability(reason: string | null): void;
   setStatus(text: string): void;
+  setReplacementAvailability?(enabled: boolean, reason: string): void;
+  setReplacementPending?(phase: 'reading' | 'sending' | null): void;
   destroy(): void;
 }
 export type ObjectPropertiesViewFactory = (

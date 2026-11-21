@@ -144,3 +144,7 @@ export const INSERT_DOCUMENT_COMMAND = createCommand<InsertDocumentPayload>('ins
 import type { EditPageSettingsPayload } from './page-settings.ts';
 export const EDIT_PAGE_SETTINGS_COMMAND =
   createCommand<EditPageSettingsPayload>('write-page-settings');
+
+import type { CreatedCellPropertiesPayload } from './created-cell-properties.ts';
+export const EDIT_CREATED_CELL_PROPERTIES_COMMAND =
+  createCommand<CreatedCellPropertiesPayload>('created-cell-properties');

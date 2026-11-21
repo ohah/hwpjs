@@ -1,3 +1,4 @@
+import { createCreatedCellPropertiesApi } from './created-cell-properties-api.mjs';
 import { createCreatedTableGridApi } from './created-table-grid.mjs';
 const encoder = new TextEncoder();
 const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
@@ -10,6 +11,7 @@ import {
 } from './table-initial-texts.mjs';
 
 export function createHwp5TableCreationApi({ wasm, memory, check, output, u32 }) {
+  const properties = createCreatedCellPropertiesApi({ wasm, memory, check, prefix: 'hwp5_edit' });
   return {
     ...createCreatedTableGridApi({
       wasm,
@@ -36,6 +38,8 @@ export function createHwp5TableCreationApi({ wasm, memory, check, output, u32 })
     },
     createdTables(section) {
       check();
+      if (properties.supportsCreatedCellPropertiesProjection())
+        return properties.createdCellPropertiesProjection(section);
       if (typeof wasm.hwp5_edit_created_tables !== 'function')
         throw new Error('Hwp5CreatedTablesAbiUnavailable');
       return decodeHwp5CreatedTables(

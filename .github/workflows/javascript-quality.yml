@@ -663,6 +663,7 @@ jobs:
             ./tests/hwpx/table-border-paint.test.mjs \
             ./tests/hwpx/table-semantic-face-fill.test.mjs \
             ./tests/hwpx/table-semantic-fill-source.test.mjs \
+            ./tests/canvas/table-authored-minimal-fill.test.mjs \
             ./tools/tests/hwpx-table-border-raw-fields.test.mjs \
             ./tests/hwp5/table-border-fill-plan.test.mjs \
             ./tests/hwp5/table-variant-fill-plan.test.mjs \
@@ -892,6 +893,40 @@ jobs:
             ./packages/vanilla/tests/non-text-history-rejected-picture.test.mjs \
             ./packages/vanilla/tests/non-text-history-rejected-picture-negative.test.mjs
           node node_modules/typescript/lib/tsc.js --noEmit -p ./tools/tests/tsconfig.picture-resize.json
+      - name: Test selected picture replacement
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --experimental-transform-types --max-old-space-size=384 \
+            --import ./tools/tests/picture-resize-source-provider.mjs \
+            --import ./tools/object-properties-test-css.mjs \
+            --test --test-concurrency=1 --test-reporter=tap \
+            ./apps/demo/tests/picture-replacement-input-lane.test.mjs \
+            ./apps/demo/tests/picture-replacement-controller.test.mjs \
+            ./apps/demo/tests/picture-replacement-port.test.mjs \
+            ./apps/demo/tests/picture-replacement-view.test.mjs \
+            ./apps/demo/tests/picture-selection-capture.test.mjs \
+            ./packages/core/tests/commands/picture-replacement.test.ts \
+            ./packages/core/tests/transport/picture-replacement-admission.test.ts \
+            ./tools/tests/live-picture-replacement.test.mjs \
+            2>&1 | tee "$RUNNER_TEMP/picture-replacement.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/picture-replacement.tap"
+          node node_modules/typescript/lib/tsc.js --noEmit -p ./tools/tests/tsconfig.picture-replacement.json
+      - name: Test created table cell properties
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --experimental-transform-types --max-old-space-size=384 \
+            --import ./tools/tests/picture-resize-source-provider.mjs \
+            --import ./apps/demo/tests/table-cell-properties-style-preload.mjs \
+            --test --test-concurrency=1 --test-reporter=tap \
+            ./apps/demo/tests/created-cell-properties-surface-admission.test.mjs \
+            ./apps/demo/tests/created-cell-properties-contract.test.mjs \
+            ./apps/demo/tests/created-cell-properties-view.test.mjs \
+            2>&1 | tee "$RUNNER_TEMP/created-cell-properties.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/created-cell-properties.tap"
       - name: Test selected table object and formatting command regressions
         timeout-minutes: 2
         run: |

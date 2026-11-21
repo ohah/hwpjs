@@ -11,6 +11,13 @@ export function attachHwp5CreatedTables(
 ) {
   content.tableCreationAvailable = available;
   content.createdTableGridAvailable = available && editor.supportsCreatedTableGrid?.() === true;
+  content.createdCellPropertiesAvailable =
+    available &&
+    editor.supportsCreatedCellPropertiesProjection?.() === true &&
+    editor.supportsCreatedCellProperties?.() === true &&
+    content.limited === false &&
+    !content.window &&
+    !content.viewKind;
   content.tableCreationResources = available ? editor.tableCreationResources() : null;
   const tables = [];
   let units = 0;

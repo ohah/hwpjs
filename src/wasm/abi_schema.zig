@@ -121,6 +121,24 @@ pub const live_image_insert_signatures = [_]OptionalFunctionSignature{
     .{ .name = "hwpx_edit_image_insert_version", .params = &.{}, .results = &.{"i32"} },
     .{ .name = "hwpx_edit_insert_image", .params = &.{ "i32", "i32", "i32", "i32" }, .results = &.{"i32"} },
 };
+pub const created_cell_properties_signatures = [_]OptionalFunctionSignature{
+    .{ .name = "hwp5_edit_created_cell_properties_version", .params = &.{}, .results = &.{"i32"} },
+    .{ .name = "hwp5_edit_created_cell_properties_ticket", .params = &.{}, .results = &.{"i32"} },
+    .{ .name = "hwp5_edit_created_cell_properties_projection", .params = &.{}, .results = &.{"i32"} },
+    .{ .name = "hwp5_edit_set_created_cell_properties", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+    .{ .name = "hwpx_edit_created_cell_properties_version", .params = &.{}, .results = &.{"i32"} },
+    .{ .name = "hwpx_edit_created_cell_properties_ticket", .params = &.{}, .results = &.{"i32"} },
+    .{ .name = "hwpx_edit_created_cell_properties_projection", .params = &.{}, .results = &.{"i32"} },
+    .{ .name = "hwpx_edit_set_created_cell_properties", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+};
+pub const live_picture_replacement_signatures = [_]OptionalFunctionSignature{
+    .{ .name = "hwp5_edit_picture_replace_version", .params = &.{}, .results = &.{"i32"} },
+    .{ .name = "hwp5_edit_picture_replace_owner", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+    .{ .name = "hwp5_edit_replace_picture", .params = &.{ "i32", "i32", "i32", "i32" }, .results = &.{"i32"} },
+    .{ .name = "hwpx_edit_picture_replace_version", .params = &.{}, .results = &.{"i32"} },
+    .{ .name = "hwpx_edit_picture_replace_owner", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+    .{ .name = "hwpx_edit_replace_picture", .params = &.{ "i32", "i32", "i32", "i32" }, .results = &.{"i32"} },
+};
 pub const document = struct {
     pub const header_bytes: usize = 8;
     pub const node_bytes: usize = 56;

@@ -1,3 +1,4 @@
+import { createCreatedCellPropertiesApi } from './created-cell-properties-api.mjs';
 import { registerStrictLayoutTransport } from './hwp5-strict-layout-transport.mjs';
 import { createBrowserStrictLayoutSaver } from './hwp5-browser-strict-layout.mjs';
 import { createHwp5ChartLiteralEditApi } from './hwp5-chart-literal-edit.mjs';
@@ -252,6 +253,7 @@ export async function createExperimentalHwp5Editor(
     },
   };
   const api = {
+    ...createCreatedCellPropertiesApi({ wasm, memory, check: check, prefix: 'hwp5_edit' }),
     ...createHwp5EquationApi({ wasm, check, output, u32 }),
     measureEquation(source, settings) {
       check();

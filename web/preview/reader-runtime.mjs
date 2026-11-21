@@ -1,3 +1,4 @@
+import { applyCreatedCellPropertiesCommand } from './created-cell-properties-command.mjs';
 import { createHwp5ChartDataCommands } from './hwp5-chart-data-command.mjs';
 import { createStrictLayoutWorker, strictLayoutKinds } from './strict-layout-worker.mjs';
 import { attachHwp5Charts } from './hwp5-chart-content.mjs';
@@ -1265,6 +1266,13 @@ export function createReaderRuntime({
           sourceTableGridAvailable: historyEnabled && editor?.supportsSourceTableGrid?.() === true,
           createdTableGridAvailable:
             historyEnabled && editor?.supportsCreatedTableGrid?.() === true,
+          createdCellPropertiesAvailable:
+            historyEnabled &&
+            historyStats?.protocolVersion === 2 &&
+            !historyPoisoned &&
+            !documentWindow &&
+            editor?.supportsCreatedCellPropertiesProjection?.() === true &&
+            editor?.supportsCreatedCellProperties?.() === true,
           ...(historyPoisoned ? { historyPoisoned: true } : {}),
           ...(historyStats === undefined ? {} : { historyStats }),
           ...(historyRevision === undefined ? {} : { historyRevision }),
@@ -1351,6 +1359,56 @@ export function createReaderRuntime({
           kind: message.kind,
           inlineObjectOwner: editor.inlineObjectOwner(message.selector),
         });
+        return;
+      }
+      if (message.kind === 'picture-replacement-query') {
+        if (
+          !['hwp5', 'hwpx'].includes(format) ||
+          !historyEnabled ||
+          !editor?.supportsPictureReplacement?.()
+        ) {
+          reply({
+            kind: message.kind,
+            pictureOwner: null,
+            reason: 'PictureReplacementUnavailable',
+          });
+          return;
+        }
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        reply({
+          kind: message.kind,
+          pictureOwner: editor.pictureReplacementOwner(message.selector),
+        });
+        return;
+      }
+      if (message.kind === 'picture-replace') {
+        if (
+          !['hwp5', 'hwpx'].includes(format) ||
+          !historyEnabled ||
+          !editor?.supportsPictureReplacement?.()
+        )
+          throw Error('PictureReplacementUnavailable');
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        atomicOutcome = editor.replacePicture(message.owner, message.imageBytes);
+        applied = atomicOutcome.application === 'applied';
+        mutationUncertain = atomicOutcome.application === 'unknown';
+        if (mutationUncertain) historyPoisoned = true;
+        if (atomicOutcome.error || atomicOutcome.cleanupError)
+          throw Error(atomicOutcome.error || atomicOutcome.cleanupError);
+        if (atomicOutcome.nativeCode === 2) {
+          reply({ kind: message.kind, changed: false });
+          return;
+        }
+        documentWindow = null;
+        if (format === 'hwpx') {
+          reader = await createHwpxReader(module);
+          preview = reader.readTextEvents(editor.saveForDisplay());
+        } else {
+          hwp5PreviewDirty = true;
+          await refreshHwp5PreviewFallback();
+        }
+        displayResources.invalidate();
+        reply({ kind: message.kind, content: format === 'hwpx' ? hwpxDisplay() : hwp5Display() });
         return;
       }
       if (message.kind === 'object-geometry-query') {
@@ -1794,6 +1852,32 @@ export function createReaderRuntime({
         // Native committed: every later failure requires refresh, never another edit.
         applied = true;
         documentWindow = null;
+        if (format === 'hwpx') {
+          reader = await createHwpxReader(module);
+          preview = reader.readTextEvents(editor.saveForDisplay());
+        } else await refreshHwp5PreviewFallback();
+        reply({ kind: message.kind, content: format === 'hwpx' ? hwpxDisplay() : hwp5Display() });
+        return;
+      }
+      if (message.kind === 'created-cell-properties') {
+        atomicOutcome = applyCreatedCellPropertiesCommand(
+          editor,
+          format,
+          historyEnabled,
+          historyPoisoned,
+          documentWindow,
+          message,
+        );
+        applied = atomicOutcome.application === 'applied';
+        mutationUncertain = atomicOutcome.application === 'unknown';
+        if (mutationUncertain) {
+          historyPoisoned = true;
+          throw Error('HistoryMutationUncertain');
+        }
+        if (!applied) {
+          reply({ kind: message.kind, applied: false });
+          return;
+        }
         if (format === 'hwpx') {
           reader = await createHwpxReader(module);
           preview = reader.readTextEvents(editor.saveForDisplay());

@@ -13,7 +13,12 @@ export function createObjectPropertiesView(
   root: HTMLElement,
   captured: ObjectPropertiesCapture,
   initial: PictureSizeDraft,
-  callbacks: { onApply(draft: PictureSizeDraft): void; onDismiss(): void },
+  callbacks: {
+    onApply(draft: PictureSizeDraft): void;
+    onDismiss(): void;
+    onReplace?(): void;
+    replacementInput?: HTMLInputElement;
+  },
 ): ObjectPropertiesView {
   if (!captured.target) throw Error('MissingPicturePropertyTarget');
   const doc = root.ownerDocument,
@@ -74,7 +79,7 @@ export function createObjectPropertiesView(
   const hint = doc.createElement('p'),
     status = doc.createElement('p');
   hint.textContent =
-    '너비·높이를 mm로 입력하세요. 지원되는 그림은 캔버스 조절점을 끌어도 크기를 바꿀 수 있습니다. 위치·회전·자르기 등 추가 속성은 현재 이 창에서 지원하지 않습니다.';
+    '선택한 그림의 크기를 변경합니다. 위치·회전·자르기 등 추가 속성은 현재 이 창에서 지원하지 않습니다.';
   hint.className = 'hwp-object-hint';
   status.id = `${prefix}-status`;
   status.dataset.role = 'object-status';
@@ -88,6 +93,22 @@ export function createObjectPropertiesView(
   apply.dataset.role = 'object-apply';
   cancel.dataset.role = 'object-cancel';
   layer.body.append(basics, hint, status);
+  // Keep the native file chooser inside the active modal's non-inert subtree.
+  if (callbacks.replacementInput) layer.body.append(callbacks.replacementInput);
+  const replace = callbacks.onReplace ? doc.createElement('button') : null;
+  const replacementStatus = callbacks.onReplace ? doc.createElement('p') : null;
+  let replacementEnabled = false;
+  let replacementPhase: 'reading' | 'sending' | null = null;
+  if (replace && replacementStatus) {
+    replace.type = 'button';
+    replace.dataset.role = 'object-replace-picture';
+    replace.textContent = '이미지 파일 교체';
+    replacementStatus.dataset.role = 'object-replacement-status';
+    replacementStatus.setAttribute('role', 'status');
+    replacementStatus.textContent = '현재 그림의 교체 지원을 확인하고 있습니다.';
+    layer.body.append(replace, replacementStatus);
+  }
+
   layer.footer.append(apply, cancel);
   const removals: (() => void)[] = [];
   const listen = (node: EventTarget, type: string, fn: (event: any) => void) => {
@@ -111,10 +132,22 @@ export function createObjectPropertiesView(
     }
     if (ratioError)
       invalid = '비율을 유지한 크기가 허용 범위를 벗어납니다. 더 작은 크기를 입력하세요.';
-    apply.disabled = busy || composing || key229 || reason !== null || invalid !== null;
-    fields.width.disabled = fields.height.disabled = lock.disabled = busy || reason !== null;
-    cancel.textContent = busy ? '닫기 (적용은 계속)' : '취소';
-    layer.element.setAttribute('aria-busy', String(busy));
+    apply.disabled =
+      busy ||
+      replacementPhase !== null ||
+      composing ||
+      key229 ||
+      reason !== null ||
+      invalid !== null;
+    fields.width.disabled =
+      fields.height.disabled =
+      lock.disabled =
+        busy || replacementPhase !== null || reason !== null;
+    cancel.textContent = busy || replacementPhase === 'sending' ? '닫기 (적용은 계속)' : '취소';
+    if (replace)
+      replace.disabled =
+        busy || replacementPhase !== null || composing || key229 || !replacementEnabled;
+    layer.element.setAttribute('aria-busy', String(busy || replacementPhase !== null));
     status.textContent = reason ?? invalid ?? notice;
   };
   const changed = (key: 'width' | 'height') => {
@@ -181,6 +214,11 @@ export function createObjectPropertiesView(
     if (!disposed && !apply.disabled) callbacks.onApply(draft());
   });
   listen(cancel, 'click', dismiss);
+  if (replace)
+    listen(replace, 'click', () => {
+      refresh();
+      if (!disposed && !replace.disabled) callbacks.onReplace?.();
+    });
   refresh();
   layer.show(fields.width);
   return {
@@ -197,6 +235,15 @@ export function createObjectPropertiesView(
     },
     setStatus(value) {
       notice = value;
+      refresh();
+    },
+    setReplacementPending(value) {
+      replacementPhase = value;
+      refresh();
+    },
+    setReplacementAvailability(enabled, text) {
+      replacementEnabled = enabled;
+      if (replacementStatus) replacementStatus.textContent = text;
       refresh();
     },
     destroy() {

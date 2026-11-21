@@ -1,5 +1,6 @@
 /** Internal compatibility inventory from reader-runtime and canvas-editor, not a general JSON API. */
 export const SURFACE_READ_KINDS = Object.freeze([
+  'picture-replacement-query',
   'formatting-capabilities',
   'query-formatting',
   'prepare-replace-all',
@@ -48,6 +49,7 @@ export const SURFACE_MUTATION_KINDS = Object.freeze([
   'created-cell-splice',
   'insert-table',
   'created-table-grid',
+  'created-cell-properties',
   'source-table-grid',
   'undo',
   'redo',
@@ -92,6 +94,7 @@ export const SURFACE_MUTATION_KINDS = Object.freeze([
   'radio-select',
   'checkbox-state',
   'form-text',
+  'picture-replace',
   'picture-resize',
   'picture-current-size',
   'picture-dimensions',

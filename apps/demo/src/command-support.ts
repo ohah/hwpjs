@@ -137,6 +137,7 @@ export function resolveCommandSupport(
       'generated-table-delete-row',
       'generated-table-insert-column',
       'generated-table-delete-column',
+      'table-cell-properties',
       'copy',
       'cut',
       'underline',
@@ -247,6 +248,7 @@ const tableCellContextCommands: readonly ContextCommand[] = Object.freeze([
 ]);
 const generatedTableContextCommands: readonly ContextCommand[] = Object.freeze([
   ...documentContextCommands,
+  'table-cell-properties',
   'table-cell-block',
   'generated-table-insert-row',
   'generated-table-delete-row',

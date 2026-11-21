@@ -16,8 +16,9 @@ fn commonPayload(a: std.mem.Allocator, table: *const Model, options: Common, lim
     // serializer is shared with other newly created native objects.
     if (!@import("../body/object_common.zig").hasAbsoluteDimensions(options.flags)) return error.InvalidTableCreationPolicy;
     _ = try @import("../body/object_common_write.zig").descriptionUnits(options.description, limit);
-    const height = try table.plan.height();
-    return @import("../body/object_common_write.zig").write(a, @import("../body/control_rules.zig").table_id, table.plan.width, height, table.instance_id, options, limit);
+    const extent = try table.extent();
+    const height = extent.height;
+    return @import("../body/object_common_write.zig").write(a, @import("../body/control_rules.zig").table_id, extent.width, height, table.instance_id, options, limit);
 }
 
 pub fn write(a: std.mem.Allocator, table: *const Model, version: Version, options: Options, resources: Resources, control_level: u10, limits: Limits) ![]u8 {
@@ -29,6 +30,10 @@ pub fn write(a: std.mem.Allocator, table: *const Model, version: Version, option
     const body = try payloads.writeTable(a, table, version, options.table, limits.max_bytes);
     defer a.free(body);
     if (@import("../docinfo/reference_rules.zig").resolve(.optional_one_based, table.resources.border_fill, resources.border_count) == .invalid) return error.InvalidBorderFillReference;
+    for (0..table.plan.rows) |row| for (0..table.plan.columns) |column| {
+        const id = try table.cellBorderFill(@intCast(row), @intCast(column));
+        if (@import("../docinfo/reference_rules.zig").resolve(.optional_one_based, id, resources.border_count) == .invalid) return error.InvalidBorderFillReference;
+    };
     var ids: std.AutoHashMap(u32, void) = .init(a);
     defer ids.deinit();
     for (table.cells) |cell| {

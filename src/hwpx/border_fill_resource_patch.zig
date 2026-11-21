@@ -146,9 +146,18 @@ fn solidFragment(a: std.mem.Allocator, source: *const Tree, node: usize, identit
     return a.dupe(u8, final.sourceOf(1));
 }
 
-pub fn writePatchBatch(a: std.mem.Allocator, tree: *const Tree, requests: []const PatchRequest, limit: usize, profile: @import("source_color_profile.zig").Profile, stats: *SolidBatchStats) !SolidBatch {
-    if (!profile.verified) return error.UnsupportedCellBackgroundProfile;
-    if (tree.source.len > limit or requests.len > 100000) return error.LimitExceeded;
+pub const ResourceIndex = struct {
+    parent: usize,
+    raw_count: @import("../xml/root.zig").attribute_value.Value,
+    nodes: std.AutoHashMap(u32, usize),
+    pub fn deinit(self: *ResourceIndex) void {
+        self.nodes.deinit();
+    }
+    pub fn source(self: *const ResourceIndex, identity: u32) !usize {
+        return self.nodes.get(identity) orelse error.MissingBorderFillId;
+    }
+};
+pub fn resourceIndex(a: std.mem.Allocator, tree: *const Tree) !ResourceIndex {
     if (tree.elements.len == 0 or !tree.elements[0].is(head, "head")) return error.InvalidBorderFillHeader;
     var container: ?usize = null;
     for (tree.elements, 0..) |element, node| {
@@ -160,9 +169,7 @@ pub fn writePatchBatch(a: std.mem.Allocator, tree: *const Tree, requests: []cons
     }
     const parent = container orelse return error.MissingBorderFills;
     var templates = std.AutoHashMap(u32, usize).init(a);
-    defer templates.deinit();
-    var occupied = std.AutoHashMap(u32, void).init(a);
-    defer occupied.deinit();
+    errdefer templates.deinit();
     var child = tree.elements[parent].first_child;
     while (child) |node| : (child = tree.elements[node].next_sibling) {
         if (!tree.elements[node].is(head, "borderFill")) continue;
@@ -170,11 +177,26 @@ pub fn writePatchBatch(a: std.mem.Allocator, tree: *const Tree, requests: []cons
         const entry = try templates.getOrPut(identity);
         if (entry.found_existing) return error.DuplicateBorderFillId;
         entry.value_ptr.* = node;
-        try occupied.put(identity, {});
-        stats.resources += 1;
     }
     const raw_count = (try tree.attributeValue(a, parent, "", "itemCnt")) orelse return error.MissingBorderFillCount;
     if (try @import("table_xml_fields.zig").unsigned(a, raw_count, 4096) != templates.count()) return error.BorderFillCountMismatch;
+    return .{ .parent = parent, .nodes = templates, .raw_count = raw_count };
+}
+
+pub fn writePatchBatch(a: std.mem.Allocator, tree: *const Tree, requests: []const PatchRequest, limit: usize, profile: @import("source_color_profile.zig").Profile, stats: *SolidBatchStats) !SolidBatch {
+    if (!profile.verified) return error.UnsupportedCellBackgroundProfile;
+    if (tree.source.len > limit or requests.len > 100000) return error.LimitExceeded;
+    if (tree.elements.len == 0 or !tree.elements[0].is(head, "head")) return error.InvalidBorderFillHeader;
+    var resources = try resourceIndex(a, tree);
+    defer resources.deinit();
+    const parent = resources.parent;
+    const raw_count = resources.raw_count;
+    const templates = &resources.nodes;
+    var occupied = std.AutoHashMap(u32, void).init(a);
+    defer occupied.deinit();
+    var resource_ids = templates.keyIterator();
+    while (resource_ids.next()) |identity| try occupied.put(identity.*, {});
+    stats.resources += templates.count();
     const context = try solidContext(a, tree, parent);
     defer a.free(context);
     var clones = std.AutoHashMap(PatchKey, u32).init(a);

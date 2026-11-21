@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "ES2024.String", "DOM", "DOM.Iterable"],
+    "types": ["bun"],
+    "skipLibCheck": true
+  },
+  "include": [
+    "../../packages/core/src/**/*.ts",
+    "../../packages/core/tests/commands/picture-replacement.test.ts",
+    "../../packages/core/tests/transport/picture-replacement-admission.test.ts",
+    "../../tools/tests/types/picture-replacement-consumer.ts"
+  ],
+  "exclude": []
+}

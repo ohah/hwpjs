@@ -223,3 +223,25 @@ export const LIVE_IMAGE_INSERT_ABI = Object.freeze({
   hwpx_edit_image_insert_version: { params: [], results: ['i32'] },
   hwpx_edit_insert_image: { params: ['i32', 'i32', 'i32', 'i32'], results: ['i32'] },
 });
+
+// Optional current-picture resource replacement; required ABI6 stays unchanged.
+export const LIVE_PICTURE_REPLACEMENT_ABI = Object.freeze({
+  hwp5_edit_picture_replace_version: { params: [], results: ['i32'] },
+  hwp5_edit_picture_replace_owner: { params: ['i32', 'i32'], results: ['i32'] },
+  hwp5_edit_replace_picture: { params: ['i32', 'i32', 'i32', 'i32'], results: ['i32'] },
+  hwpx_edit_picture_replace_version: { params: [], results: ['i32'] },
+  hwpx_edit_picture_replace_owner: { params: ['i32', 'i32'], results: ['i32'] },
+  hwpx_edit_replace_picture: { params: ['i32', 'i32', 'i32', 'i32'], results: ['i32'] },
+});
+
+// Optional generated-cell properties. Existing ABI6 signatures remain unchanged.
+export const CREATED_CELL_PROPERTIES_ABI = Object.freeze(
+  Object.fromEntries(
+    ['hwp5_edit', 'hwpx_edit'].flatMap((prefix) => [
+      [`${prefix}_created_cell_properties_version`, { params: [], results: ['i32'] }],
+      [`${prefix}_created_cell_properties_ticket`, { params: [], results: ['i32'] }],
+      [`${prefix}_created_cell_properties_projection`, { params: [], results: ['i32'] }],
+      [`${prefix}_set_created_cell_properties`, { params: ['i32', 'i32'], results: ['i32'] }],
+    ]),
+  ),
+);

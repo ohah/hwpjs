@@ -32,6 +32,7 @@ const ROOT_KEYS = new Set([
   'currentReferenceErrors',
   'tableCreationAvailable',
   'createdTableGridAvailable',
+  'createdCellPropertiesAvailable',
   'sourceTableGridAvailable',
   'sourceTableCellWidthAvailable',
   'sourceTableCellHeightAvailable',

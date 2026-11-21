@@ -78,8 +78,25 @@ pub fn edit(a: std.mem.Allocator, source: *const Table, command: Command, new_pa
         }
         initialized += 1;
     }
+    const Property = @import("created_cell_property.zig").Property;
+    const properties = try a.alloc(Property, if (source.cell_properties.len == 0) 0 else count);
+    errdefer a.free(properties);
+    if (source.cell_properties.len != 0) {
+        if (source.cell_properties.len != old_count) return error.InvalidTableCell;
+        for (properties, 0..) |*property, offset| {
+            const row: u32 = @intCast(offset / plan.columns);
+            const column: u32 = @intCast(offset % plan.columns);
+            property.* = if (try mapping.sourceIndex(row, column)) |index| source.cell_properties[index] else .{ .geometry = try plan.cell(row, column) };
+            const base = try plan.cell(row, column);
+            if (!property.width_changed) property.geometry.width = base.width;
+            if (!property.height_changed) property.geometry.height = base.height;
+            property.materialized_border_fill = null;
+        }
+    }
     var result = source.*;
     result.plan = plan;
     result.cells = cells;
+    result.cell_properties = properties;
+    try result.reflowProperties();
     return result;
 }

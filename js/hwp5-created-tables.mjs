@@ -9,7 +9,7 @@ const keys = (v, names) =>
 const integer = (v, low, high) => Number.isInteger(v) && v >= low && v <= high;
 const margins = (v) =>
   Array.isArray(v) && v.length === 4 && v.every((n) => integer(n, -32768, 32767));
-export function decodeHwp5CreatedTables(bytes) {
+export function decodeHwp5CreatedTables(bytes, { cellGeometryVersion = 0 } = {}) {
   const fail = () => {
     throw new Error('InvalidHwp5CreatedTables');
   };
@@ -22,7 +22,7 @@ export function decodeHwp5CreatedTables(bytes) {
     fail();
   validateCreatedTables(
     rows.map((row) => row.table),
-    { hostBase: 0 },
+    { hostBase: 0, cellGeometryVersion },
   );
   for (const row of rows) {
     const o = row.options;

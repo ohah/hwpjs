@@ -59,6 +59,8 @@ import { createObjectPropertiesTool } from './object-properties-tool.ts';
 import { createChartDataTool } from './chart-data-tool.ts';
 import { createEquationTool } from './equation-tool.ts';
 import { createTableCellPropertiesTool } from './table-cell-properties-tool.ts';
+import type { CreatedCellPropertiesHost } from './created-cell-properties-port.ts';
+import { createCreatedCellPropertiesTool } from './created-cell-properties-tool.ts';
 import { createTableCellAppearanceTool } from './table-cell-appearance-tool.ts';
 import { createClipboardBridge } from './clipboard-bridge.ts';
 import { commandSupportActions, DEMO_COMMANDS, DEMO_COMMAND_REGISTRY } from './command-support.ts';
@@ -98,7 +100,12 @@ import { fixtureUrl } from '../../../web/preview/fixture-catalog.mjs';
 import type { DocumentSearchSelectionPort } from './document-search-controller.ts';
 
 export interface DemoHost
-  extends SurfaceFormattingHost, SurfaceClipboardPort, DemoPageStatusHost, TableGridHost {
+  extends
+    SurfaceFormattingHost,
+    SurfaceClipboardPort,
+    DemoPageStatusHost,
+    TableGridHost,
+    CreatedCellPropertiesHost {
   captureInlineObjectInsertCaret?():
     | import('./inline-object-insert-port.ts').InlineObjectCaretCapture
     | null;
@@ -109,6 +116,9 @@ export interface DemoHost
   captureDocumentTextCaret?: import('./document-search-controller.ts').DocumentSearchCaretPort;
   /** undefined는 관측 미연결/불확실, null은 현재 그림 선택 없음입니다. */
   getContextPicture?(): ContextPicture | null | undefined;
+  capturePictureReplacementSelection?():
+    | import('./picture-replacement-port.ts').PictureReplacementSelection
+    | null;
   getSelectedObject?(): import('@hwpjs/vanilla').CanvasSelectedObject | null;
   requestSelectedObjectProperties?(): boolean;
   registerObjectPropertiesControl?(element: HTMLElement): () => void;
@@ -329,6 +339,15 @@ export async function mountDemo(
     canEditCellProperties: (section: number, listNode: number) =>
       host?.canEditCellProperties?.(section, listNode) === true,
   };
+  const createdCellProperties = createCreatedCellPropertiesTool({
+    root,
+    editor,
+    getHost: () => host,
+    onStatus: note,
+    onClose: () => {
+      host?.focus?.();
+    },
+  });
   const tableCellProperties = createTableCellPropertiesTool({
     root,
     editor,
@@ -577,7 +596,9 @@ export async function mountDemo(
         reason: '문서에서 차트, 그림 또는 글상자 테두리를 선택하세요.',
       },
       ...generatedTableGrid.presentation(),
-      'table-cell-properties': tableCellProperties.presentation(),
+      'table-cell-properties': createdCellProperties.presentation().enabled
+        ? createdCellProperties.presentation()
+        : tableCellProperties.presentation(),
       'table-cell-background': tableCellAppearance.presentation(),
       'table-cell-border': tableCellAppearance.presentation(),
       'table-cell-appearance': tableCellAppearance.presentation(),
@@ -849,7 +870,8 @@ export async function mountDemo(
       return;
     }
     if (action.command === 'table-cell-properties') {
-      tableCellProperties.open();
+      if (createdCellProperties.presentation().enabled) createdCellProperties.open();
+      else tableCellProperties.open();
       return;
     }
     if (action.command === 'table-cell-background') {
@@ -1197,6 +1219,7 @@ export async function mountDemo(
     symbols.dispose();
     generatedTableGrid.dispose();
     tableCellProperties.dispose();
+    createdCellProperties.dispose();
     tableCellAppearance.dispose();
     tableInsert.dispose();
     objectProperties.dispose();
@@ -1258,6 +1281,7 @@ export async function mountDemo(
       symbols.dispose();
       generatedTableGrid.dispose();
       tableCellProperties.dispose();
+      createdCellProperties.dispose();
       tableCellAppearance.dispose();
       tableInsert.dispose();
       objectProperties.dispose();

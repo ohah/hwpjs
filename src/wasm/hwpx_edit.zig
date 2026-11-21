@@ -1163,7 +1163,7 @@ fn apply(command: histories.Command) !void {
         _ = try @import("../hwpx/display_resource_generation.zig").applyOwned(value, session, &.{command});
     } else switch (command.kind) {
         // Independent source-axis batches require the existing owned History.
-        .page_settings, .object_geometry, .bullet_definition, .paragraph_bullet, .independent_text, .document_text, .insert_document, .equation_insert, .chart_create, .image_insert, .note_delete, .note_create, .named_field_rename, .named_field_create, .named_field_parameters, .source_table_cell_merge, .source_table_cell_split, .splice_created_cell => return error.HistoryNotEnabled,
+        .created_cell_properties, .page_settings, .object_geometry, .bullet_definition, .paragraph_bullet, .independent_text, .document_text, .insert_document, .equation_insert, .chart_create, .image_insert, .picture_replace, .note_delete, .note_create, .named_field_rename, .named_field_create, .named_field_parameters, .source_table_cell_merge, .source_table_cell_split, .splice_created_cell => return error.HistoryNotEnabled,
         .source_table_grid => {
             _ = try @import("../hwpx/source_table_grid_session.zig").apply(session, .{ .section = command.section, .node = command.source_grid_node, .expected_rows = command.source_grid_expected_rows, .expected_columns = command.source_grid_expected_columns, .action = command.source_grid_action });
         },
@@ -2907,4 +2907,101 @@ export fn hwpx_edit_delete_note(ptr: [*]const u8, size: u32) u32 {
         return if (err == error.MutationUncertain or err == error.HistoryMutationUncertain or h.stats().poisoned) 3 else 0;
     };
     return 1;
+}
+
+// Optional generated-cell properties v1; existing exports are unchanged.
+export fn hwpx_edit_created_cell_properties_version() u32 {
+    const h = if (history) |*value| value else return 0;
+    return if (h.owned != null and !h.stats().poisoned) 1 else 0;
+}
+export fn hwpx_edit_created_cell_properties_ticket() u32 {
+    hwpx_edit_output_free();
+    const current = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    if (h.owned == null) return fail(error.HistoryV2Required);
+    if (h.stats().poisoned) return fail(error.HistoryMutationUncertain);
+    output = @import("created_cell_properties_wire.zig").ticketJSON(a, current.createdCellPropertiesTicket() catch |err| return fail(err)) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_set_created_cell_properties(ptr: [*]const u8, size: usize) u32 {
+    hwpx_edit_output_free();
+    const current = if (active) |*value| value else return fail(error.EditorNotOpen);
+    _ = current;
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    if (h.owned == null) return fail(error.HistoryV2Required);
+    if (h.stats().poisoned) return fail(error.HistoryMutationUncertain);
+    const request = @import("created_cell_properties_wire.zig").decode(a, ptr[0..size]) catch |err| return fail(err);
+    const before = h.revision();
+    apply(.{ .kind = .created_cell_properties, .section = request.address.section, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "", .created_cell_properties = &request }) catch |err| {
+        _ = fail(err);
+        return if (h.stats().poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    return if (h.revision() != before) 1 else 2;
+}
+
+export fn hwpx_edit_created_cell_properties_projection() u32 {
+    hwpx_edit_output_free();
+    const current = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    if (h.owned == null) return fail(error.HistoryV2Required);
+    if (h.stats().poisoned) return fail(error.HistoryMutationUncertain);
+    const styles = current.createdCellPropertyStyles(a) catch |err| return fail(err);
+    defer @import("../model/created_cell_properties_projection.zig").deinit(a, styles);
+    const Section = struct { section: u32, tables: []@import("../hwpx/created_table_snapshot.zig").Row };
+    const sections = a.alloc(Section, current.sections.len) catch |err| return fail(err);
+    var copied: usize = 0;
+    defer {
+        for (sections[0..copied]) |part| @import("../hwpx/created_table_snapshot.zig").deinit(a, part.tables);
+        a.free(sections);
+    }
+    for (sections, 0..) |*part, section| {
+        const tables = @import("../hwpx/created_table_snapshot.zig").read(a, current, section) catch |err| return fail(err);
+        part.* = .{ .section = @intCast(section), .tables = tables };
+        copied += 1;
+    }
+    output = std.json.Stringify.valueAlloc(a, .{ .schemaVersion = @as(u32, 1), .format = "hwpx", .sections = sections, .styles = styles }, .{}) catch |err| return fail(err);
+    return 1;
+}
+
+// Optional live picture replacement; publishes only through managed parked History.
+export fn hwpx_edit_picture_replace_version() u32 {
+    return 1;
+}
+export fn hwpx_edit_picture_replace_owner(section: u32, picture_node: u32) u32 {
+    hwpx_edit_output_free();
+    requireNoReadScope() catch |err| return fail(err);
+    const s = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const h = requireManagedHistory() catch |err| return fail(err);
+    const epoch = formatting_lifetime.session(a) catch |err| return fail(err);
+    defer a.free(epoch);
+    var buffer: [20]u8 = undefined;
+    const serial = std.fmt.bufPrint(&buffer, "{d}", .{s.mutation_serial}) catch unreachable;
+    var owner = @import("../hwpx/picture_replacement_current.zig").observe(a, s, section, picture_node, h.revision(), .{ .session = epoch, .serial = serial }) catch |err| return fail(err);
+    defer owner.deinit(a);
+    output = std.json.Stringify.valueAlloc(a, owner, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_replace_picture(ptr: [*]const u8, size: usize, image_ptr: [*]const u8, image_size: usize) u32 {
+    hwpx_edit_output_free();
+    @import("live_picture_replace_range.zig").validate(ptr, size, image_ptr, image_size) catch |err| return fail(err);
+    requireNoReadScope() catch |err| return fail(err);
+    const s = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const h = requireManagedHistory() catch |err| {
+        _ = fail(err);
+        return if (err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    var parsed = @import("../model/picture_replacement.zig").parse(a, ptr[0..size]) catch |err| return fail(err);
+    defer parsed.deinit();
+    const owner = parsed.value;
+    if (owner.format != .hwpx or owner.historyRevision != h.revision()) return fail(error.StalePictureReplacementOwner);
+    formatting_lifetime.check(.{ .session = owner.binding.session, .revision = owner.historyRevision }, h.revision()) catch return fail(error.StalePictureReplacementOwner);
+    const serial = @import("../model/formatting_binding.zig").decimal(owner.binding.serial) catch |err| return fail(err);
+    if (serial != s.mutation_serial) return fail(error.StalePictureReplacementOwner);
+    const request: @import("../model/picture_replacement.zig").Request = .{ .owner = owner, .image = image_ptr[0..image_size] };
+    document_text_generation.enterMutation() catch |err| return fail(err);
+    const changed = @import("../hwpx/display_resource_generation.zig").applyOwned(h, s, &.{.{ .kind = .picture_replace, .picture_replace = &request, .section = owner.section, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "" }}) catch |err| {
+        _ = fail(err);
+        return if (h.stats().poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    return if (changed) 1 else 2;
 }

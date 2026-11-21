@@ -141,6 +141,10 @@ pub const History = struct {
             if (commands.len != 1) return error.InvalidObjectGeometryBatch;
             if (command.edit_object_geometry.historyRevision != self.stack.current.revision) return error.StaleObjectGeometryBinding;
         };
+        for (commands) |command| if (command == .replace_picture) {
+            if (commands.len != 1 or !self.managed) return error.HistoryProtocol2Required;
+            if (command.replace_picture.owner.historyRevision != self.stack.current.revision) return error.StalePictureReplacementOwner;
+        };
         try self.stack.prepare();
         try self.begin();
         // 각 분기는 성공·실패 모두 같은 Session 거래를 종료한다.

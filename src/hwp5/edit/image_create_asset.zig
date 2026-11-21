@@ -11,7 +11,11 @@ pub const Prepared = struct {
 };
 pub fn prepare(a: std.mem.Allocator, file: *const @import("../../cfb/reader.zig").File, previous: store.Values, docinfo: []const u8, version: @import("../version.zig").Version, request: @import("image_create_request.zig").Request, limit: usize) !Prepared {
     try @import("image_create_request.zig").validate(request);
-    const media = try @import("../../image/picture_input.zig").inspectImage(request.image, 8 * 1024 * 1024);
+    return prepareImage(a, file, previous, docinfo, version, request.image, limit);
+}
+/// Shared detached PNG/JPEG resource append. No target or geometry authority.
+pub fn prepareImage(a: std.mem.Allocator, file: *const @import("../../cfb/reader.zig").File, previous: store.Values, docinfo: []const u8, version: @import("../version.zig").Version, image: []const u8, limit: usize) !Prepared {
+    const media = try @import("../../image/picture_input.zig").inspectImage(image, 8 * 1024 * 1024);
     if (previous.docinfo) |bytes| if (!std.mem.eql(u8, bytes, docinfo)) return error.SourceBindingMismatch;
     if (previous.entries.len >= 128) return error.LimitExceeded;
     var names: std.ArrayList([]const u8) = .empty;
@@ -32,7 +36,7 @@ pub fn prepare(a: std.mem.Allocator, file: *const @import("../../cfb/reader.zig"
     var entries: std.ArrayList(store.Entry) = .empty;
     defer entries.deinit(a);
     try entries.appendSlice(a, previous.entries);
-    try entries.append(a, .{ .ordinal = info.ids.ordinal, .physical = info.ids.physical, .path = path, .bytes = @constCast(request.image) });
+    try entries.append(a, .{ .ordinal = info.ids.ordinal, .physical = info.ids.physical, .path = path, .bytes = @constCast(image) });
     const view: store.Values = .{ .docinfo = info.bytes, .entries = entries.items };
     return .{ .values = try view.clone(a, limit), .ordinal = info.ids.ordinal };
 }

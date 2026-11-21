@@ -1,6 +1,7 @@
+import { validateCreatedCellGeometry } from './created-cell-geometry.mjs';
 import { validateCreatedCellCharacterRuns } from './created-cell-character-runs.mjs';
 import { createdTableIdentity } from './created-table-identity.mjs';
-export function decodeCreatedTables(bytes) {
+export function decodeCreatedTables(bytes, options) {
   const fail = () => {
     throw new Error('InvalidCreatedTables');
   };
@@ -11,15 +12,16 @@ export function decodeCreatedTables(bytes) {
   } catch {
     return fail();
   }
-  return validateCreatedTables(rows);
+  return validateCreatedTables(rows, options);
 }
 
 // Geometry/text schema is shared; host ordinal bases remain format-specific.
-export function validateCreatedTables(rows, { hostBase = 1 } = {}) {
+export function validateCreatedTables(rows, { hostBase = 1, cellGeometryVersion = 0 } = {}) {
   const fail = () => {
     throw new Error('InvalidCreatedTables');
   };
   if (hostBase !== 0 && hostBase !== 1) return fail();
+  if (cellGeometryVersion !== 0 && cellGeometryVersion !== 1) return fail();
   if (!Array.isArray(rows) || rows.length > 100000) return fail();
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
   const keys = (value, names) =>
@@ -70,7 +72,7 @@ export function validateCreatedTables(rows, { hostBase = 1 } = {}) {
       !row.columns ||
       row.width < row.columns ||
       row.height < row.rows ||
-      row.height % row.rows ||
+      (cellGeometryVersion === 0 && row.height % row.rows) ||
       instances.has(row.instance_id)
     )
       return fail();
@@ -82,6 +84,7 @@ export function validateCreatedTables(rows, { hostBase = 1 } = {}) {
       return fail();
     const count = row.rows * row.columns;
     if (count > 100000 || !Array.isArray(row.cells) || row.cells.length !== count) return fail();
+    if (cellGeometryVersion === 1) validateCreatedCellGeometry(row);
     const height = row.height / row.rows;
     let x = 0;
     for (let index = 0; index < count; index++) {
@@ -111,8 +114,7 @@ export function validateCreatedTables(rows, { hostBase = 1 } = {}) {
         cell.column !== index % row.columns ||
         cell.x !== x ||
         !cell.width ||
-        cell.height !== height ||
-        cell.y !== cell.row * height ||
+        (cellGeometryVersion === 0 && (cell.height !== height || cell.y !== cell.row * height)) ||
         typeof cell.text !== 'string' ||
         !cell.text.isWellFormed()
       )
@@ -128,7 +130,7 @@ export function validateCreatedTables(rows, { hostBase = 1 } = {}) {
       x += cell.width;
       if (x > row.width) return fail();
       if (cell.column === row.columns - 1) {
-        if (x !== row.width) return fail();
+        if (cellGeometryVersion === 0 && x !== row.width) return fail();
         x = 0;
       }
     }

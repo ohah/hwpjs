@@ -1,3 +1,4 @@
+import { createdCellGrid } from './created-cell-grid.mjs';
 import { createdCellCharacterRanges } from '../../js/created-cell-character-runs.mjs';
 import { layoutContent } from './layout.mjs';
 import { tableGrid, hwpUnitsToPixels } from './table-grid.mjs';
@@ -20,7 +21,8 @@ export function layoutCreatedTable(
     throw new Error('InvalidCreatedTableLayout');
   const cells = table.cells.map((cell) => ({ ...cell, rowSpan: 1, columnSpan: 1 }));
   const columnWidths = cells.slice(0, table.columns).map((cell) => hwpUnitsToPixels(cell.width));
-  tableGrid({ ...table, cells }, { x, y, columnWidths, minColumn: 1, minRow: 1 });
+  const individual = table.createdCellPropertiesVersion === 1;
+  if (!individual) tableGrid({ ...table, cells }, { x, y, columnWidths, minColumn: 1, minRow: 1 });
   const paragraphs = cells.map((cell) => ({
     section: table.section,
     createdCell: { identity: table.identity, row: cell.row, column: cell.column },
@@ -43,7 +45,12 @@ export function layoutCreatedTable(
     if (count === maxRows) throw new Error('CreatedTableLayoutRowBudgetExceeded');
     const flow = layoutContent(
       { paragraphs: [paragraph], limited: false },
-      Math.max(1, columnWidths[cells[index].column] - insets.left - insets.right),
+      Math.max(
+        1,
+        (individual ? hwpUnitsToPixels(cells[index].width) : columnWidths[cells[index].column]) -
+          insets.left -
+          insets.right,
+      ),
       (text, _p, unit, kind) => measure(text, paragraph, unit, kind),
       maxRows - count,
       { compactLines: compact, documentBody: true, includeTerminalAfter: false },
@@ -54,20 +61,30 @@ export function layoutCreatedTable(
     count += textRows.length;
     flows.push({ ...flow, rows: textRows });
   }
-  const grid = tableGrid(
-    { ...table, cells },
-    {
-      x,
-      y,
-      columnWidths,
-      minColumn: 1,
-      minRow: minimumRow,
-      contentSize: (cell) => ({
-        width: 0,
-        height: flows[cell.row * table.columns + cell.column].height + insets.top + insets.bottom,
-      }),
-    },
-  );
+  const grid = individual
+    ? createdCellGrid(table, {
+        x,
+        y,
+        minRow: minimumRow,
+        contentSize: (cell) => ({
+          height: flows[cell.row * table.columns + cell.column].height + insets.top + insets.bottom,
+        }),
+      })
+    : tableGrid(
+        { ...table, cells },
+        {
+          x,
+          y,
+          columnWidths,
+          minColumn: 1,
+          minRow: minimumRow,
+          contentSize: (cell) => ({
+            width: 0,
+            height:
+              flows[cell.row * table.columns + cell.column].height + insets.top + insets.bottom,
+          }),
+        },
+      );
   const boxes = grid.cells.map(({ listNode: _unused, ...box }, index) => ({
     ...box,
     section: table.section,

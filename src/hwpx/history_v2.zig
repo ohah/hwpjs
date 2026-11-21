@@ -195,7 +195,7 @@ pub const History = struct {
         s.history_transaction_active = true;
         defer s.history_transaction_active = false;
         try self.stack.prepare();
-        for (commands) |command| if (command.kind == .note_delete or command.kind == .note_create or command.kind == .insert_document or command.kind == .equation_insert or command.kind == .chart_create or command.kind == .image_insert or command.kind == .bullet_definition or command.kind == .page_settings or command.kind == .object_geometry) {
+        for (commands) |command| if (command.kind == .note_delete or command.kind == .note_create or command.kind == .insert_document or command.kind == .equation_insert or command.kind == .chart_create or command.kind == .image_insert or command.kind == .picture_replace or command.kind == .bullet_definition or command.kind == .page_settings or command.kind == .object_geometry) {
             if (commands.len != 1 or command.break_before != null or command.deleted != 0)
                 return error.InvalidInsertDocumentBatch;
             if (!self.managed) return error.HistoryProtocol2Required;
@@ -210,7 +210,7 @@ pub const History = struct {
     fn insertDocument(self: *Self, command: commands_mod.Command) !bool {
         const s = self.owner;
         const inline_creation = command.kind == .equation_insert or command.kind == .chart_create or command.kind == .image_insert or command.kind == .note_create;
-        if (!inline_creation and command.kind != .note_delete and command.section != 0) return error.UnsupportedInsertSections;
+        if (!inline_creation and command.kind != .note_delete and command.kind != .picture_replace and command.section != 0) return error.UnsupportedInsertSections;
         // Inline creation proves logical-to-physical owners using serializer
         // receipts. Geometry keeps its separately validated source-frame path.
         // Every other document transaction retains the pending-owner refusal.
@@ -220,6 +220,17 @@ pub const History = struct {
         const policy_limit = self.stack.policy;
         try document.validateParkable(s, policy_limit.max_checkpoint_bytes);
 
+        if (command.kind == .picture_replace) {
+            const request = command.picture_replace orelse return error.InvalidPictureReplacementOwner;
+            if (command.inserted.len != 0 or command.deleted != 0 or request.owner.section != command.section) return error.InvalidPictureReplacementOwner;
+            if (request.owner.historyRevision != self.stack.current.revision) return error.StalePictureReplacementOwner;
+            if (try @import("../model/formatting_binding.zig").decimal(request.owner.binding.serial) != s.mutation_serial) return error.StalePictureReplacementOwner;
+            try @import("picture_replacement_current.zig").validate(s.allocator, s, request.owner);
+            _ = try @import("../image/picture_input.zig").inspectImage(request.image, @import("../model/picture_replacement.zig").max_image_bytes);
+            const old = try @import("picture_source_bytes.zig").read(s.allocator, s, request.owner.section, request.owner.pictureNode, @import("../model/picture_replacement.zig").max_image_bytes);
+            defer s.allocator.free(old);
+            if (std.mem.eql(u8, old, request.image)) return false;
+        }
         if (command.kind == .note_delete) {
             const request = command.note_delete orelse return error.InvalidNoteDeleteRequest;
             if (command.inserted.len != 0) return error.InvalidNoteDeleteRequest;
@@ -253,7 +264,9 @@ pub const History = struct {
         defer if (owner_proof) |*proof| proof.deinit();
         var physical_target: ?struct { section: usize, paragraph: usize } = null;
         var note_receipt: ?@import("note_create_caret.zig").Receipt = null;
-        var candidate = if (command.kind == .note_delete) blk: {
+        var candidate = if (command.kind == .picture_replace) blk: {
+            break :blk try @import("picture_replacement_current.zig").prepare(s.allocator, before, command.picture_replace.?.*, s.options);
+        } else if (command.kind == .note_delete) blk: {
             break :blk try @import("note_delete.zig").prepare(s.allocator, before, command.note_delete.?.*, s.options);
         } else if (command.kind == .note_create) blk: {
             const request = command.note_create.?;

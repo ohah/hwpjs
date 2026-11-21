@@ -1,4 +1,6 @@
+import { createLivePictureReplacementApi } from './live-picture-replacement.mjs';
 import { createLiveImageInsertApi } from './live-image-insertion.mjs';
+import { createCreatedCellPropertiesApi } from './created-cell-properties-api.mjs';
 import { createHwpxNoteDeleteApi } from './hwpx-note-delete.mjs';
 import { createHwpxNoteCreateApi } from './hwpx-note-create.mjs';
 import { createHwpxControlTextBatchApi } from './hwpx-control-text-batch.mjs';
@@ -227,9 +229,30 @@ export async function createHwpxEditor(source) {
       wasm.hwpx_edit_output_free();
     }
   }
+  const cellProperties = createCreatedCellPropertiesApi({
+    wasm,
+    memory,
+    check: ready,
+    prefix: 'hwpx_edit',
+  });
   const documentInsert = createHwpxDocumentInsertApi({ wasm, memory, check: ready });
   return {
+    ...createCreatedCellPropertiesApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
     ...createObjectGeometryApi({ wasm, memory, check: ready, format: 'hwpx' }),
+    ...createLivePictureReplacementApi({
+      format: 'hwpx',
+      wasm,
+      memory,
+      check: ready,
+      output(action) {
+        try {
+          if (action() !== 1) throw memory.error();
+          return { bytes: memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()) };
+        } finally {
+          wasm.hwpx_edit_output_free();
+        }
+      },
+    }),
     ...createPageSettingsEditApi({ wasm, memory, check: ready }),
     ...createCreatedTableGridApi({
       wasm,
@@ -1605,6 +1628,8 @@ export async function createHwpxEditor(source) {
     },
     createdTables(section) {
       ready();
+      if (cellProperties.supportsCreatedCellPropertiesProjection())
+        return cellProperties.createdCellPropertiesProjection(section);
       uint(section);
       if (typeof wasm.hwpx_edit_created_tables !== 'function')
         throw new Error('HwpxCreatedTablesAbiUnavailable');

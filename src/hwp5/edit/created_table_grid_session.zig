@@ -9,7 +9,8 @@ pub const Edit = struct { section: usize, table: u64, command: grid.Command };
 
 /// Borrows source/model and publishes only after serialization admission.
 /// Failed planning, cloning, editing or writing leaves all pending values intact.
-pub fn apply(a: std.mem.Allocator, sources: []const []const u8, document: *const model.Document, pending: []Values, version: @import("../version.zig").Version, edit: Edit, resources: records.Resources, limits: records.Limits) !void {
+pub fn prepare(a: std.mem.Allocator, sources: []const []const u8, document: *const model.Document, pending: []Values, version: @import("../version.zig").Version, edit: Edit, resources: records.Resources, limits: records.Limits) !Values {
+    _ = resources;
     if (sources.len != document.sections.len or pending.len != sources.len) return error.SourceBindingMismatch;
     if (edit.section >= pending.len) return error.InvalidSection;
     var found: ?usize = null;
@@ -30,12 +31,18 @@ pub fn apply(a: std.mem.Allocator, sources: []const []const u8, document: *const
     };
     if (count != 0) planned = try ids.plan(a, sources, version, document, pending, count, 2_000_000);
     var candidate = try pending[edit.section].clone(a, limits.max_bytes);
-    defer candidate.deinit(a);
+    errdefer candidate.deinit(a);
     const target = &candidate.entries[index].value.table;
     const replacement = try grid.edit(a, target, edit.command, if (planned) |plan| plan.paragraph_ids else &.{}, .{ .max_cells = limits.max_cells, .max_text_bytes = limits.max_bytes });
     target.deinit(a);
     target.* = replacement;
     _ = try candidate.byteSize(limits.max_bytes);
+    return candidate;
+}
+
+pub fn apply(a: std.mem.Allocator, sources: []const []const u8, document: *const model.Document, pending: []Values, version: @import("../version.zig").Version, edit: Edit, resources: records.Resources, limits: records.Limits) !void {
+    var candidate = try prepare(a, sources, document, pending, version, edit, resources, limits);
+    defer candidate.deinit(a);
     const output = try @import("created_table_section.zig").write(a, sources[edit.section], document.sections[edit.section], &candidate, version, resources, limits);
     defer a.free(output);
     std.mem.swap(Values, &pending[edit.section], &candidate);
