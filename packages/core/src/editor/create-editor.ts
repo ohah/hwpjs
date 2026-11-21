@@ -24,7 +24,6 @@ import {
   type ObjectOuterMarginsRead,
 } from '../commands/object-outer-margins.ts';
 import type { NativeObjectOuterMarginsObservation } from '../commands/object-outer-margins-dto.ts';
-import { checkedObjectOuterMarginsObservation } from '../../../../js/object-outer-margins.mjs';
 import { EDIT_CREATED_CELL_PROPERTIES_COMMAND } from '../commands/commands.ts';
 import {
   createdCellPropertiesMessage,
