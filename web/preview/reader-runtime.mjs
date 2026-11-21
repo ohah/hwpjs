@@ -1362,7 +1362,11 @@ export function createReaderRuntime({
         return;
       }
       if (message.kind === 'object-outer-margins-query') {
-        if (!['hwpx', 'hwp5'].includes(format) || !historyEnabled || !editor?.supportsObjectOuterMargins?.()) {
+        if (
+          !['hwpx', 'hwp5'].includes(format) ||
+          !historyEnabled ||
+          !editor?.supportsObjectOuterMargins?.()
+        ) {
           reply({
             kind: message.kind,
             outerMargins: null,
@@ -1375,7 +1379,11 @@ export function createReaderRuntime({
         return;
       }
       if (message.kind === 'object-outer-margins-set') {
-        if (!['hwpx', 'hwp5'].includes(format) || !historyEnabled || !editor?.supportsObjectOuterMargins?.())
+        if (
+          !['hwpx', 'hwp5'].includes(format) ||
+          !historyEnabled ||
+          !editor?.supportsObjectOuterMargins?.()
+        )
           throw Error('ObjectOuterMarginsUnavailable');
         if (historyPoisoned) throw Error('HistoryMutationUncertain');
         atomicOutcome = editor.setObjectOuterMargins(message.request);
