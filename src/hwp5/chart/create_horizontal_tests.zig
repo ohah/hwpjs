@@ -99,7 +99,7 @@ test "H5 horizontal chart explicit clustered profile preserves legacy column XML
     try std.testing.expectEqual(profile.Profile.spec24_registered_png_presentation_v1, try profile.decode("spec24-registered-png-presentation-v1"));
     try std.testing.expectEqual(profile.Profile.spec24_registered_png_presentation_line_v1, try profile.decode("spec24-registered-png-presentation-line-v1"));
     try std.testing.expectEqual(horizontal, try profile.decode("spec24-registered-png-presentation-horizontal-bar-v1"));
-    try std.testing.expectEqual(@as(u32, 3), profile.version);
+    try std.testing.expectEqual(@as(u32, 4), profile.version);
     const current = try profile.create(a, data, bar);
     defer a.free(current);
     try std.testing.expectEqualSlices(u8, old, current);

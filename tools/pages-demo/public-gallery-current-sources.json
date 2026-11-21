@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "policy": "public-gallery-fixtures.json",
-  "policySHA256": "c142775c47a05ef5dd9290f0a58e3188a12bb697a5853d5640e94c91fd6437f6",
+  "policySHA256": "4696f129a96e4b9bdcbf5cfb0f0057a5146c43fb29c17b9dc346748755cf097a",
   "sourcePaths": {
     "image-insert-blank.hwp": "apps/docs/docs/public/editor/fixtures/image-insert-blank.hwp",
     "image-insert-blank.hwpx": "apps/docs/docs/public/editor/fixtures/image-insert-blank.hwpx",
@@ -136,6 +136,7 @@
     "hwp5-textbox-vertical-margins.hwp": "tools/pages-demo/fixtures/hwp5-textbox-vertical-margins.hwp",
     "anchored-picture.hwp": "tools/pages-demo/fixtures/anchored-picture.hwp",
     "anchored-picture.hwpx": "tools/pages-demo/fixtures/anchored-picture.hwpx",
-    "hwp5-chart-create-horizontal-bar.hwp": "tools/pages-demo/fixtures/hwp5-chart-create-horizontal-bar.hwp"
+    "hwp5-chart-create-horizontal-bar.hwp": "tools/pages-demo/fixtures/hwp5-chart-create-horizontal-bar.hwp",
+    "hwp5-chart-create-pie.hwp": "tools/pages-demo/fixtures/hwp5-chart-create-pie.hwp"
   }
 }

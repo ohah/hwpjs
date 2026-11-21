@@ -478,7 +478,7 @@ test('v1 HWP5 dialog refuses a manually assigned line profile before preview or 
 });
 
 test('horizontal chart is only offered for engines that support it', async () => {
-  for (const version of [1, 2, 3]) {
+  for (const version of [1, 2, 3, 4]) {
     const f = fixture();
     f.state().content.hwp5ChartCreateProfileVersion = version;
     await open(f);
@@ -486,10 +486,10 @@ test('horizontal chart is only offered for engines that support it', async () =>
     const select = f.named('HWP5 차트 생성 방식');
     assert.equal(
       select.children.some((option) => option.value === horizontalProfile),
-      version === 3,
+      version >= 3,
     );
     f.choose(horizontalProfile);
-    assert.equal(f.button('차트 만들기').disabled, version !== 3);
+    assert.equal(f.button('차트 만들기').disabled, version < 3);
     f.tool.dispose();
   }
 });

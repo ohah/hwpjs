@@ -361,6 +361,18 @@ pub fn build(b: *std.Build) void {
     const h5_horizontal_step = b.step("test-hwp5-horizontal-chart-create", "Verify horizontal clustered chart creation, saved OOXML, History and legacy chart profiles");
     h5_horizontal_step.dependOn(&run_h5_horizontal_tests.step);
 
+    const h5_pie_tests = b.addTest(.{ .use_llvm = true, .filters = &.{"H5 pie chart"}, .root_module = b.createModule(.{
+        .root_source_file = b.path("src/hwp5_chart_pie_create_probe.zig"),
+        .target = target,
+        .optimize = .ReleaseSafe,
+    }) });
+    h5_pie_tests.step.dependOn(&abi_check.step);
+    h5_pie_tests.step.dependOn(&icc_registry_check.step);
+    const run_h5_pie_tests = b.addRunArtifact(h5_pie_tests);
+    run_h5_pie_tests.has_side_effects = true;
+    const h5_pie_step = b.step("test-hwp5-pie-chart-create", "Verify standard 2D HWP5 pie chart creation and persistence");
+    h5_pie_step.dependOn(&run_h5_pie_tests.step);
+
     const hx_source_crop_tests = b.addTest(.{ .use_llvm = true, .filters = &.{ "HX image source crop", "image insertion HX", "live image", "H5 chart integrated Native" }, .root_module = b.createModule(.{
         .root_source_file = b.path("src/hwpx_image_source_crop_probe.zig"),
         .target = target,

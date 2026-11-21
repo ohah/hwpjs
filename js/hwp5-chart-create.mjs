@@ -1,3 +1,4 @@
+import { checkedHwp5PieValues } from './hwp5-chart-pie-create.mjs';
 import { HWP5_CHART_CREATE_ABI } from './abi-schema.mjs';
 import { inlineInsertRecord } from './hwpx-inline-object-record.mjs';
 import { checkedChartCreateOptions, chartCreateWireData } from './hwpx-inline-object-insert.mjs';
@@ -34,10 +35,12 @@ export function checkedHwp5ChartCreateOptions(input) {
     categories: p.categories,
     series: p.series,
     ...(kind === 'lineChart' ? { chart: { kind, grouping: 'standard' } } : {}),
+    ...(kind === 'pieChart' ? { chart: { kind } } : {}),
     ...(p.profile === HWP5_HORIZONTAL_BAR_CHART_CREATE_PROFILE
       ? { chart: { kind, bar_direction: 'bar', grouping: 'clustered' } }
       : {}),
   });
+  if (kind === 'pieChart') checkedHwp5PieValues(values.series[0].values);
   if (kind === 'lineChart' && values.categories.length < 2)
     throw Error('InvalidChartLineCategoryCount');
   const preview = inlineInsertRecord(p.preview, ['width', 'height']);

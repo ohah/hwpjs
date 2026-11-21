@@ -6,6 +6,7 @@ import {
   HWP5_CHART_CREATE_PROFILE,
   HWP5_LINE_CHART_CREATE_PROFILE,
   HWP5_HORIZONTAL_BAR_CHART_CREATE_PROFILE,
+  HWP5_PIE_CHART_CREATE_PROFILE,
   supportsHwp5ChartCreateProfile,
 } from '../../../js/hwp5-chart-create-profiles.mjs';
 import { hwp5ChartRasterSize } from './hwp5-chart-raster-size.mjs';
@@ -46,6 +47,7 @@ export function createInlineObjectInsertDialog(
     [HWP5_CHART_CREATE_PROFILE, '기본 막대 차트'],
     [HWP5_LINE_CHART_CREATE_PROFILE, '기본 선 차트'],
     [HWP5_HORIZONTAL_BAR_CHART_CREATE_PROFILE, '가로 묶은 막대 차트'],
+    [HWP5_PIE_CHART_CREATE_PROFILE, '기본 원형 차트'],
   ] as const;
   const availableHwp5Profiles = hwp5Profiles.filter(([profile]) =>
     supportsHwp5ChartCreateProfile(callbacks.chartCreateProfileVersion, profile),
@@ -140,9 +142,13 @@ export function createInlineObjectInsertDialog(
       });
       chartTypes.setProfileVersion(callbacks.chartCreateProfileVersion);
     }
-    grid = createInlineObjectInsertDataGrid(data, () => {
-      if (!busy && !unavailable) status.textContent = '';
-    });
+    grid = createInlineObjectInsertDataGrid(
+      data,
+      () => {
+        if (!busy && !unavailable) status.textContent = '';
+      },
+      { strictPieInput: hwp5Chart },
+    );
   } else {
     field(
       data,
@@ -255,7 +261,10 @@ export function createInlineObjectInsertDialog(
     const size = { width: dimension('width'), height: dimension('height') };
     let options: EquationInsertOptions | ChartCreateOptions | Hwp5ChartCreateOptions;
     if (chart) {
-      const profile = chartTypes?.read();
+      const profile =
+        hwp5Chart && selectedHwp5Profile() === HWP5_PIE_CHART_CREATE_PROFILE
+          ? { kind: 'pieChart' as const }
+          : chartTypes?.read();
       const data = grid!.collect();
       try {
         options = checkedChartCreateOptions({
@@ -278,9 +287,10 @@ export function createInlineObjectInsertDialog(
         const profile = selectedHwp5Profile();
         if (!profile) throw Error('HWP5 차트 생성 방식을 선택하세요.');
         options = checkedHwp5ChartCreateOptions({
-          ...options,
+          ...size,
+          ...data,
           profile,
-          preview: hwp5ChartRasterSize(options),
+          preview: hwp5ChartRasterSize(size),
         });
       }
     } else {
@@ -359,6 +369,9 @@ export function createInlineObjectInsertDialog(
     actions.append(previewButton);
   }
   profileChoice?.addEventListener('change', () => {
+    grid?.setProfile(
+      selectedHwp5Profile() === HWP5_PIE_CHART_CREATE_PROFILE ? { kind: 'pieChart' } : undefined,
+    );
     clearPreview();
     callbacks.onDraftChange?.();
     updateEnabled();

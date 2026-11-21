@@ -29712,6 +29712,143 @@ function inlineInsertRecord(input, keys) {
 	return result;
 }
 var init_hwpx_inline_object_record = __esmMin((() => {}));
+// ../../js/chart-create-decimal.mjs
+function parseChartDecimal(text) {
+	if (typeof text !== "string" || text.length === 0 || text.length > 128) throw Error("InvalidChartNumber");
+	const match = /^([+-]?)(?:(\d+)(?:\.(\d*))?|\.(\d+))(?:[eE]([+-]?)(\d+))?$/.exec(text);
+	if (!match) throw Error("InvalidChartNumber");
+	let exponent = 0;
+	for (const digit of match[6] ?? "") {
+		exponent = exponent * 10 + digit.charCodeAt(0) - 48;
+		if (exponent > 1e4) throw Error("InvalidChartNumber");
+	}
+	if (match[5] === "-") exponent = -exponent;
+	const fraction = match[3] ?? match[4] ?? "";
+	const digits = ((match[2] ?? "") + fraction).replace(/^0+/, "");
+	return {
+		negative: match[1] === "-" && digits.length !== 0,
+		digits,
+		scale: digits.length === 0 ? 0 : exponent - fraction.length + digits.length
+	};
+}
+function compareChartDecimals(left, right) {
+	const x = parseChartDecimal(left), y = parseChartDecimal(right);
+	if (x.negative !== y.negative) return x.negative ? -1 : 1;
+	let order = 0;
+	if (x.digits.length === 0 || y.digits.length === 0) order = Math.sign(x.digits.length - y.digits.length);
+	else if (x.scale !== y.scale) order = Math.sign(x.scale - y.scale);
+	else for (let i = 0; i < Math.max(x.digits.length, y.digits.length); ++i) {
+		const xd = x.digits[i] ?? "0", yd = y.digits[i] ?? "0";
+		if (xd !== yd) {
+			order = xd < yd ? -1 : 1;
+			break;
+		}
+	}
+	return order === 0 ? 0 : x.negative ? -order : order;
+}
+var init_chart_create_decimal = __esmMin((() => {}));
+// ../../web/preview/chart-absolute-total.mjs
+/** Two-pass absolute-total arithmetic shared by circular and stacked previews. */
+function createChartAbsoluteTotal(values) {
+	if (!Array.isArray(values)) return null;
+	let magnitude = 0, scaled = 0;
+	for (const value of values) {
+		if (!Number.isFinite(value)) return null;
+		magnitude = Math.max(magnitude, Math.abs(value));
+	}
+	if (magnitude > 0) for (const value of values) scaled += Math.abs(value / magnitude);
+	return {
+		isZero: magnitude === 0,
+		share: (value) => magnitude === 0 ? 0 : value / magnitude / scaled,
+		accumulator() {
+			let sum = 0;
+			return (value) => {
+				if (magnitude === 0) return 0;
+				sum += value / magnitude;
+				return sum / scaled;
+			};
+		}
+	};
+}
+var init_chart_absolute_total = __esmMin((() => {}));
+// ../../web/preview/chart-circular-intervals.mjs
+/** Shared normalized fractions and angle endpoints, not source layout policy. */
+function chartCircularIntervals(values, origin) {
+	if (!Number.isFinite(origin)) return {
+		state: "unavailable",
+		reason: "InvalidCircularOrigin"
+	};
+	const total = createChartAbsoluteTotal(values);
+	if (!total || values.some((value) => value < 0)) return {
+		state: "unavailable",
+		reason: "InvalidCircularValues"
+	};
+	const add = total.accumulator(), intervals = [];
+	let previous = 0;
+	for (const value of values) {
+		const start = previous, end = add(value);
+		previous = end;
+		const first = origin + start * 2 * Math.PI, last = origin + end * 2 * Math.PI;
+		if (value > 0 && (total.share(value) === 0 || end <= start || last <= first)) return {
+			state: "unavailable",
+			reason: "UnrepresentableCircularShare"
+		};
+		intervals.push({
+			start_fraction: start,
+			end_fraction: end,
+			start_angle: first,
+			end_angle: last
+		});
+	}
+	return {
+		state: "ready",
+		empty: total.isZero,
+		intervals
+	};
+}
+var init_chart_circular_intervals = __esmMin((() => {
+	init_chart_absolute_total();
+}));
+// ../../js/hwp5-chart-pie-create.mjs
+function checkedHwp5PieValues(values) {
+	if (!Array.isArray(values) || values.length === 0) throw Error("EmptyPieMagnitude");
+	const numbers = values.map((value) => {
+		const text = String(value);
+		const parsed = parseChartDecimal(text);
+		const number = Number(text);
+		if (parsed.negative || !Number.isFinite(number)) throw Error("InvalidChartNumericValue");
+		if (parsed.digits.length !== 0 && number === 0) throw Error("UnrepresentablePieShare");
+		return number;
+	});
+	const intervals = chartCircularIntervals(numbers, -Math.PI / 2);
+	if (intervals.state !== "ready") throw Error("UnrepresentablePieShare");
+	if (intervals.empty) throw Error("EmptyPieMagnitude");
+	return numbers;
+}
+function checkedHwp5PiePreviewData(data) {
+	const plot = data.plots[0], settings = data.plot_settings[0];
+	if (!Array.isArray(data.point_settings) || !Array.isArray(data.series_settings)) throw Error("UnsupportedChartCreatePreviewKind");
+	if (data.plots.length !== 1 || plot.kind !== "pieChart" || plot.series_nodes.length !== 1 || data.axes.length !== 0 || data.axis_links.length !== 0 || settings.axis_references.length !== 0 || data.view_3d !== null || [
+		"direction",
+		"grouping",
+		"spatial",
+		"gap_width",
+		"overlap",
+		"scatter_style",
+		"of_pie_type",
+		"second_pie_size",
+		"split_type",
+		"split_position",
+		"custom_split_node",
+		"stock"
+	].some((key) => settings[key] !== null) || settings.family_unparsed_children === true || settings.vary_colors?.value !== true || settings.first_slice_angle?.value !== 0 || data.point_settings.length !== 0 || data.rich_text.length !== 0 || data.series_settings.length !== 1 || data.series_settings.some((s) => s.explosion !== null || s.marker !== null || s.smooth !== null)) throw Error("UnsupportedChartCreatePreviewKind");
+	checkedHwp5PieValues(data.bindings.filter((b) => b.role === "value" && b.series_node === plot.series_nodes[0]).map((binding) => data.points[binding.point].value));
+	return data;
+}
+var init_hwp5_chart_pie_create = __esmMin((() => {
+	init_chart_create_decimal();
+	init_chart_circular_intervals();
+}));
 // ../../web/preview/chart-series-data.mjs
 function chartDisplayNumber(raw) {
 	const value = raw.replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, "");
@@ -29934,30 +30071,6 @@ var init_chart_cartesian_data = __esmMin((() => {
 		reason
 	});
 }));
-// ../../web/preview/chart-absolute-total.mjs
-/** Two-pass absolute-total arithmetic shared by circular and stacked previews. */
-function createChartAbsoluteTotal(values) {
-	if (!Array.isArray(values)) return null;
-	let magnitude = 0, scaled = 0;
-	for (const value of values) {
-		if (!Number.isFinite(value)) return null;
-		magnitude = Math.max(magnitude, Math.abs(value));
-	}
-	if (magnitude > 0) for (const value of values) scaled += Math.abs(value / magnitude);
-	return {
-		isZero: magnitude === 0,
-		share: (value) => magnitude === 0 ? 0 : value / magnitude / scaled,
-		accumulator() {
-			let sum = 0;
-			return (value) => {
-				if (magnitude === 0) return 0;
-				sum += value / magnitude;
-				return sum / scaled;
-			};
-		}
-	};
-}
-var init_chart_absolute_total = __esmMin((() => {}));
 // ../../web/preview/chart-percent-normalization.mjs
 /** Group ownership only; common absolute-total arithmetic owns scaling. */
 function chartPercentNormalization(series) {
@@ -30816,44 +30929,6 @@ var init_chart_circular_data = __esmMin((() => {
 		state: "unavailable",
 		reason
 	});
-}));
-// ../../web/preview/chart-circular-intervals.mjs
-/** Shared normalized fractions and angle endpoints, not source layout policy. */
-function chartCircularIntervals(values, origin) {
-	if (!Number.isFinite(origin)) return {
-		state: "unavailable",
-		reason: "InvalidCircularOrigin"
-	};
-	const total = createChartAbsoluteTotal(values);
-	if (!total || values.some((value) => value < 0)) return {
-		state: "unavailable",
-		reason: "InvalidCircularValues"
-	};
-	const add = total.accumulator(), intervals = [];
-	let previous = 0;
-	for (const value of values) {
-		const start = previous, end = add(value);
-		previous = end;
-		const first = origin + start * 2 * Math.PI, last = origin + end * 2 * Math.PI;
-		if (value > 0 && (total.share(value) === 0 || end <= start || last <= first)) return {
-			state: "unavailable",
-			reason: "UnrepresentableCircularShare"
-		};
-		intervals.push({
-			start_fraction: start,
-			end_fraction: end,
-			start_angle: first,
-			end_angle: last
-		});
-	}
-	return {
-		state: "ready",
-		empty: total.isZero,
-		intervals
-	};
-}
-var init_chart_circular_intervals = __esmMin((() => {
-	init_chart_absolute_total();
 }));
 // ../../web/preview/chart-family-settings.mjs
 function chartFamilySettings(display, node, spec) {
@@ -33731,28 +33806,31 @@ var init_chart_preview_paint = __esmMin((() => {
 }));
 // ../../js/hwp5-chart-create-profiles.mjs
 function isHwp5ChartCreateProfileVersion(version) {
-	return version === 1 || version === 2 || version === 3;
+	return version === 1 || version === 2 || version === 3 || version === 4;
 }
 function hwp5ChartCreateKind(profile) {
 	switch (profile) {
 		case HWP5_CHART_CREATE_PROFILE:
 		case HWP5_HORIZONTAL_BAR_CHART_CREATE_PROFILE: return "barChart";
 		case HWP5_LINE_CHART_CREATE_PROFILE: return "lineChart";
+		case HWP5_PIE_CHART_CREATE_PROFILE: return "pieChart";
 		default: throw Error("UnsupportedChartCreateProfile");
 	}
 }
 function supportsHwp5ChartCreateProfile(version, profile) {
 	hwp5ChartCreateKind(profile);
 	if (!isHwp5ChartCreateProfileVersion(version)) return false;
-	if (profile === "spec24-registered-png-presentation-horizontal-bar-v1") return version === 3;
+	if (profile === "spec24-registered-png-presentation-horizontal-bar-v1") return version === 3 || version === 4;
+	if (profile === "spec24-registered-png-presentation-pie-v1") return version === 4;
 	if (profile === "spec24-registered-png-presentation-line-v1") return version !== 1;
 	return true;
 }
-var HWP5_CHART_CREATE_PROFILE, HWP5_LINE_CHART_CREATE_PROFILE, HWP5_HORIZONTAL_BAR_CHART_CREATE_PROFILE;
+var HWP5_CHART_CREATE_PROFILE, HWP5_LINE_CHART_CREATE_PROFILE, HWP5_HORIZONTAL_BAR_CHART_CREATE_PROFILE, HWP5_PIE_CHART_CREATE_PROFILE;
 var init_hwp5_chart_create_profiles = __esmMin((() => {
 	HWP5_CHART_CREATE_PROFILE = "spec24-registered-png-presentation-v1";
 	HWP5_LINE_CHART_CREATE_PROFILE = "spec24-registered-png-presentation-line-v1";
 	HWP5_HORIZONTAL_BAR_CHART_CREATE_PROFILE = "spec24-registered-png-presentation-horizontal-bar-v1";
+	HWP5_PIE_CHART_CREATE_PROFILE = "spec24-registered-png-presentation-pie-v1";
 }));
 // ../../js/hwp5-chart-literal-profiles.mjs
 function hwp5ChartLiteralKind(profile) {
@@ -33805,6 +33883,7 @@ async function renderPreview(wire, { width, height }, { createCanvas, current },
 		const settings = data.plot_settings[0];
 		if (settings?.direction?.value !== (horizontalBar ? "bar" : "col") || settings.grouping?.value !== "clustered" || settings.spatial !== null || data.view_3d !== null || data.point_settings.length !== 0 || data.rich_text.length !== 0) fail$2("UnsupportedChartLiteralEditProfile");
 	}
+	if (scope === "hwp5-chart-create-preview" && expectedKind === "pieChart") checkedHwp5PiePreviewData(data);
 	const primitives = chartPreviewPrimitives(data);
 	if (primitives.state !== "ready") fail$2(primitives.reason ?? "ChartCreatePreviewUnavailable");
 	const canvas = createCanvas(width, height);
@@ -33861,6 +33940,7 @@ function renderHwp5ChartLiteralEditPreview(wire, host, profile = HWP5_CHART_LITE
 }
 var fail$2, live, validSize, signature;
 var init_hwp5_chart_create_preview = __esmMin((() => {
+	init_hwp5_chart_pie_create();
 	init_chart_display_data();
 	init_chart_preview_primitives();
 	init_chart_preview_paint();
@@ -38872,41 +38952,6 @@ var init_live_image_insertion = __esmMin((() => {
 	init_native_edit_outcome();
 	encoder$14 = new TextEncoder();
 }));
-// ../../js/chart-create-decimal.mjs
-function parseChartDecimal(text) {
-	if (typeof text !== "string" || text.length === 0 || text.length > 128) throw Error("InvalidChartNumber");
-	const match = /^([+-]?)(?:(\d+)(?:\.(\d*))?|\.(\d+))(?:[eE]([+-]?)(\d+))?$/.exec(text);
-	if (!match) throw Error("InvalidChartNumber");
-	let exponent = 0;
-	for (const digit of match[6] ?? "") {
-		exponent = exponent * 10 + digit.charCodeAt(0) - 48;
-		if (exponent > 1e4) throw Error("InvalidChartNumber");
-	}
-	if (match[5] === "-") exponent = -exponent;
-	const fraction = match[3] ?? match[4] ?? "";
-	const digits = ((match[2] ?? "") + fraction).replace(/^0+/, "");
-	return {
-		negative: match[1] === "-" && digits.length !== 0,
-		digits,
-		scale: digits.length === 0 ? 0 : exponent - fraction.length + digits.length
-	};
-}
-function compareChartDecimals(left, right) {
-	const x = parseChartDecimal(left), y = parseChartDecimal(right);
-	if (x.negative !== y.negative) return x.negative ? -1 : 1;
-	let order = 0;
-	if (x.digits.length === 0 || y.digits.length === 0) order = Math.sign(x.digits.length - y.digits.length);
-	else if (x.scale !== y.scale) order = Math.sign(x.scale - y.scale);
-	else for (let i = 0; i < Math.max(x.digits.length, y.digits.length); ++i) {
-		const xd = x.digits[i] ?? "0", yd = y.digits[i] ?? "0";
-		if (xd !== yd) {
-			order = xd < yd ? -1 : 1;
-			break;
-		}
-	}
-	return order === 0 ? 0 : x.negative ? -order : order;
-}
-var init_chart_create_decimal = __esmMin((() => {}));
 // ../../js/hwpx-inline-object-insert.mjs
 function integer$3(value, min = 0, max = 4294967295) {
 	if (!Number.isSafeInteger(value) || value < min || value > max || Object.is(value, -0)) throw Error("InvalidInlineObjectInteger");
@@ -39336,12 +39381,14 @@ function checkedHwp5ChartCreateOptions(input) {
 			kind,
 			grouping: "standard"
 		} } : {},
+		...kind === "pieChart" ? { chart: { kind } } : {},
 		...p.profile === "spec24-registered-png-presentation-horizontal-bar-v1" ? { chart: {
 			kind,
 			bar_direction: "bar",
 			grouping: "clustered"
 		} } : {}
 	});
+	if (kind === "pieChart") checkedHwp5PieValues(values.series[0].values);
 	if (kind === "lineChart" && values.categories.length < 2) throw Error("InvalidChartLineCategoryCount");
 	const preview = inlineInsertRecord(p.preview, ["width", "height"]);
 	const width = integer$2(preview.width, 64, 2048), height = integer$2(preview.height, 64, 2048);
@@ -39477,6 +39524,7 @@ function createHwp5ChartCreateApi({ wasm, memory, ready, check, encode, copyCurr
 }
 var encoder$13, integer$2, bytesFor, equal;
 var init_hwp5_chart_create = __esmMin((() => {
+	init_hwp5_chart_pie_create();
 	init_abi_schema();
 	init_hwpx_inline_object_record();
 	init_hwpx_inline_object_insert();

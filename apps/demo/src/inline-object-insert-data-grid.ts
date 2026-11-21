@@ -20,7 +20,11 @@ interface Grid {
   focus(): void;
 }
 /** Drafts are keyed by actual profile; changing kind never casts old cells to X/size. */
-export function createInlineObjectInsertDataGrid(host: HTMLElement, onEdit: () => void) {
+export function createInlineObjectInsertDataGrid(
+  host: HTMLElement,
+  onEdit: () => void,
+  { strictPieInput = false }: { strictPieInput?: boolean } = {},
+) {
   const drafts = new Map<string, { host: HTMLElement; grid: Grid }>();
   let active: Grid,
     disabled = false;
@@ -33,7 +37,7 @@ export function createInlineObjectInsertDataGrid(host: HTMLElement, onEdit: () =
       draft = {
         host: container,
         grid: profile
-          ? createTypedGrid(container, onEdit, profile)
+          ? createTypedGrid(container, onEdit, profile, strictPieInput)
           : createLegacyGrid(container, onEdit),
       };
       drafts.set(key, draft);
@@ -256,7 +260,12 @@ function createLegacyGrid(host: HTMLElement, onEdit: () => void) {
 }
 
 /** Explicit-profile grid; every new numeric cell is blank until authored. */
-function createTypedGrid(host: HTMLElement, onEdit: () => void, profile: ChartCreateProfile): Grid {
+function createTypedGrid(
+  host: HTMLElement,
+  onEdit: () => void,
+  profile: ChartCreateProfile,
+  strictPieInput: boolean,
+): Grid {
   const doc = host.ownerDocument;
   const kind = profile.kind;
   const xy = kind === 'scatterChart' || kind === 'bubbleChart',
@@ -534,7 +543,11 @@ function createTypedGrid(host: HTMLElement, onEdit: () => void, profile: ChartCr
           const series = result.get(id)!;
           if (fields.x) series.x_values!.push(numeric(fields.x, `${r}번째 점의 ${c}번째 계열 X`));
           series.values.push(
-            numeric(fields.y, `${r}번째 ${xy ? '점' : '범주'}의 ${c}번째 계열 ${xy ? 'Y' : '값'}`),
+            numeric(
+              fields.y,
+              `${r}번째 ${xy ? '점' : '범주'}의 ${c}번째 계열 ${xy ? 'Y' : '값'}`,
+              strictPieInput && kind === 'pieChart',
+            ),
           );
           if (fields.size)
             series.bubble_sizes!.push(

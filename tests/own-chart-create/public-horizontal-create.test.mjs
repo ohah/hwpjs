@@ -30,7 +30,7 @@ function raster(width, height) {
   ]);
 }
 
-test('public reader dispatch creates a horizontal HWP5 chart and reopens the same data', async () => {
+async function verifyCreate({ profile, values, kind, assertPreview, assertPaint }) {
   const wasm = await readFile(new URL('../../packages/hwpjs/dist/hwpjs.wasm', import.meta.url));
   assert.match(process.env.HWPJS_TEST_WASM_EXPECTED_SHA256 ?? '', /^[a-f0-9]{64}$/);
   assert.equal(
@@ -38,7 +38,8 @@ test('public reader dispatch creates a horizontal HWP5 chart and reopens the sam
     process.env.HWPJS_TEST_WASM_EXPECTED_SHA256,
   );
   const initialCanvas = Object.getOwnPropertyDescriptor(globalThis, 'OffscreenCanvas');
-  const filled = [];
+  const filled = [],
+    arcs = [];
   class ControlledCanvas {
     getContext() {
       return new Proxy(
@@ -47,6 +48,7 @@ test('public reader dispatch creates a horizontal HWP5 chart and reopens the sam
           get(target, key) {
             if (Object.hasOwn(target, key)) return target[key];
             if (key === 'measureText') return (text) => ({ width: text.length * 6 });
+            if (key === 'arc') return (...bounds) => arcs.push(bounds);
             if (key === 'fillRect') return (...bounds) => filled.push(bounds);
             return () => {};
           },
@@ -76,7 +78,7 @@ test('public reader dispatch creates a horizontal HWP5 chart and reopens the sam
     const save = async (allowStaleLayout) => (await editor.save({ allowStaleLayout })).bytes;
     await load(input);
     const first = state().content.paragraphs[0];
-    assert.equal(state().content.hwp5ChartCreateProfileVersion, 3);
+    assert.equal(state().content.hwp5ChartCreateProfileVersion, 4);
     assert.equal(state().content.chartCreationAvailable, true);
     await editor.setSelection(
       core.createParagraphSelection(state(), {
@@ -89,26 +91,26 @@ test('public reader dispatch creates a horizontal HWP5 chart and reopens the sam
       target: state().selection,
       selectionVersion: state().stateVersion,
       options: {
-        profile: 'spec24-registered-png-presentation-horizontal-bar-v1',
+        profile,
         width: 20000,
         height: 12000,
         preview: { width: 267, height: 160 },
         categories: ['가', '나', '다'],
-        series: [{ name: '값', values: [3, -2, 7] }],
+        series: [{ name: '값', values }],
       },
     };
     const response = await editor.readResource(
       core.hwp5ChartCreatePreviewMessage(payload, state()),
     );
     const preview = JSON.parse(new TextDecoder().decode(response.preview)).data;
-    assert.equal(preview.plots[0].kind, 'barChart');
-    assert.equal(preview.plot_settings[0].direction.value, 'bar');
-    assert.equal(preview.plot_settings[0].grouping.value, 'clustered');
+    assert.equal(preview.plots[0].kind, kind);
+    assertPreview(preview);
     assert.equal(filled.length, 0);
+    assert.equal(arcs.length, 0);
     const outcome = await editor.dispatchCommand(core.CREATE_CHART_COMMAND, payload);
     assert.equal(outcome.status, 'committed-with-snapshot');
     assert.equal(state().nativeHistoryRevision, 1);
-    assert.equal(filled.length, 3);
+    assertPaint({ filled, arcs });
     const edited = await save(true);
     await editor.undo();
     assert.deepEqual(await save(false), input);
@@ -129,4 +131,37 @@ test('public reader dispatch creates a horizontal HWP5 chart and reopens the sam
     if (initialCanvas) Object.defineProperty(globalThis, 'OffscreenCanvas', initialCanvas);
     else delete globalThis.OffscreenCanvas;
   }
-});
+}
+
+test('public reader dispatch creates a horizontal HWP5 chart and reopens the same data', () =>
+  verifyCreate({
+    profile: 'spec24-registered-png-presentation-horizontal-bar-v1',
+    values: [3, -2, 7],
+    kind: 'barChart',
+    assertPreview(preview) {
+      assert.equal(preview.plot_settings[0].direction.value, 'bar');
+      assert.equal(preview.plot_settings[0].grouping.value, 'clustered');
+    },
+    assertPaint({ filled, arcs }) {
+      assert.equal(filled.length, 3);
+      assert.equal(arcs.length, 0);
+    },
+  }));
+
+test('public reader dispatch creates a 2D HWP5 pie chart and reopens the same data', () =>
+  verifyCreate({
+    profile: 'spec24-registered-png-presentation-pie-v1',
+    values: [1, 2, 3],
+    kind: 'pieChart',
+    assertPreview(preview) {
+      assert.deepEqual(preview.axes, []);
+      assert.deepEqual(preview.axis_links, []);
+      assert.equal(preview.plot_settings[0].first_slice_angle.value, 0);
+      assert.equal(preview.plot_settings[0].vary_colors.value, true);
+    },
+    assertPaint({ arcs }) {
+      assert.equal(arcs.length, 3);
+      const fractions = arcs.map(([, , , start, end]) => (end - start) / (2 * Math.PI));
+      assert.ok(fractions.every((actual, index) => Math.abs(actual - (index + 1) / 6) < 1e-12));
+    },
+  }));

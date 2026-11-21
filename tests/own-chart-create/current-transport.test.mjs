@@ -10,6 +10,7 @@ import { model, context } from '../hwpx/chart-family-model.mjs';
 import {
   HWP5_HORIZONTAL_BAR_CHART_CREATE_PROFILE as horizontalProfile,
   HWP5_LINE_CHART_CREATE_PROFILE as lineProfile,
+  HWP5_PIE_CHART_CREATE_PROFILE as pieProfile,
 } from '../../js/hwp5-chart-create-profiles.mjs';
 const encoder = new TextEncoder(),
   decoder = new TextDecoder();
@@ -73,6 +74,14 @@ function harness({
     node: 5,
     value: previewKind === 'barChart' ? 'clustered' : 'standard',
   };
+  if (previewKind === 'pieChart') {
+    display.axes = [];
+    display.axis_links = [];
+    display.plot_settings[0].axis_references = [];
+    display.plot_settings[0].grouping = null;
+    display.plot_settings[0].vary_colors = { node: 4, value: true };
+    display.plot_settings[0].first_slice_angle = { node: 5, value: 0 };
+  }
   const wasm = {
     hwp5_edit_current_references(_section, _first, _count) {
       outputBytes = encoder.encode(
@@ -204,7 +213,7 @@ test('older ABI, wrong arity and wrong profile never advertise or execute creati
       h.wasm.hwp5_edit_create_chart_current = () => 1;
     },
     (h) => {
-      h.wasm.hwp5_edit_chart_create_profile_version = () => 4;
+      h.wasm.hwp5_edit_chart_create_profile_version = () => 5;
     },
   ]) {
     const h = harness();
@@ -382,22 +391,47 @@ test('line input uses the typed cache budget without narrowing the legacy bar bu
 });
 
 test('new horizontal profile paints and commits only the matching native chart', async () => {
-  const good = harness({ version: 3, authoringProfile: horizontalProfile, direction: 'bar' });
-  assert.equal(good.api.chartCreateProfileVersion(), 3);
-  assert.equal((await good.api.createChart(good.request(), good.renderer)).application, 'applied');
-  assert.equal(good.calls(), 1);
-  assert.equal(good.canvases(), 1);
-  assert.equal(good.allocated.size, 0);
+  for (const version of [3, 4]) {
+    const good = harness({ version, authoringProfile: horizontalProfile, direction: 'bar' });
+    assert.equal(good.api.chartCreateProfileVersion(), version);
+    assert.equal(
+      (await good.api.createChart(good.request(), good.renderer)).application,
+      'applied',
+    );
+    assert.equal(good.calls(), 1);
+    assert.equal(good.canvases(), 1);
+    assert.equal(good.allocated.size, 0);
+  }
   for (const [version, direction, reason] of [
     [1, 'bar', /UnsupportedChartCreateProfile/],
     [2, 'bar', /UnsupportedChartCreateProfile/],
     [3, 'col', /UnsupportedChartCreatePreviewDirection/],
-    [4, 'bar', /InlineObjectInsertionUnavailable/],
+    [5, 'bar', /InlineObjectInsertionUnavailable/],
   ]) {
     const wrong = harness({ version, authoringProfile: horizontalProfile, direction });
     await assert.rejects(wrong.api.createChart(wrong.request(), wrong.renderer), reason);
     assert.equal(wrong.calls(), 0);
     assert.equal(wrong.canvases(), 0);
     assert.equal(wrong.allocated.size, 0);
+  }
+});
+
+test('pie capability4 facade uses shared painter and retains existing atomic PNG transport ownership', async () => {
+  const h = harness({ version: 4, authoringProfile: pieProfile, previewKind: 'pieChart' });
+  const result = await h.api.createChart(h.request(), h.renderer);
+  assert.equal(result.application, 'applied');
+  assert.equal(h.calls(), 1);
+  assert.equal(h.canvases(), 1);
+  assert(h.record.calls.some((call) => call[0] === 'arc'));
+  assert.equal(h.allocated.size, 0);
+  for (const version of [1, 2, 3]) {
+    const old = harness({ version, authoringProfile: pieProfile, previewKind: 'pieChart' });
+    await assert.rejects(
+      old.api.createChart(old.request(), old.renderer),
+      /UnsupportedChartCreateProfile/,
+    );
+    assert.equal(old.calls(), 0);
+    assert.equal(old.canvases(), 0);
+    assert.equal(old.allocated.size, 0);
   }
 });

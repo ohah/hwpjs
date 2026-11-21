@@ -1574,3 +1574,8 @@ test {
     _ = @import("original_cell_block_alignment_probe.zig");
     _ = @import("picture_anchor_combined_probe.zig");
 }
+
+// HWP5 pure 2D pie creation: own carrier, numeric admission and History contract.
+test {
+    _ = @import("hwp5_chart_pie_create_probe.zig");
+}

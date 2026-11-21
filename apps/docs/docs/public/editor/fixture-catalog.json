@@ -802,5 +802,11 @@
     "name": "hwp5-chart-create-horizontal-bar.hwp",
     "label": "[기능 예제] HWP5 가로 묶은 막대 차트",
     "available": true
+  },
+  {
+    "id": "hwp5-chart-create-pie.hwp",
+    "name": "hwp5-chart-create-pie.hwp",
+    "label": "[기능 예제] HWP5 원형 차트",
+    "available": true
   }
 ]

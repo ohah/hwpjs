@@ -19,6 +19,7 @@
 | HWP5 차트 생성과 미리보기 | **[기능 예제] HWP5 차트 생성과 미리보기**를 선택해 한국어 안내와 10/20/40 막대를 확인합니다. 새 차트는 아래 HWP5 순서로 만듭니다.                                                    | <a href="__HWPJS_DOCS_BASE__editor/fixtures/hwp5-chart-create.hwp" download>hwp5-chart-create.hwp</a>                                                                                                       |
 | HWP5 꺾은선 차트          | **[기능 예제] HWP5 꺾은선 차트**를 열면 10/20/30 값으로 만든 선 차트가 표시됩니다.                                                                                                   | <a href="__HWPJS_DOCS_BASE__editor/fixtures/hwp5-chart-create-line.hwp" download>hwp5-chart-create-line.hwp</a>                                                                                             |
 | HWP5 가로 묶은 막대 차트  | **[기능 예제] HWP5 가로 묶은 막대 차트**를 열어 가·나·다 범주와 3, -2, 7 값을 확인합니다.                                                                                            | <a href="__HWPJS_DOCS_BASE__editor/fixtures/hwp5-chart-create-horizontal-bar.hwp" download>hwp5-chart-create-horizontal-bar.hwp</a>                                                                         |
+| HWP5 원형 차트            | **[기능 예제] HWP5 원형 차트**를 열어 가·나·다 범주와 1, 2, 3 값을 확인합니다.                                                                                                       | <a href="__HWPJS_DOCS_BASE__editor/fixtures/hwp5-chart-create-pie.hwp" download>hwp5-chart-create-pie.hwp</a>                                                                                               |
 | HWP5 차트 데이터 편집     | 직접 생성·편집한 막대 차트의 10/73/40 값을 확인하고, 선택한 차트의 속성에서 기존 데이터 편집을 엽니다.                                                                               | <a href="__HWPJS_DOCS_BASE__editor/fixtures/hwp5-chart-data-edit.hwp" download>hwp5-chart-data-edit.hwp</a>                                                                                                 |
 | HWP5 수식 생성과 표시     | 직접 생성한 `x over y` 분수 한 개를 확인합니다. 새 수식 생성·실행 취소·다시 실행·저장 순서는 아래를 따릅니다.                                                                        | <a href="__HWPJS_DOCS_BASE__editor/fixtures/hwp5-equation-create.hwp" download>hwp5-equation-create.hwp</a>                                                                                                 |
 | 그림 크기 조절            | 그림을 클릭한 뒤 모서리 또는 변 가운데 조절점을 드래그합니다. 모서리는 두 방향, 변 가운데는 한 방향의 크기를 바꿉니다. 숫자로 조절하려면 **개체 속성**에서 너비와 높이를 입력하세요. | <a href="__HWPJS_DOCS_BASE__editor/fixtures/picture-resize.hwp" download>picture-resize.hwp</a> · <a href="__HWPJS_DOCS_BASE__editor/fixtures/picture-resize.hwpx" download>picture-resize.hwpx</a>         |
@@ -58,11 +59,11 @@ HWP5 문서는 아래 [새 수식 만들기](#hwp5-새-수식-만들기) 순서�
 
 1. 예제는 **파일 > 예제 문서... > [기능 예제] HWP5 차트 생성과 미리보기**에서 선택하거나 위의 `hwp5-chart-create.hwp`를 내려받아 엽니다. 한국어 안내와 10/20/40 막대를 확인할 수 있습니다.
 2. 새 차트는 **파일 > 새 문서**에서 문서 형식을 **HWP5**로 선택하고 **만들기**를 누릅니다. 일반 본문을 클릭해 글을 입력한 뒤 선택 영역 없이 커서를 둡니다.
-3. **입력 > 차트**를 열고 **HWP5 차트 생성 방식**에서 **기본 막대 차트**, **기본 선 차트**, **가로 묶은 막대 차트** 중 하나를 선택합니다. 외부 한글 프로그램의 표시 호환은 미검증입니다. 범주/계열 이름과 숫자를 입력하고 너비/높이를 mm로 지정합니다.
+3. **입력 > 차트**를 열고 **HWP5 차트 생성 방식**에서 **기본 막대 차트**, **기본 선 차트**, **가로 묶은 막대 차트**, **기본 원형 차트** 중 하나를 선택합니다. 외부 한글 프로그램의 표시 호환은 미검증입니다. 범주/계열 이름과 숫자를 입력하고 너비/높이를 mm로 지정합니다.
 4. **미리보기**로 확인하고 **차트 만들기**를 누릅니다. Canvas의 차트 표시와 실행 취소/다시 실행을 확인합니다.
 5. **파일 > 저장하기**로 내려받습니다. 재조판 안내가 나오면 내용을 확인하고 **줄 배치가 달라질 수 있는 HWP 저장 허용**을 직접 선택한 뒤 다시 저장합니다. 내려받은 파일을 Canvas 편집기에서 다시 열어 차트를 확인합니다.
 
-HWP5는 지원되는 일반 본문 커서에서 2D 세로·가로 묶은 막대와 2D 표준 꺾은선을 생성합니다. 다른 차트 종류, 셀과 선택 영역, 혼합 차트와 임의 스타일/조판 편집은 포함하지 않습니다. 기존 HWP5 차트 데이터 편집은 아래의 별도 제한을 따릅니다. 예제의 재열기와 표시를 확인한 범위이며 외부 한글 프로그램의 전체 상호운용이나 npm 게시/공개 배포 완료를 뜻하지 않습니다.
+HWP5는 지원되는 일반 본문 커서에서 2D 세로·가로 묶은 막대, 표준 꺾은선, 표준 원형 차트를 생성합니다. 원형 차트에는 계열 하나와 음이 아닌 값이 필요하며, 값이 모두 0이면 생성할 수 없습니다. 다른 차트 종류, 셀과 선택 영역, 혼합 차트와 임의 스타일/조판 편집은 포함하지 않습니다. 기존 HWP5 차트 데이터 편집은 아래의 별도 제한을 따릅니다. 예제의 재열기와 표시를 확인한 범위이며 외부 한글 프로그램의 전체 상호운용이나 npm 게시/공개 배포 완료를 뜻하지 않습니다.
 
 ## HWP5 기존 차트 데이터 편집
 

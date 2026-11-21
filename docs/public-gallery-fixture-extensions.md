@@ -105,3 +105,14 @@ An ordinary producer still rejects a 131-file public baseline against the new
 공식 생성기에는 이 영수증을 `--fixture-extension`으로 전달하고
 `hwp5-horizontal-chart-fixture-policy.json`에 대조해 134개를 검사합니다.
 목록, 원본 경로 메타데이터, 갤러리를 함께 갱신합니다.
+
+## HWP5 기본 원형 차트
+
+`hwp5-pie-chart-fixture-receipt.json`은 보존한 134개 정책에
+`hwp5-chart-create-pie.hwp` 하나를 추가합니다. 기준 파일은
+`image-insert-blank.hwp`입니다. 실제 브라우저에서 가·나·다와 1, 2, 3을
+입력해 생성하고 저장한 파일입니다. 독립 CFB/XML 검사는 축 없는 단일 2D
+원형 차트, 범주·값, 내장 이미지와 Worker PNG의 바이트 일치를 확인합니다.
+
+공식 생성기에는 이 영수증을 `--fixture-extension`으로 전달하고,
+`hwp5-pie-chart-fixture-policy.json`에 대조해 135개를 검사합니다.

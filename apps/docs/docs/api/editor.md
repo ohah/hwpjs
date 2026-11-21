@@ -288,7 +288,7 @@ export async function createChartDocument(editor: HeadlessEditor) {
 
 `CREATE_CHART_COMMAND`는 HWP5 본문의 편집 가능한 커서에서도 사용할 수 있습니다. 현재 `EditorState`의 `selection`과 `stateVersion`을 각각 `target`과 `selectionVersion`으로 전달하고, 먼저 `getInlineObjectInsertAvailability(state, 'chart')`로 편집 가능 여부를 확인합니다.
 
-HWP5의 `options`에는 `profile`, HWPUNIT 단위의 `width`와 `height`, `categories`, `series`, 그리고 픽셀 단위의 `preview.width`와 `preview.height`를 지정합니다. `spec24-registered-png-presentation-v1`은 2D 묶은 세로 막대형, `spec24-registered-png-presentation-line-v1`은 2D 표준 꺾은선형, `spec24-registered-png-presentation-horizontal-bar-v1`은 2D 가로 묶은 막대형을 생성합니다. 꺾은선은 `hwp5ChartCreateProfileVersion`이 2 또는 3인 엔진에서, 가로 묶은 막대는 3인 엔진에서 사용할 수 있습니다. 내장 Worker에서 미리보기 PNG를 만들 수 있어야 차트 생성이 활성화됩니다.
+HWP5의 `options`에는 `profile`, HWPUNIT 단위의 `width`와 `height`, `categories`, `series`, 그리고 픽셀 단위의 `preview.width`와 `preview.height`를 지정합니다. `spec24-registered-png-presentation-v1`은 2D 묶은 세로 막대형, `spec24-registered-png-presentation-line-v1`은 2D 표준 꺾은선형, `spec24-registered-png-presentation-horizontal-bar-v1`은 2D 가로 묶은 막대형을 생성합니다. 꺾은선은 `hwp5ChartCreateProfileVersion`이 2·3·4인 엔진에서, 가로 묶은 막대는 버전 3·4 엔진에서 사용할 수 있습니다. `spec24-registered-png-presentation-pie-v1`은 생성 프로필 버전 4의 표준 2D 원형 차트입니다. 계열 하나에 범주 수와 같은 개수의 유한한 음이 아닌 값을 지정하고, 하나 이상의 양수가 있어야 합니다. 양수 조각의 각도를 표현할 수 없는 입력은 거부합니다. 내장 Worker에서 미리보기 PNG를 만들 수 있어야 차트 생성이 활성화됩니다.
 
 일반 저장이 `LayoutReflowRequired`를 반환하면 레이아웃 변경 가능성을 확인하고 `save({ allowStaleLayout: true })`로 저장할 수 있습니다. [HWP5 차트 데모](../guide/demo.md#새-차트수식-만들기)에서 생성과 재열기 절차를 확인할 수 있습니다.
 

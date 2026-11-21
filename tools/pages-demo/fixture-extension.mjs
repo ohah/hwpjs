@@ -18,7 +18,17 @@ export const HWP5_VERTICAL_MARGINS_RECEIPT =
   'tools/pages-demo/hwp5-vertical-margins-fixture-receipt.json';
 export const ANCHORED_PICTURE_RECEIPT = 'tools/pages-demo/anchored-picture-fixture-receipt.json';
 const HWP5_HORIZONTAL_CHART_RECEIPT = 'tools/pages-demo/hwp5-horizontal-chart-fixture-receipt.json';
+const HWP5_PIE_CHART_RECEIPT = 'tools/pages-demo/hwp5-pie-chart-fixture-receipt.json';
 const approvedReceipts = new Map([
+  [
+    HWP5_PIE_CHART_RECEIPT,
+    {
+      feature: 'hwp5-pie-chart',
+      sha256: 'b92b1d03b005bd6d302c973ad423d092d52f59d273e3830055877d2c50a125fb',
+      baselinePolicy: 'tools/pages-demo/public-gallery-fixtures-134.json',
+      additions: 1,
+    },
+  ],
   [
     HWP5_HORIZONTAL_CHART_RECEIPT,
     {

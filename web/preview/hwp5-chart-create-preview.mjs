@@ -1,3 +1,4 @@
+import { checkedHwp5PiePreviewData } from '../../js/hwp5-chart-pie-create.mjs';
 import { validateChartDisplayData } from '../../js/chart-display-data.mjs';
 import { chartPreviewPrimitives } from './chart-preview-primitives.mjs';
 import { paintChartPreview } from './chart-preview-paint.mjs';
@@ -87,6 +88,8 @@ async function renderPreview(
     )
       fail('UnsupportedChartLiteralEditProfile');
   }
+  if (scope === 'hwp5-chart-create-preview' && expectedKind === 'pieChart')
+    checkedHwp5PiePreviewData(data);
   const primitives = chartPreviewPrimitives(data);
   if (primitives.state !== 'ready') fail(primitives.reason ?? 'ChartCreatePreviewUnavailable');
   const canvas = createCanvas(width, height);

@@ -6,11 +6,11 @@
 
 js/abi-schema.mjs가 단일 출처다. tools/generate-abi.mjs로 src/wasm/abi_schema.zig를 생성한다. ABI6 필수 함수와 기존 hwp5_edit export 시그니처는 유지하며 다음3개만 추가한다.
 
-| export | Wasm params | result |
-|---|---|---|
-| hwp5_edit_chart_create_profile_version | 없음 | i32 |
-| hwp5_edit_chart_create_preview | ref_ptr, ref_len, request_ptr, request_len: i32 | i32 |
-| hwp5_edit_create_chart_current | 위4개 + PNG_ptr, PNG_len: i32 | i32 |
+| export                                 | Wasm params                                     | result |
+| -------------------------------------- | ----------------------------------------------- | ------ |
+| hwp5_edit_chart_create_profile_version | 없음                                            | i32    |
+| hwp5_edit_chart_create_preview         | ref_ptr, ref_len, request_ptr, request_len: i32 | i32    |
+| hwp5_edit_create_chart_current         | 위4개 + PNG_ptr, PNG_len: i32                   | i32    |
 
 profile_version1은 기본값 없는 실험 profile `spec24-registered-png-presentation-v1`만 뜻한다. 2D clustered column authored data만 받으며 HWPX의 다른 chart-family profile을 HWP5로 전달하지 않는다. profile_version2는 기존 막대 profile과 `spec24-registered-png-presentation-line-v1` 표준 2D 꺾은선 profile을 함께 노출한다. 새 SDK는 version1 엔진에서 막대만 노출하고 version2 엔진에서 두 형식을 노출한다. version1만 인식하는 구형 SDK는 version2 WASM에서 HWP5 차트 생성을 활성화하지 않으므로 같은 번들의 SDK와 WASM을 함께 사용한다. PNG는 shared painter의 실제 Canvas encoder 결과이며 OLE 안의 등록 PNG presentation에 저장된다. 외부 HWP 앱 지원은 아직 미증명이다.
 
@@ -21,6 +21,8 @@ preview 입력은 `{start,profile,data}`이고 결과는 기존 Native create_pr
 create 입력은 `{start,profile,width,height,expected_text_utf16le,data,source_xml_sha256,pixel_width,pixel_height}`와 별도 PNG bytes다. unknown/duplicate JSON 필드는 거부한다. 현재 view epoch의 source reference를 해석하고, 실제 Session 명령에 현재 History ticket을 전달한다. body/field/lock·current source witness·XML hash·PNG·직렬화 보존·원자적 게시 검사는 be97 Native 명령에 그대로 남는다. code0은 거부,1은 적용,3은 불확실/poison이며 불확실 결과를 자동 재시도하지 않는다.
 
 전송의 명시 한계는 reference1KiB, preview request4MiB, create JSON16MiB, PNG8MiB, expected UTF16 bytes1MiB다. 이는 기존 Session semantic text budget이나 read retained budget의 재정의가 아니다.
+
+표준 2D 원형 생성은 프로필 `spec24-registered-png-presentation-pie-v1`과 capability 4를 사용한다. 버전 4는 이전 세 가지 생성 방식을 함께 제공한다. 원형은 계열 하나와 같은 수의 범주·숫자를 받는다. Native는 표준 `pieChart` 한 개를 축 없이 기록한다. 정확한 음수, 전체 0, 양수가 binary64의 0으로 변하거나 정규화 뒤 양의 각도가 사라지는 경우를 거부한다. Worker는 같은 profile의 OOXML 구조를 확인한 뒤 공통 원형 painter를 사용한다. 기존 원형 차트 편집과 외부 한글 프로그램 호환은 추가 검증 범위다.
 
 ## JS와 현재 owner 수명
 
@@ -45,7 +47,6 @@ Node transport mock11개, Bun Core source10개(직접 admission7/실제 공개 d
 기본 HWP5 chart read 경로는 여전히 observed26이다. be97의 spec24 출력은 명시 layout Native 조회가 필요하다. 이 후보는 혼합24/26과 fresh-open UI 표시를 해결했다고 선언하지 않는다. Peirce의 UI는 별도 변경이며 기존 options/disabled를 자동으로 풀지 않는다. spec24 표시 adapter·실제 UI→Worker→WASM·실제 PNG 시각 일치·full Command OOM 및 외부 앱 gate는 열린다.
 
 새 artifact hash를 Native module profiles에 자동 등록하지 않는다. whole WASM 컴파일·실제 optional/기존 시그니처 비교, 등록 기준 검증, 정상 built package 산출물 후 Node 선언/import/SDK 실행과 real UI는 각 별도 승인·증거가 필요하다. 이번 준비에는 새 Native/WASM/browser/배포 실행이 없다.
-
 
 ## 레코드별 읽기 후보와 기존 raw 호환
 

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "catalogSHA256": "6f1425ccf09b87cb9b7cf99c1394fd59a20e1fcfbceb77847260e568cf4dd19f",
+  "catalogSHA256": "c1acd0ca1bec88d88c04d790a026dcd0d9707a1d8dc899c5fa5c4d70bf5e6a5e",
   "files": [
     {
       "id": "image-insert-blank.hwp",
@@ -1073,6 +1073,14 @@
       "path": "fixtures/hwp5-chart-create-horizontal-bar.hwp",
       "bytes": 13312,
       "sha256": "3f3b2c8585f92eba10d94feae1fd0968b7615444e777a50f97b31c05c11571fb"
+    },
+    {
+      "id": "hwp5-chart-create-pie.hwp",
+      "name": "hwp5-chart-create-pie.hwp",
+      "label": "[기능 예제] HWP5 원형 차트",
+      "path": "fixtures/hwp5-chart-create-pie.hwp",
+      "bytes": 11776,
+      "sha256": "f0419e00552b521c72188064820ddf5a0b268a37e5cc24a18c8dfd510f4619fd"
     }
   ]
 }

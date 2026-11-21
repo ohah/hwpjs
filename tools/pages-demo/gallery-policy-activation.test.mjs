@@ -69,7 +69,7 @@ test('archived131 appends the exact vertical-margin samples to the archived129',
   for (const item of receipt.additions)
     assert.equal(sha(await readFile(resolve(root, item.sourcePath))), item.row.sha256);
 });
-test('actual producer policy reader defaults to134 and historical margin extension uses126 without touching the receipt', async () => {
+test('actual producer policy reader defaults to135 and historical margin extension uses126 without touching the receipt', async () => {
   for (const extension of [undefined, resolve(root, HWP5_MARGIN_RECEIPT)]) {
     const reads = [];
     const data = await loadPublicFixtureBaselinePolicy({
@@ -86,7 +86,7 @@ test('actual producer policy reader defaults to134 and historical margin extensi
         extension === undefined ? CURRENT_PUBLIC_FIXTURE_POLICY : HWP5_MARGIN_BASE_POLICY,
       ),
     ]);
-    assert.equal(JSON.parse(data).files.length, extension === undefined ? 134 : 126);
+    assert.equal(JSON.parse(data).files.length, extension === undefined ? 135 : 126);
   }
   let extra = 0;
   assert.equal(
@@ -102,7 +102,7 @@ test('actual producer policy reader defaults to134 and historical margin extensi
   );
   assert.equal(extra, 0);
 });
-test('current134 source metadata covers every exact ID without rewriting historical sourceHEAD', async () => {
+test('current135 source metadata covers every exact ID without rewriting historical sourceHEAD', async () => {
   const [
     policyBytes,
     sourceBytes,
@@ -112,6 +112,7 @@ test('current134 source metadata covers every exact ID without rewriting histori
     verticalReceiptBytes,
     anchoredReceiptBytes,
     horizontalReceiptBytes,
+    pieReceiptBytes,
   ] = await Promise.all([
     bytes('public-gallery-fixtures.json'),
     bytes('public-gallery-current-sources.json'),
@@ -121,6 +122,7 @@ test('current134 source metadata covers every exact ID without rewriting histori
     bytes('hwp5-vertical-margins-fixture-receipt.json'),
     bytes('anchored-picture-fixture-receipt.json'),
     bytes('hwp5-horizontal-chart-fixture-receipt.json'),
+    bytes('hwp5-pie-chart-fixture-receipt.json'),
   ]);
   const policy = JSON.parse(policyBytes),
     current = JSON.parse(sourceBytes),
@@ -133,7 +135,7 @@ test('current134 source metadata covers every exact ID without rewriting histori
     Object.keys(current.sourcePaths),
     policy.files.map((r) => r.id),
   );
-  assert.equal(Object.keys(current.sourcePaths).length, 134);
+  assert.equal(Object.keys(current.sourcePaths).length, 135);
   assert.equal('sourceHEAD' in current, false);
   assert.equal(historic.sourceHEAD, '8376bd004580d2429a52be544a1706210a21b0fd');
   for (const row of policy.files) {
@@ -143,6 +145,7 @@ test('current134 source metadata covers every exact ID without rewriting histori
       ...JSON.parse(verticalReceiptBytes).additions,
       ...JSON.parse(anchoredReceiptBytes).additions,
       ...JSON.parse(horizontalReceiptBytes).additions,
+      ...JSON.parse(pieReceiptBytes).additions,
     ].find((a) => a.row.id === row.id);
     assert.equal(
       current.sourcePaths[row.id],
@@ -281,11 +284,11 @@ test('anchored registry authenticates exact receipt inputs but still rejects an 
   assert.equal(count, 1);
 });
 
-test('active134 appends one HWP5 horizontal bar example to immutable133', async () => {
+test('historical134 appends one HWP5 horizontal bar example to immutable133', async () => {
   const receiptPath = resolve(root, 'tools/pages-demo/hwp5-horizontal-chart-fixture-receipt.json');
   const baseline = await loadPublicFixtureBaselinePolicy({ root, receiptPath, read: readFile });
   const receipt = JSON.parse(await readFile(receiptPath));
-  const activeBytes = await bytes('public-gallery-fixtures.json');
+  const activeBytes = await bytes('public-gallery-fixtures-134.json');
   const active = JSON.parse(activeBytes);
   assert.deepEqual(baseline, await bytes('anchored-picture-fixture-policy.json'));
   assert.equal(sha(baseline), receipt.basePolicySHA256);
@@ -297,4 +300,26 @@ test('active134 appends one HWP5 horizontal bar example to immutable133', async 
   const source = await readFile(resolve(root, addition.sourcePath));
   assert.equal(source.length, addition.row.bytes);
   assert.equal(sha(source), addition.row.sha256);
+});
+
+test('active135 appends a single standard HWP5 pie example to immutable134', async () => {
+  const receiptPath = resolve(root, 'tools/pages-demo/hwp5-pie-chart-fixture-receipt.json');
+  const baseline = await loadPublicFixtureBaselinePolicy({ root, receiptPath, read: readFile });
+  const receipt = JSON.parse(await readFile(receiptPath));
+  const activeBytes = await bytes('public-gallery-fixtures.json');
+  const active = JSON.parse(activeBytes);
+  assert.deepEqual(baseline, await bytes('hwp5-horizontal-chart-fixture-policy.json'));
+  assert.equal(sha(baseline), receipt.basePolicySHA256);
+  assert.deepEqual(activeBytes, await bytes('hwp5-pie-chart-fixture-policy.json'));
+  assert.equal(sha(activeBytes), receipt.targetPolicySHA256);
+  const [addition] = receipt.additions;
+  assert.equal(receipt.additions.length, 1);
+  assert.equal(addition.row.id, 'hwp5-chart-create-pie.hwp');
+  assert.deepEqual(active.files, [...JSON.parse(baseline).files, addition.row]);
+  const source = await readFile(resolve(root, addition.sourcePath));
+  assert.equal(source.length, addition.row.bytes);
+  assert.equal(sha(source), addition.row.sha256);
+  const provenance = await bytes('hwp5-pie-chart-fixture-provenance.json');
+  assert.equal(sha(provenance), addition.provenanceSHA256);
+  assert.deepEqual(JSON.parse(provenance).values, [1, 2, 3]);
 });

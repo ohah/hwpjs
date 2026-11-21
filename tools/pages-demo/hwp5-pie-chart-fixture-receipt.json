@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "feature": "hwp5-pie-chart",
+  "baseCount": 134,
+  "targetCount": 135,
+  "baseManifestSHA256": "0656e010b8c9d5b1eda218d7793561aef13457657e4519dda86479773710bd04",
+  "basePolicySHA256": "c142775c47a05ef5dd9290f0a58e3188a12bb697a5853d5640e94c91fd6437f6",
+  "baseCatalogSHA256": "6f1425ccf09b87cb9b7cf99c1394fd59a20e1fcfbceb77847260e568cf4dd19f",
+  "targetPolicyPath": "tools/pages-demo/hwp5-pie-chart-fixture-policy.json",
+  "targetPolicySHA256": "4696f129a96e4b9bdcbf5cfb0f0057a5146c43fb29c17b9dc346748755cf097a",
+  "targetCatalogSHA256": "c1acd0ca1bec88d88c04d790a026dcd0d9707a1d8dc899c5fa5c4d70bf5e6a5e",
+  "additions": [
+    {
+      "row": {
+        "id": "hwp5-chart-create-pie.hwp",
+        "name": "hwp5-chart-create-pie.hwp",
+        "label": "[기능 예제] HWP5 원형 차트",
+        "path": "fixtures/hwp5-chart-create-pie.hwp",
+        "bytes": 11776,
+        "sha256": "f0419e00552b521c72188064820ddf5a0b268a37e5cc24a18c8dfd510f4619fd"
+      },
+      "sourcePath": "tools/pages-demo/fixtures/hwp5-chart-create-pie.hwp",
+      "parentId": "image-insert-blank.hwp",
+      "parentBytes": 3584,
+      "parentSHA256": "3924fe5f437ffaa76f6696770cb4ae5fc19ffe485fb324bb21abc29b1f2cc689",
+      "provenanceSHA256": "04aa0df10a40938910043b6acf18a29e6db5c51b7a4bd14ae74d0196b33276c0"
+    }
+  ],
+  "producer": {
+    "browserManifestSHA256": "491cdb2c88865be2f206e6f18e0e5b9e0f4754b034870606f6c36b35a50b8f32",
+    "independentRawGateSHA256": "b8673a9dba0b372818043bc2b1ff979558ea9b93c2815d1435ce588ebc9a5a56"
+  }
+}
