@@ -7,19 +7,39 @@ export function hwp5InlineChartFlow(content) {
   const empty = () => ({ state: 'selected', index: new Map(), objects: new Map(), anchors: [] });
   if (content.format !== 'hwp5' || content.hwp5ChartTargets === undefined) return empty();
   const fail = () => ({ state: 'unavailable', error: 'UnsupportedHwp5InlineChartFlow' });
-  if (!Array.isArray(content.hwp5ChartTargets) || content.hwp5ChartTargets.some(t => !t || typeof t !== 'object')) return fail();
-  if (!content.hwp5ChartTargets.length) return empty();
-  const index = inlineHwp5ChartIndex(content), roots = projectedHwp5ChartRootKeys(content);
-  if (index.size !== content.hwp5ChartTargets.length || roots.size !== content.hwp5ChartTargets.length)
+  if (
+    !Array.isArray(content.hwp5ChartTargets) ||
+    content.hwp5ChartTargets.some((t) => !t || typeof t !== 'object')
+  )
     return fail();
-  const objects = new Map(), anchors = [];
+  if (!content.hwp5ChartTargets.length) return empty();
+  const index = inlineHwp5ChartIndex(content),
+    roots = projectedHwp5ChartRootKeys(content);
+  if (
+    index.size !== content.hwp5ChartTargets.length ||
+    roots.size !== content.hwp5ChartTargets.length
+  )
+    return fail();
+  const objects = new Map(),
+    anchors = [];
   for (const item of index.values()) {
     const chart = item?.picture;
     if (!chart || !roots.has(`${chart.section}:${chart.controlNode}`)) return fail();
-    const key = `${chart.section}:${chart.paragraph}`, entries = objects.get(key) ?? [];
-    entries.push({objectNode: chart.controlNode, unit: chart.anchorUnit, width: item.width, height: item.height});
+    const key = `${chart.section}:${chart.paragraph}`,
+      entries = objects.get(key) ?? [];
+    entries.push({
+      objectNode: chart.controlNode,
+      unit: chart.anchorUnit,
+      width: item.width,
+      height: item.height,
+    });
     objects.set(key, entries);
-    anchors.push({section: chart.section, paragraph: chart.paragraph, anchorUnit: chart.anchorUnit, node: chart.controlNode});
+    anchors.push({
+      section: chart.section,
+      paragraph: chart.paragraph,
+      anchorUnit: chart.anchorUnit,
+      node: chart.controlNode,
+    });
   }
-  return {state: 'selected', index, objects, anchors};
+  return { state: 'selected', index, objects, anchors };
 }

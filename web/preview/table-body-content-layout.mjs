@@ -82,7 +82,10 @@ export function layoutTableBodyContent(
   const charts = hwp5InlineChartFlow(content);
   if (charts.state !== 'selected') return charts;
   if (charts.anchors.length) {
-    content = {...content, inlineObjectAnchors: [...(content.inlineObjectAnchors ?? []), ...charts.anchors]};
+    content = {
+      ...content,
+      inlineObjectAnchors: [...(content.inlineObjectAnchors ?? []), ...charts.anchors],
+    };
     measure = pictureTextMeasure(charts.index, [], measure);
   }
   const inlineAnchors = inlineObjectAnchorIndex(content);
