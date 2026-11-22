@@ -185,7 +185,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node --test --test-concurrency=1 --test-reporter=tap tests/own-chart-create/current-transport.test.mjs tests/own-chart-create/pie-source-contract.test.mjs
+          node --test --test-concurrency=1 --test-reporter=tap tests/own-chart-create/current-transport.test.mjs tests/own-chart-create/pie-source-contract.test.mjs tests/hwp5/pie-created-table-flow.test.mjs
           bun test --no-install ./tests/own-chart-create/pie-core-queue.test.mjs ./tests/own-chart-create/current-sdk-queue.test.mjs
           node --experimental-transform-types --import ./tools/tests/picture-resize-source-provider.mjs --test --test-concurrency=1 --test-reporter=tap apps/demo/tests/hwp5-pie-create-dialog.test.ts apps/demo/tests/inline-object-chart-kinds.test.ts apps/demo/tests/inline-object-insert-data-grid.test.ts apps/demo/tests/hwp5-chart-create-wired.test.mjs
       - name: Existing HWP5 equation script Core and Worker source contracts

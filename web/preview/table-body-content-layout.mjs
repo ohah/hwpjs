@@ -1,3 +1,4 @@
+import { hwp5InlineChartFlow } from './hwp5-inline-chart-flow.mjs';
 import { createInlineTablePaperPreview } from './inline-table-paper-preview.mjs';
 import { projectCellPictureCaptions } from './cell-picture-caption-projection.mjs';
 import { effectiveCellPictureAlignments } from './cell-picture-effective-alignment.mjs';
@@ -78,6 +79,12 @@ export function layoutTableBodyContent(
   content = effectiveCellPictureAlignments(content);
   const unavailable = (error) => ({ state: 'unavailable', error });
   if (pictureReferences === undefined) pictureReferences = singleCellPictureColumn;
+  const charts = hwp5InlineChartFlow(content);
+  if (charts.state !== 'selected') return charts;
+  if (charts.anchors.length) {
+    content = {...content, inlineObjectAnchors: [...(content.inlineObjectAnchors ?? []), ...charts.anchors]};
+    measure = pictureTextMeasure(charts.index, [], measure);
+  }
   const inlineAnchors = inlineObjectAnchorIndex(content);
   if (inlineAnchors.state !== 'indexed') return inlineAnchors;
   if (measureBodyParagraph !== undefined && typeof measureBodyParagraph !== 'function')

@@ -1,0 +1,18 @@
+{
+  "source": "User approved actual production SDK projection capture; exact public pie/one default table insertion/fresh reopen",
+  "productRunsInThisTest": 0,
+  "files": {
+    "before": {
+      "path": "/private/tmp/hwpjs-pie-table-probe.pGfA4IZq/before-content.json",
+      "sha256": "ab4213b6795ddc5aa3e03e22dcc93bbcc7725d7790ef9c9abbd4c87fbdcfe14d"
+    },
+    "pending": {
+      "path": "/private/tmp/hwpjs-pie-table-probe.pGfA4IZq/pending-content.json",
+      "sha256": "8771c50e3542d45a6360e929e4150088beaaa35b553e5f7413c36af57e25b613"
+    },
+    "reopened": {
+      "path": "/private/tmp/hwpjs-pie-table-probe.pGfA4IZq/reopened-content.json",
+      "sha256": "6eac320293cff54e98cd92c09452583b7e339f3139ee5af3561cac2b64365fe6"
+    }
+  }
+}

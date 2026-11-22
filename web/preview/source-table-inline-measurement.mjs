@@ -1,3 +1,4 @@
+import { hwp5InlineChartFlow } from './hwp5-inline-chart-flow.mjs';
 import { tableSourceFailure } from './table-source-failure.mjs';
 import { mixedInlineTablePolicy } from './mixed-inline-table-policy.mjs';
 import { tablePageAnchorError } from './table-page-anchor-policy.mjs';
@@ -21,6 +22,8 @@ export function measureSourceInlineTables(content, measure, maxRows) {
     maxRows < 1
   )
     return unavailable('InvalidSourceInlineTables');
+  const charts = hwp5InlineChartFlow(content);
+  if (charts.state !== 'selected') return charts;
   const sourceFailure = tableSourceFailure(content, { includeCaptions: true });
   if (sourceFailure) return sourceFailure;
   const tables = new Map(),
@@ -135,5 +138,5 @@ export function measureSourceInlineTables(content, measure, maxRows) {
     });
     hosts.set(key, entries);
   }
-  return { state: 'measured', tables, hosts, rowCount };
+  return { state: 'measured', tables, hosts, rowCount, objects: charts.objects };
 }
