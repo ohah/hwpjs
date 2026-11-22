@@ -19,6 +19,7 @@ on:
       - 'web/preview/equation-controls.mjs'
       - 'web/preview/equation-edit-state.mjs'
       - 'tools/object-properties-test-css.mjs'
+      - 'tools/tests/hwp5-equation-script-source-provider.mjs'
       - '.github/workflows/existing-object-tools.yml'
   workflow_dispatch:
 
@@ -36,7 +37,7 @@ jobs:
           node-version: '24.20.0'
       - name: Test existing object tools and shell lifecycle
         env:
-          NODE_OPTIONS: '--experimental-transform-types --import ./apps/demo/tests/equation-style-preload.mjs'
+          NODE_OPTIONS: '--experimental-transform-types --import ./apps/demo/tests/equation-style-preload.mjs --import ./tools/tests/hwp5-equation-script-source-provider.mjs'
         run: |
           node --test --test-concurrency=1 \
             apps/demo/tests/chart-data-port.test.mjs \
