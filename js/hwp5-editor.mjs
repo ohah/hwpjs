@@ -1,3 +1,4 @@
+import { createPictureCropEditApi } from './picture-crop-edit.mjs';
 import {
   createHwp5EquationScriptEditApi,
   clearHwp5EquationScriptCaptures,
@@ -266,6 +267,7 @@ export async function createExperimentalHwp5Editor(
   const api = {
     ...createOriginalCellInsetsApi({ wasm, memory, check: check, prefix: 'hwp5_edit' }),
     ...createOriginalCellVerticalAlignmentApi({ wasm, memory, check: check, prefix: 'hwp5_edit' }),
+    ...createPictureCropEditApi({ wasm, memory, check: check, prefix: 'hwp5_edit' }),
     ...createPictureAnchoredResizeApi({ wasm, memory, check, prefix: 'hwp5_edit' }),
     ...createPageRestartApi({ wasm, memory, check, prefix: 'hwp5_edit' }),
     ...createOriginalCellVerticalAlignmentBatchApi({

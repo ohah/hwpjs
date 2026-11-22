@@ -1304,6 +1304,15 @@ export function createReaderRuntime({
           sourceTableGridAvailable: historyEnabled && editor?.supportsSourceTableGrid?.() === true,
           createdTableGridAvailable:
             historyEnabled && editor?.supportsCreatedTableGrid?.() === true,
+          pictureCropEditAvailable:
+            historyEnabled &&
+            historyStats?.protocolVersion === 2 &&
+            !historyPoisoned &&
+            !documentWindow &&
+            !readonlyTextReader &&
+            preview?.readOnly !== true &&
+            !preview?.limited &&
+            editor?.supportsPictureCropEdit?.() === true,
           originalCellVerticalAlignmentBatchAvailable,
           originalCellVerticalAlignmentAvailable:
             historyEnabled &&
@@ -1621,6 +1630,60 @@ export function createReaderRuntime({
         preview = reader.readTextEvents(editor.saveForDisplay());
         displayResources.invalidate();
         reply({ kind: message.kind, content: hwpxDisplay() });
+        return;
+      }
+      if (
+        ['picture-crop-query', 'picture-crop-set', 'picture-crop-release'].includes(message.kind)
+      ) {
+        const available =
+          ['hwp5', 'hwpx'].includes(format) &&
+          historyEnabled &&
+          !documentWindow &&
+          !readonlyTextReader &&
+          preview?.readOnly !== true &&
+          !preview?.limited &&
+          editor?.historyStats?.()?.protocolVersion === 2 &&
+          editor?.supportsPictureCropEdit?.() === true;
+        if (!available) {
+          if (message.kind === 'picture-crop-query') {
+            reply({ kind: message.kind, pictureCrop: null, reason: 'PictureCropUnavailable' });
+            return;
+          }
+          throw Error('PictureCropUnavailable');
+        }
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        if (message.kind === 'picture-crop-query') {
+          reply({ kind: message.kind, pictureCrop: editor.capturePictureCrop(message.selector) });
+          return;
+        }
+        if (message.kind === 'picture-crop-release') {
+          editor.releasePictureCrop(message.leaseKey);
+          reply({ kind: message.kind });
+          return;
+        }
+        atomicOutcome = editor.commitPictureCrop({
+          leaseKey: message.leaseKey,
+          crop: message.crop,
+        });
+        applied = atomicOutcome.application === 'applied';
+        mutationUncertain = atomicOutcome.application === 'unknown';
+        if (mutationUncertain) historyPoisoned = true;
+        if (atomicOutcome.error || atomicOutcome.cleanupError)
+          throw Error(atomicOutcome.error || atomicOutcome.cleanupError);
+        if (atomicOutcome.nativeCode === 2) {
+          reply({ kind: message.kind, changed: false });
+          return;
+        }
+        documentWindow = null;
+        if (format === 'hwpx') {
+          reader = await createHwpxReader(module);
+          preview = reader.readTextEvents(editor.saveForDisplay());
+        } else {
+          hwp5PreviewDirty = true;
+          await refreshHwp5PreviewFallback();
+        }
+        displayResources.invalidate();
+        reply({ kind: message.kind, content: format === 'hwpx' ? hwpxDisplay() : hwp5Display() });
         return;
       }
       if (message.kind === 'picture-replacement-query') {

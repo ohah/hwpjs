@@ -306,6 +306,9 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
         verticalValid()) &&
       !custom &&
       (![
+        'picture-crop-query',
+        'picture-crop-set',
+        'picture-crop-release',
         'picture-anchored-resize-query',
         'picture-anchored-resize-set',
         'picture-replacement-query',

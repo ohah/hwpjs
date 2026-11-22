@@ -175,6 +175,10 @@ pub fn build(b: *std.Build) void {
     editor_extensions_step.dependOn(control_text_read_step);
     for ([_]struct { path: []const u8, filters: []const []const u8, step: []const u8, description: []const u8 }{
         .{ .path = "src/original_cell_insets_probe.zig", .filters = &.{ "original cell insets shared", "original cell insets H5", "original cell insets HX" }, .step = "test-original-cell-insets", .description = "Verify original H5/HX single-cell source insets, inherited axes and managed history" },
+        .{ .path = "src/hwp5_picture_crop_probe.zig", .filters = &.{"H5 existing crop"}, .step = "test-hwp5-existing-picture-crop", .description = "Verify existing HWP5 picture crop and atomic history" },
+        .{ .path = "src/hwpx_existing_picture_crop_probe.zig", .filters = &.{"HX existing crop"}, .step = "test-hwpx-existing-picture-crop", .description = "Verify existing HWPX picture crop and atomic history" },
+        .{ .path = "src/hwp5_picture_crop_abi_probe.zig", .filters = &.{"H5 crop ABI"}, .step = "test-hwp5-existing-picture-crop-abi", .description = "Verify HWP5 picture crop lease, wire and saved source" },
+        .{ .path = "src/hwpx_picture_crop_edit_abi_probe.zig", .filters = &.{"HX crop ABI"}, .step = "test-hwpx-existing-picture-crop-abi", .description = "Verify HWPX picture crop lease, wire and saved source" },
         .{ .path = "src/object_geometry_probe.zig", .filters = &.{ "object geometry", "HWPX TOP margins", "H5 outer margins", "H5 margins top bottom", "H5 observed vertical" }, .step = "test-object-geometry", .description = "Verify source-owned object geometry, history and allocation failure rollback" },
         .{ .path = "src/generated_cell_rich_transfer_probe.zig", .filters = &.{"generated cell rich"}, .step = "test-generated-cell-rich", .description = "Verify canonical generated-cell rich typing, serializer transfer and owned history" },
         .{ .path = "src/caret_rich_native_probe.zig", .filters = &.{"caret rich"}, .step = "test-caret-rich", .description = "Verify HWP5 and HWPX source body and cell rich typing" },

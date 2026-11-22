@@ -1,7 +1,7 @@
-export type ObjectPropertiesEditLane = 'geometry' | 'margins' | 'bodyFlow';
+export type ObjectPropertiesEditLane = 'geometry' | 'margins' | 'bodyFlow' | 'crop';
 /** One dialog intent and one in-flight mutation. This does not issue edit authority. */
 export function createObjectPropertiesEditGate() {
-  const dirty = { geometry: false, margins: false, bodyFlow: false };
+  const dirty = { geometry: false, margins: false, bodyFlow: false, crop: false };
   const listeners = new Set<() => void>();
   let active: ObjectPropertiesEditLane | null = null;
   const notify = () => {

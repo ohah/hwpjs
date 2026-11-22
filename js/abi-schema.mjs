@@ -373,3 +373,49 @@ export const HWP5_EQUATION_SCRIPT_EDIT_ABI = Object.freeze({
 export const HWP5_EQUATION_SCRIPT_EDIT_FUNCTIONS = Object.freeze(
   Object.keys(HWP5_EQUATION_SCRIPT_EDIT_ABI),
 );
+
+// Optional HWPX source-picture crop: one private Native-retained observation.
+export const HWPX_PICTURE_CROP_EDIT_ABI = Object.freeze({
+  hwpx_edit_picture_crop_edit_version: Object.freeze({
+    params: Object.freeze([]),
+    results: Object.freeze(['i32']),
+  }),
+  hwpx_edit_picture_crop_edit_capture: Object.freeze({
+    params: Object.freeze(['i32', 'i32']),
+    results: Object.freeze(['i32']),
+  }),
+  hwpx_edit_picture_crop_edit_commit: Object.freeze({
+    params: Object.freeze(['i32', 'i32']),
+    results: Object.freeze(['i32']),
+  }),
+  hwpx_edit_picture_crop_edit_release: Object.freeze({
+    params: Object.freeze(['i32', 'i32']),
+    results: Object.freeze(['i32']),
+  }),
+});
+export const HWPX_PICTURE_CROP_EDIT_FUNCTIONS = Object.freeze(
+  Object.keys(HWPX_PICTURE_CROP_EDIT_ABI),
+);
+
+// Independently optional HWP5 source-picture rectangle edit, profile1. ABI6 is unchanged.
+export const HWP5_PICTURE_CROP_EDIT_ABI = Object.freeze({
+  hwp5_edit_picture_crop_edit_version: Object.freeze({
+    params: Object.freeze([]),
+    results: Object.freeze(['i32']),
+  }),
+  hwp5_edit_picture_crop_edit_capture: Object.freeze({
+    params: Object.freeze(['i32', 'i32']),
+    results: Object.freeze(['i32']),
+  }),
+  hwp5_edit_picture_crop_edit_commit: Object.freeze({
+    params: Object.freeze(['i32', 'i32']),
+    results: Object.freeze(['i32']),
+  }),
+  hwp5_edit_picture_crop_edit_release: Object.freeze({
+    params: Object.freeze(['i32', 'i32']),
+    results: Object.freeze(['i32']),
+  }),
+});
+export const HWP5_PICTURE_CROP_EDIT_FUNCTIONS = Object.freeze(
+  Object.keys(HWP5_PICTURE_CROP_EDIT_ABI),
+);

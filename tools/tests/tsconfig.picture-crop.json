@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "ES2024.String", "DOM", "DOM.Iterable"],
+    "types": ["bun"],
+    "paths": {
+      "@hwpjs/core": ["../../packages/core/src/index.ts"],
+      "@hwpjs/core/*": ["../../packages/core/src/*"]
+    }
+  },
+  "include": [
+    "../../packages/core/src/**/*.ts",
+    "../../apps/demo/src/picture-crop*.ts",
+    "../../apps/demo/src/object-properties*.ts",
+    "../../tools/tests/types/picture-crop-consumer.ts",
+    "../../apps/demo/src/assets.d.ts"
+  ],
+  "exclude": []
+}

@@ -213,6 +213,30 @@ pub const page_restart_edit_signatures = [_]OptionalFunctionSignature{
     .{ .name = "hwpx_edit_page_restart_capabilities", .params = &.{}, .results = &.{"i32"} },
     .{ .name = "hwpx_edit_write_page_restart", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
 };
+pub const hwpx_picture_crop_edit_exports = [_][]const u8{
+    "hwpx_edit_picture_crop_edit_version",
+    "hwpx_edit_picture_crop_edit_capture",
+    "hwpx_edit_picture_crop_edit_commit",
+    "hwpx_edit_picture_crop_edit_release",
+};
+pub const hwpx_picture_crop_edit_signatures = [_]OptionalFunctionSignature{
+    .{ .name = "hwpx_edit_picture_crop_edit_version", .params = &.{}, .results = &.{"i32"} },
+    .{ .name = "hwpx_edit_picture_crop_edit_capture", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+    .{ .name = "hwpx_edit_picture_crop_edit_commit", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+    .{ .name = "hwpx_edit_picture_crop_edit_release", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+};
+pub const hwp5_picture_crop_edit_exports = [_][]const u8{
+    "hwp5_edit_picture_crop_edit_version",
+    "hwp5_edit_picture_crop_edit_capture",
+    "hwp5_edit_picture_crop_edit_commit",
+    "hwp5_edit_picture_crop_edit_release",
+};
+pub const hwp5_picture_crop_edit_signatures = [_]OptionalFunctionSignature{
+    .{ .name = "hwp5_edit_picture_crop_edit_version", .params = &.{}, .results = &.{"i32"} },
+    .{ .name = "hwp5_edit_picture_crop_edit_capture", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+    .{ .name = "hwp5_edit_picture_crop_edit_commit", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+    .{ .name = "hwp5_edit_picture_crop_edit_release", .params = &.{ "i32", "i32" }, .results = &.{"i32"} },
+};
 pub const document = struct {
     pub const header_bytes: usize = 8;
     pub const node_bytes: usize = 56;

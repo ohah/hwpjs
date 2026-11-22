@@ -1,6 +1,10 @@
 import { readFileSync } from 'node:fs';
 import {
   ABI_VERSION,
+  HWP5_PICTURE_CROP_EDIT_ABI,
+  HWP5_PICTURE_CROP_EDIT_FUNCTIONS,
+  HWPX_PICTURE_CROP_EDIT_ABI,
+  HWPX_PICTURE_CROP_EDIT_FUNCTIONS,
   HWP5_EQUATION_SCRIPT_EDIT_ABI,
   HWP5_EQUATION_SCRIPT_EDIT_FUNCTIONS,
   ORIGINAL_CELL_INSETS_ABI,
@@ -231,6 +235,28 @@ const generated =
   '};\n' +
   'pub const page_restart_edit_signatures = [_]OptionalFunctionSignature{\n' +
   Object.entries(PAGE_RESTART_EDIT_ABI)
+    .map(
+      ([name, signature]) =>
+        `    .{ .name = ${JSON.stringify(name)}, .params = ${signatureTypes(signature.params)}, .results = ${signatureTypes(signature.results)} },\n`,
+    )
+    .join('') +
+  '};\n' +
+  'pub const hwpx_picture_crop_edit_exports = [_][]const u8{\n' +
+  HWPX_PICTURE_CROP_EDIT_FUNCTIONS.map((name) => `    ${JSON.stringify(name)},\n`).join('') +
+  '};\n' +
+  'pub const hwpx_picture_crop_edit_signatures = [_]OptionalFunctionSignature{\n' +
+  Object.entries(HWPX_PICTURE_CROP_EDIT_ABI)
+    .map(
+      ([name, signature]) =>
+        `    .{ .name = ${JSON.stringify(name)}, .params = ${signatureTypes(signature.params)}, .results = ${signatureTypes(signature.results)} },\n`,
+    )
+    .join('') +
+  '};\n' +
+  'pub const hwp5_picture_crop_edit_exports = [_][]const u8{\n' +
+  HWP5_PICTURE_CROP_EDIT_FUNCTIONS.map((name) => `    ${JSON.stringify(name)},\n`).join('') +
+  '};\n' +
+  'pub const hwp5_picture_crop_edit_signatures = [_]OptionalFunctionSignature{\n' +
+  Object.entries(HWP5_PICTURE_CROP_EDIT_ABI)
     .map(
       ([name, signature]) =>
         `    .{ .name = ${JSON.stringify(name)}, .params = ${signatureTypes(signature.params)}, .results = ${signatureTypes(signature.results)} },\n`,

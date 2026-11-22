@@ -51,6 +51,7 @@ pub const Command = union(enum) {
     set_cell_styles: []const @import("h5cell_style_batch.zig").Request,
     set_picture_current_size: @import("picture_current_size_values.zig").Edit,
     resize_picture: @import("picture_resize_values.zig").Edit,
+    set_picture_crop: @import("picture_crop.zig").Request,
     resize_picture_anchored: @import("picture_anchored_resize.zig").Request,
     set_paragraph_format: @import("paragraph_format.zig").Edit,
     set_paragraph_bullet: struct { section: usize, paragraph: usize, value: @import("../../model/formatting_patch.zig").Bullet },
@@ -667,7 +668,7 @@ pub const Session = opaque {
     }
 
     pub fn applyBatchCheckpointed(self: *Session, checkpoint: *Checkpoint, limit: usize, commands: []const Command) !bool {
-        for (commands) |command| if (command == .set_cell_insets and commands.len != 1) return error.HistoryProtocol2Required;
+        for (commands) |command| if ((command == .set_cell_insets or command == .set_picture_crop) and commands.len != 1) return error.HistoryProtocol2Required;
         for (commands) |command| if (command == .set_cell_vertical_alignment_block or command == .set_cell_insets) try self.requireManagedCellBlock();
         for (commands) |command| try self.requireManagedAnchoredDispatch(command);
         try self.materializeLiveText();
@@ -1130,6 +1131,27 @@ pub const Session = opaque {
         state.refreshSourceViews();
         if (old) |*basis| basis.deinit(state.allocator);
         if (sizes == .replace) if (old_sizes) |values| state.allocator.free(values);
+    }
+    /// Query is fixed physical source ownership, never row coordinates or an instance-ID lookup.
+    pub fn pictureCrop(self: *const Session, selector: @import("picture_crop.zig").Selector) !@import("picture_crop.zig").Observation {
+        if (self.historyTransactionActive()) return error.MutationInProgress;
+        return self.pictureCropBody(selector);
+    }
+    fn pictureCropBody(self: *const Session, selector: @import("picture_crop.zig").Selector) !@import("picture_crop.zig").Observation {
+        try self.materializeLiveText();
+        const state = self.stateConst();
+        if (selector.section >= state.document.sections.len) return error.InvalidSection;
+        if (state.formatting_batch != null) return error.MutationInProgress;
+        const raw = state.decoded[selector.section];
+        const ordinal = try @import("picture_replacement_current.zig").ordinal(state.allocator, raw, state.source.header.version(), selector.picture_node);
+        const resource = try self.binaryResource(state.allocator, ordinal, 8 * 1024 * 1024);
+        defer state.allocator.free(resource);
+        const read_only = state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview);
+        return @import("picture_crop.zig").observe(state.allocator, raw, state.source.header.version(), state.document.sections[selector.section], selector, try self.historyTicket(), read_only, resource);
+    }
+    /// No-op and stale authority precede revision capacity and any transaction/cache mutation.
+    pub fn validatePictureCrop(self: *const Session, request: @import("picture_crop.zig").Request) !bool {
+        return @import("picture_crop.zig").validate(try self.pictureCropBody(request.before.target.selector), request);
     }
     pub fn anchoredPictureGeometry(self: *const Session, selector: @import("object_outer_margins.zig").Selector) !@import("picture_anchored_resize.zig").Observation {
         if (self.historyTransactionActive()) return error.MutationInProgress;
@@ -1911,13 +1933,13 @@ pub const Session = opaque {
 
     /// Check before any external-history barrier, lazy materialization or cache invalidation.
     fn requireManagedAnchoredDispatch(self: *const Session, command: Command) !void {
-        if (command != .resize_picture_anchored) return;
+        if (command != .resize_picture_anchored and command != .set_picture_crop) return;
         if (!self.historyTransactionActive() or self.stateConst().history_poison_observer == null) return error.HistoryProtocol2Required;
     }
     pub fn apply(self: *Session, command: Command) !void {
         if (command == .edit_page_restart) return error.HistoryProtocol2Required;
         if (command == .set_cell_vertical_alignment_block or command == .set_cell_insets) return error.HistoryProtocol2Required;
-        if (command == .resize_picture_anchored) return error.HistoryProtocol2Required;
+        if (command == .resize_picture_anchored or command == .set_picture_crop) return error.HistoryProtocol2Required;
         return self.applyWithFontCache(command, null);
     }
     pub fn applyWithFontCache(self: *Session, command: Command, font_cache: ?*@import("../../model/batch_font_lookup.zig").Cache) !void {
@@ -2555,6 +2577,21 @@ pub const Session = opaque {
                 const state = self.getState();
                 if (edit.section >= state.document.sections.len) return error.InvalidSection;
                 try @import("picture_current_size_values.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section], edit);
+            },
+            .set_picture_crop => |request| {
+                const state = self.getState();
+                const selector = request.before.target.selector;
+                if (selector.section >= state.document.sections.len) return error.InvalidSection;
+                if (state.formatting_batch != null) return error.MutationInProgress;
+                const raw = state.decoded[selector.section];
+                const ordinal = try @import("picture_replacement_current.zig").ordinal(state.allocator, raw, state.source.header.version(), selector.picture_node);
+                const resource = try self.binaryResource(state.allocator, ordinal, 8 * 1024 * 1024);
+                defer state.allocator.free(resource);
+                const read_only = state.source.header.has(.distribution) or state.source.header.has(.history) or state.source.header.has(.digital_signature) or state.source.header.has(.signature_preview);
+                const bytes = (try @import("picture_crop.zig").write(state.allocator, raw, state.source.header.version(), state.document.sections[selector.section], request, try self.historyTicket(), read_only, resource)) orelse return;
+                errdefer state.allocator.free(bytes);
+                // Crop is source-only. Keep all pending resize/matrix and other model intents.
+                try self.publishFixedSection(selector.section, bytes, .keep);
             },
             .resize_picture_anchored => |request| {
                 if (!self.historyTransactionActive()) return error.HistoryProtocol2Required;

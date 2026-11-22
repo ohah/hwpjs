@@ -462,3 +462,14 @@ export type {
   ResizePictureAnchoredPayload,
   PictureAnchoredResizeRead,
 } from './commands/picture-anchored-resize.ts';
+
+export { SET_PICTURE_CROP_COMMAND } from './commands/picture-crop.ts';
+export type {
+  PictureCropSelector,
+  PictureCropRect,
+  PictureCropBounds,
+  PictureCropObservation,
+  PictureCropTarget,
+  PictureCropRead,
+  SetPictureCropPayload,
+} from './commands/picture-crop.ts';

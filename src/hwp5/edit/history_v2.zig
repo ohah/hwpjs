@@ -141,6 +141,11 @@ pub const History = struct {
             if (commands.len != 1 or !self.managed) return error.HistoryProtocol2Required;
             if (!try s.validatePageRestart(command.edit_page_restart, self.stack.current.revision)) return false;
         };
+        for (commands) |command| if (command == .set_picture_crop) {
+            if (commands.len != 1 or !self.managed) return error.HistoryProtocol2Required;
+            if (!std.meta.eql(command.set_picture_crop.before.target.ticket, try s.historyTicket())) return error.StaleMutationEpoch;
+            if (!try s.validatePictureCrop(command.set_picture_crop)) return false;
+        };
         for (commands) |command| if (command == .resize_picture_anchored) {
             if (commands.len != 1 or !self.managed) return error.HistoryProtocol2Required;
             if (!std.meta.eql(command.resize_picture_anchored.target.ticket, try s.historyTicket())) return error.StaleMutationEpoch;

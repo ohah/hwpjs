@@ -1,3 +1,6 @@
+import { createPictureCropForm } from './picture-crop-form.ts';
+import type { HeadlessEditor } from '@hwpjs/core';
+import type { PictureReplacementHost } from './picture-replacement-port.ts';
 import {
   createObjectOuterMarginsForm,
   type ObjectOuterMarginsEditor,
@@ -22,6 +25,13 @@ export function createObjectPropertiesView(
   callbacks: {
     onApply(draft: PictureSizeDraft): void;
     onDismiss(): void;
+    editGate?: ObjectPropertiesEditGate;
+    crop?: {
+      editor: HeadlessEditor;
+      host(): PictureReplacementHost | undefined;
+      gate: ObjectPropertiesEditGate;
+      onStatus(text: string): void;
+    };
     onReplace?(): void;
     replacementInput?: HTMLInputElement;
     outerMargins?: {
@@ -134,7 +144,7 @@ export function createObjectPropertiesView(
     dirty: { ...dirty },
     ...(lock.checked && dirty[lastEdited] ? { aspectRatio: lastEdited } : {}),
   });
-  const gate = callbacks.outerMargins?.gate;
+  const gate = callbacks.editGate ?? callbacks.outerMargins?.gate;
   let margins: ReturnType<typeof createObjectOuterMarginsForm> | undefined;
   const refresh = () => {
     if (disposed) return;
@@ -263,6 +273,9 @@ export function createObjectPropertiesView(
         callbacks.onDismiss,
       )
     : undefined;
+  const crop = callbacks.crop
+    ? createPictureCropForm({ ...callbacks.crop, root: layer.body, onClose: callbacks.onDismiss })
+    : undefined;
   const stopGate = gate?.subscribe(refresh);
   refresh();
   layer.show(fields.width);
@@ -277,6 +290,7 @@ export function createObjectPropertiesView(
     },
     setAvailability(value) {
       reason = value;
+      crop?.refresh();
       refresh();
     },
     setStatus(value) {
@@ -298,6 +312,7 @@ export function createObjectPropertiesView(
       disposed = true;
       stopGate?.();
       margins?.dispose();
+      crop?.dispose();
       gate?.setDirty('geometry', false);
       for (const remove of removals.splice(0)) remove();
       layer.destroy();

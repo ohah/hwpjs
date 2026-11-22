@@ -39,6 +39,8 @@ export fn hwpx_edit_read_scope_end(token: u32) u32 {
 var active: ?editor.Session = null;
 var history: ?histories.History = null;
 var output: ?[]u8 = null;
+const picture_crop_edit = @import("hwpx_picture_crop_edit_bridge.zig");
+var picture_crop_edit_leases: picture_crop_edit.Store = .{};
 const page_restart_capabilities = @import("page_restart_capabilities.zig");
 const page_restart_wire = @import("page_restart_wire.zig");
 var page_restart_leases: page_restart_capabilities.HXStore = .{};
@@ -79,6 +81,7 @@ export fn hwpx_edit_table_creation_resources() u32 {
     return 1;
 }
 export fn hwpx_edit_close() void {
+    picture_crop_edit_leases.clear(a);
     clearOriginalCellInsetsLease();
     page_restart_leases.clear(a);
     clearOriginalCellLease();
@@ -1170,7 +1173,7 @@ fn apply(command: histories.Command) !void {
         _ = try @import("../hwpx/display_resource_generation.zig").applyOwned(value, session, &.{command});
     } else switch (command.kind) {
         // Independent source-axis batches require the existing owned History.
-        .original_cell_insets, .cell_vertical_alignment, .cell_vertical_alignment_block, .created_cell_properties, .page_restart, .page_settings, .object_geometry, .object_outer_margins, .object_body_flow, .bullet_definition, .paragraph_bullet, .independent_text, .document_text, .insert_document, .equation_insert, .chart_create, .image_insert, .picture_replace, .note_delete, .note_create, .named_field_rename, .named_field_create, .named_field_parameters, .source_table_cell_merge, .source_table_cell_split, .splice_created_cell => return error.HistoryNotEnabled,
+        .original_cell_insets, .cell_vertical_alignment, .cell_vertical_alignment_block, .created_cell_properties, .page_restart, .page_settings, .object_geometry, .object_outer_margins, .object_body_flow, .bullet_definition, .paragraph_bullet, .independent_text, .document_text, .insert_document, .equation_insert, .chart_create, .image_insert, .picture_replace, .picture_crop, .note_delete, .note_create, .named_field_rename, .named_field_create, .named_field_parameters, .source_table_cell_merge, .source_table_cell_split, .splice_created_cell => return error.HistoryNotEnabled,
         .source_table_grid => {
             _ = try @import("../hwpx/source_table_grid_session.zig").apply(session, .{ .section = command.section, .node = command.source_grid_node, .expected_rows = command.source_grid_expected_rows, .expected_columns = command.source_grid_expected_columns, .action = command.source_grid_action });
         },
@@ -3360,4 +3363,47 @@ export fn hwpx_edit_write_page_restart(ptr: [*]const u8, len: usize) u32 {
         return if (err == error.HistoryMutationUncertain or err == error.MutationUncertain or h.stats().poisoned) 3 else 0;
     };
     return if (changed) 1 else 2;
+}
+
+// Optional source-only picture crop editing; the existing HPC1 reader is unchanged.
+fn pictureCropEditContext() !picture_crop_edit.Context {
+    const current = if (active) |*value| value else return error.EditorNotOpen;
+    if (!formatting_lifetime.opened) return error.EditorNotOpen;
+    return .{ .session = current, .history = try requireManagedHistory(), .generation = &document_text_generation, .instance_epoch = formatting_lifetime.epoch, .read_scope_active = read_scope != null };
+}
+export fn hwpx_edit_picture_crop_edit_version() u32 {
+    return @import("hwpx_picture_crop_edit_wire.zig").version;
+}
+export fn hwpx_edit_picture_crop_edit_capture(section: u32, picture_node: u32) u32 {
+    picture_crop_edit_leases.clear(a);
+    hwpx_edit_output_free();
+    const context = pictureCropEditContext() catch |err| return fail(err);
+    output = picture_crop_edit.capture(a, &picture_crop_edit_leases, context, section, picture_node) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_picture_crop_edit_commit(ptr: [*]const u8, len: usize) u32 {
+    hwpx_edit_output_free();
+    const limit = @import("hwpx_picture_crop_edit_wire.zig").max_request_bytes;
+    if (len == 0 or len > limit) {
+        picture_crop_edit_leases.clear(a);
+        return fail(error.LimitExceeded);
+    }
+    const context = pictureCropEditContext() catch |err| {
+        picture_crop_edit_leases.clear(a);
+        _ = fail(err);
+        return if (err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    const changed = picture_crop_edit.commit(a, &picture_crop_edit_leases, context, ptr[0..len]) catch |err| {
+        _ = fail(err);
+        return if (err == error.MutationUncertain or err == error.HistoryMutationUncertain or context.history.stats().poisoned) 3 else 0;
+    };
+    return if (changed) 1 else 2;
+}
+export fn hwpx_edit_picture_crop_edit_release(ptr: [*]const u8, len: usize) u32 {
+    hwpx_edit_output_free();
+    const limit = @import("hwpx_picture_crop_edit_wire.zig").max_request_bytes;
+    if (len == 0 or len > limit) return fail(error.LimitExceeded);
+    const released = picture_crop_edit.release(a, &picture_crop_edit_leases, ptr[0..len]) catch |err| return fail(err);
+    if (!released) return fail(error.StalePictureCropLease);
+    return 1;
 }

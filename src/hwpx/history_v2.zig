@@ -87,6 +87,7 @@ pub const History = struct {
     observed_serial: u64,
     cell_vertical_alignment_scope: u64 = 0,
     page_restart_scope: u64 = 0,
+    picture_crop_scope: u64 = 0,
     source: [*]const u8,
     lane: ?text.Lane = null,
     total_text_bytes: usize,
@@ -226,6 +227,19 @@ pub const History = struct {
         try self.bind(session);
         return @import("cell_vertical_alignment_history.zig").observe(a, session, section, paragraph, try self.cellVerticalAlignmentTicket());
     }
+    fn pictureCropTicket(self: *Self) !@import("../model/history_mutation_epoch.zig").Ticket {
+        if (!self.managed) return error.HistoryProtocol2Required;
+        if (self.picture_crop_scope == 0) self.picture_crop_scope = try @import("../model/picture_crop_scope.zig").issue();
+        return .{ .binding = .{ .document = self.picture_crop_scope, .generation = 1, .owner = self.picture_crop_scope }, .epoch = self.owner.mutation_serial };
+    }
+    pub fn validatePictureCrop(self: *Self, session: *editor.Session, request: @import("picture_crop_edit.zig").Request) !bool {
+        try self.bind(session);
+        return @import("picture_crop_edit.zig").validate(session.allocator, session, request, try self.pictureCropTicket(), self.stack.current.revision);
+    }
+    pub fn pictureCrop(self: *Self, session: *editor.Session, a: std.mem.Allocator, section: u32, picture: u32) !@import("picture_crop_edit.zig").Observation {
+        try self.bind(session);
+        return @import("picture_crop_edit.zig").observe(a, session, section, picture, self.stack.current.revision, try self.pictureCropTicket());
+    }
     pub fn applyBatch(self: *Self, s: *editor.Session, commands: []const commands_mod.Command) !bool {
         try self.bind(s);
         for (commands) |command| if (command.kind == .page_restart) {
@@ -245,10 +259,17 @@ pub const History = struct {
             if (command.section != request.section or command.paragraph != request.paragraph or command.inserted.len != 0 or command.start != 0) return error.InvalidOriginalCellInsets;
             if (!try @import("original_cell_insets_history.zig").validate(s.allocator, s, request.*, try self.cellVerticalAlignmentTicket(), self.stack.current.revision)) return false;
         };
+        for (commands) |command| if (command.kind == .picture_crop) {
+            if (commands.len != 1 or command.start != 0 or command.deleted != 0 or command.inserted.len != 0 or command.break_before != null) return error.InvalidPictureCropCommand;
+            const request = command.picture_crop orelse return error.InvalidPictureCropCommand;
+            if (command.section != request.before.owner.section) return error.InvalidPictureCropCommand;
+            // Validate before stack.prepare: no-op preserves a valid prior redo edge.
+            if (!try @import("picture_crop_edit.zig").validate(s.allocator, s, request.*, try self.pictureCropTicket(), self.stack.current.revision)) return false;
+        };
         s.history_transaction_active = true;
         defer s.history_transaction_active = false;
         try self.stack.prepare();
-        for (commands) |command| if (command.kind == .note_delete or command.kind == .note_create or command.kind == .insert_document or command.kind == .equation_insert or command.kind == .chart_create or command.kind == .image_insert or command.kind == .picture_replace or command.kind == .bullet_definition or command.kind == .page_restart or command.kind == .page_settings or command.kind == .object_geometry or command.kind == .object_outer_margins or command.kind == .object_body_flow or command.kind == .original_cell_insets or command.kind == .cell_vertical_alignment or command.kind == .cell_vertical_alignment_block) {
+        for (commands) |command| if (command.kind == .note_delete or command.kind == .note_create or command.kind == .insert_document or command.kind == .equation_insert or command.kind == .chart_create or command.kind == .image_insert or command.kind == .picture_replace or command.kind == .picture_crop or command.kind == .bullet_definition or command.kind == .page_restart or command.kind == .page_settings or command.kind == .object_geometry or command.kind == .object_outer_margins or command.kind == .object_body_flow or command.kind == .original_cell_insets or command.kind == .cell_vertical_alignment or command.kind == .cell_vertical_alignment_block) {
             if (commands.len != 1 or command.break_before != null or command.deleted != 0)
                 return error.InvalidInsertDocumentBatch;
             if (!self.managed) return error.HistoryProtocol2Required;
@@ -263,7 +284,7 @@ pub const History = struct {
     fn insertDocument(self: *Self, command: commands_mod.Command) !bool {
         const s = self.owner;
         const inline_creation = command.kind == .equation_insert or command.kind == .chart_create or command.kind == .image_insert or command.kind == .note_create;
-        if (!inline_creation and command.kind != .note_delete and command.kind != .picture_replace and command.kind != .object_outer_margins and command.kind != .object_body_flow and command.kind != .original_cell_insets and command.kind != .cell_vertical_alignment and command.kind != .cell_vertical_alignment_block and command.kind != .page_restart and command.section != 0) return error.UnsupportedInsertSections;
+        if (!inline_creation and command.kind != .note_delete and command.kind != .picture_replace and command.kind != .picture_crop and command.kind != .object_outer_margins and command.kind != .object_body_flow and command.kind != .original_cell_insets and command.kind != .cell_vertical_alignment and command.kind != .cell_vertical_alignment_block and command.kind != .page_restart and command.section != 0) return error.UnsupportedInsertSections;
         // Inline creation proves logical-to-physical owners using serializer
         // receipts. Geometry keeps its separately validated source-frame path.
         // Every other document transaction retains the pending-owner refusal.
@@ -344,7 +365,9 @@ pub const History = struct {
         defer if (owner_proof) |*proof| proof.deinit();
         var physical_target: ?struct { section: usize, paragraph: usize } = null;
         var note_receipt: ?@import("note_create_caret.zig").Receipt = null;
-        var candidate = if (command.kind == .picture_replace) blk: {
+        var candidate = if (command.kind == .picture_crop) blk: {
+            break :blk (try @import("picture_crop_edit.zig").prepare(s.allocator, s, before, command.picture_crop.?.*, try self.pictureCropTicket(), self.stack.current.revision)) orelse return false;
+        } else if (command.kind == .picture_replace) blk: {
             break :blk try @import("picture_replacement_current.zig").prepare(s.allocator, before, command.picture_replace.?.*, s.options);
         } else if (command.kind == .note_delete) blk: {
             break :blk try @import("note_delete.zig").prepare(s.allocator, before, command.note_delete.?.*, s.options);

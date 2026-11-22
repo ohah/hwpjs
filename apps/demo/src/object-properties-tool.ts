@@ -1,3 +1,4 @@
+import { createPictureCropTool } from './picture-crop-tool.ts';
 import {
   createObjectPropertiesEditGate,
   type ObjectPropertiesEditGate,
@@ -26,6 +27,8 @@ export function createObjectPropertiesTool(options: {
   onPresentationChange?(): void;
   onError?(error: unknown): void;
 }) {
+  let openRequest = 0,
+    disposed = false;
   const gates = new WeakMap<ObjectPropertiesCapture, ObjectPropertiesEditGate>();
   const originalPort = createObjectPropertiesPort(options.editor, options.host);
   const resizePort = {
@@ -44,6 +47,7 @@ export function createObjectPropertiesTool(options: {
       }
     },
   };
+  const cropOnly = createPictureCropTool(options);
   const marginsOnly = createHwp5PictureOuterMarginsTool(options);
   const controller = createObjectPropertiesController({
     ...options,
@@ -51,7 +55,7 @@ export function createObjectPropertiesTool(options: {
     createView: (capture, draft, callbacks) => {
       let view: ReturnType<typeof createObjectPropertiesView> | undefined;
       const h5 = (capture.state.content as { format?: unknown } | undefined)?.format === 'hwp5';
-      const gate = h5 ? createObjectPropertiesEditGate() : undefined;
+      const gate = createObjectPropertiesEditGate();
       if (gate) gates.set(capture, gate);
       const marginSelection = h5
         ? captureHwp5PictureMarginsSelection(options.editor, options.host)
@@ -84,6 +88,8 @@ export function createObjectPropertiesTool(options: {
       try {
         view = createObjectPropertiesView(options.root, capture, draft, {
           ...callbacks,
+          editGate: gate,
+          crop: { editor: options.editor, host: options.host, gate, onStatus: options.onStatus },
           onReplace: () => replacement.choose(),
           replacementInput: replacement.input,
           ...(h5 && gate && capture.target && marginSelection
@@ -121,7 +127,23 @@ export function createObjectPropertiesTool(options: {
   });
   return {
     ...controller,
-    open() {
+    presentation() {
+      const normal = controller.presentation();
+      return normal.enabled || !cropOnly.presentation() ? normal : { enabled: true };
+    },
+    async open() {
+      const ticket = ++openRequest,
+        snapshot = options.editor.getEditorState();
+      if (disposed) return;
+      if (originalPort.capture().reason && cropOnly.presentation()) {
+        controller.close();
+        marginsOnly.close();
+        const opened = await cropOnly.open();
+        if (disposed || ticket !== openRequest || options.editor.getEditorState() !== snapshot)
+          return;
+        if (opened) return;
+      }
+      cropOnly.close();
       const state = options.editor.getEditorState();
       if ((state.content as { format?: unknown } | undefined)?.format !== 'hwp5') {
         marginsOnly.close();
@@ -150,10 +172,15 @@ export function createObjectPropertiesTool(options: {
       controller.open();
     },
     close() {
+      openRequest++;
+      cropOnly.close();
       marginsOnly.close();
       controller.close();
     },
     dispose() {
+      disposed = true;
+      openRequest++;
+      cropOnly.dispose();
       marginsOnly.dispose();
       controller.dispose();
     },

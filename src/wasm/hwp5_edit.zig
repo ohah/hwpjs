@@ -23,6 +23,8 @@ var available_section_copy: ?@import("../hwp5/edit/available_section_copy.zig").
 var view_epoch: @import("editor_view_epoch.zig").Epoch = .{};
 const equation_script_lease = @import("hwp5_equation_script_edit_lease.zig");
 var equation_script_leases: equation_script_lease.Store = .{};
+const picture_crop_bridge = @import("hwp5_picture_crop_edit_bridge.zig");
+var picture_crop_leases: picture_crop_bridge.Store = .{};
 
 fn fail(err: anyerror) u32 {
     _ = errors.fail(err);
@@ -60,6 +62,7 @@ export fn hwp5_edit_reflow() u32 {
 }
 export fn hwp5_edit_close() void {
     equation_script_leases.clear();
+    picture_crop_leases.clear();
     clearOriginalCellInsetsLease();
     page_restart_leases.clear(a);
     clearOriginalCellLease();
@@ -2660,4 +2663,32 @@ export fn hwp5_edit_write_page_restart(ptr: [*]const u8, len: usize) u32 {
         return if (err == error.HistoryMutationUncertain or err == error.MutationUncertain or h.stats().poisoned) 3 else 0;
     };
     return if (h.revision() == before) 2 else 1;
+}
+
+// Optional4 existing-picture source crop. Never accepts a caller-provided Native witness.
+fn pictureCropEditContext() picture_crop_bridge.Context {
+    return .{ .session = active, .history = if (history) |*h| h else null, .generation = &document_text_generation, .view = &view_epoch };
+}
+export fn hwp5_edit_picture_crop_edit_version() u32 {
+    return picture_crop_bridge.version(pictureCropEditContext());
+}
+export fn hwp5_edit_picture_crop_edit_capture(section: u32, picture: u32) u32 {
+    picture_crop_leases.clear();
+    hwp5_edit_output_free();
+    output = picture_crop_bridge.capture(a, &picture_crop_leases, pictureCropEditContext(), section, picture) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_picture_crop_edit_commit(ptr: [*]const u8, len: usize) u32 {
+    hwp5_edit_output_free();
+    last_delta = null;
+    const changed = picture_crop_bridge.commit(a, &picture_crop_leases, pictureCropEditContext(), ptr[0..len]) catch |err| {
+        _ = fail(err);
+        return if (err == error.MutationUncertain or err == error.HistoryMutationUncertain or (if (history) |*h| h.stats().poisoned else false)) 3 else 0;
+    };
+    return if (changed) 1 else 2;
+}
+export fn hwp5_edit_picture_crop_edit_release(ptr: [*]const u8, len: usize) u32 {
+    hwp5_edit_output_free();
+    const released = picture_crop_bridge.release(a, &picture_crop_leases, ptr[0..len]) catch |err| return fail(err);
+    return if (released) 1 else fail(error.StalePictureCropLease);
 }

@@ -458,6 +458,12 @@ export async function typeInCreatedCell(
 
 HWP5는 현재 본문 캐럿의 `selection`을 `target`으로, 그 상태의 `stateVersion`을 `selectionVersion`으로 사용합니다. HWPX는 Native에서 조회한 현재 본문 삽입 대상이 필요합니다. 대상과 상태가 바뀌면 새로 포착해야 합니다. [데모 사용법](../guide/demo.md#새-그림-삽입)
 
+## 기존 그림 자르기
+
+`editor.getPictureCrop({ section, pictureNode })`는 현재 그림의 자르기 사각형과 원본 범위를 조회합니다. HWP5는 물리 그림 레코드 번호, HWPX는 현재 섹션의 그림 노드 번호를 전달합니다. 결과가 `available`이면 같은 편집기의 `SET_PICTURE_CROP_COMMAND`에 반환된 `target`과 `crop: { left, top, right, bottom }`을 전달합니다. 각 변은 원본 좌표의 정수이며, 양의 너비·높이가 원본 범위 안에 들어야 합니다. 대상을 바꾸거나 편집을 끝냈으면 다시 조회하고, 사용하지 않은 대상은 `editor.releasePictureCrop(target)`으로 해제할 수 있습니다.
+
+현재는 소유권과 원본 크기를 확인할 수 있는 일부 본문 PNG·JPEG 그림을 지원합니다. 원본 이미지 바이트와 화면의 그림 틀을 보존하며, 자르기 변경은 실행 취소·다시 실행 및 현재 문서 형식의 저장에 반영됩니다. HWP5의 저장 시 기존 줄 배치 유지 동의는 기존 저장 정책을 따릅니다.
+
 ## 그림의 고정점을 유지하며 크기 변경
 
 `getAnchoredPictureResize({ section, pictureNode })`로 현재 그림의 크기와 위치를 조회합니다. HWP5의 `pictureNode`에는 화면 컴포넌트 번호와 구분되는 물리 그림 레코드 번호를 전달합니다. HWPX는 현재 섹션의 그림 노드 번호를 사용합니다. 지원하는 배치이면 반환값의 `target`을 같은 편집기에서 한 번 사용할 수 있습니다. 문서나 편집 상태가 달라지면 다시 조회합니다.

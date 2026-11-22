@@ -60,7 +60,7 @@
     },
     "packages/hwpjs": {
       "name": "@ohah/hwpjs",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "bin": {
         "hwpjs": "./dist/hwpjs.mjs",
         "hwpjs-mcp": "./dist/mcp.mjs",

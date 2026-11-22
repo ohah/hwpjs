@@ -1,3 +1,4 @@
+import { createPictureCropEditApi } from './picture-crop-edit.mjs';
 import { createPageRestartApi } from './page-restart-api.mjs';
 import { createPictureAnchoredResizeApi } from './picture-anchored-resize-api.mjs';
 import { createOriginalCellVerticalAlignmentBatchApi } from './original-cell-vertical-alignment-batch.mjs';
@@ -246,6 +247,7 @@ export async function createHwpxEditor(source) {
   return {
     ...createOriginalCellInsetsApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
     ...createOriginalCellVerticalAlignmentApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
+    ...createPictureCropEditApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
     ...createPictureAnchoredResizeApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
     ...createPageRestartApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
     ...createOriginalCellVerticalAlignmentBatchApi({

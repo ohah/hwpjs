@@ -1,3 +1,18 @@
+import { SET_PICTURE_CROP_COMMAND, capturePictureCropPayload } from '../commands/picture-crop.ts';
+import type {
+  PictureCropSelector,
+  PictureCropRead,
+  PictureCropTarget,
+  PictureCropObservation,
+  SetPictureCropPayload,
+} from '../commands/picture-crop.ts';
+import {
+  checkedPictureCropLease,
+  checkedPictureCropSelector,
+  checkedPictureCropCapture,
+  checkedPictureCropRect,
+  pictureCropObservation,
+} from '../../../../js/picture-crop-edit.mjs';
 import { originalCellPropertiesSelector } from '../commands/original-cell-owner.ts';
 import {
   SET_ORIGINAL_CELL_INSETS_COMMAND,
@@ -1249,6 +1264,7 @@ export function createEditor(options: CreateEditorOptions) {
         verifyReply(reply, ctx);
         if (
           [
+            'picture-crop-set',
             'picture-anchored-resize-set',
             'insert-image',
             'insert-equation',
@@ -1615,6 +1631,16 @@ export function createEditor(options: CreateEditorOptions) {
     PictureReplacementTarget,
     { state: EditorState; runtime: EditorRuntime; native: PictureReplacementOwner }
   >();
+  let pictureCropQueryGeneration = 0;
+  const pictureCropTargets = new WeakMap<
+    PictureCropTarget,
+    {
+      state: EditorState;
+      runtime: EditorRuntime;
+      native: PictureCropObservation & { readonly leaseKey: string };
+      generation: number;
+    }
+  >();
   let pictureResizeQueryGeneration = 0;
   const pictureResizeTargets = new WeakMap<
     PictureAnchoredResizeTarget,
@@ -1668,6 +1694,7 @@ export function createEditor(options: CreateEditorOptions) {
     const outerMargins = command.id === SET_OBJECT_OUTER_MARGINS_COMMAND.id;
     const verticalMargins = command.id === SET_HWP5_VERTICAL_MARGINS_COMMAND.id;
     const bodyFlow = command.id === SET_OBJECT_BODY_FLOW_COMMAND.id;
+    const pictureCrop = command.id === SET_PICTURE_CROP_COMMAND.id;
     const pictureReplacement = command.id === REPLACE_PICTURE_COMMAND.id;
     const tableCell =
       originalCellInsets ||
@@ -1683,6 +1710,7 @@ export function createEditor(options: CreateEditorOptions) {
       anchoredPicture ||
       objectGeometry ||
       pictureReplacement ||
+      pictureCrop ||
       outerMargins ||
       verticalMargins ||
       bodyFlow;
@@ -1704,52 +1732,54 @@ export function createEditor(options: CreateEditorOptions) {
         : command.id === INSERT_ENDNOTE_COMMAND.id
           ? 'end'
           : undefined;
-    const owned = originalCellInsets
-      ? captureOriginalCellInsetsPayload(payload)
-      : anchoredPicture
-        ? captureResizePictureAnchoredPayload(payload)
-        : originalCellBlock
-          ? captureOriginalCellAlignmentBlockPayload(payload)
-          : originalCellAlignment
-            ? captureOriginalCellAlignmentPayload(payload)
-            : verticalMargins
-              ? captureHwp5VerticalMarginsPayload(payload)
-              : bodyFlow
-                ? captureObjectBodyFlowPayload(payload)
-                : outerMargins
-                  ? captureObjectOuterMarginsPayload(payload)
-                  : pictureReplacement
-                    ? captureReplacePicturePayload(payload)
-                    : command.id === INSERT_IMAGE_COMMAND.id
-                      ? captureImageInsertPayload(payload)
-                      : command.id === DELETE_NOTE_COMMAND.id
-                        ? captureNoteDeletePayload(payload)
-                        : noteKind
-                          ? captureNoteInsertPayload(payload)
-                          : logicalSplice
-                            ? captureCreatedCellSplicePayload(payload)
-                            : objectGeometry
-                              ? captureObjectGeometryPayload(payload)
-                              : inlineKind
-                                ? captureInlineObjectInsertPayload(payload, inlineKind)
-                                : hwp5EquationScript
-                                  ? captureHwp5EquationScriptPayload(payload)
-                                  : pageRestart
-                                    ? capturePageRestartPayload(payload)
-                                    : pageSettings
-                                      ? capturePageSettingsPayload(payload)
-                                      : split
-                                        ? captureSourceTableCellSplitPayload(payload)
-                                        : merge || width || height
-                                          ? payload
-                                          : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
-                                            ? captureSourceTableGridRequest(
-                                                payload,
-                                                (snapshot.content as any)?.format,
-                                              )
-                                            : command.id === INSERT_DOCUMENT_COMMAND.id
-                                              ? captureDocumentInsertPayload(payload)
-                                              : copyOwned(payload);
+    const owned = pictureCrop
+      ? capturePictureCropPayload(payload)
+      : originalCellInsets
+        ? captureOriginalCellInsetsPayload(payload)
+        : anchoredPicture
+          ? captureResizePictureAnchoredPayload(payload)
+          : originalCellBlock
+            ? captureOriginalCellAlignmentBlockPayload(payload)
+            : originalCellAlignment
+              ? captureOriginalCellAlignmentPayload(payload)
+              : verticalMargins
+                ? captureHwp5VerticalMarginsPayload(payload)
+                : bodyFlow
+                  ? captureObjectBodyFlowPayload(payload)
+                  : outerMargins
+                    ? captureObjectOuterMarginsPayload(payload)
+                    : pictureReplacement
+                      ? captureReplacePicturePayload(payload)
+                      : command.id === INSERT_IMAGE_COMMAND.id
+                        ? captureImageInsertPayload(payload)
+                        : command.id === DELETE_NOTE_COMMAND.id
+                          ? captureNoteDeletePayload(payload)
+                          : noteKind
+                            ? captureNoteInsertPayload(payload)
+                            : logicalSplice
+                              ? captureCreatedCellSplicePayload(payload)
+                              : objectGeometry
+                                ? captureObjectGeometryPayload(payload)
+                                : inlineKind
+                                  ? captureInlineObjectInsertPayload(payload, inlineKind)
+                                  : hwp5EquationScript
+                                    ? captureHwp5EquationScriptPayload(payload)
+                                    : pageRestart
+                                      ? capturePageRestartPayload(payload)
+                                      : pageSettings
+                                        ? capturePageSettingsPayload(payload)
+                                        : split
+                                          ? captureSourceTableCellSplitPayload(payload)
+                                          : merge || width || height
+                                            ? payload
+                                            : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
+                                              ? captureSourceTableGridRequest(
+                                                  payload,
+                                                  (snapshot.content as any)?.format,
+                                                )
+                                              : command.id === INSERT_DOCUMENT_COMMAND.id
+                                                ? captureDocumentInsertPayload(payload)
+                                                : copyOwned(payload);
     return {
       command: command as EditorCommand<unknown>,
       payload: owned,
@@ -1989,6 +2019,33 @@ export function createEditor(options: CreateEditorOptions) {
         guard();
         return await mutate(
           pictureReplacementMessage(owned.native, payload.imageBytes),
+          pending.token,
+          false,
+          guard,
+        );
+      }
+      if (pending.command.id === SET_PICTURE_CROP_COMMAND.id) {
+        const payload = pending.payload as SetPictureCropPayload;
+        const owned = pictureCropTargets.get(payload.target);
+        if (!owned) throw Error('ForeignPictureCropTarget');
+        const guard = () => {
+          requireReady(pending.token, true);
+          if (
+            state !== owned.state ||
+            active !== owned.runtime ||
+            owned.generation !== pictureCropQueryGeneration
+          )
+            throw Error('StalePictureCropTarget');
+          if (state.nativeHistoryRevision !== owned.native.historyRevision)
+            throw Error('StalePictureCropBinding');
+          if (!hasRuntimeAdmission(active, 'picture-crop-set'))
+            throw Error('UnsupportedPictureCropRuntime');
+        };
+        guard();
+        const crop = checkedPictureCropRect(payload.crop, owned.native.bounds);
+        pictureCropTargets.delete(payload.target);
+        return await mutate(
+          { kind: 'picture-crop-set', leaseKey: owned.native.leaseKey, crop },
           pending.token,
           false,
           guard,
@@ -2762,6 +2819,17 @@ export function createEditor(options: CreateEditorOptions) {
       if (state !== owned.state || active !== owned.runtime)
         return Promise.resolve(reject(context(pending.token), 'StalePictureReplacementTarget'));
     }
+    if (command.id === SET_PICTURE_CROP_COMMAND.id) {
+      const owned = pictureCropTargets.get((pending.payload as SetPictureCropPayload).target);
+      if (!owned)
+        return Promise.resolve(reject(context(pending.token), 'ForeignPictureCropTarget'));
+      if (
+        state !== owned.state ||
+        active !== owned.runtime ||
+        owned.generation !== pictureCropQueryGeneration
+      )
+        return Promise.resolve(reject(context(pending.token), 'StalePictureCropTarget'));
+    }
     if (command.id === RESIZE_PICTURE_ANCHORED_COMMAND.id) {
       const owned = pictureResizeTargets.get(
         (pending.payload as ResizePictureAnchoredPayload).target,
@@ -3241,6 +3309,9 @@ export function createEditor(options: CreateEditorOptions) {
         'hwp5-vertical-object-margins-set',
         'object-body-flow-query',
         'object-body-flow-set',
+        'picture-crop-query',
+        'picture-crop-set',
+        'picture-crop-release',
         'picture-anchored-resize-query',
         'picture-anchored-resize-set',
         'picture-replacement-query',
@@ -4075,6 +4146,163 @@ export function createEditor(options: CreateEditorOptions) {
         target,
         observation,
       });
+    });
+  }
+  function getPictureCrop(
+    selector: PictureCropSelector,
+    options: { token?: StateToken } = {},
+  ): Promise<PictureCropRead> {
+    assertPublicMutation();
+    const snapshot = state,
+      queryRuntime = active;
+    const selected = checkedPictureCropSelector(selector);
+    const settings = copyOwned(options);
+    if (
+      !settings ||
+      typeof settings !== 'object' ||
+      Array.isArray(settings) ||
+      settings.token === null ||
+      Object.keys(settings).some((key) => key !== 'token')
+    )
+      throw Error('InvalidPictureCropOptions');
+    const token = copyOwned(settings.token ?? snapshot.token);
+    requireReady(token, true);
+    if (state !== snapshot || active !== queryRuntime) throw Error('StalePictureCropTarget');
+    if (pictureCropQueryGeneration >= Number.MAX_SAFE_INTEGER)
+      throw Error('PictureCropQueryExhausted');
+    const generation = ++pictureCropQueryGeneration;
+    return enqueue(async () => {
+      requireReady(token, true);
+      const runtime = queryRuntime;
+      const guard = () => {
+        requireReady(token, true);
+        if (state !== snapshot || active !== runtime || generation !== pictureCropQueryGeneration)
+          throw Error('StalePictureCropTarget');
+      };
+      guard();
+      const content = snapshot.content as Record<string, unknown> | undefined;
+      const capabilities = snapshot.capabilities as Record<string, unknown> | undefined;
+      if (content?.readOnly === true || capabilities?.readOnly === true)
+        return { state: 'unavailable', reason: 'ReadOnlyDocument' };
+      if (
+        !content ||
+        !['hwp5', 'hwpx'].includes(String(content.format)) ||
+        content.limited ||
+        content.window
+      )
+        return { state: 'unavailable', reason: 'PictureCropRequiresFullDocument' };
+      if (
+        snapshot.nativeHistoryStats?.protocolVersion !== 2 ||
+        !Number.isSafeInteger(snapshot.nativeHistoryRevision) ||
+        snapshot.nativeHistoryRevision! < 0 ||
+        snapshot.nativeHistoryRevision! >= 0xffffffff
+      )
+        return { state: 'unavailable', reason: 'HistoryProtocol2Required' };
+      if (!runtime || !hasRuntimeAdmission(runtime, 'picture-crop-query'))
+        return { state: 'unavailable', reason: 'UnsupportedPictureCropRuntime' };
+      const ctx = context(token);
+      let reply: RuntimeReply | undefined;
+      let replyVerified = false;
+      try {
+        reply = await requestAtRuntimeAdmission(
+          runtime,
+          { kind: 'picture-crop-query', selector: selected },
+          ctx,
+          guard,
+        );
+        verifyReply(reply, ctx);
+        if (reply.error) throw Error(reply.error);
+        reply = freezeDTO(copyOwned(reply, true));
+        replyVerified = true;
+        guard();
+        if (!hasRuntimeAdmission(runtime, 'picture-crop-query'))
+          throw Error('UnsupportedPictureCropRuntime');
+        if (reply.kind !== 'picture-crop-query') throw Error('MismatchedRuntimeReply');
+        if (reply.pictureCrop === null)
+          return {
+            state: 'unavailable',
+            reason: typeof reply.reason === 'string' ? reply.reason : 'PictureCropUnavailable',
+          };
+        const native = checkedPictureCropCapture(reply.pictureCrop);
+        const observation = pictureCropObservation(native);
+        if (
+          observation.format !== content.format ||
+          observation.section !== selected.section ||
+          observation.pictureNode !== selected.pictureNode ||
+          observation.historyRevision !== snapshot.nativeHistoryRevision
+        )
+          throw Error('PictureCropBindingMismatch');
+        guard();
+        const target = Object.freeze({}) as PictureCropTarget;
+        pictureCropTargets.set(target, { state: snapshot, runtime, native, generation });
+        return Object.freeze({
+          state: 'available',
+          target,
+          observation,
+        });
+      } catch (error) {
+        // A newer queued query may retire this publication before Native's reply arrives.
+        // Only the exact returned key in this still-owned document/runtime may be released.
+        if (replyVerified && reply?.kind === 'picture-crop-query' && reply.pictureCrop !== null) {
+          try {
+            const key = checkedPictureCropLease(
+              Object.getOwnPropertyDescriptor(reply?.pictureCrop ?? {}, 'leaseKey')?.value,
+            );
+            const cleanupState = state;
+            if (
+              active === runtime &&
+              cleanupState.status === 'ready' &&
+              cleanupState.documentId === snapshot.documentId &&
+              cleanupState.generation === snapshot.generation &&
+              hasRuntimeAdmission(runtime, 'picture-crop-release')
+            ) {
+              const cleanupToken = cleanupState.token,
+                cleanupContext = context(cleanupToken);
+              const cleanupGuard = () => {
+                requireReady(cleanupToken, true);
+                if (state !== cleanupState || active !== runtime)
+                  throw Error('StalePictureCropCleanup');
+              };
+              const cleaned = await requestAtRuntimeAdmission(
+                runtime,
+                { kind: 'picture-crop-release', leaseKey: key },
+                cleanupContext,
+                cleanupGuard,
+              );
+              verifyReply(cleaned, cleanupContext);
+              if (cleaned.error) throw Error(cleaned.error);
+            }
+          } catch (cleanupError) {
+            if (error && typeof error === 'object')
+              Object.defineProperty(error, 'cropReleaseError', {
+                value: String(cleanupError),
+                configurable: true,
+              });
+          }
+        }
+        notifyError(error, ctx, false);
+        throw error;
+      }
+    });
+  }
+  function releasePictureCrop(target: PictureCropTarget): Promise<void> {
+    const owned = pictureCropTargets.get(target);
+    pictureCropTargets.delete(target);
+    return enqueue(async () => {
+      if (!owned || active !== owned.runtime || state !== owned.state) return;
+      const token = state.token;
+      const guard = () => {
+        requireReady(token, true);
+        if (active !== owned.runtime || state !== owned.state)
+          throw Error('StalePictureCropTarget');
+      };
+      if (hasRuntimeAdmission(active, 'picture-crop-release'))
+        await readRequest(
+          { kind: 'picture-crop-release', leaseKey: owned.native.leaseKey },
+          token,
+          guard,
+          true,
+        );
     });
   }
   function getObjectGeometry(
@@ -5450,6 +5678,8 @@ export function createEditor(options: CreateEditorOptions) {
     getHwp5VerticalMargins: geometryGuard(getHwp5VerticalMargins),
     getObjectBodyFlow: geometryGuard(getObjectBodyFlow),
     getPictureReplacement: geometryGuard(getPictureReplacement),
+    getPictureCrop: geometryGuard(getPictureCrop),
+    releasePictureCrop: geometryGuard(releasePictureCrop),
     getAnchoredPictureResize: geometryGuard(getAnchoredPictureResize),
     getObjectGeometry: geometryGuard(getObjectGeometry),
     getHwp5EquationScript: geometryGuard(getHwp5EquationScript),

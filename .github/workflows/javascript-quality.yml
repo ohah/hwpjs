@@ -199,6 +199,13 @@ jobs:
           grep -Eq '^# pass 13$' "$RUNNER_TEMP/hwp5-equation-script-source.tap"
           grep -Eq '^# fail 0$' "$RUNNER_TEMP/hwp5-equation-script-source.tap"
           grep -Eq '^# skipped 0$' "$RUNNER_TEMP/hwp5-equation-script-source.tap"
+      - name: Existing HWP5 and HWPX picture crop source contracts
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          bun test --no-install --tsconfig-override ./tools/tests/tsconfig.picture-crop.json ./packages/core/tests/commands/picture-crop.test.ts ./packages/core/tests/commands/picture-crop-bridge.test.mjs ./packages/core/tests/transport/picture-crop-admission.test.ts ./apps/demo/tests/picture-crop-port.test.ts ./apps/demo/tests/picture-crop-form.test.ts ./apps/demo/tests/picture-crop-tool.test.ts
+          node node_modules/typescript/bin/tsc --noEmit -p tools/tests/tsconfig.picture-crop.json
       - name: Existing PAGE restart Core and UI source contracts
         timeout-minutes: 2
         shell: bash
