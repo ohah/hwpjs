@@ -22,6 +22,15 @@ const HWP5_PIE_CHART_RECEIPT = 'tools/pages-demo/hwp5-pie-chart-fixture-receipt.
 const PAGE_RESTART_RECEIPT = 'tools/pages-demo/page-restart-fixture-receipt.json';
 const approvedReceipts = new Map([
   [
+    'tools/pages-demo/table-merge-fixture-receipt.json',
+    {
+      feature: 'table-cell-merge',
+      sha256: '01a2947559ba0b47c8f3d553c146892ee9e3f34d25bd0a1b513da423cae570ae',
+      baselinePolicy: 'tools/pages-demo/public-gallery-fixtures-137.json',
+      additions: 2,
+    },
+  ],
+  [
     PAGE_RESTART_RECEIPT,
     {
       feature: 'existing-page-restart',

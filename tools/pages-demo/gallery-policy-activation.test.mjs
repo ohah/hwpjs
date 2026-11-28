@@ -69,7 +69,7 @@ test('archived131 appends the exact vertical-margin samples to the archived129',
   for (const item of receipt.additions)
     assert.equal(sha(await readFile(resolve(root, item.sourcePath))), item.row.sha256);
 });
-test('actual producer policy reader defaults to137 and historical margin extension uses126 without touching the receipt', async () => {
+test('actual producer policy reader defaults to139 and historical margin extension uses126 without touching the receipt', async () => {
   for (const extension of [undefined, resolve(root, HWP5_MARGIN_RECEIPT)]) {
     const reads = [];
     const data = await loadPublicFixtureBaselinePolicy({
@@ -86,7 +86,7 @@ test('actual producer policy reader defaults to137 and historical margin extensi
         extension === undefined ? CURRENT_PUBLIC_FIXTURE_POLICY : HWP5_MARGIN_BASE_POLICY,
       ),
     ]);
-    assert.equal(JSON.parse(data).files.length, extension === undefined ? 137 : 126);
+    assert.equal(JSON.parse(data).files.length, extension === undefined ? 139 : 126);
   }
   let extra = 0;
   assert.equal(
@@ -102,7 +102,7 @@ test('actual producer policy reader defaults to137 and historical margin extensi
   );
   assert.equal(extra, 0);
 });
-test('current137 source metadata covers every exact ID without rewriting historical sourceHEAD', async () => {
+test('current139 source metadata covers every exact ID without rewriting historical sourceHEAD', async () => {
   const [
     policyBytes,
     sourceBytes,
@@ -114,6 +114,7 @@ test('current137 source metadata covers every exact ID without rewriting histori
     horizontalReceiptBytes,
     pieReceiptBytes,
     pageRestartReceiptBytes,
+    tableMergeReceiptBytes,
   ] = await Promise.all([
     bytes('public-gallery-fixtures.json'),
     bytes('public-gallery-current-sources.json'),
@@ -125,6 +126,7 @@ test('current137 source metadata covers every exact ID without rewriting histori
     bytes('hwp5-horizontal-chart-fixture-receipt.json'),
     bytes('hwp5-pie-chart-fixture-receipt.json'),
     bytes('page-restart-fixture-receipt.json'),
+    bytes('table-merge-fixture-receipt.json'),
   ]);
   const policy = JSON.parse(policyBytes),
     current = JSON.parse(sourceBytes),
@@ -137,7 +139,7 @@ test('current137 source metadata covers every exact ID without rewriting histori
     Object.keys(current.sourcePaths),
     policy.files.map((r) => r.id),
   );
-  assert.equal(Object.keys(current.sourcePaths).length, 137);
+  assert.equal(Object.keys(current.sourcePaths).length, 139);
   assert.equal('sourceHEAD' in current, false);
   assert.equal(historic.sourceHEAD, '8376bd004580d2429a52be544a1706210a21b0fd');
   for (const row of policy.files) {
@@ -149,6 +151,7 @@ test('current137 source metadata covers every exact ID without rewriting histori
       ...JSON.parse(horizontalReceiptBytes).additions,
       ...JSON.parse(pieReceiptBytes).additions,
       ...JSON.parse(pageRestartReceiptBytes).additions,
+      ...JSON.parse(tableMergeReceiptBytes).additions,
     ].find((a) => a.row.id === row.id);
     assert.equal(
       current.sourcePaths[row.id],
@@ -327,12 +330,12 @@ test('historical135 appends a single standard HWP5 pie example to immutable134',
   assert.deepEqual(JSON.parse(provenance).values, [1, 2, 3]);
 });
 
-test('active137 adds exactly the two own existing PAGE examples to immutable135', async () => {
+test('historical137 adds exactly the two own existing PAGE examples to immutable135', async () => {
   const receiptPath = resolve(root, 'tools/pages-demo/page-restart-fixture-receipt.json');
   const baseline = await loadPublicFixtureBaselinePolicy({ root, receiptPath, read: readFile });
   const receiptBytes = await readFile(receiptPath);
   const receipt = JSON.parse(receiptBytes);
-  const activeBytes = await bytes('public-gallery-fixtures.json');
+  const activeBytes = await bytes('public-gallery-fixtures-137.json');
   assert.deepEqual(baseline, await bytes('public-gallery-fixtures-135.json'));
   assert.deepEqual(baseline, await bytes('hwp5-pie-chart-fixture-policy.json'));
   assert.equal(sha(baseline), receipt.basePolicySHA256);
@@ -417,5 +420,30 @@ test('PAGE parent proof matches approved normal blank bytes in normal and optimi
     assert.equal(proof['hwp5-page-restart.hwp'].normalBlankHeaderExact, true);
     assert.equal(proof['hwp5-page-restart.hwp'].parentContainerWholePreservationClaim, false);
     assert.equal(proof['hwpx-page-restart.hwpx'].normalBlankOtherEntriesExact, true);
+  }
+});
+
+test('active139 appends the two own table merge examples to immutable137', async () => {
+  const receiptPath = resolve(root, 'tools/pages-demo/table-merge-fixture-receipt.json');
+  const before = await loadPublicFixtureBaselinePolicy({ root, receiptPath, read: readFile });
+  const active = await bytes('public-gallery-fixtures.json');
+  const receipt = JSON.parse(await readFile(receiptPath));
+  assert.deepEqual(before, await bytes('public-gallery-fixtures-137.json'));
+  assert.equal(sha(before), receipt.basePolicySHA256);
+  assert.equal(sha(active), receipt.targetPolicySHA256);
+  assert.deepEqual(active, await bytes('table-merge-fixture-policy.json'));
+  assert.deepEqual(JSON.parse(active).files, [
+    ...JSON.parse(before).files,
+    ...receipt.additions.map(({ row }) => row),
+  ]);
+  const provenance = await bytes('table-merge-fixture-provenance.json');
+  for (const addition of receipt.additions) {
+    const example = await readFile(resolve(root, addition.sourcePath));
+    assert.equal(example.length, addition.row.bytes);
+    assert.equal(sha(example), addition.row.sha256);
+    assert.equal(sha(provenance), addition.provenanceSHA256);
+    const parent = JSON.parse(before).files.find((row) => row.id === addition.parentId);
+    assert.equal(addition.parentSHA256, parent.sha256);
+    assert.equal(addition.parentBytes, parent.bytes);
   }
 });

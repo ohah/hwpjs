@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "wasmSha256": "ca7d4a01760c9ad6c7ac148d7a41aea8837690520745d2d18d9c3f682f123ae9",
+  "inputPolicy": "constructor-authored public blank parents",
+  "cases": [
+    {
+      "name": "hwp5-table-merge.hwp",
+      "parent": {
+        "id": "image-insert-blank.hwp",
+        "sha256": "3924fe5f437ffaa76f6696770cb4ae5fc19ffe485fb324bb21abc29b1f2cc689",
+        "bytes": 3584
+      },
+      "input": {
+        "sha256": "449f99d14e85c510a9800ae288b4a4d2bca73475a7f57bd2478a680d023cad52",
+        "bytes": 4608
+      },
+      "merged": {
+        "sha256": "f8db705583fe1f9de95e1e15d08bb3b67540a80e9fb4b72c9d1138c6809a656f",
+        "bytes": 4096
+      }
+    },
+    {
+      "name": "hwpx-table-merge.hwpx",
+      "parent": {
+        "id": "image-insert-blank.hwpx",
+        "sha256": "8b74ee3b9a26ab112276241a39779f21de3b26ce8ec20ceb8093a443e41ff1ee",
+        "bytes": 6671
+      },
+      "input": {
+        "sha256": "7b1ce06a0fa6eb0d2a787bfd1002f68b95af37a38fda595a9216ce047a3d95e7",
+        "bytes": 11146
+      },
+      "merged": {
+        "sha256": "64263693d6835e8547b1756cc2cc2f3f417f579106fa03c6c244bf966a32a9dc",
+        "bytes": 10222
+      }
+    }
+  ]
+}

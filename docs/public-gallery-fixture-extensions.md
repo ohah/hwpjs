@@ -116,3 +116,9 @@ An ordinary producer still rejects a 131-file public baseline against the new
 
 공식 생성기에는 이 영수증을 `--fixture-extension`으로 전달하고,
 `hwp5-pie-chart-fixture-policy.json`에 대조해 135개를 검사합니다.
+
+## 139개 정책의 표 셀 연속 병합 예제
+
+HWP5·HWPX 표 병합 예제는 공개 빈 문서 생성기에서 만든 2행 3열 표입니다. 두 행에서 왼쪽 두 셀을 차례로 합칠 수 있으며 오른쪽 셀은 비교용입니다. HWP5의 덮이는 셀은 비워 두었고 HWPX에는 병합 뒤에도 보존되는 문단을 넣었습니다.
+
+기존 137개 정책은 `public-gallery-fixtures-137.json`에 유지합니다. `table-merge-fixture-receipt.json`은 기존 manifest, 두 빈 문서, 두 예제의 해시와 확인 결과를 연결합니다. 활성 정책과 정적 자산은 기존 137개를 그대로 유지하고 두 파일만 추가합니다.

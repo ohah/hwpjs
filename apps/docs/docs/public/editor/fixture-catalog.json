@@ -820,5 +820,17 @@
     "name": "hwpx-page-restart.hwpx",
     "label": "[기능 예제] HWPX 기존 쪽 번호 재시작",
     "available": true
+  },
+  {
+    "id": "hwp5-table-merge.hwp",
+    "name": "hwp5-table-merge.hwp",
+    "label": "[기능 예제] HWP5 표 셀 연속 병합",
+    "available": true
+  },
+  {
+    "id": "hwpx-table-merge.hwpx",
+    "name": "hwpx-table-merge.hwpx",
+    "label": "[기능 예제] HWPX 표 셀 연속 병합",
+    "available": true
   }
 ]

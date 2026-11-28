@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "catalogSHA256": "eb04aa6cdb80ac990a704845341d099daaa7a3eda2679dbbe6587ca50f05c7bd",
+  "catalogSHA256": "a2e3e7b3d6eef97cd10aa64f0e7bd4c69cfc435e9ce38485cb6b0d090f800e9c",
   "files": [
     {
       "id": "image-insert-blank.hwp",
@@ -1097,6 +1097,22 @@
       "path": "fixtures/hwpx-page-restart.hwpx",
       "bytes": 6937,
       "sha256": "ff03f70bb048a45abcd21d2a40d2e1828d89ae8e2c85ee9cb42ed9c36c738a6d"
+    },
+    {
+      "id": "hwp5-table-merge.hwp",
+      "name": "hwp5-table-merge.hwp",
+      "label": "[기능 예제] HWP5 표 셀 연속 병합",
+      "path": "fixtures/hwp5-table-merge.hwp",
+      "bytes": 4608,
+      "sha256": "449f99d14e85c510a9800ae288b4a4d2bca73475a7f57bd2478a680d023cad52"
+    },
+    {
+      "id": "hwpx-table-merge.hwpx",
+      "name": "hwpx-table-merge.hwpx",
+      "label": "[기능 예제] HWPX 표 셀 연속 병합",
+      "path": "fixtures/hwpx-table-merge.hwpx",
+      "bytes": 11146,
+      "sha256": "7b1ce06a0fa6eb0d2a787bfd1002f68b95af37a38fda595a9216ce047a3d95e7"
     }
   ]
 }

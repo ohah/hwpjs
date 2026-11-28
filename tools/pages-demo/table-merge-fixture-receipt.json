@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "feature": "table-cell-merge",
+  "baseCount": 137,
+  "targetCount": 139,
+  "baseManifestSHA256": "44dc17a5271e9a6a02aae16c73e96509cc7660c5a97dd1e41123e42fbc0fca01",
+  "basePolicySHA256": "47dd226b4aeb1731d3c29c086b5dfa0a4690f9bfdb537d252d50b6d1fcf04bc3",
+  "baseCatalogSHA256": "eb04aa6cdb80ac990a704845341d099daaa7a3eda2679dbbe6587ca50f05c7bd",
+  "targetPolicyPath": "tools/pages-demo/table-merge-fixture-policy.json",
+  "targetPolicySHA256": "059b4cacb64bc420656321a41367fbf002529d16b480ffb4ba589ecc47cff889",
+  "targetCatalogSHA256": "a2e3e7b3d6eef97cd10aa64f0e7bd4c69cfc435e9ce38485cb6b0d090f800e9c",
+  "additions": [
+    {
+      "row": {
+        "id": "hwp5-table-merge.hwp",
+        "name": "hwp5-table-merge.hwp",
+        "label": "[기능 예제] HWP5 표 셀 연속 병합",
+        "path": "fixtures/hwp5-table-merge.hwp",
+        "bytes": 4608,
+        "sha256": "449f99d14e85c510a9800ae288b4a4d2bca73475a7f57bd2478a680d023cad52"
+      },
+      "sourcePath": "tools/pages-demo/fixtures/hwp5-table-merge.hwp",
+      "parentId": "image-insert-blank.hwp",
+      "parentBytes": 3584,
+      "parentSHA256": "3924fe5f437ffaa76f6696770cb4ae5fc19ffe485fb324bb21abc29b1f2cc689",
+      "provenanceSHA256": "5a8447f2671def57b0da06e4c841513440d4febf4343c19a7f885a6eaca70e88"
+    },
+    {
+      "row": {
+        "id": "hwpx-table-merge.hwpx",
+        "name": "hwpx-table-merge.hwpx",
+        "label": "[기능 예제] HWPX 표 셀 연속 병합",
+        "path": "fixtures/hwpx-table-merge.hwpx",
+        "bytes": 11146,
+        "sha256": "7b1ce06a0fa6eb0d2a787bfd1002f68b95af37a38fda595a9216ce047a3d95e7"
+      },
+      "sourcePath": "tools/pages-demo/fixtures/hwpx-table-merge.hwpx",
+      "parentId": "image-insert-blank.hwpx",
+      "parentBytes": 6671,
+      "parentSHA256": "8b74ee3b9a26ab112276241a39779f21de3b26ce8ec20ceb8093a443e41ff1ee",
+      "provenanceSHA256": "5a8447f2671def57b0da06e4c841513440d4febf4343c19a7f885a6eaca70e88"
+    }
+  ],
+  "producer": {
+    "authorProgramSHA256": "4deb5409b7be5d87ea2a1799acc5b8da354a827a819f0a8ec23d1c3758f570fd",
+    "independentRawGateSHA256": "509ceb8952c09156da0f462f0a834f239ac1d4f88850ec7ecf4188b293c84fe8"
+  }
+}
