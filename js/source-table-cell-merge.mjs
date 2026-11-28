@@ -53,13 +53,27 @@ const words = (text) => {
   return [Number(value & 0xffffffffn), Number(value >> 32n)];
 };
 
-export function createSourceTableCellMergeApi({ wasm, memory, check, documentInsert }) {
+export function createSourceTableCellMergeApi({
+  wasm,
+  memory,
+  check,
+  documentInsert,
+  format = 'hwpx',
+}) {
+  const mergeExport = `${format}_edit_merge_source_table_cells`;
   const supported =
     documentInsert.supportsDocumentInsertionAbi() &&
-    HWPX_SOURCE_TABLE_CELL_MERGE_FUNCTIONS.every((name) => typeof wasm[name] === 'function');
+    (format === 'hwp5' ? [mergeExport] : HWPX_SOURCE_TABLE_CELL_MERGE_FUNCTIONS).every(
+      (name) => typeof wasm[name] === 'function',
+    );
   const requireSupport = () => {
     check();
-    if (!supported) throw new Error('HwpxSourceTableCellMergeAbiUnavailable');
+    if (!supported)
+      throw new Error(
+        format === 'hwp5'
+          ? 'Hwp5SourceTableCellMergeAbiUnavailable'
+          : 'HwpxSourceTableCellMergeAbiUnavailable',
+      );
   };
   return {
     supportsSourceTableCellMerge() {
@@ -97,7 +111,7 @@ export function createSourceTableCellMergeApi({ wasm, memory, check, documentIns
         { withBytes: (_, invoke) => invoke(0, 0), error: () => memory.error() },
         null,
         () =>
-          wasm.hwpx_edit_merge_source_table_cells(
+          wasm[mergeExport](
             ...coordinates.map((key) => value[key]),
             current.revision,
             ...words(current.session.slice(current.session.lastIndexOf(':') + 2)),

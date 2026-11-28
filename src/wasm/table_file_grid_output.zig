@@ -17,10 +17,36 @@ pub const Request = struct {
     layout: u32,
     /// Only after validateRequest and validateAddress have succeeded.
     pub fn input(self: Request) []const u8 {
-        const pointer: [*]const u8 = @ptrCast(self.input_ptr);
-        return pointer[0..self.input_len];
+        return inputBytes(self.input_ptr, self.input_len);
     }
 };
+
+pub const Hwp5MergeRequest = struct {
+    input_ptr: [*]allowzero const u8,
+    input_len: usize,
+    section: u32,
+    table_node: u32,
+    expected_rows: u32,
+    expected_columns: u32,
+    row: u32,
+    last_row: u32,
+    first_column: u32,
+    last_column: u32,
+};
+
+fn inputBytes(input_ptr: [*]allowzero const u8, len: usize) []const u8 {
+    const pointer: [*]const u8 = @ptrCast(input_ptr);
+    return pointer[0..len];
+}
+
+fn validateHwp5Merge(r: Hwp5MergeRequest) !void {
+    if (r.input_len == 0 or r.input_len > max_input_bytes) return error.LimitExceeded;
+    if (r.section >= 1024) return error.InvalidSection;
+    if (r.expected_rows > 65535 or r.expected_columns > 65535 or
+        @as(u64, r.expected_rows) * r.expected_columns > 100_000) return error.LimitExceeded;
+    if (r.row > r.last_row or r.last_row >= r.expected_rows or r.first_column > r.last_column or
+        r.last_column >= r.expected_columns or (r.row == r.last_row and r.first_column == r.last_column)) return error.InvalidSourceTableCellMerge;
+}
 
 pub fn command(action: u32, index: u32) !plan.Command {
     return @import("created_table_grid_request.zig").decode(action, index);
@@ -69,10 +95,16 @@ pub const Output = struct {
     }
     /// Converter borrows input and returns a distinct owned allocation.
     pub fn replaceWith(self: *Output, r: Request, comptime convert: anytype) !void {
+        return self.replaceValidated(r, validateRequest, convert);
+    }
+    pub fn mergeHwp5(self: *Output, r: Hwp5MergeRequest) !void {
+        return self.replaceValidated(r, validateHwp5Merge, transformHwp5Merge);
+    }
+    fn replaceValidated(self: *Output, r: anytype, comptime validate: anytype, comptime convert: anytype) !void {
         const previous = self.bytes;
         self.bytes = null;
         defer if (previous) |bytes| self.allocator.free(bytes);
-        try validateRequest(r);
+        try validate(r);
         try validateAddress(@intFromPtr(r.input_ptr), r.input_len, memoryBound());
         const candidate = try convert(self.allocator, r);
         errdefer self.allocator.free(candidate);
@@ -101,4 +133,20 @@ fn transform(a: std.mem.Allocator, r: Request) ![]u8 {
         }, .{ .max_input_bytes = max_input_bytes, .max_output_bytes = max_output_bytes }),
         else => error.InvalidDocumentFormat,
     };
+}
+
+fn transformHwp5Merge(a: std.mem.Allocator, r: Hwp5MergeRequest) ![]u8 {
+    return @import("../hwp5/edit/source_table_grid_file.zig").mergeHorizontal(a, inputBytes(r.input_ptr, r.input_len), .{
+        .section = r.section,
+        .table_node = r.table_node,
+        .expected_rows = r.expected_rows,
+        .expected_columns = r.expected_columns,
+        .layout = .observed8,
+        .selection = .{
+            .row = @intCast(r.row),
+            .last_row = @intCast(r.last_row),
+            .first_column = @intCast(r.first_column),
+            .last_column = @intCast(r.last_column),
+        },
+    }, .{ .max_input_bytes = max_input_bytes, .max_output_bytes = max_output_bytes });
 }

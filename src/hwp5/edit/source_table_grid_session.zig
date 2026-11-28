@@ -14,6 +14,7 @@ pub const Edit = struct {
     command: ?@import("../../model/table_grid_edit_plan.zig").Command = null,
     split: ?@import("source_table_cell_split.zig").Request = null,
     layout: @import("../body/list_header.zig").Layout,
+    merge: ?@import("source_table_horizontal_merge.zig").Selection = null,
 };
 const TableSite = struct { ordinal: usize, total: usize };
 fn tableSite(raw: []const u8, selected: usize) !TableSite {
@@ -61,6 +62,7 @@ pub fn prepare(a: std.mem.Allocator, current_file: []const u8, active_source: []
         .command = edit.command,
         .split = edit.split,
         .layout = edit.layout,
+        .merge = edit.merge,
     }, .{});
     defer a.free(changed_file);
     var changed = try Source.open(a, changed_file);

@@ -377,6 +377,7 @@ export function createReaderRuntime({
       );
     content.sourceTableCellHeightAvailable = content.sourceTableCellWidthAvailable;
     content.sourceTableGridAvailable = editor?.supportsSourceTableGrid?.() === true;
+    content.sourceTableCellMergeAvailable = editor?.supportsSourceTableCellMerge?.() === true;
     content.sourceTableCellSplitAvailable = editor?.supportsSourceTableCellSplit?.() === true;
     if (content.sourceTableCellSplitAvailable && historyEnabled)
       content.sourceTableCellSplitProfile = editor.sourceTableCellSplitProfile();
@@ -2241,7 +2242,7 @@ export function createReaderRuntime({
       }
       if (message.kind === 'source-table-cell-merge') {
         if (
-          format !== 'hwpx' ||
+          !['hwp5', 'hwpx'].includes(format) ||
           !historyEnabled ||
           editor?.supportsSourceTableCellMerge?.() !== true
         )
@@ -2258,9 +2259,11 @@ export function createReaderRuntime({
           return;
         }
         documentWindow = null;
-        reader = await createHwpxReader(module);
-        preview = reader.readTextEvents(editor.saveForDisplay());
-        reply({ kind: message.kind, content: hwpxDisplay() });
+        if (format === 'hwpx') {
+          reader = await createHwpxReader(module);
+          preview = reader.readTextEvents(editor.saveForDisplay());
+        } else await refreshHwp5PreviewFallback();
+        reply({ kind: message.kind, content: format === 'hwpx' ? hwpxDisplay() : hwp5Display() });
         return;
       }
       if (message.kind === 'source-table-grid') {

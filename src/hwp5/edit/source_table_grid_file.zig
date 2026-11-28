@@ -6,6 +6,7 @@ const Source = @import("../text_source.zig").Source;
 const Cfb = @import("../../cfb/reader.zig").File;
 const stream = @import("../stream.zig");
 const Version = @import("../version.zig").Version;
+const horizontal_merge = @import("source_table_horizontal_merge.zig");
 pub const Command = @import("../../model/table_grid_edit_plan.zig").Command;
 pub const Request = struct {
     section: usize,
@@ -15,6 +16,7 @@ pub const Request = struct {
     command: ?Command = null,
     split: ?@import("source_table_cell_split.zig").Request = null,
     layout: @import("../body/list_header.zig").Layout,
+    merge: ?horizontal_merge.Selection = null,
 };
 pub const Options = struct {
     max_input_bytes: usize = 64 * 1024 * 1024,
@@ -31,7 +33,30 @@ pub const Options = struct {
 
 /// Caller frees the new CFB bytes. Source and all non-target stream contents
 /// remain unchanged. Canonical CFB sectors/directory ordering may differ.
+pub const HorizontalMerge = struct {
+    section: usize,
+    table_node: usize,
+    expected_rows: u32,
+    expected_columns: u32,
+    layout: @import("../body/list_header.zig").Layout,
+    selection: horizontal_merge.Selection,
+};
+
+/// Private Native file transform for a typed source TABLE and a cell rectangle.
+pub fn mergeHorizontal(a: std.mem.Allocator, input: []const u8, request: HorizontalMerge, options: Options) ![]u8 {
+    return transform(a, input, .{
+        .section = request.section,
+        .table_node = request.table_node,
+        .expected_rows = request.expected_rows,
+        .expected_columns = request.expected_columns,
+        .layout = request.layout,
+        .merge = request.selection,
+    }, options);
+}
+
 pub fn transform(a: std.mem.Allocator, input: []const u8, request: Request, options: Options) ![]u8 {
+    const selection = request.merge;
+    if (selection != null and (request.command != null or request.split != null)) return error.InvalidSourceTableGridOperation;
     if (input.len == 0 or input.len > options.max_input_bytes) return error.LimitExceeded;
     var arena = std.heap.ArenaAllocator.init(a);
     defer arena.deinit();
@@ -41,12 +66,13 @@ pub fn transform(a: std.mem.Allocator, input: []const u8, request: Request, opti
     const source = &opened.source;
     if (source.header.has(.history) or source.header.has(.digital_signature) or source.header.has(.signature_preview)) return error.UnsupportedSourceTableGridSaveFeatures;
     if (request.section >= source.section_count) return error.InvalidSection;
-    const plan = try @import("source_table_grid_operation.zig").create(request.expected_rows, request.expected_columns, request.command, request.split, options.max_cells);
+    if (selection != null and source.header.has(.distribution)) return error.UnsupportedSourceTableGridSaveFeatures;
+    const inserted_count = if (selection != null) 0 else (try @import("source_table_grid_operation.zig").create(request.expected_rows, request.expected_columns, request.command, request.split, options.max_cells)).inserted_count;
     var ids: std.AutoHashMap(u32, void) = .init(s);
     defer ids.deinit();
-    const inventory = try inspect(s, &opened, request.section, options, &ids);
-    if (plan.inserted_count > options.max_paragraphs - inventory.total.paragraphs) return error.LimitExceeded;
-    const fresh = try s.alloc(u32, plan.inserted_count);
+    const inventory = try inspect(s, &opened, request.section, options, if (selection == null) &ids else null);
+    if (inserted_count > options.max_paragraphs - inventory.total.paragraphs) return error.LimitExceeded;
+    const fresh = try s.alloc(u32, inserted_count);
     // One monotone cursor: expected O(records + paragraphs + inserted cells),
     // independent of existing ID magnitudes, with no wraparound.
     var candidate: u32 = 1;
@@ -61,7 +87,7 @@ pub fn transform(a: std.mem.Allocator, input: []const u8, request: Request, opti
     candidate_total.bytes -= inventory.target.len;
     candidate_total.records -= inventory.target_records;
     candidate_total.paragraphs -= inventory.target_paragraphs;
-    const changed = try grid.prepare(s, inventory.target, source.header.version(), .{
+    const local_request: grid.Request = .{
         .table_node = request.table_node,
         .expected_rows = request.expected_rows,
         .expected_columns = request.expected_columns,
@@ -69,11 +95,16 @@ pub fn transform(a: std.mem.Allocator, input: []const u8, request: Request, opti
         .split = request.split,
         .layout = request.layout,
         .new_paragraph_ids = fresh,
-    }, .{
+    };
+    const local_limits: grid.Limits = .{
         .max_bytes = @min(options.max_section_bytes, options.max_decoded_bytes - candidate_total.bytes),
         .max_records = options.max_records - candidate_total.records,
         .max_cells = options.max_cells,
-    });
+    };
+    const changed = if (selection) |range|
+        try horizontal_merge.prepare(s, inventory.target, source.header.version(), local_request, range, local_limits)
+    else
+        try grid.prepare(s, inventory.target, source.header.version(), local_request, local_limits);
     try candidate_total.add(changed, true, source.header.version(), options, null);
     const stored = if (source.header.has(.compressed)) try @import("../../compression/raw_deflate.zig").encodeStored(s, changed, options.max_output_bytes) else changed;
     const path = try std.fmt.allocPrint(s, "/BodyText/Section{d}", .{request.section});

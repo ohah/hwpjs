@@ -64,6 +64,32 @@ function captureRequest(request) {
   return captured;
 }
 
+function captureMerge(request, rectangular) {
+  const keys = [
+    'section',
+    'tableNode',
+    'expectedRows',
+    'expectedColumns',
+    'row',
+    ...(rectangular ? ['lastRow'] : []),
+    'firstColumn',
+    'lastColumn',
+  ];
+  if (
+    !request ||
+    typeof request !== 'object' ||
+    Array.isArray(request) ||
+    Reflect.ownKeys(request).length !== keys.length
+  )
+    throw new TypeError('InvalidTableFileHorizontalMergeRequest');
+  return keys.map((key) => {
+    const property = Object.getOwnPropertyDescriptor(request, key);
+    if (!property || !Object.hasOwn(property, 'value') || !uint(property.value))
+      throw new TypeError('InvalidTableFileHorizontalMergeRequest');
+    return property.value;
+  });
+}
+
 /** Independent immutable file transform; edit is synchronous after instantiation. */
 export async function createSourceTableGridFileApi(
   source,
@@ -92,64 +118,89 @@ export async function createSourceTableGridFileApi(
   const memory = createMemory(wasm);
   let closed = false,
     busy = false;
+  /** @returns {Uint8Array} */
+  function run(input, capture) {
+    if (closed) throw new Error('TableFileGridClosed');
+    if (busy) throw new Error('TableFileGridBusy');
+    // Guard descriptor traps and cleanup callbacks as well as the Native call.
+    busy = true;
+    try {
+      const edit = capture();
+      const document = copyPictureInput(input, TABLE_FILE_GRID_LIMITS.documentBytes, 'Document');
+      const errors = [];
+      /** @type {Uint8Array | undefined} */
+      let output;
+      const attempt = (action) => {
+        try {
+          return action();
+        } catch (error) {
+          errors.push(error);
+        }
+      };
+      attempt(() =>
+        memory.withBytes(document, (ptr, length) =>
+          attempt(() => {
+            if (edit(ptr, length) !== 1) throw memory.error();
+            const pointer = wasm.table_file_grid_ptr(),
+              size = wasm.table_file_grid_len();
+            if (
+              !uint(pointer) ||
+              pointer === 0 ||
+              !uint(size) ||
+              size === 0 ||
+              size > TABLE_FILE_GRID_LIMITS.outputBytes ||
+              pointer > wasm.memory.buffer.byteLength - size
+            )
+              throw new RangeError('InvalidTableFileGridOutput');
+            output = memory.copy(pointer, size);
+          }),
+        ),
+      );
+      attempt(() => wasm.table_file_grid_free());
+      if (errors.length > 1) throw new AggregateError(errors, 'TableFileGridAndCleanupFailed');
+      if (errors.length === 1) throw errors[0];
+      if (!output) throw new Error('MissingTableFileGridOutput');
+      return output;
+    } finally {
+      busy = false;
+    }
+  }
   return {
     edit(input, request) {
-      if (closed) throw new Error('TableFileGridClosed');
-      if (busy) throw new Error('TableFileGridBusy');
-      // Guard descriptor traps and cleanup callbacks as well as the Native call.
-      busy = true;
-      try {
+      return run(input, () => {
         const target = captureRequest(request);
-        const document = copyPictureInput(input, TABLE_FILE_GRID_LIMITS.documentBytes, 'Document');
-        const errors = [];
-        let output;
-        const attempt = (action) => {
-          try {
-            return action();
-          } catch (error) {
-            errors.push(error);
-          }
-        };
-        attempt(() =>
-          memory.withBytes(document, (ptr, length) =>
-            attempt(() => {
-              if (
-                wasm.table_file_grid_edit(
-                  target.format === 'hwp5' ? 1 : 2,
-                  ptr,
-                  length,
-                  target.section,
-                  target.tableNode,
-                  target.expectedRows,
-                  target.expectedColumns,
-                  actions[target.action],
-                  target.index,
-                  target.layout === 'observed8' ? 1 : 0,
-                ) !== 1
-              )
-                throw memory.error();
-              const pointer = wasm.table_file_grid_ptr(),
-                size = wasm.table_file_grid_len();
-              if (
-                !uint(pointer) ||
-                pointer === 0 ||
-                !uint(size) ||
-                size === 0 ||
-                size > TABLE_FILE_GRID_LIMITS.outputBytes ||
-                pointer > wasm.memory.buffer.byteLength - size
-              )
-                throw new RangeError('InvalidTableFileGridOutput');
-              output = memory.copy(pointer, size);
-            }),
-          ),
-        );
-        attempt(() => wasm.table_file_grid_free());
-        if (errors.length > 1) throw new AggregateError(errors, 'TableFileGridAndCleanupFailed');
-        if (errors.length === 1) throw errors[0];
-        return output;
-      } finally {
-        busy = false;
-      }
+        return (ptr, length) =>
+          wasm.table_file_grid_edit(
+            target.format === 'hwp5' ? 1 : 2,
+            ptr,
+            length,
+            target.section,
+            target.tableNode,
+            target.expectedRows,
+            target.expectedColumns,
+            actions[target.action],
+            target.index,
+            target.layout === 'observed8' ? 1 : 0,
+          );
+      });
+    },
+    mergeHwp5Horizontal(input, request) {
+      return run(input, () => {
+        const native = wasm.hwp5_merge_source_table_horizontal_file;
+        if (typeof native !== 'function' || native.length !== 9)
+          throw new Error('Hwp5SourceTableCellMergeUnavailable');
+        const selection = captureMerge(request, false);
+        return (ptr, length) => native(ptr, length, ...selection);
+      });
+    },
+    mergeHwp5Rectangle(input, request) {
+      return run(input, () => {
+        const native = wasm.hwp5_merge_source_table_rectangle_file;
+        if (typeof native !== 'function' || native.length !== 10)
+          throw new Error('Hwp5SourceTableCellMergeUnavailable');
+        const selection = captureMerge(request, true);
+        return (ptr, length) => native(ptr, length, ...selection);
+      });
     },
     close() {
       if (busy) throw new Error('TableFileGridBusy');

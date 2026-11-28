@@ -12,6 +12,8 @@ HWPX는 최초 tree의 Session 소유권과 현재 optional owned basis를 구�
 
 표 구조 변경은 v2의 기존 full/bridge 경로를 사용합니다. 전후 일반 입력은 기존 text delta 경로를 유지합니다. 삭제의 undo는 반대 명령 재실행이 아니라 이전 모델·basis 복원이므로 삭제된 본문과 서식도 돌아옵니다. 스칼라 실패·예산·할당 실패는 후보를 버리고 이전 값과 redo를 보존합니다.
 
+HWP5 직사각형 병합도 Native 열린 세션에서 같은 경로를 사용합니다. 현재 구역을 저장한 뒤 TABLE의 순번으로 대상을 다시 찾아 파일 병합기를 호출하고, 검증된 새 구역을 이력에 한 번 반영합니다. 기존 병합과 겹치거나 덮이는 셀에 내용이 있으면 변경을 거부합니다. 웹에서는 이 조건을 충족하는 원본 셀 블록의 컨텍스트 메뉴에서 **셀 합치기**를 실행합니다. HWP5 병합은 기존 세션·리비전·이력 티켓을 재사용하며, WASM에 선택 export가 없으면 메뉴를 비활성화합니다.
+
 ## 명령과 표시
 
 SDK의 `supportsSourceTableGrid()`와 `editSourceTableGrid({section, tableNode, expectedRows, expectedColumns, action, index, layout})`, Core의 `EDIT_SOURCE_TABLE_GRID_COMMAND`를 제공합니다. action은 `insert-row`, `delete-row`, `insert-column`, `delete-column`입니다. Native wire 숫자 0..3은 기존 ABI 스키마에서만 변환합니다. optional ABI6 export는 `hwp5_edit_source_table_grid`·`hwpx_edit_source_table_grid`이며 일곱 인자를 받습니다.
@@ -21,6 +23,8 @@ HWP5 웹 선택은 기존 Reader의 `observed8` 정책을 사용하며 파일 �
 초기 HWPX load 결과는 enable 단계에서 재사용합니다. 콘텐츠의 ABI 제공 여부를 history 활성화 전의 false 값으로 고정하면 최초 편집에서 기능이 누락되는 반례를 확인했습니다. 콘텐츠는 실제 export 제공 여부를, 최상위 명령 capability는 history 활성화까지 확인하도록 분리해 기존 load 재사용을 유지했습니다. 일반 쓰기 정책과 Worker의 history guard도 적용합니다.
 
 기존 네 행·열 메뉴와 컨텍스트 메뉴는 tagged source/generated lease router를 공유합니다. 원본 TABLE 노드를 생성 identity로 변환하지 않습니다. `captureSourceTableGridSelection()`은 실제 Canvas·Native table binding과 Core 상태의 일치를 확인하고 모달·조합·대기 입력·이력·재선택 이후 lease를 거부합니다.
+
+새 WASM으로 Vanilla 데모에 HWP를 열고 셀 블록을 선택해 컨텍스트 메뉴에서 2×2 병합을 실행했습니다. 실행 취소·다시 실행 후 내려받은 HWP를 브라우저와 파일 리더에서 다시 열어 병합 범위와 주변 셀 텍스트를 확인했습니다. Core와 Worker 통합 검사에서는 이전 선택 재사용 거부와 실행 취소·다시 실행의 저장 바이트 일치도 확인했습니다.
 
 ## 지원 경계
 

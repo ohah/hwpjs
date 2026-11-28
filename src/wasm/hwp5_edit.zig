@@ -427,6 +427,41 @@ export fn hwp5_edit_split_source_table_cells(section: u32, table_node: u32, rows
     }
     return if (changed) 1 else 2;
 }
+export fn hwp5_edit_merge_source_table_cells(section: u32, table_node: u32, rows: u32, columns: u32, top: u32, left: u32, bottom: u32, right: u32, revision: u32, epoch_lo: u32, epoch_hi: u32, serial_lo: u32, serial_hi: u32) u32 {
+    hwp5_edit_output_free();
+    const service = sourceCellSplitService() catch |err| return fail(err);
+    const current = service.currentRevision() catch |err| {
+        _ = fail(err);
+        return if (err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    const ticket = service.session.historyTicket() catch |err| return fail(err);
+    const epoch = @as(u64, epoch_hi) << 32 | epoch_lo;
+    const serial = @as(u64, serial_hi) << 32 | serial_lo;
+    if (formatting_lifetime.epoch != epoch or current != revision or ticket.epoch != serial)
+        return fail(error.StaleSourceTableMergeBinding);
+    if (bottom <= top or right <= left or bottom > rows or right > columns or rows > 65535 or columns > 65535 or
+        @as(u64, rows) * columns > 100_000 or (bottom - top == 1 and right - left == 1))
+        return fail(error.InvalidSourceTableCellMerge);
+    apply(.{ .edit_source_table_grid = .{
+        .section = section,
+        .table_node = table_node,
+        .expected_rows = rows,
+        .expected_columns = columns,
+        .layout = .observed8,
+        .merge = .{
+            .row = @intCast(top),
+            .last_row = @intCast(bottom - 1),
+            .first_column = @intCast(left),
+            .last_column = @intCast(right - 1),
+        },
+    } }) catch |err| {
+        const poisoned = service.history.stats().poisoned;
+        _ = fail(err);
+        return if (poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    reflow = true;
+    return 1;
+}
 export fn hwp5_edit_source_table_grid(section: u32, table_node: u32, rows: u32, columns: u32, action: u32, index: u32, layout: u32) u32 {
     hwp5_edit_output_free();
     const command = @import("created_table_grid_request.zig").decode(action, index) catch |err| return fail(err);

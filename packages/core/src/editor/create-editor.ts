@@ -2700,7 +2700,10 @@ export function createEditor(options: CreateEditorOptions) {
             throw Error('StaleSourceTableCellMergeTarget');
         };
         guard();
-        const admission = await readDocumentInsertCapability(pending.token, guard);
+        const admission =
+          (state.content as { format?: string })?.format === 'hwp5'
+            ? await readSourceTableCellSplitCapability(pending.token, guard)
+            : await readDocumentInsertCapability(pending.token, guard);
         if ('reason' in admission) throw Error(admission.reason);
         return await mutate(
           {

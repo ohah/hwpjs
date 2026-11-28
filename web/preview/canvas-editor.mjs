@@ -876,9 +876,7 @@ export function createCanvasEditor({
       !context ||
       context.created ||
       (!split && !appearance && (!block || block.paint.cells.size < 2)) ||
-      (split || appearance || alignment || equalizeWidth || equalizeHeight
-        ? !['hwpx', 'hwp5'].includes(content?.format)
-        : content?.format !== 'hwpx') ||
+      !['hwpx', 'hwp5'].includes(content?.format) ||
       (!appearance && content[capability] !== true) ||
       renderer.viewEditPolicyActive?.() === true
     )

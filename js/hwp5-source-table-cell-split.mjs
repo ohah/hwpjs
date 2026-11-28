@@ -1,6 +1,9 @@
 import { HWP5_SOURCE_TABLE_CELL_SPLIT_FUNCTIONS } from './abi-schema.mjs';
 import { decodeSourceTableCellSplitCapability } from './source-table-cell-split-capability.mjs';
-import { createSourceTableCellSplitApi } from './source-table-cell-merge.mjs';
+import {
+  createSourceTableCellMergeApi,
+  createSourceTableCellSplitApi,
+} from './source-table-cell-merge.mjs';
 let sequence = 0n;
 export function createHwp5SourceTableCellSplitApi({ wasm, memory, check }) {
   const supported = HWP5_SOURCE_TABLE_CELL_SPLIT_FUNCTIONS.every(
@@ -32,11 +35,9 @@ export function createHwp5SourceTableCellSplitApi({ wasm, memory, check }) {
       }
     },
   };
-  return createSourceTableCellSplitApi({
-    wasm,
-    memory,
-    check,
-    documentInsert: bindingSource,
-    format: 'hwp5',
-  });
+  const options = { wasm, memory, check, documentInsert: bindingSource, format: 'hwp5' };
+  return {
+    ...createSourceTableCellSplitApi(options),
+    ...createSourceTableCellMergeApi(options),
+  };
 }

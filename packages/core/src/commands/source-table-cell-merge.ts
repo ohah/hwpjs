@@ -66,7 +66,7 @@ function sourceTableCellPlan(
   if (
     !content ||
     state.nativeHistoryStats?.protocolVersion !== 2 ||
-    (split ? !['hwp5', 'hwpx'].includes(content?.format ?? '') : content?.format !== 'hwpx') ||
+    !['hwp5', 'hwpx'].includes(content.format ?? '') ||
     (split
       ? content.sourceTableCellSplitAvailable !== true
       : content.sourceTableCellMergeAvailable !== true) ||

@@ -2298,6 +2298,17 @@ pub const Session = opaque {
                 if (state.created_tables[edit.section].entries.len != 0) return error.UnsupportedSourceTableGridPendingObjects;
                 // These transient DocInfo clones require an explicit node/resource remap.
                 for (state.cell_backgrounds.entries) |entry| if (entry.edit.section == edit.section) return error.UnsupportedSourceTableGridPendingCellStyle;
+                if (edit.merge != null) {
+                    const version = state.source.header.version();
+                    const policy = @import("source_policy.zig");
+                    for (state.decoded, 0..) |bytes, section| {
+                        if (section == edit.section) {
+                            try policy.validate(state.allocator, bytes, version);
+                        } else {
+                            try policy.validateUnselectedStructureSection(state.allocator, bytes, version);
+                        }
+                    }
+                }
                 const saved = try self.save(state.allocator, .{ .allow_stale_layout = true });
                 defer state.allocator.free(saved.bytes);
                 const current = state.document.sections[edit.section];
