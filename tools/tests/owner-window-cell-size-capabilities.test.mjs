@@ -28,6 +28,7 @@ test('actual HWP5 cell-size capabilities retain plain-owner admission and reject
       'sourceTableCellWidthAvailable',
       'sourceTableCellHeightAvailable',
       'sourceTableCellSplitAvailable',
+      'sourceTableCellMergeAvailable',
     ]) {
       for (const value of [true, false]) assert.equal(probe({ [key]: value }), true);
       for (const value of [undefined, null, 0, 1, '', 'true', {}, []])
