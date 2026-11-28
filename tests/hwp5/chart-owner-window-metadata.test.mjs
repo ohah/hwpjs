@@ -139,7 +139,7 @@ test('H5 chart boolean metadata reuse is distinct from actual creation admission
     enabled: false,
     reason: 'ChartCreateProfileUnavailable',
   });
-  for (const profile of [undefined, null, 0, 2, true, '1'])
+  for (const profile of [undefined, null, 0, 5, true, '1'])
     assert.deepEqual(
       availability({ chartCreationAvailable: true, hwp5ChartCreateProfileVersion: profile }),
       {
@@ -147,10 +147,11 @@ test('H5 chart boolean metadata reuse is distinct from actual creation admission
         reason: 'ChartCreateProfileUnavailable',
       },
     );
-  assert.equal(
-    availability({ chartCreationAvailable: true, hwp5ChartCreateProfileVersion: 1 }).enabled,
-    true,
-  );
+  for (const profile of [1, 2, 3, 4])
+    assert.deepEqual(
+      availability({ chartCreationAvailable: true, hwp5ChartCreateProfileVersion: profile }),
+      { enabled: true },
+    );
   assert.equal(
     availability({ chartCreationAvailable: false, hwp5ChartCreateProfileVersion: 1 }).enabled,
     false,
