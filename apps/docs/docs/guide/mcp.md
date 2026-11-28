@@ -397,7 +397,7 @@ MCP의 `outputPath`는 **새 단일 파일**입니다. CLI `extract-images --out
 
 `reference`는 같은 원본 SHA를 포함한 실제 표 참조로 바꿔야 합니다. `action`·0 기반 `index`·현재 예상 크기와 선택 `layout`의 범위는 [CLI 계약](./cli.md#원본-표-행열-파일-편집-소스-후보)을 따릅니다. 알 수 없는 키는 거부하며 `allowStaleLayout` 기본값은 false입니다. HWP5/HWPX 모두 명시 동의해야 저장합니다. MCP는 공통 CLI 파일 호스트를 호출하고 별도 파일 쓰기를 수행하지 않습니다. 응답에는 새 파일의 경로·SHA·원본 SHA와 `layoutRequiresReflow: true`, `previewStale: true`가 포함됩니다. 열린 세션을 편집하는 도구가 아닙니다.
 
-HWP5 관측형 표를 병합하려면 `action`을 `"merge"`로 지정하고 `index` 대신 `range: "0,0:1,1"`을 전달합니다. 이 예는 좌상단의 2×2 범위를 지정합니다. `expectedRows`·`expectedColumns`는 병합 전 표 크기이며 `allowStaleLayout: true`가 필요합니다. 새 파일에서만 병합합니다.
+HWP5 관측형 표나 HWPX 표를 병합하려면 `action`을 `"merge"`로 지정하고 `index` 대신 `range: "0,0:1,1"`을 전달합니다. 이 예는 좌상단의 2×2 범위를 지정합니다. `expectedRows`·`expectedColumns`는 병합 전 표 크기이며 `allowStaleLayout: true`가 필요합니다. 새 파일에서만 병합합니다. HWPX는 덮이는 셀의 문단을 순서대로 보존합니다.
 
 ## 문자 글머리표 정의 생성·수정
 

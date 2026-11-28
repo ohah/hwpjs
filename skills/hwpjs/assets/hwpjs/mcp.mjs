@@ -24609,8 +24609,11 @@ function interpretExtendedArguments(command, options, positional, fail) {
 	}
 	if (command === "edit-table-grid") {
 		const reference = required("ref", "MissingRequiredOption:ref");
+		let format;
 		try {
-			if (parseObjectReference(reference).kind !== "table") return fail("ExpectedTableReference");
+			const table = parseObjectReference(reference);
+			format = table.format;
+			if (table.kind !== "table") return fail("ExpectedTableReference");
 		} catch {
 			return fail("InvalidTableReference");
 		}
@@ -24638,7 +24641,7 @@ function interpretExtendedArguments(command, options, positional, fail) {
 		};
 		if (action === "merge") {
 			if (options.has("index")) return fail("InvalidTableGridActionOptions");
-			if (layout === "spec6") return fail("Hwp5ObservedTableMergeRequired");
+			if (format === "hwp5" && layout === "spec6") return fail("Hwp5ObservedTableMergeRequired");
 			const range = required("range", "MissingRequiredOption:range");
 			try {
 				parseTableMergeRange(range, expectedRows, expectedColumns);
@@ -50653,6 +50656,17 @@ var init_table_file_grid = __esmMin((() => {
 }));
 // src/edit-table-grid.ts
 var edit_table_grid_exports = /* @__PURE__ */ __exportAll$1({ editDocumentTableGrid: () => editDocumentTableGrid });
+function mergeHwpxTable(sdk, target) {
+	if (!sdk.supportsSourceTableCellMerge?.() || !sdk.enableHistoryV2 || !sdk.sourceTableCellMergeBinding || !sdk.mergeSourceTableCells || !sdk.save) throw new Error("HwpxSourceTableCellMergeUnavailable");
+	sdk.enableHistoryV2();
+	const result = sdk.mergeSourceTableCells({
+		...target,
+		binding: sdk.sourceTableCellMergeBinding()
+	});
+	const cleanupError = "cleanupError" in result ? result.cleanupError : void 0;
+	if (result.nativeCode !== 1 || result.changed !== true || result.application !== "applied" || cleanupError) throw new Error(result.error ?? cleanupError ?? "SourceTableCellMergeFailed");
+	return sdk.save();
+}
 function field$1(value, key, optional = false) {
 	if (!record$15(value)) throw new TypeError("InvalidTableGridModel");
 	const descriptor = Object.getOwnPropertyDescriptor(value, key);
@@ -50695,7 +50709,7 @@ async function editDocumentTableGrid(input, dependencies = {}) {
 	const format = detectDocumentFormat(source);
 	if (format === "hwpx" && layout === "observed8") throw new TypeError("InvalidTableGridLayout");
 	const merge = action === "merge" ? parseTableMergeRange(field$1(input, "range"), expectedRows, expectedColumns) : void 0;
-	if (merge && (format !== "hwp5" || layout === "spec6")) throw new TypeError("Hwp5ObservedTableMergeRequired");
+	if (merge && format === "hwp5" && layout === "spec6") throw new TypeError("Hwp5ObservedTableMergeRequired");
 	if (target.format !== format) throw new Error("ObjectReferenceFormatMismatch");
 	const hash = await crypto.subtle.digest("SHA-256", source);
 	const sourceSha256 = Array.from(new Uint8Array(hash), (n) => n.toString(16).padStart(2, "0")).join("");
@@ -50730,22 +50744,36 @@ async function editDocumentTableGrid(input, dependencies = {}) {
 			sectionCount
 		}, true);
 		if (selected.expectedRows !== expectedRows || selected.expectedColumns !== expectedColumns) throw new Error("TableGridDimensionsMismatch");
-		const editor = await create(Uint8Array.from(wasm));
-		own(editor);
-		const edit = field$1(editor, merge ? "mergeHwp5Rectangle" : "edit", true);
-		if (typeof edit !== "function") throw new TypeError("InvalidTableGridResource");
-		const bytes = copyFileTransformInput(Reflect.apply(edit, editor, [source, {
+		const grid = {
 			section: selected.section,
 			tableNode: selected.tableNode,
 			expectedRows,
-			expectedColumns,
-			...merge ?? {
-				format,
-				action,
-				index,
-				...layout === void 0 ? {} : { layout }
-			}
-		}]), TABLE_FILE_GRID_LIMITS.outputBytes, "Output");
+			expectedColumns
+		};
+		let output;
+		if (merge && document.format === "hwpx") output = mergeHwpxTable(document.sdk, {
+			...grid,
+			top: merge.row,
+			left: merge.firstColumn,
+			bottom: merge.lastRow + 1,
+			right: merge.lastColumn + 1
+		});
+		else {
+			const editor = await create(Uint8Array.from(wasm));
+			own(editor);
+			const edit = field$1(editor, merge ? "mergeHwp5Rectangle" : "edit", true);
+			if (typeof edit !== "function") throw new TypeError("InvalidTableGridResource");
+			output = Reflect.apply(edit, editor, [source, {
+				...grid,
+				...merge ?? {
+					format,
+					action,
+					index,
+					...layout === void 0 ? {} : { layout }
+				}
+			}]);
+		}
+		const bytes = copyFileTransformInput(output, TABLE_FILE_GRID_LIMITS.outputBytes, "Output");
 		if (detectDocumentFormat(bytes) !== format) throw new Error("TableGridFormatMismatch");
 		result = {
 			format,
@@ -57125,7 +57153,7 @@ function extendedDocumentTools({ invoke, wasm, ocrExecutable }) {
 			name: "edit_document_table_grid",
 			config: {
 				title: "원본 표의 행·열 편집 및 셀 병합",
-				description: "같은 원본 SHA를 포함한 표 reference와 현재 행·열 수를 확인해 행 또는 열 하나를 삽입·삭제합니다. index는 0부터 시작하며 삽입은 축 끝도 허용합니다. HWP5/HWPX 모두 allowStaleLayout 동의가 필요합니다. 새 파일만 게시하며 layoutRequiresReflow와 previewStale은 true입니다. HWP5 observed8 표의 병합은 action=merge와 0부터 시작하는 양끝 포함 range(예: 0,0:1,2)를 사용합니다.",
+				description: "같은 원본 SHA를 포함한 표 reference와 현재 행·열 수를 확인해 행 또는 열 하나를 삽입·삭제합니다. index는 0부터 시작하며 삽입은 축 끝도 허용합니다. HWP5/HWPX 모두 allowStaleLayout 동의가 필요합니다. 새 파일만 게시하며 layoutRequiresReflow와 previewStale은 true입니다. 셀 병합은 action=merge와 0부터 시작하는 양끝 포함 range(예: 0,0:1,2)를 사용합니다. HWP5는 관측형 표만 지원하며, HWPX는 덮이는 셀의 문단을 시작 셀에 이어 붙입니다.",
 				inputSchema: strictObject({
 					inputPath: path(),
 					outputPath: path(),
@@ -57149,10 +57177,12 @@ function extendedDocumentTools({ invoke, wasm, ocrExecutable }) {
 					expectedColumns: uint().min(1),
 					layout: _enum(["spec6", "observed8"]).optional(),
 					allowStaleLayout: boolean$2().default(false)
-				}).refine(({ action, index, range, expectedRows, expectedColumns, layout }) => {
+				}).refine(({ action, index, range, expectedRows, expectedColumns, layout, reference }) => {
 					if (action === "merge") {
-						if (index !== void 0 || layout === "spec6") return false;
+						if (index !== void 0) return false;
 						try {
+							const { format } = parseObjectReference(reference);
+							if (format === "hwp5" ? layout === "spec6" : layout === "observed8") return false;
 							parseTableMergeRange(range, expectedRows, expectedColumns);
 							return true;
 						} catch {

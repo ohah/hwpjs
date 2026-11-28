@@ -111,8 +111,11 @@ export function interpretExtendedArguments(
   }
   if (command === 'edit-table-grid') {
     const reference = required('ref', 'MissingRequiredOption:ref');
+    let format: DocumentFormat;
     try {
-      if (parseObjectReference(reference).kind !== 'table') return fail('ExpectedTableReference');
+      const table = parseObjectReference(reference);
+      format = table.format;
+      if (table.kind !== 'table') return fail('ExpectedTableReference');
     } catch {
       return fail('InvalidTableReference');
     }
@@ -154,7 +157,7 @@ export function interpretExtendedArguments(
     } as const;
     if (action === 'merge') {
       if (options.has('index')) return fail('InvalidTableGridActionOptions');
-      if (layout === 'spec6') return fail('Hwp5ObservedTableMergeRequired');
+      if (format === 'hwp5' && layout === 'spec6') return fail('Hwp5ObservedTableMergeRequired');
       const range = required('range', 'MissingRequiredOption:range');
       try {
         parseTableMergeRange(range, expectedRows, expectedColumns);

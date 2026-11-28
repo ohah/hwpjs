@@ -1,3 +1,4 @@
+import type { createHwpxEditor } from '../../../js/hwpx-editor.mjs';
 import { parseTableMergeRange } from './table-merge-range.ts';
 import { resolveTableReference } from './table-reference-resolution.ts';
 import { detectDocumentFormat } from '../../../js/document-format.mjs';
@@ -14,11 +15,46 @@ import type { ObservationSdk } from './types/document-view.ts';
 
 export type TableGridAction = 'insert-row' | 'delete-row' | 'insert-column' | 'delete-column';
 
+type HwpxMergeSdk = Pick<
+  Awaited<ReturnType<typeof createHwpxEditor>>,
+  | 'enableHistoryV2'
+  | 'supportsSourceTableCellMerge'
+  | 'sourceTableCellMergeBinding'
+  | 'mergeSourceTableCells'
+  | 'save'
+>;
+type HwpxMergeTarget = Omit<Parameters<HwpxMergeSdk['mergeSourceTableCells']>[0], 'binding'>;
+
+function mergeHwpxTable(sdk: Partial<HwpxMergeSdk>, target: HwpxMergeTarget): Uint8Array {
+  if (
+    !sdk.supportsSourceTableCellMerge?.() ||
+    !sdk.enableHistoryV2 ||
+    !sdk.sourceTableCellMergeBinding ||
+    !sdk.mergeSourceTableCells ||
+    !sdk.save
+  )
+    throw new Error('HwpxSourceTableCellMergeUnavailable');
+  sdk.enableHistoryV2();
+  const result = sdk.mergeSourceTableCells({
+    ...target,
+    binding: sdk.sourceTableCellMergeBinding(),
+  });
+  const cleanupError = 'cleanupError' in result ? result.cleanupError : undefined;
+  if (
+    result.nativeCode !== 1 ||
+    result.changed !== true ||
+    result.application !== 'applied' ||
+    cleanupError
+  )
+    throw new Error(result.error ?? cleanupError ?? 'SourceTableCellMergeFailed');
+  return sdk.save();
+}
+
 interface GridDocument {
   format: DocumentFormat;
   sourceSha256: string;
   sectionCount: number;
-  sdk: ObservationSdk;
+  sdk: ObservationSdk & Partial<HwpxMergeSdk>;
   close(): void | Promise<void>;
 }
 interface TableGridEditor {
@@ -144,7 +180,7 @@ export async function editDocumentTableGrid(
     action === 'merge'
       ? parseTableMergeRange(field(input, 'range'), expectedRows, expectedColumns)
       : undefined;
-  if (merge && (format !== 'hwp5' || layout === 'spec6'))
+  if (merge && format === 'hwp5' && layout === 'spec6')
     throw new TypeError('Hwp5ObservedTableMergeRequired');
   if (target.format !== format) throw new Error('ObjectReferenceFormatMismatch');
   // 위의 입력 스냅샷은 첫 await 전에 모두 완료됩니다.
@@ -193,20 +229,34 @@ export async function editDocumentTableGrid(
     );
     if (selected.expectedRows !== expectedRows || selected.expectedColumns !== expectedColumns)
       throw new Error('TableGridDimensionsMismatch');
-    const editor = await create(Uint8Array.from(wasm));
-    own(editor);
-    const edit = field(editor, merge ? 'mergeHwp5Rectangle' : 'edit', true);
-    if (typeof edit !== 'function') throw new TypeError('InvalidTableGridResource');
-    const output: unknown = Reflect.apply(edit, editor, [
-      source,
-      {
-        section: selected.section,
-        tableNode: selected.tableNode,
-        expectedRows,
-        expectedColumns,
-        ...(merge ?? { format, action, index, ...(layout === undefined ? {} : { layout }) }),
-      },
-    ]);
+    const grid = {
+      section: selected.section,
+      tableNode: selected.tableNode,
+      expectedRows,
+      expectedColumns,
+    };
+    let output: unknown;
+    if (merge && document.format === 'hwpx') {
+      output = mergeHwpxTable(document.sdk, {
+        ...grid,
+        top: merge.row,
+        left: merge.firstColumn,
+        bottom: merge.lastRow + 1,
+        right: merge.lastColumn + 1,
+      });
+    } else {
+      const editor = await create(Uint8Array.from(wasm));
+      own(editor);
+      const edit = field(editor, merge ? 'mergeHwp5Rectangle' : 'edit', true);
+      if (typeof edit !== 'function') throw new TypeError('InvalidTableGridResource');
+      output = Reflect.apply(edit, editor, [
+        source,
+        {
+          ...grid,
+          ...(merge ?? { format, action, index, ...(layout === undefined ? {} : { layout }) }),
+        },
+      ]);
+    }
     const bytes = copyPictureInput(output, limits.outputBytes, 'Output');
     if (detectDocumentFormat(bytes) !== format) throw new Error('TableGridFormatMismatch');
     result = { format, sourceSha256, bytes, layoutRequiresReflow: true, previewStale: true };

@@ -247,7 +247,7 @@ export function extendedDocumentTools({
       config: {
         title: '원본 표의 행·열 편집 및 셀 병합',
         description:
-          '같은 원본 SHA를 포함한 표 reference와 현재 행·열 수를 확인해 행 또는 열 하나를 삽입·삭제합니다. index는 0부터 시작하며 삽입은 축 끝도 허용합니다. HWP5/HWPX 모두 allowStaleLayout 동의가 필요합니다. 새 파일만 게시하며 layoutRequiresReflow와 previewStale은 true입니다. HWP5 observed8 표의 병합은 action=merge와 0부터 시작하는 양끝 포함 range(예: 0,0:1,2)를 사용합니다.',
+          '같은 원본 SHA를 포함한 표 reference와 현재 행·열 수를 확인해 행 또는 열 하나를 삽입·삭제합니다. index는 0부터 시작하며 삽입은 축 끝도 허용합니다. HWP5/HWPX 모두 allowStaleLayout 동의가 필요합니다. 새 파일만 게시하며 layoutRequiresReflow와 previewStale은 true입니다. 셀 병합은 action=merge와 0부터 시작하는 양끝 포함 range(예: 0,0:1,2)를 사용합니다. HWP5는 관측형 표만 지원하며, HWPX는 덮이는 셀의 문단을 시작 셀에 이어 붙입니다.',
         inputSchema: z
           .strictObject({
             inputPath: path(),
@@ -271,10 +271,12 @@ export function extendedDocumentTools({
             layout: z.enum(['spec6', 'observed8']).optional(),
             allowStaleLayout: z.boolean().default(false),
           })
-          .refine(({ action, index, range, expectedRows, expectedColumns, layout }) => {
+          .refine(({ action, index, range, expectedRows, expectedColumns, layout, reference }) => {
             if (action === 'merge') {
-              if (index !== undefined || layout === 'spec6') return false;
+              if (index !== undefined) return false;
               try {
+                const { format } = parseObjectReference(reference);
+                if (format === 'hwp5' ? layout === 'spec6' : layout === 'observed8') return false;
                 parseTableMergeRange(range, expectedRows, expectedColumns);
                 return true;
               } catch {
