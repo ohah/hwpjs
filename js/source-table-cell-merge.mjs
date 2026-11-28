@@ -80,6 +80,13 @@ export function createSourceTableCellMergeApi({
       check();
       return supported;
     },
+    supportsSourceTableCellMergeWithSpans() {
+      check();
+      return (
+        supported &&
+        (format === 'hwp5' || wasm.hwpx_edit_source_table_merge_existing_spans_version?.() === 1)
+      );
+    },
     /** @returns {MergeBinding} */
     sourceTableCellMergeBinding() {
       requireSupport();

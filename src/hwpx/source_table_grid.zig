@@ -238,7 +238,7 @@ fn inspect(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: 
     const grid_edit = profile == .grid_spans or profile == .column_preserved;
     if (grid_edit) try validateGridPlacement(t, table);
     const merging = profile == .merge or profile == .split;
-    const spanning = profile == .split or grid_edit;
+    const spanning = merging or grid_edit;
     if (rows == 0 or cols == 0 or @as(u64, rows) * cols > limit) return error.LimitExceeded;
     if (try number(a, t, table, "rowCnt") != rows or try number(a, t, table, "colCnt") != cols) return error.StaleSourceTableGrid;
     if (merging) {
@@ -570,32 +570,40 @@ pub fn prepareMerge(allocator: std.mem.Allocator, source: []const u8, request: M
     try @import("field_free_section.zig").validate(a, &tree, request.max_bytes);
     if (tree.elements[table].name.local.encoding != .utf8) return error.UnsupportedEditEncoding;
     const grid = try inspect(a, &tree, table, rows, cols, request.max_cells, .merge);
+    try validateSpanGrid(a, &tree, table, rows, cols, grid.cells.len, request.max_cells);
     var ids: std.AutoHashMapUnmanaged(u32, void) = .empty;
     for (tree.elements, 0..) |_, index| {
         if (!fields.childIs(&tree, index, "p")) continue;
         const id = try number(a, &tree, index, "id");
         if ((try ids.getOrPut(a, id)).found_existing) return error.InvalidTableParagraphIds;
     }
-    const anchor = grid.cells[@as(usize, rect.top) * cols + rect.left];
-    var width: u32 = 0;
-    var height: u32 = 0;
-    for (rect.left..rect.right) |column| width += grid.cells[column].width;
-    for (rect.top..rect.bottom) |row| height += grid.cells[row * cols].height;
+    const selected = try a.alloc(Cell, @as(usize, rect.bottom - rect.top) * (rect.right - rect.left));
+    var count: usize = 0;
+    for (grid.cells) |cell| {
+        if (cell.row < rect.top or cell.row >= rect.bottom or cell.column < rect.left or cell.column >= rect.right) continue;
+        if (cell.row_span != 1 or cell.column_span != 1 or count >= selected.len) return error.MergedSourceTable;
+        selected[count] = cell;
+        count += 1;
+    }
+    // An existing span entering from outside would leave a selected anchor absent.
+    if (count != selected.len) return error.MergedSourceTable;
+    const anchor = selected[0];
+    const geometry = @import("source_table_grid_axis.zig");
+    const x = try geometry.axis(a, grid.cells, cols, grid.width, true, null);
+    const y = try geometry.axis(a, grid.cells, rows, grid.height, false, null);
+    const width = x[rect.right] - x[rect.left];
+    const height = y[rect.bottom] - y[rect.top];
 
     var content: std.ArrayList(u8) = .empty;
     var changes: std.ArrayList(writer.Change) = .empty;
-    for (rect.top..rect.bottom) |row| {
-        for (rect.left..rect.right) |column| {
-            const donor = grid.cells[row * cols + column];
-            if (donor.node == anchor.node) continue;
-            const list = tree.elements[donor.list];
-            const end = list.end_tag orelse return error.UnsupportedSourceTableStructure;
-            const bytes = source[list.start_tag.end..end.start];
-            if (bytes.len > request.max_bytes -| content.items.len) return error.LimitExceeded;
-            try content.appendSlice(a, bytes);
-            const node = tree.elements[donor.node];
-            try changes.append(a, .{ .start = node.start_tag.start, .end = node.end, .text = "", .serialized_xml = "" });
-        }
+    for (selected[1..]) |donor| {
+        const list = tree.elements[donor.list];
+        const end = list.end_tag orelse return error.UnsupportedSourceTableStructure;
+        const bytes = source[list.start_tag.end..end.start];
+        if (bytes.len > request.max_bytes -| content.items.len) return error.LimitExceeded;
+        try content.appendSlice(a, bytes);
+        const node = tree.elements[donor.node];
+        try changes.append(a, .{ .start = node.start_tag.start, .end = node.end, .text = "", .serialized_xml = "" });
     }
     var anchor_changes: std.ArrayList(writer.Change) = .empty;
     const append_at = (tree.elements[anchor.list].end_tag orelse return error.UnsupportedSourceTableStructure).start;

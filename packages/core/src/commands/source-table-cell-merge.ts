@@ -101,7 +101,12 @@ export function sourceTableCellBlockPlan(
   witness: SourceTableCellBlockWitness,
   split = false,
 ) {
-  const content = state.content as { tables?: Table[]; paragraphs?: Paragraph[] };
+  const content = state.content as {
+    tables?: Table[];
+    paragraphs?: Paragraph[];
+    sourceTableCellMergeWithSpansAvailable?: boolean;
+  };
+  const allowExistingSpans = split || content.sourceTableCellMergeWithSpansAvailable === true;
   const { section, tableNode, rows, columns, cells } = witness;
   if (
     ![section, tableNode, rows, columns].every(uint) ||
@@ -126,7 +131,7 @@ export function sourceTableCellBlockPlan(
     table.rows !== rows ||
     table.columns !== columns ||
     table.cells.length > rows * columns ||
-    (!split && table.cells.length !== rows * columns)
+    (!allowExistingSpans && table.cells.length !== rows * columns)
   )
     throw Error('InvalidSourceTableCellBlock');
 
@@ -141,7 +146,7 @@ export function sourceTableCellBlockPlan(
       cell.column >= columns ||
       cell.rowSpan > rows - cell.row ||
       cell.columnSpan > columns - cell.column ||
-      (!split && (cell.rowSpan !== 1 || cell.columnSpan !== 1)) ||
+      (!allowExistingSpans && (cell.rowSpan !== 1 || cell.columnSpan !== 1)) ||
       owners.has(cell.listNode)
     )
       throw Error('InvalidSourceTableCellBlock');
@@ -180,6 +185,7 @@ export function sourceTableCellBlockPlan(
     if (
       !cell ||
       selected.has(cell.listNode) ||
+      (!split && (cell.rowSpan !== 1 || cell.columnSpan !== 1)) ||
       selection.row !== cell.row ||
       selection.column !== cell.column ||
       !Array.isArray(selection.paragraphs) ||

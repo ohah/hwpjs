@@ -378,6 +378,8 @@ export function createReaderRuntime({
     content.sourceTableCellHeightAvailable = content.sourceTableCellWidthAvailable;
     content.sourceTableGridAvailable = editor?.supportsSourceTableGrid?.() === true;
     content.sourceTableCellMergeAvailable = editor?.supportsSourceTableCellMerge?.() === true;
+    content.sourceTableCellMergeWithSpansAvailable =
+      editor?.supportsSourceTableCellMergeWithSpans?.() === true;
     content.sourceTableCellSplitAvailable = editor?.supportsSourceTableCellSplit?.() === true;
     if (content.sourceTableCellSplitAvailable && historyEnabled)
       content.sourceTableCellSplitProfile = editor.sourceTableCellSplitProfile();
@@ -1155,6 +1157,8 @@ export function createReaderRuntime({
     if (result.sourceTableCellSplitAvailable)
       result.sourceTableCellSplitProfile = editor.sourceTableCellSplitProfile();
     result.sourceTableCellMergeAvailable = editor?.supportsSourceTableCellMerge?.() === true;
+    result.sourceTableCellMergeWithSpansAvailable =
+      editor?.supportsSourceTableCellMergeWithSpans?.() === true;
     result.sourceTableCellWidthAvailable = WebAssembly.Module.exports(module).some(
       (entry) => entry.name === 'hwpx_edit_set_cell_sizes' && entry.kind === 'function',
     );

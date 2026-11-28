@@ -41,6 +41,7 @@ const ROOT_KEYS = new Set([
   'sourceTableCellHeightAvailable',
   'sourceTableCellSplitAvailable',
   'sourceTableCellMergeAvailable',
+  'sourceTableCellMergeWithSpansAvailable',
   'sourceTableCellSplitProfile',
   'tableCreationResources',
   'createdTables',
@@ -273,6 +274,8 @@ export function isPlainOwnerBaseline(content: any, section: number, paragraph: n
         typeof content.sourceTableCellWidthAvailable !== 'boolean') ||
       (Object.hasOwn(content, 'sourceTableCellHeightAvailable') &&
         typeof content.sourceTableCellHeightAvailable !== 'boolean') ||
+      (Object.hasOwn(content, 'sourceTableCellMergeWithSpansAvailable') &&
+        typeof content.sourceTableCellMergeWithSpansAvailable !== 'boolean') ||
       (Object.hasOwn(content, 'sourceTableCellMergeAvailable') &&
         typeof content.sourceTableCellMergeAvailable !== 'boolean') ||
       (Object.hasOwn(content, 'sourceTableCellSplitAvailable') &&

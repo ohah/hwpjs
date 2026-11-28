@@ -343,6 +343,9 @@ export fn hwpx_edit_source_table_grid(section: u32, table_node: u32, rows: u32, 
     return 1;
 }
 // Use the existing document binding (open epoch, History revision, mutation serial).
+export fn hwpx_edit_source_table_merge_existing_spans_version() u32 {
+    return 1;
+}
 export fn hwpx_edit_merge_source_table_cells(section: u32, table_node: u32, rows: u32, columns: u32, top: u32, left: u32, bottom: u32, right: u32, revision: u32, epoch_lo: u32, epoch_hi: u32, serial_lo: u32, serial_hi: u32) u32 {
     requireNoReadScope() catch |err| return fail(err);
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
