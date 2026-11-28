@@ -127,6 +127,22 @@ test('grid CLI parses exact payload, optional layout, help, and all actions', ()
   );
 });
 
+test('grid CLI accepts inclusive merge bounds without an index', () => {
+  const merge = { action: 'merge', range: '0,0:1,1', index: undefined };
+  const parsed = parseArguments(args('hwp5', merge));
+  assert.equal(parsed.action, 'merge');
+  assert.equal(parsed.range, '0,0:1,1');
+  assert.equal(Object.hasOwn(parsed, 'index'), false);
+  for (const patch of [
+    { range: undefined },
+    { range: '0,0:2,2' },
+    { range: '0,0:0,0' },
+    { index: '0' },
+    { layout: 'spec6' },
+  ])
+    assert.throws(() => parseArguments(args('hwp5', { ...merge, ...patch })));
+});
+
 test('grid parser rejects missing, duplicate, unknown flags, malformed integers and bounds', () => {
   for (const key of ['ref', 'action', 'index', 'rows', 'columns', 'output'])
     assert.throws(() => parseArguments(args('hwp5', { [key]: undefined })), key);
@@ -327,6 +343,18 @@ test('grid MCP schema is strict and mirrors integer/action boundaries', () => {
     delete missing[key];
     assert.equal(schema.safeParse(missing).success, false, key);
   }
+  const merge = { ...request, action: 'merge', range: '0,0:1,1' };
+  delete merge.index;
+  assert.equal(schema.parse(merge).range, '0,0:1,1');
+  for (const patch of [
+    { index: 0 },
+    { layout: 'spec6' },
+    { range: '0,0:0,0' },
+    { range: '1,1:0,0' },
+    { range: '0,0:2,1' },
+    { range: '0,0:1,1\n' },
+  ])
+    assert.equal(schema.safeParse({ ...merge, ...patch }).success, false);
   for (const patch of [
     { extra: true },
     { action: 'merge' },

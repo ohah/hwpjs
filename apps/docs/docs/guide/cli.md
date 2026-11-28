@@ -299,6 +299,8 @@ bun run cli edit-table-grid ./input.hwpx --ref "$TABLE_REF" \
 
 HWP5와 HWPX 모두 `--allow-stale-layout`이 필수이며 결과는 `layoutRequiresReflow: true`, `previewStale: true`입니다. 선택 `--layout`은 `spec6` 또는 HWP5 전용 `observed8`이며 생략하면 서비스 기본값을 사용합니다. 기존 원본·출력을 덮어쓰지 않고 새 파일 게시 영수증에 출력 경로·SHA·원본 SHA를 보고합니다. 이 연결의 집중 검증은 주입 서비스를 이용한 CLI·공식 MCP 전송 검사이며 실제 Native 저장 검증은 별도입니다.
 
+HWP5 관측형 원본 표에는 `--action merge --range 0,0:1,1`을 사용할 수 있습니다. 이 예는 2×2 범위를 병합합니다. 범위는 행·열 순이며 0부터 시작하고 양끝을 포함합니다. 병합에는 `--index`를 넣지 않습니다. 덮이는 셀에 내용이 있거나 앞서 병합된 범위와 겹치면 저장을 거부합니다.
+
 ## 문자 글머리표 정의 작업
 
 이 연산은 **현재 GitHub 구현 기준**이며 npm 릴리스에 포함됐다는 뜻이 아닙니다. 공개 설치 이름은 `npm install @ohah/hwpjs`이며 아래 호출에는 이 기능과 대응 WASM을 포함한 빌드가 필요합니다. 별도 CLI 패키지는 설치하지 않습니다.

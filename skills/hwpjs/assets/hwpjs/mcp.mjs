@@ -24454,7 +24454,22 @@ function parseNativeTarget(value) {
 		paragraph
 	});
 }
+// src/table-merge-range.ts
+function parseTableMergeRange(range, rows, columns) {
+	const match = typeof range === "string" && /^(0|[1-9]\d*),(0|[1-9]\d*):(0|[1-9]\d*),(0|[1-9]\d*)$/u.exec(range);
+	if (!match || match[0] !== range) throw new TypeError("InvalidTableMergeRange");
+	const [row, firstColumn, lastRow, lastColumn] = match.slice(1).map(Number);
+	if (row > lastRow || lastRow >= rows || firstColumn > lastColumn || lastColumn >= columns || row === lastRow && firstColumn === lastColumn) throw new RangeError("InvalidTableMergeRange");
+	return {
+		row,
+		firstColumn,
+		lastRow,
+		lastColumn
+	};
+}
+var init_table_merge_range = __esmMin((() => {}));
 // src/extended-arguments.ts
+init_table_merge_range();
 const EXTENDED_OPTIONS = Object.freeze({
 	apply: [
 		"patch",
@@ -24504,6 +24519,7 @@ const EXTENDED_OPTIONS = Object.freeze({
 		"ref",
 		"action",
 		"index",
+		"range",
 		"rows",
 		"columns",
 		"output",
@@ -24542,6 +24558,7 @@ const EXTENDED_USAGE = `  hwpjs apply INPUT (--patch FILE | --operations JSON) -
   hwpjs paragraph INPUT --target s0:p3 [--expect-sha256 SHA256] [--format text|markdown] [--wasm PATH]
   hwpjs replace-image INPUT --ref IMAGE_REFERENCE --image IMAGE_FILE --output NEWFILE [--wasm PATH]
   hwpjs edit-table-grid INPUT --ref TABLE_REFERENCE --action insert-row|delete-row|insert-column|delete-column --index N --rows EXPECTED --columns EXPECTED --output NEWFILE --allow-stale-layout [--layout spec6|observed8] [--wasm PATH]
+  hwpjs edit-table-grid INPUT --ref TABLE_REFERENCE --action merge --range TOP,LEFT:BOTTOM,RIGHT --rows EXPECTED --columns EXPECTED --output NEWFILE --allow-stale-layout [--wasm PATH]
   hwpjs delete-table INPUT --ref TABLE_REFERENCE --output NEWFILE --allow-stale-layout [--wasm PATH]
   hwpjs insert-image INPUT --target s0:p3 --unit 0 --expect-text RAW --expect-sha256 SHA256 --image IMAGE_FILE --width HWPUNIT --height HWPUNIT --output NEWFILE --allow-stale-layout [--wasm PATH]
   hwpjs export-html INPUT --output NEW.html [--embed-images supported|none] [--wasm PATH]`;
@@ -24598,31 +24615,50 @@ function interpretExtendedArguments(command, options, positional, fail) {
 			return fail("InvalidTableReference");
 		}
 		const action = required("action", "MissingRequiredOption:action");
-		if (action !== "insert-row" && action !== "delete-row" && action !== "insert-column" && action !== "delete-column") return fail("InvalidTableGridAction");
+		if (action !== "insert-row" && action !== "delete-row" && action !== "insert-column" && action !== "delete-column" && action !== "merge") return fail("InvalidTableGridAction");
 		const integer = (name, minimum) => {
 			const text = required(name, "MissingRequiredOption:" + name);
 			const value = Number(text);
 			if (!/^(0|[1-9]\d*)$/u.test(text) || !Number.isSafeInteger(value) || value < minimum || value > 4294967295) return fail("InvalidTableGridInteger:" + name);
 			return value;
 		};
-		const index = integer("index", 0);
 		const expectedRows = integer("rows", 1);
 		const expectedColumns = integer("columns", 1);
-		const axis = action.endsWith("row") ? expectedRows : expectedColumns;
-		if (action.startsWith("insert") ? index > axis || axis === 4294967295 : index >= axis || axis === 1) return fail("InvalidTableGridIndex");
 		const layout = options.get("layout");
 		if (layout !== void 0 && layout !== "spec6" && layout !== "observed8") return fail("InvalidTableGridLayout");
-		return Object.freeze({
+		const base = {
 			...common,
 			...save(),
 			command,
 			input,
 			reference,
-			action,
-			index,
 			expectedRows,
 			expectedColumns,
 			...layout === void 0 ? {} : { layout }
+		};
+		if (action === "merge") {
+			if (options.has("index")) return fail("InvalidTableGridActionOptions");
+			if (layout === "spec6") return fail("Hwp5ObservedTableMergeRequired");
+			const range = required("range", "MissingRequiredOption:range");
+			try {
+				parseTableMergeRange(range, expectedRows, expectedColumns);
+			} catch {
+				return fail("InvalidTableMergeRange");
+			}
+			return Object.freeze({
+				...base,
+				action,
+				range
+			});
+		}
+		if (options.has("range")) return fail("InvalidTableGridActionOptions");
+		const index = integer("index", 0);
+		const axis = action.endsWith("row") ? expectedRows : expectedColumns;
+		if (action.startsWith("insert") ? index > axis || axis === 4294967295 : index >= axis || axis === 1) return fail("InvalidTableGridIndex");
+		return Object.freeze({
+			...base,
+			action,
+			index
 		});
 	}
 	if (command === "delete-table") {
@@ -50631,6 +50667,7 @@ async function editDocumentTableGrid(input, dependencies = {}) {
 		"reference",
 		"action",
 		"index",
+		"range",
 		"expectedRows",
 		"expectedColumns",
 		"layout"
@@ -50641,7 +50678,7 @@ async function editDocumentTableGrid(input, dependencies = {}) {
 	const target = parseObjectReference(reference);
 	if (target.kind !== "table" || typeof reference !== "string") throw new TypeError("ExpectedTableReference");
 	const action = field$1(input, "action");
-	const index = field$1(input, "index");
+	const index = field$1(input, "index", action === "merge");
 	const expectedRows = field$1(input, "expectedRows");
 	const expectedColumns = field$1(input, "expectedColumns");
 	const layout = field$1(input, "layout", true);
@@ -50649,12 +50686,16 @@ async function editDocumentTableGrid(input, dependencies = {}) {
 		"insert-row",
 		"delete-row",
 		"insert-column",
-		"delete-column"
-	].includes(action) || !uint$16(index) || !uint$16(expectedRows) || !uint$16(expectedColumns) || expectedRows < 1 || expectedColumns < 1 || Object.hasOwn(input, "layout") && layout !== "spec6" && layout !== "observed8") throw new TypeError("InvalidTableGridInput");
+		"delete-column",
+		"merge"
+	].includes(action) || (action === "merge" ? Object.hasOwn(input, "index") : !uint$16(index) || Object.hasOwn(input, "range")) || !uint$16(expectedRows) || !uint$16(expectedColumns) || expectedRows < 1 || expectedColumns < 1 || Object.hasOwn(input, "layout") && layout !== "spec6" && layout !== "observed8") throw new TypeError("InvalidTableGridInput");
 	const axis = action.endsWith("row") ? expectedRows : expectedColumns;
-	if (action.startsWith("insert-") ? index > axis || axis === 4294967295 : index >= axis || axis === 1) throw new RangeError("InvalidTableGridIndex");
+	const inserting = action.startsWith("insert-");
+	if (typeof index === "number" && (inserting ? index > axis || axis === 4294967295 : index >= axis || axis === 1)) throw new RangeError("InvalidTableGridIndex");
 	const format = detectDocumentFormat(source);
 	if (format === "hwpx" && layout === "observed8") throw new TypeError("InvalidTableGridLayout");
+	const merge = action === "merge" ? parseTableMergeRange(field$1(input, "range"), expectedRows, expectedColumns) : void 0;
+	if (merge && (format !== "hwp5" || layout === "spec6")) throw new TypeError("Hwp5ObservedTableMergeRequired");
 	if (target.format !== format) throw new Error("ObjectReferenceFormatMismatch");
 	const hash = await crypto.subtle.digest("SHA-256", source);
 	const sourceSha256 = Array.from(new Uint8Array(hash), (n) => n.toString(16).padStart(2, "0")).join("");
@@ -50691,17 +50732,19 @@ async function editDocumentTableGrid(input, dependencies = {}) {
 		if (selected.expectedRows !== expectedRows || selected.expectedColumns !== expectedColumns) throw new Error("TableGridDimensionsMismatch");
 		const editor = await create(Uint8Array.from(wasm));
 		own(editor);
-		const edit = field$1(editor, "edit");
+		const edit = field$1(editor, merge ? "mergeHwp5Rectangle" : "edit", true);
 		if (typeof edit !== "function") throw new TypeError("InvalidTableGridResource");
 		const bytes = copyFileTransformInput(Reflect.apply(edit, editor, [source, {
-			format,
 			section: selected.section,
 			tableNode: selected.tableNode,
 			expectedRows,
 			expectedColumns,
-			action,
-			index,
-			...layout === void 0 ? {} : { layout }
+			...merge ?? {
+				format,
+				action,
+				index,
+				...layout === void 0 ? {} : { layout }
+			}
 		}]), TABLE_FILE_GRID_LIMITS.outputBytes, "Output");
 		if (detectDocumentFormat(bytes) !== format) throw new Error("TableGridFormatMismatch");
 		result = {
@@ -50728,6 +50771,7 @@ async function editDocumentTableGrid(input, dependencies = {}) {
 }
 var record$15, uint$16;
 var init_edit_table_grid = __esmMin((() => {
+	init_table_merge_range();
 	init_table_reference_resolution();
 	init_document_format();
 	init_table_file_grid();
@@ -50762,7 +50806,7 @@ async function runGridFileCommand(options, { files, io, loadWasm, dependencies =
 		wasm,
 		reference: options.reference,
 		action: options.action,
-		index: options.index,
+		...options.action === "merge" ? { range: options.range } : { index: options.index },
 		expectedRows: options.expectedRows,
 		expectedColumns: options.expectedColumns,
 		...options.layout === void 0 ? {} : { layout: options.layout }
@@ -56886,6 +56930,7 @@ async function runCLI(argv, dependencies = {}) {
 	}
 }
 // src/mcp/extended-tools.ts
+init_table_merge_range();
 init_object_reference();
 init_document_operations();
 function defineDocumentTool(tool) {
@@ -57079,8 +57124,8 @@ function extendedDocumentTools({ invoke, wasm, ocrExecutable }) {
 		defineDocumentTool({
 			name: "edit_document_table_grid",
 			config: {
-				title: "원본 표 행·열을 새 파일에서 편집",
-				description: "같은 원본 SHA를 포함한 표 reference와 현재 행·열 수를 확인해 행 또는 열 하나를 삽입·삭제합니다. index는 0부터 시작하며 삽입은 축 끝도 허용합니다. HWP5/HWPX 모두 allowStaleLayout 동의가 필요합니다. 새 파일만 게시하며 layoutRequiresReflow와 previewStale은 true입니다. layout observed8은 HWP5 전용입니다.",
+				title: "원본 표의 행·열 편집 및 셀 병합",
+				description: "같은 원본 SHA를 포함한 표 reference와 현재 행·열 수를 확인해 행 또는 열 하나를 삽입·삭제합니다. index는 0부터 시작하며 삽입은 축 끝도 허용합니다. HWP5/HWPX 모두 allowStaleLayout 동의가 필요합니다. 새 파일만 게시하며 layoutRequiresReflow와 previewStale은 true입니다. HWP5 observed8 표의 병합은 action=merge와 0부터 시작하는 양끝 포함 range(예: 0,0:1,2)를 사용합니다.",
 				inputSchema: strictObject({
 					inputPath: path(),
 					outputPath: path(),
@@ -57095,24 +57140,36 @@ function extendedDocumentTools({ invoke, wasm, ocrExecutable }) {
 						"insert-row",
 						"delete-row",
 						"insert-column",
-						"delete-column"
+						"delete-column",
+						"merge"
 					]),
-					index: uint(),
+					index: uint().optional(),
+					range: string$3().max(48).optional(),
 					expectedRows: uint().min(1),
 					expectedColumns: uint().min(1),
 					layout: _enum(["spec6", "observed8"]).optional(),
 					allowStaleLayout: boolean$2().default(false)
-				}).refine(({ action, index, expectedRows, expectedColumns }) => {
+				}).refine(({ action, index, range, expectedRows, expectedColumns, layout }) => {
+					if (action === "merge") {
+						if (index !== void 0 || layout === "spec6") return false;
+						try {
+							parseTableMergeRange(range, expectedRows, expectedColumns);
+							return true;
+						} catch {
+							return false;
+						}
+					}
+					if (index === void 0 || range !== void 0) return false;
 					const axis = action.endsWith("row") ? expectedRows : expectedColumns;
 					return action.startsWith("insert") ? index <= axis && axis < 4294967295 : index < axis && axis > 1;
 				}, "행·열 인덱스 또는 예상 크기가 범위를 벗어났습니다."),
 				annotations: writeNew
 			},
-			invoke: ({ inputPath, outputPath, reference, action, index, expectedRows, expectedColumns, layout, allowStaleLayout = false }) => invoke([
+			invoke: ({ inputPath, outputPath, reference, action, index, range, expectedRows, expectedColumns, layout, allowStaleLayout = false }) => invoke([
 				"edit-table-grid",
 				`--ref=${reference}`,
 				`--action=${action}`,
-				`--index=${index}`,
+				action === "merge" ? `--range=${range}` : `--index=${index}`,
 				`--rows=${expectedRows}`,
 				`--columns=${expectedColumns}`,
 				`--output=${outputPath}`,

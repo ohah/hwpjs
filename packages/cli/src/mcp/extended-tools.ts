@@ -1,3 +1,4 @@
+import { parseTableMergeRange } from '../table-merge-range.ts';
 import * as z from 'zod/v4';
 import type {
   McpServer,
@@ -244,9 +245,9 @@ export function extendedDocumentTools({
     defineDocumentTool({
       name: 'edit_document_table_grid',
       config: {
-        title: '원본 표 행·열을 새 파일에서 편집',
+        title: '원본 표의 행·열 편집 및 셀 병합',
         description:
-          '같은 원본 SHA를 포함한 표 reference와 현재 행·열 수를 확인해 행 또는 열 하나를 삽입·삭제합니다. index는 0부터 시작하며 삽입은 축 끝도 허용합니다. HWP5/HWPX 모두 allowStaleLayout 동의가 필요합니다. 새 파일만 게시하며 layoutRequiresReflow와 previewStale은 true입니다. layout observed8은 HWP5 전용입니다.',
+          '같은 원본 SHA를 포함한 표 reference와 현재 행·열 수를 확인해 행 또는 열 하나를 삽입·삭제합니다. index는 0부터 시작하며 삽입은 축 끝도 허용합니다. HWP5/HWPX 모두 allowStaleLayout 동의가 필요합니다. 새 파일만 게시하며 layoutRequiresReflow와 previewStale은 true입니다. HWP5 observed8 표의 병합은 action=merge와 0부터 시작하는 양끝 포함 range(예: 0,0:1,2)를 사용합니다.',
         inputSchema: z
           .strictObject({
             inputPath: path(),
@@ -262,14 +263,25 @@ export function extendedDocumentTools({
                   return false;
                 }
               }, '표 참조가 필요합니다.'),
-            action: z.enum(['insert-row', 'delete-row', 'insert-column', 'delete-column']),
-            index: uint(),
+            action: z.enum(['insert-row', 'delete-row', 'insert-column', 'delete-column', 'merge']),
+            index: uint().optional(),
+            range: z.string().max(48).optional(),
             expectedRows: uint().min(1),
             expectedColumns: uint().min(1),
             layout: z.enum(['spec6', 'observed8']).optional(),
             allowStaleLayout: z.boolean().default(false),
           })
-          .refine(({ action, index, expectedRows, expectedColumns }) => {
+          .refine(({ action, index, range, expectedRows, expectedColumns, layout }) => {
+            if (action === 'merge') {
+              if (index !== undefined || layout === 'spec6') return false;
+              try {
+                parseTableMergeRange(range, expectedRows, expectedColumns);
+                return true;
+              } catch {
+                return false;
+              }
+            }
+            if (index === undefined || range !== undefined) return false;
             const axis = action.endsWith('row') ? expectedRows : expectedColumns;
             return action.startsWith('insert')
               ? index <= axis && axis < 0xffffffff
@@ -283,6 +295,7 @@ export function extendedDocumentTools({
         reference,
         action,
         index,
+        range,
         expectedRows,
         expectedColumns,
         layout,
@@ -292,7 +305,7 @@ export function extendedDocumentTools({
           'edit-table-grid',
           `--ref=${reference}`,
           `--action=${action}`,
-          `--index=${index}`,
+          action === 'merge' ? `--range=${range}` : `--index=${index}`,
           `--rows=${expectedRows}`,
           `--columns=${expectedColumns}`,
           `--output=${outputPath}`,

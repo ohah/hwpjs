@@ -40,7 +40,7 @@ export async function runGridFileCommand(
     wasm,
     reference: options.reference,
     action: options.action,
-    index: options.index,
+    ...(options.action === 'merge' ? { range: options.range } : { index: options.index }),
     expectedRows: options.expectedRows,
     expectedColumns: options.expectedColumns,
     ...(options.layout === undefined ? {} : { layout: options.layout }),

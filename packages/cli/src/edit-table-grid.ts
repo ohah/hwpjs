@@ -1,3 +1,4 @@
+import { parseTableMergeRange } from './table-merge-range.ts';
 import { resolveTableReference } from './table-reference-resolution.ts';
 import { detectDocumentFormat } from '../../../js/document-format.mjs';
 import {
@@ -32,6 +33,19 @@ interface TableGridEditor {
       action: TableGridAction;
       index: number;
       layout?: 'spec6' | 'observed8';
+    },
+  ): unknown;
+  mergeHwp5Rectangle?(
+    bytes: Uint8Array,
+    target: {
+      section: number;
+      tableNode: number;
+      expectedRows: number;
+      expectedColumns: number;
+      row: number;
+      lastRow: number;
+      firstColumn: number;
+      lastColumn: number;
     },
   ): unknown;
   close(): void | Promise<void>;
@@ -85,6 +99,7 @@ export async function editDocumentTableGrid(
           'reference',
           'action',
           'index',
+          'range',
           'expectedRows',
           'expectedColumns',
           'layout',
@@ -99,14 +114,16 @@ export async function editDocumentTableGrid(
   if (target.kind !== 'table' || typeof reference !== 'string')
     throw new TypeError('ExpectedTableReference');
   const action = field(input, 'action');
-  const index = field(input, 'index');
+  const index = field(input, 'index', action === 'merge');
   const expectedRows = field(input, 'expectedRows');
   const expectedColumns = field(input, 'expectedColumns');
   const layout = field(input, 'layout', true);
   if (
     typeof action !== 'string' ||
-    !['insert-row', 'delete-row', 'insert-column', 'delete-column'].includes(action) ||
-    !uint(index) ||
+    !['insert-row', 'delete-row', 'insert-column', 'delete-column', 'merge'].includes(action) ||
+    (action === 'merge'
+      ? Object.hasOwn(input, 'index')
+      : !uint(index) || Object.hasOwn(input, 'range')) ||
     !uint(expectedRows) ||
     !uint(expectedColumns) ||
     expectedRows < 1 ||
@@ -116,10 +133,19 @@ export async function editDocumentTableGrid(
     throw new TypeError('InvalidTableGridInput');
   const axis = action.endsWith('row') ? expectedRows : expectedColumns;
   const inserting = action.startsWith('insert-');
-  if (inserting ? index > axis || axis === 0xffffffff : index >= axis || axis === 1)
+  if (
+    typeof index === 'number' &&
+    (inserting ? index > axis || axis === 0xffffffff : index >= axis || axis === 1)
+  )
     throw new RangeError('InvalidTableGridIndex');
   const format = detectDocumentFormat(source);
   if (format === 'hwpx' && layout === 'observed8') throw new TypeError('InvalidTableGridLayout');
+  const merge =
+    action === 'merge'
+      ? parseTableMergeRange(field(input, 'range'), expectedRows, expectedColumns)
+      : undefined;
+  if (merge && (format !== 'hwp5' || layout === 'spec6'))
+    throw new TypeError('Hwp5ObservedTableMergeRequired');
   if (target.format !== format) throw new Error('ObjectReferenceFormatMismatch');
   // 위의 입력 스냅샷은 첫 await 전에 모두 완료됩니다.
   const hash = await crypto.subtle.digest('SHA-256', source);
@@ -169,19 +195,16 @@ export async function editDocumentTableGrid(
       throw new Error('TableGridDimensionsMismatch');
     const editor = await create(Uint8Array.from(wasm));
     own(editor);
-    const edit = field(editor, 'edit');
+    const edit = field(editor, merge ? 'mergeHwp5Rectangle' : 'edit', true);
     if (typeof edit !== 'function') throw new TypeError('InvalidTableGridResource');
     const output: unknown = Reflect.apply(edit, editor, [
       source,
       {
-        format,
         section: selected.section,
         tableNode: selected.tableNode,
         expectedRows,
         expectedColumns,
-        action: action as TableGridAction,
-        index,
-        ...(layout === undefined ? {} : { layout }),
+        ...(merge ?? { format, action, index, ...(layout === undefined ? {} : { layout }) }),
       },
     ]);
     const bytes = copyPictureInput(output, limits.outputBytes, 'Output');

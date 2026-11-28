@@ -6,6 +6,7 @@ import type {
 } from './types/commands.ts';
 import { parseObjectReference } from './object-reference.ts';
 import { parseNativeTarget } from './native-target.ts';
+import { parseTableMergeRange } from './table-merge-range.ts';
 
 export const EXTENDED_OPTIONS = Object.freeze({
   apply: ['patch', 'operations', 'expect-sha256', 'output', 'wasm', 'allow-stale-layout'],
@@ -18,6 +19,7 @@ export const EXTENDED_OPTIONS = Object.freeze({
     'ref',
     'action',
     'index',
+    'range',
     'rows',
     'columns',
     'output',
@@ -48,6 +50,7 @@ export const EXTENDED_USAGE = `  hwpjs apply INPUT (--patch FILE | --operations 
   hwpjs paragraph INPUT --target s0:p3 [--expect-sha256 SHA256] [--format text|markdown] [--wasm PATH]
   hwpjs replace-image INPUT --ref IMAGE_REFERENCE --image IMAGE_FILE --output NEWFILE [--wasm PATH]
   hwpjs edit-table-grid INPUT --ref TABLE_REFERENCE --action insert-row|delete-row|insert-column|delete-column --index N --rows EXPECTED --columns EXPECTED --output NEWFILE --allow-stale-layout [--layout spec6|observed8] [--wasm PATH]
+  hwpjs edit-table-grid INPUT --ref TABLE_REFERENCE --action merge --range TOP,LEFT:BOTTOM,RIGHT --rows EXPECTED --columns EXPECTED --output NEWFILE --allow-stale-layout [--wasm PATH]
   hwpjs delete-table INPUT --ref TABLE_REFERENCE --output NEWFILE --allow-stale-layout [--wasm PATH]
   hwpjs insert-image INPUT --target s0:p3 --unit 0 --expect-text RAW --expect-sha256 SHA256 --image IMAGE_FILE --width HWPUNIT --height HWPUNIT --output NEWFILE --allow-stale-layout [--wasm PATH]
   hwpjs export-html INPUT --output NEW.html [--embed-images supported|none] [--wasm PATH]`;
@@ -118,7 +121,8 @@ export function interpretExtendedArguments(
       action !== 'insert-row' &&
       action !== 'delete-row' &&
       action !== 'insert-column' &&
-      action !== 'delete-column'
+      action !== 'delete-column' &&
+      action !== 'merge'
     )
       return fail('InvalidTableGridAction');
     const integer = (name: string, minimum: number) => {
@@ -133,9 +137,34 @@ export function interpretExtendedArguments(
         return fail('InvalidTableGridInteger:' + name);
       return value;
     };
-    const index = integer('index', 0);
     const expectedRows = integer('rows', 1);
     const expectedColumns = integer('columns', 1);
+    const layout = options.get('layout');
+    if (layout !== undefined && layout !== 'spec6' && layout !== 'observed8')
+      return fail('InvalidTableGridLayout');
+    const base = {
+      ...common,
+      ...save(),
+      command,
+      input,
+      reference,
+      expectedRows,
+      expectedColumns,
+      ...(layout === undefined ? {} : ({ layout } as const)),
+    } as const;
+    if (action === 'merge') {
+      if (options.has('index')) return fail('InvalidTableGridActionOptions');
+      if (layout === 'spec6') return fail('Hwp5ObservedTableMergeRequired');
+      const range = required('range', 'MissingRequiredOption:range');
+      try {
+        parseTableMergeRange(range, expectedRows, expectedColumns);
+      } catch {
+        return fail('InvalidTableMergeRange');
+      }
+      return Object.freeze({ ...base, action, range });
+    }
+    if (options.has('range')) return fail('InvalidTableGridActionOptions');
+    const index = integer('index', 0);
     const axis = action.endsWith('row') ? expectedRows : expectedColumns;
     if (
       action.startsWith('insert')
@@ -143,21 +172,7 @@ export function interpretExtendedArguments(
         : index >= axis || axis === 1
     )
       return fail('InvalidTableGridIndex');
-    const layout = options.get('layout');
-    if (layout !== undefined && layout !== 'spec6' && layout !== 'observed8')
-      return fail('InvalidTableGridLayout');
-    return Object.freeze({
-      ...common,
-      ...save(),
-      command,
-      input,
-      reference,
-      action,
-      index,
-      expectedRows,
-      expectedColumns,
-      ...(layout === undefined ? {} : { layout }),
-    });
+    return Object.freeze({ ...base, action, index });
   }
   if (command === 'delete-table') {
     const reference = required('ref', 'MissingRequiredOption:ref');

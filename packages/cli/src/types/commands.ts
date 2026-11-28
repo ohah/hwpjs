@@ -30,12 +30,16 @@ export type ExtendedCommandOptions =
       NewOutput & {
         readonly command: 'edit-table-grid';
         readonly reference: string;
-        readonly action: 'insert-row' | 'delete-row' | 'insert-column' | 'delete-column';
-        readonly index: number;
         readonly expectedRows: number;
         readonly expectedColumns: number;
         readonly layout?: 'spec6' | 'observed8';
-      })
+      } & (
+        | {
+            readonly action: 'insert-row' | 'delete-row' | 'insert-column' | 'delete-column';
+            readonly index: number;
+          }
+        | { readonly action: 'merge'; readonly range: string }
+      ))
   | (InputOption &
       NewOutput & {
         readonly command: 'delete-table';
